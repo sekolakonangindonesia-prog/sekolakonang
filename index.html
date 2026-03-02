@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yayasan Sekola Konang Indonesia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Efek Gradasi untuk Tulisan */
+        .text-gradient {
+            background: linear-gradient(to right, #10b981, #3b82f6, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-bg {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- NAVBAR -->
+    <nav class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex flex-col leading-none">
+                <span class="text-2xl font-black text-slate-900 tracking-tighter">SEKOLA KONANG</span>
+                <span class="text-[10px] font-bold tracking-[0.3em] text-gradient uppercase">Indonesia</span>
+            </div>
+            <div class="hidden md:flex space-x-8 font-semibold text-sm">
+                <a href="#about" class="hover:text-emerald-600 transition">Tentang Kami</a>
+                <a href="#vision" class="hover:text-emerald-600 transition">Visi Misi</a>
+                <a href="#projects" class="hover:text-emerald-600 transition">Program</a>
+                <a href="#bibit" class="hover:text-emerald-600 transition border-b-2 border-emerald-500">Bagi Bibit</a>
+            </div>
+            <button class="bg-slate-900 text-white px-5 py-2 rounded-full text-xs font-bold hover:bg-emerald-700 transition">KONTAK</button>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero-bg h-[80vh] flex items-center justify-center text-center text-white px-6">
+        <div class="max-w-4xl">
+            <p class="text-emerald-400 font-bold tracking-widest mb-4 uppercase text-sm">The Firefly Movement Agenda</p>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">Berpikir Kreatif, Inovatif, <br>dan Berintegritas Tinggi</h1>
+            <p class="text-lg md:text-xl opacity-90 font-light italic">"Pelestarian Keanekaragaman Hayati & Penyerapan Karbon untuk Masa Depan."</p>
+        </div>
+    </section>
+
+    <!-- TENTANG KAMI -->
+    <section id="about" class="py-20 container mx-auto px-6">
+        <div class="grid md:grid-cols-2 gap-16 items-center">
+            <div class="relative">
+                <div class="absolute -top-4 -left-4 w-24 h-24 bg-emerald-100 rounded-full z-0"></div>
+                <h2 class="text-4xl font-bold text-slate-900 relative z-10">Tentang <br><span class="text-emerald-600">Sekola Konang</span></h2>
+                <p class="mt-6 text-slate-600 leading-relaxed">
+                    Berawal dari komunitas <strong>Sanggar Belajar Tatakelola Lingkungan</strong> pada 18 Oktober 2012, kami bertransformasi menjadi <strong>Yayasan Sekola Konang Indonesia</strong> pada Juli 2020. 
+                </p>
+                <p class="mt-4 text-slate-600 leading-relaxed text-sm">
+                    Kami bergerak di bidang Pendidikan Untuk Pembangunan Berkelanjutan dan Pemberdayaan Masyarakat, berangkat dari keprihatinan bersama terhadap masalah lingkungan dan ekonomi sosial.
+                </p>
+            </div>
+            <div class="bg-slate-900 p-10 rounded-[2rem] text-white shadow-2xl">
+                <div id="vision" class="mb-10">
+                    <h3 class="text-emerald-400 font-bold mb-2 uppercase tracking-widest text-xs italic">Visi Kami</h3>
+                    <p class="text-xl font-medium">"Terwujudnya kelestarian alam melalui upaya Perbaikan Mutu Pendidikan dan Tatakelola lingkungan yang Berkelanjutan."</p>
+                </div>
+                <div id="mission">
+                    <h3 class="text-emerald-400 font-bold mb-4 uppercase tracking-widest text-xs italic">Misi Kami</h3>
+                    <ul class="space-y-3 text-sm opacity-90">
+                        <li class="flex items-start"><i class="fas fa-check-circle mt-1 mr-3 text-emerald-500"></i> Mengembangkan kurikulum pendidikan pembangunan berkelanjutan.</li>
+                        <li class="flex items-start"><i class="fas fa-check-circle mt-1 mr-3 text-emerald-500"></i> Aktif dalam gerakan konservasi dan penyelamatan hutan/lahan.</li>
+                        <li class="flex items-start"><i class="fas fa-check-circle mt-1 mr-3 text-emerald-500"></i> Pengembangan ekowisata dan ekonomi kreatif daerah.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROGRAM BAGI BIBIT (INTEGRASI FIREBASE) -->
+    <section id="bibit" class="py-20 bg-emerald-900 text-white rounded-t-[3rem]">
+        <div class="container mx-auto px-6 max-w-4xl">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4 italic">Bagi-Bagi Bibit Berkala</h2>
+                <p class="text-emerald-200">Setiap pohon yang Anda tanam adalah investasi untuk udara bersih anak cucu kita.</p>
+            </div>
+
+            <div class="bg-white text-slate-900 p-8 md:p-12 rounded-3xl shadow-2xl">
+                <form id="formBibit" class="grid md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-bold uppercase text-slate-400">Nama Lengkap</label>
+                            <input type="text" id="nama" class="w-full border-b-2 border-slate-200 py-2 outline-none focus:border-emerald-500 transition" required>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold uppercase text-slate-400">Titik Koordinat GPS (Tanam Dimana?)</label>
+                            <input type="text" id="lokasi" placeholder="-7.821, 113.219" class="w-full border-b-2 border-slate-200 py-2 outline-none focus:border-emerald-500 transition" required>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-bold uppercase text-slate-400">Alasan Mengajukan Bibit</label>
+                            <textarea id="alasan" class="w-full border-2 border-slate-100 rounded-xl p-3 h-28 outline-none focus:border-emerald-500 transition"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-xl shadow-lg shadow-emerald-200 transition transform hover:-translate-y-1">
+                            AJUKAN SEKARANG
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Mekanisme Singkat -->
+            <div class="grid md:grid-cols-3 gap-8 mt-16 text-center text-sm">
+                <div>
+                    <div class="text-2xl mb-2 font-bold text-emerald-400 italic">01. Tanam</div>
+                    <p class="opacity-70 font-light italic text-xs leading-relaxed">Ajukan bibit dan tanam di lahan yang sudah Anda tentukan titik GPS-nya.</p>
+                </div>
+                <div>
+                    <div class="text-2xl mb-2 font-bold text-emerald-400 italic">02. Rawat</div>
+                    <p class="opacity-70 font-light italic text-xs leading-relaxed">Update perkembangan pohon secara berkala melalui sistem pelaporan kami.</p>
+                </div>
+                <div>
+                    <div class="text-2xl mb-2 font-bold text-emerald-400 italic">03. Hasil</div>
+                    <p class="opacity-70 font-light italic text-xs leading-relaxed">Mekanisme sharing profit saat masa panen atau nilai ekonomi karbon tersedia.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-white py-12 border-t border-slate-100">
+        <div class="container mx-auto px-6 text-center">
+            <div class="flex flex-col items-center mb-6 leading-none">
+                <span class="text-2xl font-black text-slate-900 tracking-tighter uppercase">SEKOLA KONANG</span>
+                <span class="text-[10px] font-bold tracking-[0.3em] text-gradient uppercase">Indonesia</span>
+            </div>
+            <p class="text-slate-400 text-xs mb-8">Perum Taman Sadeng Kentjana F18, Kedungdalem - Dringu, Probolinggo</p>
+            <div class="flex justify-center space-x-6 text-slate-600">
+                <a href="mailto:sekolakonang@gmail.com" class="hover:text-emerald-600"><i class="fas fa-envelope"></i></a>
+                <a href="#" class="hover:text-emerald-600"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="hover:text-emerald-600"><i class="fas fa-globe"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- FIREBASE SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+            authDomain: "sekola-konang.firebaseapp.com",
+            projectId: "sekola-konang",
+            storageBucket: "sekola-konang.firebasestorage.app",
+            messagingSenderId: "9338352073",
+            appId: "1:9338352073:web:b56481b836888b1a8bf818",
+            measurementId: "G-Q83T9JCGMJ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const form = document.getElementById('formBibit');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nama = document.getElementById('nama').value;
+            const lokasi = document.getElementById('lokasi').value;
+            const alasan = document.getElementById('alasan').value;
+
+            try {
+                await addDoc(collection(db, "pengajuan_bibit"), {
+                    nama: nama,
+                    lokasi: lokasi,
+                    alasan: alasan,
+                    tanggal: new Date(),
+                    status: "Menunggu Review"
+                });
+                alert("Alhamdulillah, pengajuan bibit Anda telah terkirim ke sistem Sekola Konang Indonesia!");
+                form.reset();
+            } catch (error) {
+                console.error("Error: ", error);
+                alert("Maaf, terjadi kendala teknis. Silakan coba lagi nanti.");
+            }
+        });
+    </script>
+</body>
+</html>
