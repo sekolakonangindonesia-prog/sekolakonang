@@ -7,18 +7,24 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Efek Gradasi untuk Tulisan */
         .text-gradient {
-            background: linear-gradient(to right, #10b981, #3b82f6, #ef4444);
+            background: linear-gradient(to right, #10b981, #facc15, #ef4444);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         .hero-bg {
-            background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1350&q=80');
             background-size: cover;
             background-position: center;
         }
+        .firefly-glow:hover {
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+            transition: 0.3s;
+        }
         html { scroll-behavior: smooth; }
+        
+        /* Dropdown Style */
+        .dropdown:hover .dropdown-menu { display: block; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
@@ -27,17 +33,28 @@
     <nav class="bg-white/95 backdrop-blur-md shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-6 py-2 flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <!-- LOGO DARI GITHUB BAPAK -->
-                <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="Logo Sekola Konang" class="h-12 w-auto">
+                <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="Logo" class="h-12 w-auto">
                 <div class="flex flex-col leading-none">
                     <span class="text-xl font-black text-slate-900 tracking-tighter uppercase">SEKOLA KONANG</span>
                     <span class="text-[9px] font-bold tracking-[0.3em] text-gradient uppercase italic">Indonesia</span>
                 </div>
             </div>
-            <div class="hidden md:flex space-x-8 font-semibold text-xs uppercase tracking-widest">
-                <a href="#about" class="hover:text-emerald-600 transition">Profil</a>
-                <a href="#vision" class="hover:text-emerald-600 transition">Visi Misi</a>
-                <a href="#bibit" class="hover:text-emerald-600 transition border-b-2 border-emerald-500 pb-1">Bagi Bibit</a>
+            
+            <div class="hidden md:flex space-x-8 font-semibold text-xs uppercase tracking-widest items-center">
+                <!-- DROPDOWN PROFIL -->
+                <div class="relative dropdown">
+                    <a href="#about" class="hover:text-emerald-600 transition flex items-center">
+                        Profil <i class="fas fa-chevron-down ml-2 text-[8px]"></i>
+                    </a>
+                    <div class="dropdown-menu hidden absolute left-0 mt-2 w-48 bg-white shadow-xl rounded-xl py-2 border border-slate-100">
+                        <a href="#welcome" class="block px-4 py-2 hover:bg-emerald-50 hover:text-emerald-600 transition">Sambutan</a>
+                        <a href="#vision" class="block px-4 py-2 hover:bg-emerald-50 hover:text-emerald-600 transition">Visi & Misi</a>
+                        <a href="#how-we-work" class="block px-4 py-2 hover:bg-emerald-50 hover:text-emerald-600 transition">Cara Kerja</a>
+                        <a href="#awards" class="block px-4 py-2 hover:bg-emerald-50 hover:text-emerald-600 transition">Penghargaan</a>
+                    </div>
+                </div>
+                
+                <a href="#bibit" class="hover:text-emerald-600 transition">Bagi Bibit</a>
                 <a href="#" class="hover:text-emerald-600 transition">Berita</a>
             </div>
             <button class="hidden md:block bg-emerald-600 text-white px-5 py-2 rounded-full text-[10px] font-black hover:bg-slate-900 transition uppercase tracking-widest">Kemitraan CSR</button>
@@ -45,116 +62,156 @@
     </nav>
 
     <!-- HERO SECTION -->
-    <section class="hero-bg min-h-[90vh] flex items-center justify-center text-center text-white px-6">
+    <section class="hero-bg min-h-[85vh] flex items-center justify-center text-center text-white px-6">
         <div class="max-w-4xl">
-            <!-- LOGO BESAR DI HERO -->
-            <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="Logo" class="h-32 mx-auto mb-8 drop-shadow-2xl animate-pulse">
-            
-            <p class="text-emerald-400 font-bold tracking-[0.4em] mb-4 uppercase text-xs">The Firefly Movement Agenda</p>
+            <p class="text-yellow-400 font-bold tracking-[0.4em] mb-4 uppercase text-xs">The Firefly Movement Agenda</p>
             <h1 class="text-4xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tighter">Berpikir Kreatif, Inovatif, <br>& Berintegritas Tinggi</h1>
             <p class="text-lg md:text-2xl opacity-90 font-light italic max-w-2xl mx-auto border-t border-b border-white/20 py-4">
                 "Pelestarian Keanekaragaman Hayati & Penyerapan Karbon untuk Masa Depan."
             </p>
-            <div class="mt-10">
-                <a href="#bibit" class="bg-white text-emerald-900 px-8 py-4 rounded-full font-black text-sm uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition shadow-xl">Ajukan Bibit Sekarang</a>
-            </div>
         </div>
     </section>
 
-    <!-- TENTANG KAMI -->
-    <section id="about" class="py-24 container mx-auto px-6">
-        <div class="grid md:grid-cols-2 gap-16 items-center">
-            <div class="relative">
-                <div class="absolute -top-10 -left-10 w-40 h-40 bg-emerald-50 rounded-full z-0 opacity-50"></div>
-                <h2 class="text-5xl font-black text-slate-900 relative z-10 tracking-tighter italic">Transformasi <br><span class="text-emerald-600">Perjalanan</span></h2>
-                <p class="mt-8 text-slate-600 leading-relaxed text-lg font-light">
-                    Berawal dari komunitas <strong>"Sanggar Belajar Tatakelola Lingkungan"</strong> yang berdiri sejak 18 Oktober 2012. 
-                </p>
-                <p class="mt-4 text-slate-500 leading-relaxed">
-                    Kini kami bertransformasi menjadi Badan Hukum Yayasan (sejak Juli 2020) yang berfokus pada Pendidikan Pembangunan Berkelanjutan dan Pemberdayaan Masyarakat di wilayah Probolinggo dan sekitarnya.
-                </p>
-                <div class="mt-8 flex space-x-4 uppercase text-[10px] font-bold tracking-widest text-emerald-700">
-                    <span>#Ecologi</span>
-                    <span>#Social</span>
-                    <span>#Economy</span>
-                </div>
-            </div>
-            <div class="bg-slate-900 p-12 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-10">
-                    <i class="fas fa-leaf text-8xl"></i>
-                </div>
-                <div id="vision" class="mb-12">
-                    <h3 class="text-emerald-400 font-bold mb-4 uppercase tracking-widest text-xs italic border-l-4 border-emerald-500 pl-4">Visi</h3>
-                    <p class="text-2xl font-medium leading-snug">"Terwujudnya kelestarian alam melalui upaya Perbaikan Mutu Pendidikan dan Tatakelola lingkungan yang Berkelanjutan."</p>
-                </div>
-                <div id="mission">
-                    <h3 class="text-emerald-400 font-bold mb-6 uppercase tracking-widest text-xs italic border-l-4 border-emerald-500 pl-4">Misi Utama</h3>
-                    <ul class="space-y-4 text-sm opacity-80">
-                        <li class="flex items-start"><i class="fas fa-seedling mt-1 mr-4 text-emerald-500"></i> Pengembangan kurikulum pendidikan berkelanjutan.</li>
-                        <li class="flex items-start"><i class="fas fa-shield-alt mt-1 mr-4 text-emerald-500"></i> Gerakan konservasi penyelamatan hutan dan lahan.</li>
-                        <li class="flex items-start"><i class="fas fa-chart-line mt-1 mr-4 text-emerald-500"></i> Pengembangan ekowisata & ekonomi kreatif daerah.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- PROGRAM BAGI BIBIT (FORM) -->
-    <section id="bibit" class="py-24 bg-slate-900 text-white relative">
+    <!-- WELCOME MESSAGE (BARU) -->
+    <section id="welcome" class="py-20 bg-white">
         <div class="container mx-auto px-6 max-w-5xl">
+            <div class="flex flex-col md:flex-row items-center gap-12">
+                <div class="w-64 h-64 flex-shrink-0">
+                    <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/smipro-streetart/main/Eko_Antony.jpg" alt="Eko Antony Sofian" class="w-full h-full object-cover rounded-3xl shadow-2xl border-4 border-emerald-500">
+                </div>
+                <div>
+                    <span class="text-emerald-600 font-bold uppercase tracking-[0.2em] text-xs">Founder Message</span>
+                    <h2 class="text-4xl font-black text-slate-900 mt-2 mb-6 italic">Welcome <span class="text-emerald-600">Message</span></h2>
+                    <p class="text-slate-600 leading-relaxed italic border-l-4 border-yellow-400 pl-6 mb-4 text-lg">
+                        "Kunang-kunang adalah serangga kecil yang dari perutnya bercahaya menerangi malam... Cahaya efisien dimuka bumi yang dihasilkan dari sinar dingin sebagai reaksi kimia didalam tubuhnya yang disebut bioluminescene."
+                    </p>
+                    <p class="text-slate-500 text-sm leading-relaxed">
+                        Kini serangga ini susah ditemui sebagai tanda bio-indikator kualitas lingkungan yang terdegradasi. Kehadiran Yayasan Sekola Konang Indonesia adalah upaya kita bersama untuk menjaga habitat yang sehat bagi masa depan.
+                    </p>
+                    <h4 class="mt-6 font-bold text-slate-900">Eko Antony Sofian</h4>
+                    <p class="text-xs text-emerald-600 font-bold uppercase">Pendiri Yayasan</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TENTANG KAMI (PROFIL LENGKAP) -->
+    <section id="about" class="py-24 bg-slate-50">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-5xl font-black text-slate-900 tracking-tighter italic">Transformasi <br><span class="text-emerald-600 text-gradient">Perjalanan</span></h2>
+                    <p class="mt-8 text-slate-700 leading-relaxed text-lg">
+                        Berawal dari komunitas <strong>"Sanggar Belajar Tatakelola Lingkungan"</strong> yang berdiri sejak 18 Oktober 2012. 
+                    </p>
+                    <p class="mt-4 text-slate-600 leading-relaxed">
+                        Berdasarkan nomor <strong>AHU-0011569.AH.01.04 Tahun 2020</strong>, kami bertransformasi menjadi Yayasan resmi yang bergerak dalam bidang Pendidikan Pembangunan Berkelanjutan dan Pemberdayaan Masyarakat. Kami hadir sebagai solusi atas keprihatinan bersama terhadap degradasi lingkungan dan persoalan ekonomi sosial di wilayah Probolinggo.
+                    </p>
+                </div>
+                <div class="bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl">
+                    <div id="vision" class="mb-10">
+                        <h3 class="text-yellow-400 font-bold mb-3 uppercase tracking-widest text-[10px] border-l-4 border-emerald-500 pl-4">Visi</h3>
+                        <p class="text-xl font-medium">"Terwujudnya kelestarian alam melalui upaya Perbaikan Mutu Pendidikan dan Tatakelola lingkungan yang Berkelanjutan."</p>
+                    </div>
+                    <div id="mission">
+                        <h3 class="text-yellow-400 font-bold mb-4 uppercase tracking-widest text-[10px] border-l-4 border-emerald-500 pl-4">Misi Utama</h3>
+                        <ul class="space-y-3 text-sm opacity-90">
+                            <li class="flex items-start"><i class="fas fa-check-circle mt-1 mr-3 text-emerald-500"></i> Pengembangan kurikulum pendidikan pembangunan berkelanjutan.</li>
+                            <li class="flex items-start"><i class="fas fa-check-circle mt-1 mr-3 text-emerald-500"></i> Gerakan konservasi penyelamatan hutan dan lahan.</li>
+                            <li class="flex items-start"><i class="fas fa-check-circle mt-1 mr-3 text-emerald-500"></i> Pengembangan ekowisata & ekonomi kreatif daerah.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW WE WORK (BARU) -->
+    <section id="how-we-work" class="py-24 bg-white">
+        <div class="container mx-auto px-6">
             <div class="text-center mb-16">
-                <span class="bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase mb-4 inline-block border border-emerald-500/20">Program Berkala</span>
-                <h2 class="text-5xl font-black mb-4 italic">Penyaluran Bibit</h2>
-                <p class="text-slate-400 max-w-xl mx-auto">Kami menyediakan bibit secara berkala bagi masyarakat yang berkomitmen merawat alam. Tentukan titik GPS Anda dan jadilah bagian dari perubahan.</p>
+                <h2 class="text-4xl font-black italic">How <span class="text-emerald-600">We Work</span></h2>
+                <div class="w-24 h-1 bg-yellow-400 mx-auto mt-4"></div>
+            </div>
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="p-8 border border-slate-100 rounded-3xl hover:bg-emerald-50 transition group">
+                    <i class="fas fa-chart-bar text-3xl text-emerald-600 mb-6"></i>
+                    <h4 class="font-black uppercase text-sm mb-3">Measurement</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">Potensi surplus air, penyerapan karbon, dan pelestarian biodiversitas.</p>
+                </div>
+                <div class="p-8 border border-slate-100 rounded-3xl hover:bg-emerald-50 transition">
+                    <i class="fas fa-clock text-3xl text-emerald-600 mb-6"></i>
+                    <h4 class="font-black uppercase text-sm mb-3">Scope & Time</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">Manajemen waktu berdasarkan musim dan perencanaan iklim jangka panjang.</p>
+                </div>
+                <div class="p-8 border border-slate-100 rounded-3xl hover:bg-emerald-50 transition">
+                    <i class="fas fa-project-diagram text-3xl text-emerald-600 mb-6"></i>
+                    <h4 class="font-black uppercase text-sm mb-3">Approach</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">Penentuan trend baseline, mitigasi adaptasi, dan rencana pengembangan.</p>
+                </div>
+                <div class="p-8 border border-slate-100 rounded-3xl hover:bg-emerald-50 transition">
+                    <i class="fas fa-users text-3xl text-emerald-600 mb-6"></i>
+                    <h4 class="font-black uppercase text-sm mb-3">Partnership</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">Kolaborasi komunitas, social enterprise, dan pemerintah pusat/daerah.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ACHIEVEMENTS (BARU) -->
+    <section id="awards" class="py-24 bg-slate-900 text-white overflow-hidden relative">
+        <div class="container mx-auto px-6 relative z-10">
+            <h2 class="text-4xl font-black mb-16 italic text-center">Achievements & <span class="text-emerald-500">Awards</span></h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/10 firefly-glow">
+                    <span class="text-yellow-400 font-bold text-2xl">2024</span>
+                    <h4 class="font-bold mt-4 mb-2">Radar Bromo Awards</h4>
+                    <p class="text-xs text-slate-400 italic">Kategori Lingkungan - Program Gerakan Rejoso Menabung Air.</p>
+                </div>
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/10 firefly-glow">
+                    <span class="text-yellow-400 font-bold text-2xl">2023</span>
+                    <h4 class="font-bold mt-4 mb-2">Tokoh Inspiratif</h4>
+                    <p class="text-xs text-slate-400 italic">Penghargaan khusus bidang pelestarian lingkungan hidup.</p>
+                </div>
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/10 firefly-glow">
+                    <span class="text-yellow-400 font-bold text-2xl">2013</span>
+                    <h4 class="font-bold mt-4 mb-2">Adiwiyata Nasional</h4>
+                    <p class="text-xs text-slate-400 italic">Pendampingan Sekolah Sobat Bumi (SSB) bersama Pertamina Foundation.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROGRAM BAGI BIBIT (FIREBASE TETAP ADA) -->
+    <section id="bibit" class="py-24 bg-slate-50 relative">
+        <div class="container mx-auto px-6 max-w-5xl">
+            <div class="text-center mb-16 text-slate-900">
+                <h2 class="text-5xl font-black mb-4 italic">Penyaluran <span class="text-emerald-600 text-gradient">Bibit</span></h2>
+                <p class="text-slate-500 max-w-xl mx-auto">Tentukan titik GPS Anda dan jadilah bagian dari perubahan ekosistem.</p>
             </div>
 
-            <div class="bg-white text-slate-900 p-8 md:p-14 rounded-[3rem] shadow-2xl">
+            <div class="bg-white p-8 md:p-14 rounded-[3rem] shadow-2xl border border-slate-100">
                 <form id="formBibit" class="grid md:grid-cols-2 gap-10">
                     <div class="space-y-6">
                         <div class="group">
-                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nama Lengkap Pengaju</label>
-                            <input type="text" id="nama" class="w-full border-b-2 border-slate-100 py-3 outline-none focus:border-emerald-500 transition font-medium" placeholder="Contoh: Eko Antony" required>
+                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nama Lengkap</label>
+                            <input type="text" id="nama" class="w-full border-b-2 border-slate-100 py-3 outline-none focus:border-emerald-500 transition font-medium" placeholder="Nama Anda" required>
                         </div>
                         <div class="group">
-                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Koordinat Lokasi Tanam (GPS)</label>
+                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">GPS Koordinat</label>
                             <input type="text" id="lokasi" placeholder="-7.8217, 113.2195" class="w-full border-b-2 border-slate-100 py-3 outline-none focus:border-emerald-500 transition font-medium" required>
-                            <p class="text-[10px] text-slate-400 mt-2 italic">*Buka Google Maps, salin titik koordinat lahan Anda.</p>
                         </div>
                     </div>
                     <div class="space-y-6">
                         <div>
-                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Rencana Pemanfaatan Lahan</label>
-                            <textarea id="alasan" placeholder="Ceritakan rencana Anda..." class="w-full border-2 border-slate-50 rounded-2xl p-4 h-32 outline-none focus:border-emerald-500 transition bg-slate-50 font-medium"></textarea>
+                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Rencana Pemanfaatan</label>
+                            <textarea id="alasan" class="w-full border-2 border-slate-50 rounded-2xl p-4 h-32 outline-none focus:border-emerald-500 transition bg-slate-50 font-medium"></textarea>
                         </div>
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-200 transition transform hover:-translate-y-1 uppercase tracking-[0.2em] text-xs">
-                            Kirim Pengajuan Bibit
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-slate-900 text-white font-black py-5 rounded-2xl shadow-xl transition transform hover:-translate-y-1 uppercase tracking-[0.2em] text-xs">
+                            Kirim Pengajuan
                         </button>
                     </div>
                 </form>
-            </div>
-            
-            <!-- Mekanisme -->
-            <div class="grid md:grid-cols-4 gap-8 mt-20 text-center">
-                <div class="p-6 bg-white/5 rounded-3xl border border-white/10">
-                    <div class="text-emerald-500 text-3xl mb-4"><i class="fas fa-file-signature"></i></div>
-                    <h4 class="font-bold text-sm mb-2 uppercase italic">01. Ajukan</h4>
-                    <p class="text-xs text-slate-400 leading-relaxed font-light">Isi formulir dengan koordinat GPS lahan yang valid.</p>
-                </div>
-                <div class="p-6 bg-white/5 rounded-3xl border border-white/10">
-                    <div class="text-emerald-500 text-3xl mb-4"><i class="fas fa-truck-loading"></i></div>
-                    <h4 class="font-bold text-sm mb-2 uppercase italic">02. Terima</h4>
-                    <p class="text-xs text-slate-400 leading-relaxed font-light">Tim akan memverifikasi lokasi dan mengirimkan bibit berkala.</p>
-                </div>
-                <div class="p-6 bg-white/5 rounded-3xl border border-white/10">
-                    <div class="text-emerald-500 text-3xl mb-4"><i class="fas fa-camera"></i></div>
-                    <h4 class="font-bold text-sm mb-2 uppercase italic">03. Lapor</h4>
-                    <p class="text-xs text-slate-400 leading-relaxed font-light">Wajib kirim foto perkembangan pohon secara berkala.</p>
-                </div>
-                <div class="p-6 bg-white/5 rounded-3xl border border-white/10">
-                    <div class="text-emerald-500 text-3xl mb-4"><i class="fas fa-hand-holding-usd"></i></div>
-                    <h4 class="font-bold text-sm mb-2 uppercase italic">04. Sharing</h4>
-                    <p class="text-xs text-slate-400 leading-relaxed font-light">Mekanisme bagi hasil ekonomi atau nilai karbon di masa depan.</p>
-                </div>
             </div>
         </div>
     </section>
@@ -163,25 +220,16 @@
     <footer class="bg-white py-16 border-t border-slate-100">
         <div class="container mx-auto px-6 text-center">
             <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="Logo" class="h-16 mx-auto mb-6">
-            <div class="flex flex-col items-center mb-6 leading-none">
-                <span class="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">SEKOLA KONANG</span>
-                <span class="text-[10px] font-bold tracking-[0.4em] text-gradient uppercase italic">Indonesia</span>
-            </div>
             <p class="text-slate-400 text-xs mb-8 max-w-sm mx-auto leading-relaxed uppercase tracking-widest font-medium">
                 Perum Taman Sadeng Kentjana F18,<br>Kedungdalem - Dringu, Probolinggo
             </p>
-            <div class="flex justify-center space-x-8 text-slate-400 text-xl">
-                <a href="mailto:sekolakonang@gmail.com" class="hover:text-emerald-600 transition"><i class="fas fa-envelope"></i></a>
-                <a href="#" class="hover:text-emerald-600 transition"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="hover:text-emerald-600 transition"><i class="fas fa-globe"></i></a>
-            </div>
             <div class="mt-12 text-[10px] text-slate-300 font-bold tracking-[0.3em] uppercase">
                 &copy; 2024 Yayasan Sekola Konang Indonesia
             </div>
         </div>
     </footer>
 
-    <!-- FIREBASE SCRIPT -->
+    <!-- FIREBASE SCRIPT (DIPERTAHANKAN) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -214,11 +262,11 @@
                     tanggal: new Date(),
                     status: "Pending"
                 });
-                alert("Terima kasih! Data pengajuan bibit Anda telah tersimpan di pusat data Sekola Konang Indonesia.");
+                alert("Berhasil! Data Anda telah tersimpan.");
                 form.reset();
             } catch (error) {
                 console.error("Error: ", error);
-                alert("Maaf, terjadi kendala koneksi ke database. Silakan coba beberapa saat lagi.");
+                alert("Gagal mengirim data.");
             }
         });
     </script>
