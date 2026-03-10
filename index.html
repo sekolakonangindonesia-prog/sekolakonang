@@ -40,11 +40,18 @@
 
         /* --- PAGE 2: DASHBOARD --- */
         #page-dashboard { display: none; min-height: 100vh; padding: 120px 5% 50px; }
+        
+        /* Navigasi Dashboard (Logo + Tombol Kembali) */
         .dashboard-nav { 
             position: absolute; top: 30px; left: 5%; right: 5%; 
             display: flex; justify-content: space-between; align-items: center; z-index: 10;
         }
-        .btn-home { position: absolute; top: 30px; right: 5%; color: white; text-decoration: none; font-weight: 700; font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.3); padding: 10px 25px; border-radius: 50px; transition: 0.3s; }
+
+        .btn-home { 
+            color: white; text-decoration: none; font-weight: 700; font-size: 0.75rem; 
+            border: 1px solid rgba(255,255,255,0.3); padding: 10px 25px; 
+            border-radius: 50px; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
+        }
         .btn-home:hover { background: var(--accent); color: black; border-color: var(--accent); }
 
         .founder-box { text-align: center; max-width: 700px; margin: 0 auto 60px; }
