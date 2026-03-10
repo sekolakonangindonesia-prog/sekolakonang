@@ -40,6 +40,10 @@
 
         /* --- PAGE 2: DASHBOARD --- */
         #page-dashboard { display: none; min-height: 100vh; padding: 100px 5% 50px; }
+        .dashboard-nav { 
+            position: absolute; top: 30px; left: 5%; right: 5%; 
+            display: flex; justify-content: space-between; align-items: center; z-index: 10;
+        }
         .btn-home { position: absolute; top: 30px; right: 5%; color: white; text-decoration: none; font-weight: 700; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 50px; transition: 0.3s; }
         .btn-home:hover { background: var(--accent); color: black; border-color: var(--accent); }
 
