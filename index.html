@@ -208,7 +208,80 @@
         </div>
     </div>
 
-    <script>
+ <!-- PAGE 3: PROFIL (SIAPA KAMI) -->
+    <div id="page-profil">
+        <div class="dashboard-nav">
+            <div class="logo-area"><img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" height="45"><div class="ms-3" style="line-height: 1.1;"><span class="fw-black d-block" style="font-size: 0.9rem;">SEKOLA KONANG</span><small style="font-size: 0.6rem; letter-spacing: 3px; color: var(--accent);">INDONESIA</small></div></div>
+            <a href="javascript:void(0)" onclick="showPage('dashboard')" class="btn-home">KEMBALI KE MENU</a>
+        </div>
+        <div class="container mt-5">
+            <h2 class="fw-black mb-4">SIAPA <span style="color:var(--accent)">KAMI</span></h2>
+            <div class="profil-card">
+                <div class="accent-line">
+                    <h5 class="fw-bold">Sejarah & Perjalanan</h5>
+                    <p id="p-sejarah"></p>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <h5 class="fw-bold accent-text" style="color:var(--accent)">VISI</h5>
+                        <p id="p-visi"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="fw-bold accent-text" style="color:var(--accent)">MISI</h5>
+                        <ul id="p-misi"></ul>
+                    </div>
+                </div>
+            </div>
+            <div class="dashboard-footer">@Yayasan Sekola Konang Indonesia</div>
+        </div>
+    </div>   
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+            authDomain: "sekola-konang.firebaseapp.com",
+            projectId: "sekola-konang",
+            storageBucket: "sekola-konang.firebasestorage.app",
+            messagingSenderId: "9338352073",
+            appId: "1:9338352073:web:b56481b836888b1a8bf818"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.showPage = (pageId) => {
+            ['home', 'dashboard', 'profil'].forEach(id => document.getElementById('page-'+id).style.display = 'none');
+            document.getElementById('page-'+pageId).style.display = (pageId === 'home' ? 'flex' : 'block');
+            window.scrollTo(0,0);
+        }
+
+        async function fetchFounder() {
+            const docRef = doc(db, "profil_yayasan", "tentang_kami");
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                document.getElementById('f-quote').innerText = `"${docSnap.data().founder_quote}"`;
+                document.getElementById('f-text').innerText = "Visi utama kami adalah perbaikan mutu pendidikan dan tatakelola lingkungan berkelanjutan.";
+            }
+        }
+        fetchFounder();
+
+        window.loadProfil = async () => {
+            showPage('profil');
+            const docRef = doc(db, "profil_yayasan", "tentang_kami");
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('p-sejarah').innerText = data.sejarah;
+                document.getElementById('p-visi').innerText = data.visi;
+                
+                let misiHtml = '';
+                data.misi.forEach(m => misiHtml += `<li>${m}</li>`);
+                document.getElementById('p-misi').innerHTML = misiHtml;
+            }
+        }
         function openDashboard() {
             document.getElementById('page-home').style.display = 'none';
             document.getElementById('page-dashboard').style.display = 'block';
