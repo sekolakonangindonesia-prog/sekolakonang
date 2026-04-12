@@ -67,6 +67,11 @@
         .menu-card h6 { font-size: 0.75rem; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
 
         #program-detail { display: none; margin-top: 30px; background: rgba(198, 255, 0, 0.1); border-radius: 20px; padding: 20px; animation: fadeIn 0.5s; }
+        
+        /* Tambahan untuk Page Profil */
+#page-profil { display: none; min-height: 100vh; padding: 120px 5% 50px; position: relative; }
+.profil-card { background: rgba(255,255,255,0.05); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); margin-top: 30px; }
+.accent-line { border-left: 4px solid var(--accent); padding-left: 20px; margin-bottom: 30px; }
 
         /* FOOTER MARKER DASHBOARD */
         .dashboard-footer {
@@ -156,6 +161,40 @@
                     <small style="font-size: 0.6rem; letter-spacing: 3px; color: var(--accent);">INDONESIA</small>
                 </div>
             </div>
+
+            <!-- PAGE 3: PROFIL (SIAPA KAMI) -->
+<div id="page-profil">
+    <div class="dashboard-nav">
+        <div class="logo-area">
+            <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" height="45">
+            <div class="ms-3" style="line-height: 1.1;">
+                <span class="fw-black d-block" style="font-size: 0.9rem;">SEKOLA KONANG</span>
+                <small style="font-size: 0.6rem; letter-spacing: 3px; color: var(--accent);">INDONESIA</small>
+            </div>
+        </div>
+        <a href="javascript:void(0)" onclick="openDashboard()" class="btn-home">KEMBALI KE MENU</a>
+    </div>
+    <div class="container mt-5">
+        <h2 class="fw-black mb-4 uppercase">SIAPA <span style="color:var(--accent)">KAMI</span></h2>
+        <div class="profil-card">
+            <div class="accent-line">
+                <h5 class="fw-bold">Sejarah & Perjalanan</h5>
+                <p id="p-sejarah" class="opacity-75">Memuat data...</p>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <h5 class="fw-bold uppercase" style="color:var(--accent)">VISI</h5>
+                    <p id="p-visi" class="opacity-75">Memuat data...</p>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="fw-bold uppercase" style="color:var(--accent)">MISI</h5>
+                    <ul id="p-misi" class="opacity-75"></ul>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-footer">@Yayasan Sekola Konang Indonesia</div>
+    </div>
+</div>
             <a href="javascript:void(0)" onclick="openHome()" class="btn-home"><i class="fas fa-home me-2"></i> KEMBALI</a>
         </div>
         
@@ -167,7 +206,7 @@
             </div>
 
             <div class="menu-grid">
-                <div class="menu-card" onclick="alert('Buka Profil')">
+                <div class="menu-card" onclick="loadProfil()">
                     <i class="fas fa-id-card"></i>
                     <h6>Siapa Kami</h6>
                 </div>
@@ -208,27 +247,59 @@
         </div>
     </div>
 
-    <script>
-        function openDashboard() {
-            document.getElementById('page-home').style.display = 'none';
-            document.getElementById('page-dashboard').style.display = 'block';
-            window.scrollTo(0,0);
-        }
+   <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        function openHome() {
-            document.getElementById('page-dashboard').style.display = 'none';
-            document.getElementById('page-home').style.display = 'flex';
-            window.scrollTo(0,0);
-        }
+    const firebaseConfig = {
+        apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+        authDomain: "sekola-konang.firebaseapp.com",
+        projectId: "sekola-konang",
+        storageBucket: "sekola-konang.firebasestorage.app",
+        messagingSenderId: "9338352073",
+        appId: "1:9338352073:web:b56481b836888b1a8bf818"
+    };
 
-        function toggleProgram() {
-            const detail = document.getElementById('program-detail');
-            if (detail.style.display === 'block') {
-                detail.style.display = 'none';
-            } else {
-                detail.style.display = 'block';
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Fungsi Navigasi Global
+    window.showPage = (id) => {
+        document.getElementById('page-home').style.display = 'none';
+        document.getElementById('page-dashboard').style.display = 'none';
+        document.getElementById('page-profil').style.display = 'none';
+        
+        const target = document.getElementById('page-' + id);
+        target.style.display = (id === 'home' ? 'flex' : 'block');
+        window.scrollTo(0,0);
+    };
+
+    window.openDashboard = () => showPage('dashboard');
+    window.openHome = () => showPage('home');
+
+    // Ambil data Profil dari Firebase
+    window.loadProfil = async () => {
+        showPage('profil');
+        const docRef = doc(db, "profil_yayasan", "tentang_kami");
+        try {
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('p-sejarah').innerText = data.sejarah;
+                document.getElementById('p-visi').innerText = data.visi;
+                
+                let misiHtml = '';
+                data.misi.forEach(m => misiHtml += `<li class="mb-2">${m}</li>`);
+                document.getElementById('p-misi').innerHTML = misiHtml;
             }
-        }
-    </script>
+        } catch (e) { console.error("Gagal mengambil data profil", e); }
+    };
+
+    window.toggleProgram = () => {
+        const detail = document.getElementById('program-detail');
+        detail.style.display = (detail.style.display === 'block' ? 'none' : 'block');
+    };
+</script>
+    
 </body>
 </html>
