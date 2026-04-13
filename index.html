@@ -73,6 +73,16 @@
 
         .dashboard-footer { text-align: center; margin-top: 80px; font-size: 0.5rem; font-weight: 600; letter-spacing: 3px; opacity: 0.3; }
         #program-detail { display: none; margin-top: 30px; background: rgba(198, 255, 0, 0.1); border-radius: 20px; padding: 20px; }
+
+        /* Media Query untuk HP */
+        @media (max-width: 576px) {
+            .pillar-grid { grid-template-columns: 1fr; } /* Pilar jadi 1 kolom di HP */
+            .main-title { font-size: 2rem; }
+            .logo-header img { height: 40px; }
+            .dashboard-nav { top: 15px; }
+            #page-dashboard, #page-profil, #page-program-list { padding-top: 130px; }
+            .founder-quote { font-size: 1rem; }
+        }
     </style>
 </head>
 <body>
@@ -126,22 +136,13 @@
 
             <div class="menu-grid">
                 <div class="menu-card" onclick="loadProfil()"><i class="fas fa-id-card"></i><h6>Siapa Kami</h6></div>
-                <div class="menu-card" onclick="toggleProgram()"><i class="fas fa-leaf"></i><h6>Apa Yang Telah Kami Kerjakan</h6></div>
+                <div class="menu-card" onclick="toggleProgram()"><i class="fas fa-leaf"></i><h6>Program Kami</h6></div>
                 <div class="menu-card"><i class="fas fa-handshake"></i><h6>Kemitraan</h6></div>
                 <div class="menu-card"><i class="fas fa-newspaper"></i><h6>Warta SK</h6></div>
                 <div class="menu-card"><i class="fas fa-file-contract"></i><h6>Laporan Tim</h6></div>
                 <div class="menu-card"><i class="fas fa-phone"></i><h6>Kontak</h6></div>
             </div>
 
-            <div id="program-detail" class="text-center max-w-1000 mx-auto">
-                <h5 class="fw-black mb-3 accent-text uppercase" style="font-size: 0.8rem; color: var(--accent);">Program Kami</h5>
-                <div class="d-flex justify-content-center flex-wrap gap-2">
-                    <span class="badge rounded-pill border border-success p-2 px-3">Konservasi Air</span>
-                    <span class="badge rounded-pill border border-success p-2 px-3">Edukasi Karbon</span>
-                    <span class="badge rounded-pill border border-success p-2 px-3">Rejoso Menabung Air</span>
-                    <span class="badge rounded-pill border border-success p-2 px-3">Bagi Bibit Berkala</span>
-                </div>
-            </div>
             <div class="dashboard-footer">@Yayasan Sekola Konang Indonesia</div>
         </div>
     </div>
@@ -179,7 +180,40 @@
             <div class="dashboard-footer">@Yayasan Sekola Konang Indonesia</div>
         </div>
     </div>
-
+ <!-- PAGE 4: PROGRAM LIST -->
+    <div id="page-program-list">
+        <div class="dashboard-nav">
+            <div class="logo-area"><img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" height="40"></div>
+            <a href="javascript:void(0)" onclick="openDashboard()" class="btn-home">MENU</a>
+        </div>
+        <div class="container text-center">
+            <h2 class="fw-black mb-1">PROGRAM <span style="color:var(--accent)">KAMI</span></h2>
+            <p class="small opacity-50 mb-4">Monitoring & Konservasi</p>
+            
+            <div class="program-container">
+                <div class="program-item-card">
+                    <i id="icon-konservasi" class="fas fa-water"></i>
+                    <h4>Konservasi</h4>
+                    <p id="desc-konservasi" class="small"></p>
+                    <button class="btn-home" style="border-color: var(--accent); color: var(--accent);">BUKA DATA</button>
+                </div>
+                <div class="program-item-card">
+                    <i id="icon-biodiversity" class="fas fa-leaf"></i>
+                    <h4>Biodiversity</h4>
+                    <p id="desc-biodiversity" class="small"></p>
+                    <button class="btn-home">BUKA DATA</button>
+                </div>
+                <div class="program-item-card">
+                    <i id="icon-comdev" class="fas fa-users"></i>
+                    <h4>Comdev</h4>
+                    <p id="desc-comdev" class="small"></p>
+                    <button class="btn-home" style="opacity: 0.5;">COMING SOON</button>
+                </div>
+            </div>
+            <div class="dashboard-footer">@Yayasan Sekola Konang Indonesia</div>
+        </div>
+    </div>
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -234,9 +268,17 @@
             }
         };
 
-        window.toggleProgram = () => {
-            const detail = document.getElementById('program-detail');
-            detail.style.display = (detail.style.display === 'block' ? 'none' : 'block');
+        window.openProgramList = async () => {
+            window.showPage('program-list');
+            const querySnapshot = await getDocs(collection(db, "programs"));
+            querySnapshot.forEach((doc) => {
+                const id = doc.id;
+                const data = doc.data();
+                if(document.getElementById('desc-' + id)) {
+                    document.getElementById('desc-' + id).innerText = data.desc;
+                    document.getElementById('icon-' + id).className = data.icon;
+                }
+            });
         };
     </script>
 </body>
