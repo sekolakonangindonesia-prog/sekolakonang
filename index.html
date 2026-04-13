@@ -39,7 +39,7 @@
         .btn-explore:hover { background: white; transform: scale(1.05); color: black; }
 
         /* PAGE 2 & 3 STYLE */
-        #page-dashboard, #page-profil { display: none; min-height: 100vh; padding: 120px 5% 50px; position: relative; }
+        #page-dashboard, #page-profil, #page-program-list { display: none; min-height: 100vh; padding: 120px 5% 50px; position: relative; }
         
         .dashboard-nav { 
             position: absolute; top: 30px; left: 5%; right: 5%; 
@@ -72,13 +72,22 @@
         .accent-line { border-left: 4px solid var(--accent); padding-left: 20px; margin-bottom: 30px; }
 
         .dashboard-footer { text-align: center; margin-top: 80px; font-size: 0.5rem; font-weight: 600; letter-spacing: 3px; opacity: 0.3; }
-        #program-detail { display: none; margin-top: 30px; background: rgba(198, 255, 0, 0.1); border-radius: 20px; padding: 20px; }
-        .program-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 50px; }
-        .program-item-card { 
-    background: rgba(255, 255, 255, 0.03); 
-    border: 1px solid rgba(198, 255, 0, 0.1); 
-    padding: 40px 25px; border-radius: 25px; text-align: center; transition: 0.
-        .program-item-card:hover { 
+        .program-item-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(198, 255, 0, 0.1);
+    padding: 40px 25px;
+    border-radius: 25px;
+    text-align: center;
+    transition: 0.3s;
+}
+
+.program-item-card:hover {
+    border-color: var(--accent);
+    background: rgba(198, 255, 0, 0.05);
+    transform: translateY(-10px);
+    box-shadow: 0 0 20px rgba(198, 255, 0, 0.1);
+}
+       .program-item-card:hover { 
     border-color: var(--accent); 
     background: rgba(198, 255, 0, 0.05); 
     transform: translateY(-10px); 
@@ -228,8 +237,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+        import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
         const firebaseConfig = {
             apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
             authDomain: "sekola-konang.firebaseapp.com",
@@ -243,19 +252,20 @@
         const db = getFirestore(app);
 
         // Fungsi Navigasi Global (Ditempel ke window agar onclick bisa panggil)
-        window.showPage = (id) => {
-            document.getElementById('page-home').style.display = 'none';
-            document.getElementById('page-dashboard').style.display = 'none';
-            document.getElementById('page-profil').style.display = 'none';
-            
-            const target = document.getElementById('page-' + id);
-            if (id === 'home') {
-                target.style.display = 'flex';
-            } else {
-                target.style.display = 'block';
-            }
-            window.scrollTo(0,0);
-        };
+       window.showPage = (id) => {
+    document.getElementById('page-home').style.display = 'none';
+    document.getElementById('page-dashboard').style.display = 'none';
+    document.getElementById('page-profil').style.display = 'none';
+    document.getElementById('page-program-list').style.display = 'none'; // TAMBAHKAN INI
+    
+    const target = document.getElementById('page-' + id);
+    if (id === 'home') {
+        target.style.display = 'flex';
+    } else {
+        target.style.display = 'block';
+    }
+    window.scrollTo(0,0);
+};
 
         window.openDashboard = () => window.showPage('dashboard');
         window.openHome = () => window.showPage('home');
@@ -280,6 +290,23 @@
             }
         };
 
+        window.openProgramList = async () => {
+    window.showPage('program-list');
+    try {
+        const querySnapshot = await getDocs(collection(db, "programs"));
+        querySnapshot.forEach((doc) => {
+            const id = doc.id;
+            const data = doc.data();
+            if(document.getElementById('desc-' + id)) {
+                document.getElementById('desc-' + id).innerText = data.desc;
+                document.getElementById('icon-' + id).className = data.icon;
+            }
+        });
+    } catch (e) { 
+        console.error("Gagal ambil data program", e); 
+    }
+};
+        
         window.toggleProgram = () => {
             const detail = document.getElementById('program-detail');
             detail.style.display = (detail.style.display === 'block' ? 'none' : 'block');
