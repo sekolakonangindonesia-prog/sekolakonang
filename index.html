@@ -68,11 +68,33 @@
         .menu-card h6 { font-size: 0.75rem; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
 
         /* PROFIL CARD */
-        .profil-card { background: rgba(255,255,255,0.05); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); margin-top: 30px; text-align: left; }
+        .profil-card { background: rgba(198, 255, 0, 0.05); padding: 40px; border-radius: 30px; border: 1px solid rgba(198, 255, 0, 0.05); margin-top: 30px; text-align: left; }
         .accent-line { border-left: 4px solid var(--accent); padding-left: 20px; margin-bottom: 30px; }
 
         .dashboard-footer { text-align: center; margin-top: 80px; font-size: 0.5rem; font-weight: 600; letter-spacing: 3px; opacity: 0.3; }
         #program-detail { display: none; margin-top: 30px; background: rgba(198, 255, 0, 0.1); border-radius: 20px; padding: 20px; }
+        .program-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 50px; }
+        .program-item-card { 
+    background: rgba(255, 255, 255, 0.03); 
+    border: 1px solid rgba(198, 255, 0, 0.1); 
+    padding: 40px 25px; border-radius: 25px; text-align: center; transition: 0.
+        .program-item-card:hover { 
+    border-color: var(--accent); 
+    background: rgba(198, 255, 0, 0.05); 
+    transform: translateY(-10px); 
+    box-shadow: 0 0 20px rgba(198, 255, 0, 0.1);
+}
+        .program-item-card i { font-size: 3rem; color: var(--accent); margin-bottom: 25px; }
+
+        /* --- REVISI MOBILE FRIENDLY (TAMBAHKAN INI) --- */
+@media (max-width: 768px) {
+    .main-title { font-size: 2.2rem; }
+    .pillar-grid { grid-template-columns: 1fr; }
+    #page-home, #page-dashboard, #page-profil, #page-program-list { padding-top: 100px; }
+    .logo-header img, .dashboard-nav img { height: 35px; }
+    .btn-explore { padding: 15px 30px; font-size: 0.8rem; }
+}
+
     </style>
 </head>
 <body>
@@ -126,22 +148,13 @@
 
             <div class="menu-grid">
                 <div class="menu-card" onclick="loadProfil()"><i class="fas fa-id-card"></i><h6>Siapa Kami</h6></div>
-                <div class="menu-card" onclick="toggleProgram()"><i class="fas fa-leaf"></i><h6>Apa Yang Telah Kami Kerjakan</h6></div>
+                <div class="menu-card" onclick="openProgramList()"><i class="fas fa-leaf"></i><h6>Apa Yang Telah Kami Kerjakan</h6></div>
                 <div class="menu-card"><i class="fas fa-handshake"></i><h6>Kemitraan</h6></div>
                 <div class="menu-card"><i class="fas fa-newspaper"></i><h6>Warta SK</h6></div>
                 <div class="menu-card"><i class="fas fa-file-contract"></i><h6>Laporan Tim</h6></div>
                 <div class="menu-card"><i class="fas fa-phone"></i><h6>Kontak</h6></div>
             </div>
-
-            <div id="program-detail" class="text-center max-w-1000 mx-auto">
-                <h5 class="fw-black mb-3 accent-text uppercase" style="font-size: 0.8rem; color: var(--accent);">Program Kami</h5>
-                <div class="d-flex justify-content-center flex-wrap gap-2">
-                    <span class="badge rounded-pill border border-success p-2 px-3">Konservasi Air</span>
-                    <span class="badge rounded-pill border border-success p-2 px-3">Edukasi Karbon</span>
-                    <span class="badge rounded-pill border border-success p-2 px-3">Rejoso Menabung Air</span>
-                    <span class="badge rounded-pill border border-success p-2 px-3">Bagi Bibit Berkala</span>
-                </div>
-            </div>
+        
             <div class="dashboard-footer">@Yayasan Sekola Konang Indonesia</div>
         </div>
     </div>
@@ -179,6 +192,39 @@
             <div class="dashboard-footer">@Yayasan Sekola Konang Indonesia</div>
         </div>
     </div>
+
+    <div id="page-program-list">
+    <div class="dashboard-nav">
+        <div class="logo-area"><img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" height="45"></div>
+        <a href="javascript:void(0)" onclick="openDashboard()" class="btn-home">KEMBALI KE MENU</a>
+    </div>
+    <div class="container text-center">
+        <h2 class="fw-black mb-1">PROGRAM <span style="color:var(--accent)">KAMI</span></h2>
+        <p class="small opacity-50 mb-4 uppercase tracking-widest" style="font-size: 0.6rem;">Monitoring & Konservasi</p>
+        
+        <div class="program-container">
+            <div class="program-item-card">
+                <i id="icon-konservasi" class="fas fa-water"></i>
+                <h4 class="fw-black">KONSERVASI</h4>
+                <p id="desc-konservasi" class="small opacity-75">Memuat data...</p>
+                <button class="btn-home" style="border-color: var(--accent); color: var(--accent);">BUKA DATA</button>
+            </div>
+            <div class="program-item-card">
+                <i id="icon-biodiversity" class="fas fa-leaf"></i>
+                <h4 class="fw-black">BIODIVERSITY</h4>
+                <p id="desc-biodiversity" class="small opacity-75">Memuat data...</p>
+                <button class="btn-home">BUKA DATA</button>
+            </div>
+            <div class="program-item-card">
+                <i id="icon-comdev" class="fas fa-users"></i>
+                <h4 class="fw-black">COMDEV</h4>
+                <p id="desc-comdev" class="small opacity-75">Memuat data...</p>
+                <button class="btn-home" style="opacity: 0.5;">COMING SOON</button>
+            </div>
+        </div>
+        <div class="dashboard-footer">@Yayasan Sekola Konang Indonesia</div>
+    </div>
+</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
