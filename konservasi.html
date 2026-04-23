@@ -184,7 +184,7 @@
                 }
                 // Peta: Gambar Titik jika ada
                 if(d.points) {
-                    d.points.forEach(pt => L.circleMarker([pt[0], pt[1]], {radius: 5, color: varAccent()}).addTo(map));
+                d.points.forEach(pt => L.circleMarker([pt.latitude, pt.longitude], {radius: 5, color: varAccent()}).addTo(map));
                 }
 
                 tbody.innerHTML += `
