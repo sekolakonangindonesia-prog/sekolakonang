@@ -239,7 +239,7 @@
                 const map = L.map('map-detail', {zoomControl: false}).setView([-7.810, 112.908], 13);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
                 if(d.areaPolygon) L.polygon(d.areaPolygon, {color: '#c6ff00', weight: 2, fillOpacity: 0.2}).addTo(map);
-                if(d.points) d.points.forEach(p => L.circleMarker([p[0], p[1]], {radius: 5, color: '#ffab00', fillOpacity: 1}).addTo(map));
+                if(d.points) d.points.forEach(p => L.circleMarker([p.latitude, p.longitude], {radius: 5, color: '#ffab00', fillOpacity: 1}).addTo(map));
                 if(d.areaPolygon) map.fitBounds(L.polygon(d.areaPolygon).getBounds());
 
                 // Species Chart
