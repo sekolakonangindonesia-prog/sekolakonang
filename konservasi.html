@@ -3,211 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Tahunan - Sekola Konang</title>
+    <title>Dashboard Konservasi - Sekola Konang</title>
+
+<!-- Library CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+
+<style>
+    :root { --accent: #c6ff00; --dark: #050505; --card-bg: #121212; }
+    body { font-family: 'Montserrat', sans-serif; background-color: var(--dark); color: #eee; padding-bottom: 50px; }
     
-    <!-- Library CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    .header-section { padding: 60px 0 30px; text-align: center; border-bottom: 3px solid var(--accent); background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1350&q=80') center/cover; }
+    .main-title { font-weight: 800; font-size: 1.8rem; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
 
-    <style>
-        :root { --accent: #c6ff00; --dark: #050505; --card-bg: #121212; --border: #333; }
-        body { font-family: 'Montserrat', sans-serif; background-color: var(--dark); color: #eee; padding-bottom: 50px; }
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: -30px; padding: 0 15px; }
+    .stat-card-mini { background: var(--card-bg); padding: 15px; border-radius: 15px; border: 1px solid #333; text-align: center; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+    .stat-card-mini i { color: var(--accent); font-size: 1.2rem; margin-bottom: 5px; }
+    .stat-card-mini .num { display: block; font-size: 1.4rem; font-weight: 800; color: white; }
+    .stat-card-mini label { font-size: 0.55rem; text-transform: uppercase; font-weight: 700; color: #777; letter-spacing: 1px; }
 
-        .hero-header { 
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1350&q=80') center/cover;
-            padding: 60px 0 80px; text-align: center; border-bottom: 3px solid var(--accent);
-        }
-        /* Tombol Kembali yang bisa diklik */
-        .btn-back-nav { 
-            background: var(--accent); color: black !important; 
-            font-size: 0.75rem; font-weight: 800; border-radius: 50px; 
-            padding: 10px 25px; text-decoration: none; display: inline-block;
-            box-shadow: 0 0 15px rgba(198, 255, 0, 0.4); transition: 0.3s;
-        }
-        .btn-back-nav:hover { background: white; transform: scale(1.05); }
+    .custom-card { background: var(--card-bg); border-radius: 20px; border: 1px solid #222; overflow: hidden; margin-bottom: 20px; }
+    .card-header-neon { background: #ffab00; padding: 10px 20px; font-weight: 800; color: #000; font-size: 0.75rem; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
 
-        .stat-box-container { margin-top: -40px; }
-        .stat-box { background: white; border-radius: 12px; padding: 25px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); color: #333; height: 100%; }
-        .stat-box .val { font-size: 2rem; font-weight: 800; display: block; line-height: 1; }
-        .stat-box label { font-size: 0.65rem; font-weight: 700; color: #888; text-transform: uppercase; margin-top: 8px; display: block;}
+    #map { height: 400px; width: 100%; background: #222; }
+    .chart-container { position: relative; height: 220px; width: 100%; padding: 10px; }
 
-        .ui-card { background: var(--card-bg); border-radius: 15px; border: 1px solid var(--border); padding: 20px; height: 100%; }
-        .ui-title { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;}
-        #map-detail { height: 350px; width: 100%; border-radius: 10px; border: 1px solid #333; background: #222; }
+    .table-custom { background: white; color: black; margin-bottom: 0; font-size: 0.8rem; }
+    .table-custom th { background: #f8f9fa; font-weight: 800; text-transform: uppercase; font-size: 0.65rem; padding: 12px; border-bottom: 2px solid #ddd; }
+    .table-custom td { padding: 10px; vertical-align: middle; border-bottom: 1px solid #eee; }
+    .btn-detail-neon { border: 1px solid #333; font-size: 0.6rem; font-weight: 800; padding: 5px 12px; border-radius: 50px; text-decoration: none; color: #444; }
 
-        .water-summary-box { background: linear-gradient(135deg, #0277bd, #01579b); color: white; border-radius: 15px; padding: 30px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; }
-
-        .table-formula { background: white; border-radius: 10px; overflow: hidden; font-size: 0.75rem; color: black !important; }
-        .table-formula thead th { background: #f1f1f1; font-weight: 800; text-transform: uppercase; font-size: 0.6rem; border: 1px solid #ddd; padding: 10px; }
-        .table-formula td { border: 1px solid #eee; padding: 10px; }
-        .formula-text { font-family: 'Courier New', monospace; color: #d32f2f; font-weight: bold; }
-        .badge-dim { font-size: 0.6rem; background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 4px; margin-top: 5px; display: inline-block; font-style: italic;}
-
-        .gallery-img { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; border: 1px solid #333; cursor: pointer; }
-    </style>
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        #map { height: 300px; }
+        .main-title { font-size: 1.3rem; }
+    }
+</style>
 </head>
 <body>
 
-    <div class="hero-header">
-        <div class="container">
-            <!-- Link diperbaiki supaya kembali ke Konservasi -->
-            <a href="konservasi.html" class="btn-back-nav mb-4"><i class="fas fa-arrow-left me-2"></i> KEMBALI KE DASHBOARD</a><br>
-            <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" height="50" class="mb-3">
-            <h1 class="fw-bold display-5" id="title-year">TAHUN ...</h1>
-            <p id="title-loc" class="small opacity-50 uppercase tracking-widest">MEMUAT DATA...</p>
-        </div>
-    </div>
+<!-- TOMBOL MIGRASI -->
+<button id="btnMigrasi" style="position:fixed; top:100px; right:20px; z-index:9999; padding:15px; background:red; color:white; font-weight:bold; border-radius:10px; border:2px solid white; cursor:pointer;">
+    🚀 PINDAHKAN SEMUA DATA KE FIREBASE
+</button>
 
+<div class="header-section">
     <div class="container">
-        <div class="row g-3 stat-box-container mb-4 text-center">
-            <div class="col-md-4"><div class="stat-box"><i class="fas fa-tree text-success mb-2"></i><span class="val" id="stat-trees">0</span><label>Pohon Ditanam</label></div></div>
-            <div class="col-md-4"><div class="stat-box"><i class="fas fa-inbox mb-2" style="color:#795548"></i><span class="val" id="stat-rorak">0</span><label>Rorak Terbangun</label></div></div>
-            <div class="col-md-4"><div class="stat-box"><i class="fas fa-faucet text-primary mb-2"></i><span class="val text-primary" id="stat-sipil">0 Unit</span><label>Sumur & Biopori</label></div></div>
-        </div>
+        <h1 class="main-title">Sebaran Penanaman & Konservasi</h1>
+        <p class="small uppercase tracking-widest text-white-50" style="letter-spacing: 3px;">Monitoring Reboisasi dan Sipil Teknis</p>
+        <a href="index.html" class="btn btn-outline-light btn-sm rounded-pill mt-2 px-4" style="font-size: 0.6rem; font-weight: 700;">KEMBALI KE MENU</a>
+    </div>
+</div>
 
-        <div class="row g-4 mb-4">
-            <div class="col-lg-7"><div class="ui-card"><div class="ui-title">Peta Sebaran</div><div id="map-detail"></div></div></div>
-            <div class="col-lg-5"><div class="ui-card"><div class="ui-title">Komposisi Tanaman</div><div style="height: 250px;"><canvas id="chartSpecies"></canvas></div><div id="sp-list" class="mt-3"></div></div></div>
-        </div>
-
-        <div class="ui-card border-top border-4 border-primary mb-4">
-            <div class="ui-title text-primary"><i class="fas fa-calculator me-2"></i> Analisis Infiltrasi Air</div>
-            <div class="row g-4 mb-4 align-items-center">
-                <div class="col-lg-8"><div style="height: 250px;"><canvas id="chartWater"></canvas></div></div>
-                <div class="col-lg-4">
-                    <div class="water-summary-box shadow">
-                        <h2 class="fw-bold display-5 mb-0" id="total-water">0.00</h2>
-                        <span class="fw-bold small uppercase">ML / Year</span>
-                    </div>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-formula align-middle mb-0">
-                    <thead><tr><th>ITEM KONSERVASI</th><th>VOLUME</th><th>FORMULA ANALISIS</th><th class="text-end">HASIL (ML/Y)</th></tr></thead>
-                    <tbody id="formula-body"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="ui-card mt-4 mb-5">
-            <div class="ui-title"><i class="fas fa-camera me-2"></i> Dokumentasi</div>
-            <div class="row g-3" id="gallery"></div>
-        </div>
+<div class="container-fluid px-md-5">
+    <div class="stats-grid mb-4">
+        <div class="stat-card-mini"><i class="fas fa-tree"></i><span class="num" id="t-pohon">0</span><label>Pohon</label></div>
+        <div class="stat-card-mini"><i class="fas fa-inbox"></i><span class="num" id="t-rorak">0</span><label>Rorak</label></div>
+        <div class="stat-card-mini"><i class="fas fa-faucet"></i><span class="num" id="t-sumur">0</span><label>Sumur</label></div>
+        <div class="stat-card-mini"><i class="fas fa-fill-drip"></i><span class="num" id="t-biopori">0</span><label>Biopori</label></div>
+        <div class="stat-card-mini"><i class="fas fa-tint"></i><span class="num" id="t-air">0.0</span><label>Infiltrasi (ML)</label></div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <div class="custom-card">
+        <div class="card-header-neon">
+            <span><i class="fas fa-map-marked-alt me-2"></i> Peta Sebaran & Delineasi Area</span>
+            <span class="badge bg-dark">Leaflet Maps</span>
+        </div>
+        <div id="map"></div>
+    </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
-            authDomain: "sekola-konang.firebaseapp.com",
-            projectId: "sekola-konang",
-            storageBucket: "sekola-konang.firebasestorage.app",
-            messagingSenderId: "9338352073",
-            appId: "1:9338352073:web:b56481b836888b1a8bf818"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    <div class="row g-3">
+        <div class="col-lg-8"><div class="custom-card p-3"><label class="small fw-bold text-white-50 mb-3 uppercase">Tren Penanaman Pohon</label><div class="chart-container"><canvas id="chartTrees"></canvas></div></div></div>
+        <div class="col-lg-4"><div class="custom-card p-3"><label class="small fw-bold text-white-50 mb-3 uppercase">Komposisi Tanaman</label><div class="chart-container"><canvas id="chartSpecies"></canvas></div></div></div>
+        <div class="col-lg-6"><div class="custom-card p-3"><label class="small fw-bold text-white-50 mb-3 uppercase">Sipil Teknis Terakumulasi</label><div class="chart-container"><canvas id="chartSipil"></canvas></div></div></div>
+        <div class="col-lg-6"><div class="custom-card p-3"><label class="small fw-bold text-white-50 mb-3 uppercase">Infiltrasi Air (ML/Y)</label><div class="chart-container"><canvas id="chartWater"></canvas></div></div></div>
+    </div>
 
-        // Ambil ID dari URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const docId = urlParams.get('id');
+    <div class="custom-card mt-3">
+        <div class="card-header-neon" style="background:#333; color:white;">
+            <span><i class="fas fa-history me-2"></i> Riwayat Program Per Tahun</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-custom">
+                <thead>
+                    <tr>
+                        <th>Tahun</th>
+                        <th>Lokasi Program</th>
+                        <th class="text-center">Pohon</th>
+                        <th class="text-center">Rorak</th>
+                        <th class="text-center">Sumur</th>
+                        <th class="text-center">Biopori</th>
+                        <th class="text-end">Hasil (ML)</th>
+                        <th class="text-center">Opsi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-        async function loadData() {
-            if(!docId) { 
-                alert("ID Tahun tidak ditemukan!"); 
-                return; 
+<!-- SCRIPTS PENTING -->
+<script src="database_planting.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, collection, getDocs, GeoPoint } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+        authDomain: "sekola-konang.firebaseapp.com",
+        projectId: "sekola-konang",
+        storageBucket: "sekola-konang.firebasestorage.app",
+        messagingSenderId: "9338352073",
+        appId: "1:9338352073:web:b56481b836888b1a8bf818"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // --- 1. ROBOT MIGRASI (DIPERBAIKI) ---
+    const btn = document.getElementById('btnMigrasi');
+    if(btn) {
+        btn.onclick = async () => {
+            if (typeof db_planting === 'undefined') {
+                alert("Error: File database_planting.js belum terbaca!");
+                return;
             }
+            if (!confirm("Pindahkan ratusan koordinat ke Firebase?")) return;
             
+            alert("Sedang mengirim... Mohon tunggu sampai ada pesan BERHASIL.");
+
             try {
-                const docSnap = await getDoc(doc(db, "monitoring_reboisasi", docId));
-                
-                if (docSnap.exists()) {
-                    const d = docSnap.data();
-                    const s = d.stats;
+                const dataHutan = db_planting.years;
+                for (let key in dataHutan) {
+                    const item = dataHutan[key];
+                    const koordinatResmi = item.points.map(pt => ({
+                        koordinat: new GeoPoint(pt[0], pt[1]),
+                        nama_pohon: pt[2] || "Pohon"
+                    }));
 
-                    document.getElementById('title-year').innerText = "PROGRAM TAHUN " + d.year;
-                    document.getElementById('title-loc').innerText = d.location;
-                    document.getElementById('stat-trees').innerText = s.trees.toLocaleString();
-                    document.getElementById('stat-rorak').innerText = s.rorak.toLocaleString();
-                    document.getElementById('stat-sipil').innerText = `${s.sumur + s.biopori} Unit`;
+                    const dataSiapKirim = {
+                        year: item.year,
+                        location: item.location,
+                        desc: item.desc || "",
+                        stats: item.stats,
+                        species: item.species,
+                        points: koordinatResmi,
+                        areaPolygon: JSON.stringify(item.areaPolygon), 
+                        photos: item.photos || []
+                    };
 
-                    // PETA
-                    const map = L.map('map-detail', {zoomControl: false}).setView([-7.810, 112.908], 13);
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-                    
-                    if(d.areaPolygon) {
-                        try {
-                            const polyData = JSON.parse(d.areaPolygon);
-                            const layer = L.polygon(polyData, {color: '#c6ff00', fillOpacity: 0.2, weight: 2}).addTo(map);
-                            map.fitBounds(layer.getBounds());
-                        } catch(e) {}
-                    }
-                    if(d.points) {
-                        d.points.forEach(p => {
-                            if(p.koordinat) L.circleMarker([p.koordinat.latitude, p.koordinat.longitude], {radius: 5, color: '#c6ff00', fillOpacity:1}).addTo(map).bindPopup(p.nama_pohon);
-                        });
-                    }
-
-                    // SPECIES CHART
-                    const spKeys = Object.keys(d.species);
-                    const spVals = Object.values(d.species);
-                    new Chart(document.getElementById('chartSpecies'), {
-                        type: 'doughnut',
-                        data: { labels: spKeys, datasets: [{ data: spVals, backgroundColor: ['#1b5e20', '#c6ff00', '#2e7d32', '#66bb6a', '#a5d6a7'] }] },
-                        options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                    });
-                    const list = document.getElementById('sp-list');
-                    spKeys.forEach((key, i) => {
-                        list.innerHTML += `<div style="display:flex; justify-content:space-between; font-size:0.7rem; border-bottom:1px solid #222; padding:4px 0;"><span>${key}</span> <b>${spVals[i]}</b></div>`;
-                    });
-
-                    // ANALISIS AIR
-                    renderAnalysis(d.year, s);
-
-                } else {
-                    alert("Data tahun " + docId + " tidak ditemukan di Firebase!");
+                    await setDoc(doc(db, "monitoring_reboisasi", item.year.toString()), dataSiapKirim);
                 }
-            } catch (err) { console.error("Error Firebase:", err); }
-        }
+                alert("✅ MIGRASI BERHASIL! Sekarang silakan Refresh halaman (F5).");
+            } catch (err) { alert("Error Migrasi: " + err.message); }
+        };
+    }
 
-        function renderAnalysis(year, s) {
-            const tbody = document.getElementById('formula-body');
-            const VWB = 0.02495, TIME = 31.536, RAIN = 163;
+    // --- 2. TAMPILKAN DATA ---
+    var map = L.map('map', {zoomControl: false}).setView([-7.810, 112.908], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    async function loadAllData() {
+        try {
+            const querySnapshot = await getDocs(collection(db, "monitoring_reboisasi"));
+            if (querySnapshot.empty) return; 
+
+            let years = [], treeCounts = [], rorakCounts = [], sipilLainCounts = [], waterCounts = [];
+            let total = { p:0, r:0, s:0, b:0, a:0 };
+            let speciesAgg = {};
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = ""; 
             
-            let resP = (s.trees / 400) * VWB * TIME * 0.75;
-            let resR = (s.rorak * 490 * 3 * RAIN) / 1000000;
-            let resS = (s.sumur * 754 * 3 * RAIN) / 1000000;
-            let resB = (s.biopori / 300) * 1.5;
+            let dataArr = [];
+            querySnapshot.forEach(doc => dataArr.push(doc.data()));
+            dataArr.sort((a, b) => a.year - b.year);
 
-            const total = resP + resR + resS + resB;
-            document.getElementById('total-water').innerText = total.toFixed(2);
+            dataArr.forEach((d) => {
+                const s = d.stats;
+                const year = d.year;
+                
+                let air = (year === 2024) ? 
+                    ((s.trees / 400) * 1.5) + (s.rorak * 0.17) : 
+                    ((s.trees / 400) * 0.02495 * 31.536 * 0.75) + ((s.rorak * 490 * 3 * 163) / 1000000) + ((s.sumur * 754 * 3 * 163) / 1000000) + ((s.biopori / 300) * 1.5);
+                
+                total.p += s.trees; total.r += s.rorak; total.s += s.sumur; total.b += s.biopori; total.a += air;
+                years.push(year);
+                treeCounts.push(s.trees);
+                rorakCounts.push(s.rorak);
+                sipilLainCounts.push(s.sumur + s.biopori);
+                waterCounts.push(air.toFixed(1));
 
-            const data = [
-                { itm: 'Pohon', vol: '400 phn/ha', f: `(${s.trees}/400)*${VWB}*${TIME}*75%`, val: resP },
-                { itm: 'Rorak', vol: '490 L', f: `(${s.rorak}*490*3*${RAIN})/1jt`, val: resR },
-                { itm: 'Sumur', vol: '754 L', f: `(${s.sumur}*754*3*${RAIN})/1jt`, val: resS },
-                { itm: 'Biopori', vol: 'Std', f: `(${s.biopori}/300)*1.5`, val: resB }
-            ];
+                if(d.species) { for(let sp in d.species) speciesAgg[sp] = (speciesAgg[sp] || 0) + d.species[sp]; }
 
-            data.forEach(r => {
-                if(r.val > 0) tbody.innerHTML += `<tr><td><b>${r.itm}</b></td><td>${r.vol}</td><td class="formula-text">${r.f}</td><td class="text-end fw-bold">${r.val.toFixed(2)}</td></tr>`;
+                if(d.areaPolygon) {
+                    try {
+                        const polyData = JSON.parse(d.areaPolygon);
+                        L.polygon(polyData, {color: '#c6ff00', fillOpacity: 0.1, weight: 1}).addTo(map);
+                    } catch(e) {}
+                }
+                
+                if(d.points) {
+                    d.points.forEach(pt => {
+                        if(pt.koordinat) {
+                            L.circleMarker([pt.koordinat.latitude, pt.koordinat.longitude], {radius: 3, color: '#c6ff00'}).addTo(map).bindPopup(pt.nama_pohon);
+                        }
+                    });
+                }
+
+                tbody.innerHTML += `<tr>
+                    <td class="fw-bold">${year}</td>
+                    <td class="small">${d.location}</td>
+                    <td class="text-center">${s.trees.toLocaleString()}</td>
+                    <td class="text-center">${s.rorak.toLocaleString()}</td>
+                    <td class="text-center">${s.sumur.toLocaleString()}</td>
+                    <td class="text-center">${s.biopori.toLocaleString()}</td>
+                    <td class="text-end fw-bold text-primary">${air.toFixed(1)}</td>
+                    <td class="text-center"><a href="konservasi-year-detail.html?id=${year}" class="btn-detail-neon">DETAIL</a></td>
+                </tr>`;
             });
 
-            new Chart(document.getElementById('chartWater'), {
-                type: 'bar',
-                data: { labels: ['Pohon', 'Rorak', 'Lainnya'], datasets: [{ data: [resP, resR, (resS+resB)], backgroundColor: ['#4caf50', '#795548', '#0277bd'] }] },
-                options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-        }
+            document.getElementById('t-pohon').innerText = total.p.toLocaleString();
+            document.getElementById('t-rorak').innerText = total.r.toLocaleString();
+            document.getElementById('t-sumur').innerText = total.s.toLocaleString();
+            document.getElementById('t-biopori').innerText = total.b.toLocaleString();
+            document.getElementById('t-air').innerText = total.a.toFixed(1);
 
-        loadData();
+            renderCharts(years, treeCounts, speciesAgg, rorakCounts, sipilLainCounts, waterCounts);
+        } catch (err) { console.error("Load Error:", err); }
+    }
+
+    function renderCharts(years, trees, species, rorak, sipil, water) {
+        Chart.defaults.color = '#888';
+        new Chart(document.getElementById('chartTrees'), { type: 'bar', data: { labels: years, datasets: [{ label: 'Pohon', data: trees, backgroundColor: '#c6ff00' }] }, options: { maintainAspectRatio: false } });
+        new Chart(document.getElementById('chartSpecies'), { type: 'doughnut', data: { labels: Object.keys(species), datasets: [{ data: Object.values(species), backgroundColor: ['#1b5e20', '#c6ff00', '#2e7d32', '#66bb6a', '#a5d6a7'] }] }, options: { maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: {boxWidth: 8, font: {size: 9}} } } } });
+        new Chart(document.getElementById('chartSipil'), { type: 'bar', data: { labels: years, datasets: [{ label: 'Rorak', data: rorak, backgroundColor: '#795548' }, { label: 'Sumur/Bio', data: sipil, backgroundColor: '#0277bd' }] }, options: { maintainAspectRatio: false } });
+        new Chart(document.getElementById('chartWater'), { type: 'line', data: { labels: years, datasets: [{ label: 'ML/Y', data: water, borderColor: '#c6ff00', fill: true, backgroundColor: 'rgba(198, 255, 0, 0.05)' }] }, options: { maintainAspectRatio: false } });
+    }
+
+    loadAllData();
     </script>
 </body>
 </html>
