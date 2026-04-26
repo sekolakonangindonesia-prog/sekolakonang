@@ -147,7 +147,7 @@
                         stats: item.stats,
                         species: item.species,
                         points: koordinatResmi,
-                        areaPolygon: item.areaPolygon,
+                        areaPolygon: JSON.stringify(item.areaPolygon),
                         photos: item.photos || []
                     };
                     await setDoc(doc(db, "monitoring_reboisasi", item.year.toString()), dataSiapKirim);
@@ -187,7 +187,11 @@
 
                     if(d.species) { for(let sp in d.species) speciesAgg[sp] = (speciesAgg[sp] || 0) + d.species[sp]; }
 
-                    if(d.areaPolygon) { L.polygon(d.areaPolygon, {color: '#c6ff00', fillOpacity: 0.2, weight: 1}).addTo(map); }
+                    if(d.areaPolygon) { 
+    // Bongkar kembali teks menjadi data koordinat
+    const polyData = JSON.parse(d.areaPolygon); 
+    L.polygon(polyData, {color: '#c6ff00', fillOpacity: 0.2, weight: 1}).addTo(map); 
+}
                     if(d.points) {
                         d.points.forEach(pt => L.circleMarker([pt.koordinat.latitude, pt.koordinat.longitude], {radius: 4, color: '#c6ff00'}).addTo(map).bindPopup(pt.nama_pohon));
                     }
