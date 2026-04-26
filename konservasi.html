@@ -162,70 +162,130 @@
         var map = L.map('map', {zoomControl: false}).setView([-7.810, 112.908], 12);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        async function loadAllData() {
+        // --- KODE REVISI UNTUK DETAIL TAHUNAN ---
+async function loadData() {
+    if(!docId) return;
+    const docSnap = await getDoc(doc(db, "monitoring_reboisasi", docId));
+    
+    if (docSnap.exists()) {
+        const d = docSnap.data();
+        const s = d.stats;
+
+        // 1. Update Teks Judul & Stats Atas
+        document.getElementById('title-year').innerText = "PROGRAM TAHUN " + d.year;
+        document.getElementById('title-loc').innerText = d.location;
+        document.getElementById('stat-trees').innerText = s.trees.toLocaleString();
+        document.getElementById('stat-rorak').innerText = s.rorak.toLocaleString();
+        document.getElementById('stat-sipil').innerText = `${s.sumur} Sumur + ${s.biopori} Biopori`;
+
+        // 2. Inisialisasi Peta (FIX KOORDINAT)
+        const map = L.map('map-detail', {zoomControl: false}).setView([-7.810, 112.908], 14);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        
+        // Baca Polygon yang dibungkus JSON
+        if(d.areaPolygon) {
             try {
-                const querySnapshot = await getDocs(collection(db, "monitoring_reboisasi"));
-                let years = [], treeCounts = [], rorakCounts = [], sipilLainCounts = [], waterCounts = [];
-                let total = { p:0, r:0, s:0, b:0, a:0 };
-                let speciesAgg = {};
-                const tbody = document.getElementById('tableBody');
-                
-                let dataArr = [];
-                querySnapshot.forEach(doc => dataArr.push({id: doc.id, ...doc.data()}));
-                dataArr.sort((a, b) => a.year - b.year);
+                const polyData = JSON.parse(d.areaPolygon);
+                L.polygon(polyData, {color: '#c6ff00', weight: 2, fillOpacity: 0.2}).addTo(map);
+                map.fitBounds(L.polygon(polyData).getBounds());
+            } catch(e) { console.error("Gagal parse polygon", e); }
+        }
 
-                dataArr.forEach((d) => {
-                    const s = d.stats;
-                    let air = (s.trees * 0.02) + (s.rorak * 0.17) + (s.sumur * 1.1) + (s.biopori * 0.005);
-                    
-                    total.p += s.trees; total.r += s.rorak; total.s += s.sumur; total.b += s.biopori; total.a += air;
-                    years.push(d.year);
-                    treeCounts.push(s.trees);
-                    rorakCounts.push(s.rorak);
-                    sipilLainCounts.push(s.sumur + s.biopori);
-                    waterCounts.push(air.toFixed(1));
+        // Baca Titik Koordinat (GeoPoint)
+        if(d.points) {
+            d.points.forEach(p => {
+                if(p.koordinat) {
+                    L.circleMarker([p.koordinat.latitude, p.koordinat.longitude], {
+                        radius: 5, color: '#ffab00', fillOpacity: 1
+                    }).addTo(map).bindPopup(p.nama_pohon);
+                }
+            });
+        }
 
-                    if(d.species) { for(let sp in d.species) speciesAgg[sp] = (speciesAgg[sp] || 0) + d.species[sp]; }
+        // 3. Species Chart (WARNA-WARNI)
+        const spKeys = Object.keys(d.species);
+        const spVals = Object.values(d.species);
+        const colors = ['#1b5e20', '#c6ff00', '#2e7d32', '#66bb6a', '#a5d6a7', '#81c784', '#4caf50'];
+        
+        new Chart(document.getElementById('chartSpecies'), {
+            type: 'doughnut',
+            data: {
+                labels: spKeys,
+                datasets: [{ data: spVals, backgroundColor: colors, borderWidth: 0 }]
+            },
+            options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
 
-                    if(d.areaPolygon) { 
-    // Bongkar kembali teks menjadi data koordinat
-    const polyData = JSON.parse(d.areaPolygon); 
-    L.polygon(polyData, {color: '#c6ff00', fillOpacity: 0.2, weight: 1}).addTo(map); 
+        const spList = document.getElementById('sp-list');
+        spKeys.forEach((key, index) => {
+            spList.innerHTML += `<div class="sp-list-item"><span>${key}</span> <b>${spVals[index]}</b></div>`;
+        });
+
+        // 4. Jalankan Analisis Perhitungan Sesuai Tahun
+        renderAnalysis(d.year, s);
+
+        // 5. Galeri Foto
+        const gallery = document.getElementById('gallery');
+        const photos = d.photos || [];
+        photos.forEach(src => {
+            gallery.innerHTML += `<div class="col-md-4 col-6"><img src="${src}" class="gallery-img" onclick="window.open(this.src)"></div>`;
+        });
+    }
 }
-                    if(d.points) {
-                        d.points.forEach(pt => L.circleMarker([pt.koordinat.latitude, pt.koordinat.longitude], {radius: 4, color: '#c6ff00'}).addTo(map).bindPopup(pt.nama_pohon));
-                    }
 
-                    tbody.innerHTML += `<tr>
-                        <td class="fw-bold">${d.year}</td>
-                        <td>${d.location}</td>
-                        <td class="text-center">${s.trees.toLocaleString()}</td>
-                        <td class="text-center">${s.rorak.toLocaleString()}</td>
-                        <td class="text-center">${s.sumur.toLocaleString()}</td>
-                        <td class="text-center">${s.biopori.toLocaleString()}</td>
-                        <td class="text-end fw-bold text-primary">${air.toFixed(1)}</td>
-                        <td class="text-center"><a href="konservasi-year-detail.html?id=${d.id}" class="btn-detail-neon">DETAIL</a></td>
-                    </tr>`;
-                });
+function renderAnalysis(year, s) {
+    const tbody = document.getElementById('formula-body');
+    const RAIN_DAYS = 163;
+    const TIME_FACTOR = 31.536;
+    const VWB = 0.02495;
 
-                document.getElementById('t-pohon').innerText = total.p.toLocaleString();
-                document.getElementById('t-rorak').innerText = total.r.toLocaleString();
-                document.getElementById('t-sumur').innerText = total.s.toLocaleString();
-                document.getElementById('t-biopori').innerText = total.b.toLocaleString();
-                document.getElementById('t-air').innerText = total.a.toFixed(1);
+    let res = { tree: 0, rorak: 0, sumur: 0, biopori: 0 };
+    let rows = [];
 
-                renderCharts(years, treeCounts, speciesAgg, rorakCounts, sipilLainCounts, waterCounts);
-            } catch (err) { console.error("Load Data Error: ", err); }
+    if (year == 2024) {
+        // Logika 2024 (Konstanta)
+        res.tree = (s.trees / 400) * 1.5;
+        res.rorak = s.rorak * 0.17;
+        res.sumur = s.sumur * 1.1;
+        
+        rows = [
+            { item: 'Pohon / Vegetasi', dim: 'Metode Konstanta', vol: '1.5 ML/Ha', formula: `(${s.trees.toLocaleString()}/400) * 1.5`, val: res.tree },
+            { item: 'Rorak (Trench)', dim: 'Metode Konstanta', vol: '0.17 ML', formula: `${s.rorak.toLocaleString()} * 0.17`, val: res.rorak }
+        ];
+    } else {
+        // Logika 2021-2023 (Manual Detail)
+        res.tree = (s.trees / 400) * VWB * TIME_FACTOR * 0.75;
+        res.rorak = (s.rorak * 490 * 3 * RAIN_DAYS) / 1000000;
+        res.sumur = (s.sumur * 754 * 3 * RAIN_DAYS) / 1000000;
+        res.biopori = (s.biopori / 300) * 1.5;
+
+        rows = [
+            { item: 'Pohon / Vegetasi', dim: `VWB: ${VWB} l/s/ha`, vol: 'Asumsi 400 phn/ha', formula: `(${s.trees.toLocaleString()}/400)*${VWB}*${TIME_FACTOR}*75%`, val: res.tree },
+            { item: 'Rorak (Trench)', dim: '1m x 0.7m x 0.7m', vol: '490 Liter', formula: `(${s.rorak.toLocaleString()}*490*3*${RAIN_DAYS})/1jt`, val: res.rorak },
+            { item: 'Sumur Resapan', dim: 'Dia 0.8m x T 1.5m', vol: '754 Liter', formula: `(${s.sumur}*754*3*${RAIN_DAYS})/1jt`, val: res.sumur },
+            { item: 'Biopori', dim: 'Std Biopori', vol: '1.5 ML', formula: `(${s.biopori}/300)*1.5`, val: res.biopori }
+        ];
+    }
+
+    const total = res.tree + res.rorak + res.sumur + res.biopori;
+    document.getElementById('total-water').innerText = total.toLocaleString('id-ID', {minimumFractionDigits:2});
+
+    rows.forEach(r => {
+        if(r.val > 0) {
+            tbody.innerHTML += `<tr><td><b>${r.item}</b><br><span class="badge-dim">${r.dim}</span></td><td>${r.vol}</td><td class="formula-text">${r.formula}</td><td class="text-end fw-bold">${r.val.toLocaleString('id-ID', {minimumFractionDigits:2})}</td></tr>`;
         }
+    });
 
-        function renderCharts(years, trees, species, rorak, sipil, water) {
-            const accent = '#c6ff00';
-            Chart.defaults.color = '#888';
-            new Chart(document.getElementById('chartTrees'), { type: 'bar', data: { labels: years, datasets: [{ label: 'Pohon', data: trees, backgroundColor: accent }] }, options: { maintainAspectRatio: false } });
-            new Chart(document.getElementById('chartSpecies'), { type: 'doughnut', data: { labels: Object.keys(species), datasets: [{ data: Object.values(species), backgroundColor: ['#1b5e20', accent, '#2e7d32', '#66bb6a', '#a5d6a7'] }] }, options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: {boxWidth: 8, font: {size: 9}} } } } });
-            new Chart(document.getElementById('chartSipil'), { type: 'bar', data: { labels: years, datasets: [{ label: 'Rorak', data: rorak, backgroundColor: '#795548' }, { label: 'Sumur/Bio', data: sipil, backgroundColor: '#0277bd' }] }, options: { maintainAspectRatio: false } });
-            new Chart(document.getElementById('chartWater'), { type: 'line', data: { labels: years, datasets: [{ label: 'ML/Y', data: water, borderColor: accent, fill: true, backgroundColor: 'rgba(198, 255, 0, 0.05)' }] }, options: { maintainAspectRatio: false } });
-        }
+    // Water Chart warnanya disesuaikan
+    new Chart(document.getElementById('chartWater'), {
+        type: 'bar',
+        data: {
+            labels: ['Pohon', 'Rorak', 'Sipil Lain'],
+            datasets: [{ data: [res.tree, res.rorak, (res.sumur + res.biopori)], backgroundColor: ['#43a047', '#795548', '#0277bd'], borderRadius: 5 }]
+        },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+}
 
         loadAllData();
     </script>
