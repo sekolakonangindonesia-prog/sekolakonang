@@ -212,25 +212,52 @@
 if(d.areaPolygon) {
     try {
         const polyData = JSON.parse(d.areaPolygon);
-        // Buat area menjadi interaktif
-        const area = L.polygon(polyData, {
-            color: '#c6ff00', 
-            fillOpacity: 0.1, 
-            weight: 2,
-            interactive: true // Memastikan area bisa diklik
-        }).addTo(map);
+        
+        // polyData bisa berisi Array Koordinat saja, atau Array Objek {name, coords, color}
+        polyData.forEach(item => {
+            let coords, color, name;
 
-        // Munculkan keterangan saat diklik (Desa Galih / Desa Petung berdasarkan data lokasi)
-        area.bindPopup(`<b>Area Konservasi</b><br>${d.location}<br>Tahun: ${d.year}`);
+            // Cek apakah ini format baru (Objek dengan Nama & Warna) atau format lama (Hanya Koordinat)
+            if (item.coords) {
+                coords = item.coords;
+                color = item.color || '#c6ff00';
+                name = item.name;
+            } else {
+                coords = item;
+                color = '#c6ff00';
+                name = (coords.length > 20) ? "Batas Desa Galih" : "Plot Konservasi"; 
+            }
 
-        // Efek Hover (Warna berubah saat kursor lewat)
-        area.on('mouseover', function() {
-            this.setStyle({ fillOpacity: 0.3, weight: 3 });
+            // Gambar polygon satu per satu
+            const area = L.polygon(coords, {
+                color: color,
+                fillColor: color,
+                fillOpacity: (name.includes("Batas Desa")) ? 0.05 : 0.2, // Desa dibuat sangat transparan supaya tidak menutupi yang lain
+                weight: (name.includes("Batas Desa")) ? 1 : 2,
+                interactive: true
+            }).addTo(map);
+
+            // Beri identitas unik pada popup
+            area.bindPopup(`
+                <div style="text-align:center">
+                    <strong style="color:#2e7d32">${name}</strong><br>
+                    <small>${d.location}</small><br>
+                    <b>Tahun: ${d.year}</b>
+                </div>
+            `);
+
+            // Pastikan area kecil selalu di depan area besar (Batas Desa)
+            if (!name.includes("Batas Desa")) {
+                area.bringToFront();
+            } else {
+                area.bringToBack();
+            }
+            
+            // Efek Hover
+            area.on('mouseover', function() { this.setStyle({ fillOpacity: 0.4 }); });
+            area.on('mouseout', function() { this.setStyle({ fillOpacity: (name.includes("Batas Desa")) ? 0.05 : 0.2 }); });
         });
-        area.on('mouseout', function() {
-            this.setStyle({ fillOpacity: 0.1, weight: 2 });
-        });
-    } catch(e) { console.error("Gagal memproses Polygon:", e); }
+    } catch(e) { console.error("Gagal load area:", e); }
 }
 
 // 2. Bagian Titik (Pohon/Rorak)
