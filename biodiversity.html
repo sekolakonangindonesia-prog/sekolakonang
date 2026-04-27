@@ -28,10 +28,12 @@
 
          /* --- MAP SECTION (GAYA SS2) --- */
        .map-card { 
-    background: var(--card-bg); border-radius: 15px; border: 1px solid var(--accent); 
-    overflow: hidden; margin: 40px 0; /* Memberi jarak ke atas dan bawah */
+    background: var(--card-bg); border-radius: 15px; border: 2px solid var(--accent); 
+    overflow: hidden; margin: 40px 0; width: 100%;
 }
 #map-kehati { height: 500px; width: 100%; background: #222; }
+
+        .stats-highlight-area { margin-top: 50px; margin-bottom: 50px; }
 
         .map-header { background: var(--accent); color: black; padding: 10px 20px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; }
         #map-kehati { height: 450px; width: 100%; background: #222; }
@@ -49,9 +51,9 @@
 
         /* BOOK GALLERY - MOCKUP 3D */
         .book-container { perspective: 1000px; margin-bottom: 30px; }
-        .book-grid { 
+       .book-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
     gap: 15px; 
     margin-top: 20px; 
 }
@@ -60,7 +62,7 @@
     transition: 0.3s; cursor: pointer; text-align: center;
 }
 .book-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-.book-cover { width: 100%; height: 240px; background: #222; border-radius: 5px; margin-bottom: 10px; overflow: hidden; }
+.book-cover { width: 100%; height: 220px; background: #222; border-radius: 5px; margin-bottom: 10px; overflow: hidden; }
 .book-cover img { width: 100%; height: 100%; object-fit: cover; }
 
         /* DATA TABLE - Professional White */
@@ -104,7 +106,7 @@
     <div class="container mt-5">
         <!-- 1. NARRATIVE (FULL WIDTH) -->
         <div class="row">
-            <div class="col-12 mb-5">
+            <div class="col-12 mb-4">
                 <div class="narrative-box">
                     <h2 class="global-title">Lentera Hayati: Dari Lereng Bromo untuk Keseimbangan Global</h2>
                     <div class="text-justify">
@@ -114,40 +116,40 @@
                     </div>
                 </div>
 
-                <!-- 2. PUBLIKASI (5 KOTAK DI BAWAH NARASI) -->
+                <!-- 2. PUBLIKASI (DI BAWAH NARASI - 5 KOTAK) -->
                 <h6 class="small fw-bold text-white-50 mt-5 mb-3 uppercase tracking-widest text-center">
                     <i class="fas fa-book-open me-2 text-accent"></i> Publikasi Ilmiah Kami
                 </h6>
                 <div class="book-grid">
                     <div class="book-card">
-                        <div class="book-cover"><img src="kehatigambar.jpg"></div>
+                        <div class="book-cover"><img src="kehatigambar.jpg" onerror="this.src='https://via.placeholder.com/200x300?text=Baseline+2020'"></div>
                         <span class="small fw-bold d-block">BASELINE 2020</span>
                     </div>
                     <div class="book-card">
-                        <div class="book-cover"><img src="kehatigambar2.jpg"></div>
+                        <div class="book-cover"><img src="kehatigambar2.jpg" onerror="this.src='https://via.placeholder.com/200x300?text=Monitoring+2023'"></div>
                         <span class="small fw-bold d-block">MONITORING 2023</span>
                     </div>
                     <div class="book-card">
-                        <div class="book-cover"><img src="https://via.placeholder.com/200x300?text=Next+Report"></div>
+                        <div class="book-cover"><img src="https://via.placeholder.com/200x300?text=Report+2024"></div>
                         <span class="small fw-bold d-block">REPORT 2024</span>
                     </div>
                     <div class="book-card">
-                        <div class="book-cover"><img src="https://via.placeholder.com/200x300?text=Next+Report"></div>
+                        <div class="book-cover"><img src="https://via.placeholder.com/200x300?text=Report+2025"></div>
                         <span class="small fw-bold d-block">REPORT 2025</span>
                     </div>
                     <div class="book-card">
-                        <div class="book-cover"><img src="https://via.placeholder.com/200x300?text=Next+Report"></div>
+                        <div class="book-cover"><img src="https://via.placeholder.com/200x300?text=Future+Data"></div>
                         <span class="small fw-bold d-block">COMING SOON</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 3. MAP SECTION (FULL ADJUSTED) -->
+        <!-- 3. MAP SECTION (FULL WIDTH ADJUSTED) -->
         <div class="map-card">
             <div class="map-header d-flex justify-content-between align-items-center">
                 <span><i class="fas fa-map-marker-alt me-2"></i> Peta Sebaran & Delineasi Area Monitoring</span>
-                <span class="badge bg-dark border border-secondary">GOOGLE HYBRID</span>
+                <span class="badge bg-dark border border-secondary">GLOBAL SATELLITE</span>
             </div>
             <div id="map-kehati"></div>
             <div class="map-footer">
@@ -160,21 +162,21 @@
             </div>
         </div>
 
-        <!-- 4. STATS HIGHLIGHT (DI BAWAH PETA) -->
-        <div class="row g-3 justify-content-center">
-            <div class="col-md-3">
+        <!-- 4. STATS HIGHLIGHT (JARAK DISESUAIKAN) -->
+        <div class="row g-3 justify-content-center stats-highlight-area">
+            <div class="col-6 col-md-3">
                 <div class="p-3 rounded-4 bg-dark border border-secondary text-center">
                     <h2 class="fw-black mb-0" style="color:var(--accent); font-size: 1.5rem;">201+</h2>
                     <small class="text-muted uppercase font-bold" style="font-size: 0.55rem;">Spesies Flora</small>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="p-3 rounded-4 bg-dark border border-secondary text-center">
                     <h2 class="fw-black mb-0" style="color:var(--accent); font-size: 1.5rem;">25+</h2>
                     <small class="text-muted uppercase font-bold" style="font-size: 0.55rem;">Spesies Burung</small>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-md-3">
                 <div class="p-3 rounded-4 bg-dark border border-secondary text-center">
                     <h2 class="fw-black mb-0" style="color:var(--accent); font-size: 1.5rem;">Sangat Baik</h2>
                     <small class="text-muted uppercase font-bold" style="font-size: 0.55rem;">Status Indeks H'</small>
