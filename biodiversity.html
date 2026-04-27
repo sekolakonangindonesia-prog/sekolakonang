@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Biodiversity Monitoring - Sekola Konang</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --accent: #c6ff00; --dark: #050505; --sk-blue: #0277bd; }
+        body { font-family: 'Montserrat', sans-serif; background-color: var(--dark); color: #eee; overflow-x: hidden; }
+
+        /* HERO - Sinematik */
+        .hero-kehati {
+            background: linear-gradient(rgba(0,0,0,0.6), var(--dark)), url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=1350') center/cover;
+            padding: 120px 0 80px; text-align: center; border-bottom: 3px solid var(--accent);
+        }
+
+        /* NARRATIVE SECTION */
+        .narrative-box { border-left: 4px solid var(--accent); padding-left: 25px; margin-bottom: 40px; }
+        .global-title { font-weight: 800; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
+        .text-justify { text-align: justify; line-height: 1.8; opacity: 0.9; }
+
+        /* BOOK GALLERY - MOCKUP 3D */
+        .book-container { perspective: 1000px; margin-bottom: 30px; }
+        .book-card {
+            background: #111; border: 1px solid #222; border-radius: 15px; padding: 15px;
+            transition: 0.4s; cursor: pointer; position: relative;
+        }
+        .book-card:hover { transform: rotateY(-10deg) translateY(-10px); border-color: var(--accent); box-shadow: 15px 15px 30px rgba(0,0,0,0.5); }
+        .book-cover {
+            width: 100%; height: 320px; background: #222; border-radius: 5px;
+            overflow: hidden; box-shadow: 3px 3px 10px rgba(0,0,0,0.3); margin-bottom: 15px;
+        }
+        .book-cover img { width: 100%; height: 100%; object-fit: cover; }
+        .book-badge { position: absolute; top: 25px; right: 25px; background: var(--sk-blue); color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.6rem; font-weight: 800; }
+
+        /* DATA TABLE - Professional White */
+        .card-table { background: white; border-radius: 20px; overflow: hidden; color: #333; margin-top: 50px; }
+        .table-kehati th { background: #f8f9fa; color: #000; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; padding: 15px; border-bottom: 2px solid #eee; }
+        .table-kehati td { padding: 15px; border-bottom: 1px solid #f0f0f0; font-weight: 600; font-size: 0.85rem; }
+
+        /* MOBILE OPTIMIZATION */
+        @media (max-width: 768px) {
+            .hero-kehati { padding: 80px 0 40px; }
+            .display-4 { font-size: 2rem; }
+            .book-cover { height: 250px; }
+            .stat-badge { font-size: 1.5rem !important; }
+        }
+
+        .footer-sk { text-align: center; padding: 50px 0; font-size: 0.6rem; font-weight: 700; letter-spacing: 3px; opacity: 0.4; }
+    </style>
+</head>
+<body>
+
+    <!-- HERO SECTION -->
+    <div class="hero-kehati">
+        <div class="container">
+            <h1 class="fw-black display-4 italic">BIODIVERSITY <span style="color:var(--accent)">MONITORING</span></h1>
+            <p class="small uppercase tracking-widest text-white-50 mb-5" style="letter-spacing: 6px;">Building Ecosystem Resilience for Future Generations</p>
+            <a href="index.html" class="btn btn-outline-light btn-sm rounded-pill px-4" style="font-size: 0.7rem; font-weight: 700;">KEMBALI KE MENU UTAMA</a>
+        </div>
+    </div>
+
+    <div class="container mt-5">
+        <!-- NARRATIVE & GLOBAL SYNERGY -->
+        <div class="row align-items-start mb-5">
+            <div class="col-lg-7 mb-5">
+                <div class="narrative-box">
+                    <h2 class="global-title">Lentera Hayati: Dari Lereng Bromo untuk Keseimbangan Global</h2>
+                    <div class="text-justify">
+                        Biodiversitas bukan sekadar statistik, melainkan jaring penyangga kehidupan global. Di tengah ancaman krisis iklim dan degradasi lahan, <strong>Yayasan Sekola Konang Indonesia</strong> hadir sebagai jembatan ilmiah untuk memulihkan ekosistem. Kami percaya bahwa kesehatan sebuah kawasan industri atau perkotaan dapat diukur dari seberapa tangguh keanekaragaman hayati di dalamnya.
+                        <br><br>
+                        Mengadopsi standar <em>Baseline Study</em> yang komprehensif dan monitoring berkala, kami menerapkan metodologi ilmiah kelas dunia seperti Indeks Shanon-Wiener (H') dan Indeks Kekayaan Margalef (DMg). Kami menciptakan model pelestarian yang dapat direplikasi di berbagai wilayah nusantara bersama mitra strategis kami untuk mencapai target keberlanjutan global.
+                    </div>
+                </div>
+                
+                <!-- STATS HIGHLIGHT -->
+                <div class="row g-3">
+                    <div class="col-6 col-md-4">
+                        <div class="p-3 rounded-4 bg-dark border border-secondary text-center">
+                            <h2 class="fw-black mb-0 stat-badge" style="color:var(--accent)">201+</h2>
+                            <small class="text-muted uppercase font-bold" style="font-size: 0.55rem;">Spesies Flora</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="p-3 rounded-4 bg-dark border border-secondary text-center">
+                            <h2 class="fw-black mb-0 stat-badge" style="color:var(--accent)">25+</h2>
+                            <small class="text-muted uppercase font-bold" style="font-size: 0.55rem;">Spesies Burung</small>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 rounded-4 bg-dark border border-secondary text-center">
+                            <h2 class="fw-black mb-0 stat-badge" style="color:var(--accent)">Sangat Baik</h2>
+                            <small class="text-muted uppercase font-bold" style="font-size: 0.55rem;">Status Indeks H'</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIGITAL LIBRARY (COVER BUKU) -->
+            <div class="col-lg-5">
+                <div class="ps-lg-4">
+                    <h6 class="small fw-bold text-white-50 mb-4 uppercase tracking-widest"><i class="fas fa-book-open me-2 text-accent"></i> Publikasi Ilmiah Kami</h6>
+                    <div class="row">
+                        <!-- Buku 1: Baseline 2020 -->
+                        <div class="col-6 book-container">
+                            <div class="book-card">
+                                <span class="book-badge">Baseline</span>
+                                <div class="book-cover">
+                                    <!-- MASUKKAN LINK COVER BUKU BASELINE STUDY 2020 -->
+                                    <img src="https://via.placeholder.com/200x300?text=Cover+Baseline+2020" alt="Baseline Study 2020">
+                                </div>
+                                <h6 class="small fw-bold mb-1">Baseline Study</h6>
+                                <small class="opacity-50">Tahun 2020</small>
+                            </div>
+                        </div>
+                        <!-- Buku 2: Monitoring 2023 -->
+                        <div class="col-6 book-container">
+                            <div class="book-card">
+                                <span class="book-badge">Monitoring</span>
+                                <div class="book-cover">
+                                    <!-- MASUKKAN LINK COVER BUKU MONITORING 2023 -->
+                                    <img src="https://via.placeholder.com/200x300?text=Cover+Monitoring+2023" alt="Monitoring 2023">
+                                </div>
+                                <h6 class="small fw-bold mb-1">Biodiversity Log</h6>
+                                <small class="opacity-50">Tahun 2023</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABEL DATA (LOG DATA TERKINI) -->
+        <div class="card-table shadow-lg">
+            <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
+                <h5 class="m-0 fw-bold small uppercase tracking-widest text-dark"><i class="fas fa-database me-2 text-primary"></i> Log Database Kehati</h5>
+                <span class="badge bg-success rounded-pill" style="font-size:0.6rem">UPDATED 2025</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-kehati mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Lokasi Pantau</th>
+                            <th class="text-center">Tahun</th>
+                            <th class="text-center">Indeks Shanon (H')</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kehati-table-body">
+                        <!-- Data otomatis dari Firebase -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer-sk">@ Yayasan Sekola Konang Indonesia</div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Konfigurasi Firebase Bapak
+        const firebaseConfig = {
+            apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+            authDomain: "sekola-konang.firebaseapp.com",
+            projectId: "sekola-konang",
+            storageBucket: "sekola-konang.firebasestorage.app",
+            messagingSenderId: "9338352073",
+            appId: "1:9338352073:web:b56481b836888b1a8bf818"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadKehatiData() {
+            const tbody = document.getElementById('kehati-table-body');
+            try {
+                const querySnapshot = await getDocs(collection(db, "monitoring_kehati"));
+                querySnapshot.forEach((doc) => {
+                    const d = doc.data();
+                    let statusColor = d.index_h > 3 ? 'success' : (d.index_h > 2 ? 'warning' : 'danger');
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><i class="fas fa-map-marker-alt text-danger me-2"></i> ${d.location}</td>
+                            <td class="text-center">${d.year}</td>
+                            <td class="text-center fw-bold text-primary">${d.index_h}</td>
+                            <td class="text-center">
+                                <span class="badge bg-${statusColor} uppercase p-2" style="font-size:0.6rem; width:100px;">${d.status}</span>
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-dark fw-bold rounded-pill px-3" style="font-size:0.6rem">DETAIL</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (e) { console.error(e); }
+        }
+        loadKehatiData();
+    </script>
+</body>
+</html>
