@@ -210,11 +210,11 @@
     </div>
 
     <!-- Scripts -->
-    <script type="module">
+   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Konfigurasi Firebase Bapak
+    // 1. Konfigurasi Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
         authDomain: "sekola-konang.firebaseapp.com",
@@ -226,32 +226,32 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- INISIALISASI PETA (VERSI STABIL) ---
-    // Gunakan id 'map-kehati' sesuai dengan div di HTML
+    // 2. INISIALISASI PETA (DIPINDAH KE ATAS AGAR CEPAT MUNCUL)
+    // Kita gunakan link CartoDB yang sangat ringan dan stabil
     var map = L.map('map-kehati', {
         zoomControl: true,
-        scrollWheelZoom: false // Supaya tidak mengganggu saat scroll halaman
+        scrollWheelZoom: false
     }).setView([-7.810, 112.908], 13);
 
-    // --- PILIHAN TILE LAYER (Ganti ke Esri atau Google yang lebih stabil) ---
-    // Esri World Imagery (Satelit yang sangat stabil dan tajam)
-    var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Esri, DigitalGlobe, GeoEye, Earthstar Geographics'
+    // Gunakan tema Dark Matter agar senada dengan web Bapak
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
     }).addTo(map);
 
-    // Tambahkan label jalan/nama tempat di atas satelit (Hybrid)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-        pane: 'shadowPane' // Menaruh label di lapisan atas
-    }).addTo(map);
+    // Paksa peta muncul meskipun loading belum selesai
+    setTimeout(function(){ 
+        map.invalidateSize();
+    }, 100);
 
-    // Memastikan peta merender ulang saat halaman terbuka
-    setTimeout(function(){ map.invalidateSize()}, 500);
-
-    // --- LOAD DATA DARI FIREBASE ---
+    // 3. LOAD DATA DARI FIREBASE (JALAN DI BELAKANG LAYAR)
     async function loadKehatiData() {
         const tbody = document.getElementById('kehati-table-body');
+        if(!tbody) return;
+
         try {
             const querySnapshot = await getDocs(collection(db, "monitoring_kehati"));
+            tbody.innerHTML = ""; // Bersihkan loading
+            
             querySnapshot.forEach((doc) => {
                 const d = doc.data();
                 let statusColor = d.index_h > 3 ? 'success' : (d.index_h > 2 ? 'warning' : 'danger');
@@ -270,8 +270,12 @@
                     </tr>
                 `;
             });
-        } catch (e) { console.error("Gagal ambil data:", e); }
+        } catch (e) { 
+            console.error("Firebase Error:", e);
+            tbody.innerHTML = "<tr><td colspan='5' class='text-center'>Gagal memuat data dari database.</td></tr>";
+        }
     }
+
     loadKehatiData();
 </script>
 </body>
