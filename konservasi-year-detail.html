@@ -5,203 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detail Tahunan - Sekola Konang</title>
     
-    <!-- Library -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root { --accent: #c6ff00; --dark: #050505; --card-bg: #121212; --border: #333; }
         body { font-family: 'Montserrat', sans-serif; background-color: var(--dark); color: #eee; padding-bottom: 50px; }
 
-        /* --- HEADER --- */
         .hero-header { 
             background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1350&q=80') center/cover;
             padding: 60px 0 80px; text-align: center; border-bottom: 3px solid var(--accent);
         }
-        .btn-back-nav { 
-            background: transparent; border: 1px solid var(--accent); color: var(--accent); 
-            font-size: 0.7rem; font-weight: 800; border-radius: 50px; padding: 8px 20px; transition: 0.3s;
-        }
+        .btn-back-nav { background: transparent; border: 1px solid var(--accent); color: var(--accent); font-size: 0.7rem; font-weight: 800; border-radius: 50px; padding: 8px 20px; text-decoration: none; transition: 0.3s; }
         .btn-back-nav:hover { background: var(--accent); color: black; }
 
-        /* --- STAT BOXES (3 Kolom) --- */
         .stat-box-container { margin-top: -40px; }
-        .stat-box { 
-            background: white; border-radius: 12px; padding: 25px; text-align: center; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); color: #333; height: 100%;
-        }
-        .stat-box i { font-size: 1.5rem; margin-bottom: 15px; }
-        .stat-box .val { font-size: 2.2rem; font-weight: 800; display: block; line-height: 1; }
-        .stat-box label { font-size: 0.7rem; font-weight: 700; color: #888; text-transform: uppercase; margin-top: 10px; display: block;}
+        .stat-box { background: white; border-radius: 12px; padding: 25px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); color: #333; height: 100%; }
+        .stat-box i { font-size: 1.5rem; margin-bottom: 10px; }
+        .stat-box .val { font-size: 2rem; font-weight: 800; display: block; line-height: 1; }
+        .stat-box label { font-size: 0.65rem; font-weight: 700; color: #888; text-transform: uppercase; margin-top: 8px; display: block;}
 
-        /* --- CARDS & MAP --- */
         .ui-card { background: var(--card-bg); border-radius: 15px; border: 1px solid var(--border); padding: 20px; height: 100%; }
-        .ui-title { font-size: 0.8rem; font-weight: 800; color: var(--accent); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;}
+        .ui-title { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;}
         #map-detail { height: 350px; width: 100%; border-radius: 10px; border: 1px solid #333; }
 
-        /* --- SPECIES LIST --- */
-        .sp-list-item { font-size: 0.8rem; padding: 8px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; opacity: 0.8; }
-        .sp-list-item b { color: var(--accent); }
+        .water-summary-box { background: linear-gradient(135deg, #0277bd, #01579b); color: white; border-radius: 15px; padding: 30px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; }
 
-        /* --- HYDROLOGY BOX --- */
-        .water-summary-box { 
-            background: linear-gradient(135deg, #0277bd, #01579b); color: white; 
-            border-radius: 15px; padding: 30px; text-align: center; height: 100%;
-            display: flex; flex-direction: column; justify-content: center;
-        }
-
-        /* --- TABLE --- */
-        .table-formula { background: white; border-radius: 10px; overflow: hidden; font-size: 0.8rem; color: black !important; }
-        .table-formula thead th { background: #f1f1f1; font-weight: 800; text-transform: uppercase; font-size: 0.65rem; border: 1px solid #ddd; }
+        .table-formula { background: white; border-radius: 10px; overflow: hidden; font-size: 0.75rem; color: black !important; }
+        .table-formula thead th { background: #f1f1f1; font-weight: 800; text-transform: uppercase; font-size: 0.6rem; border: 1px solid #ddd; padding: 10px; }
         .table-formula td { border: 1px solid #eee; padding: 10px; }
         .formula-text { font-family: 'Courier New', monospace; color: #d32f2f; font-weight: bold; }
-        .badge-dim { font-size: 0.6rem; background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 4px; margin-top: 5px; display: inline-block; }
+        .badge-dim { font-size: 0.6rem; background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 4px; margin-top: 5px; display: inline-block; font-style: italic;}
 
-      .formula-text { 
-    font-family: 'Courier New', monospace; 
-    color: #d32f2f !important; /* Warna Merah Rumus */
-    font-weight: bold; 
-    font-size: 0.85rem; 
-}
-.badge-dim { 
-    font-size: 0.65rem; 
-    color: #e65100; 
-    background: #fff3e0; 
-    padding: 2px 6px; 
-    border-radius: 4px; 
-    font-style: italic;
-}
+        .gallery-img { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; border: 1px solid #333; cursor: pointer; }
 
-        /* --- GALLERY --- */
-        .gallery-img { width: 100%; height: 200px; object-fit: cover; border-radius: 12px; border: 1px solid #333; }
-
-        @media (max-width: 768px) {
-            .stat-box { margin-bottom: 10px; }
-            .display-5 { font-size: 1.8rem; }
-        }
+        @media (max-width: 768px) { .stat-box { margin-bottom: 10px; } .display-5 { font-size: 1.6rem; } }
     </style>
 </head>
 <body>
 
-    <!-- HEADER -->
     <div class="hero-header">
         <div class="container">
-            <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" height="55" class="mb-3">
+            <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" height="50" class="mb-3">
             <h1 class="fw-bold display-5" id="title-year">PROGRAM TAHUN ...</h1>
-            <p id="title-loc" class="small opacity-50 uppercase tracking-widest">MEMUAT DATA LOKASI...</p>
-            <a href="konservasi.html" class="btn btn-back-nav mt-3"><i class="fas fa-arrow-left me-2"></i> KEMBALI KE DASHBOARD</a>
+            <p id="title-loc" class="small opacity-50 uppercase tracking-widest">Memuat lokasi...</p>
+            <a href="konservasi.html" class="btn-back-nav mt-3"><i class="fas fa-arrow-left me-2"></i> KEMBALI KE DASHBOARD</a>
         </div>
     </div>
 
     <div class="container">
-        <!-- 3 STATS UTAMA -->
         <div class="row g-3 stat-box-container mb-4">
-            <div class="col-md-4">
-                <div class="stat-box">
-                    <i class="fas fa-tree text-success"></i>
-                    <span class="val" id="stat-trees">0</span>
-                    <label>Pohon Ditanam</label>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-box">
-                    <i class="fas fa-inbox" style="color:#795548"></i>
-                    <span class="val" id="stat-rorak">0</span>
-                    <label>Rorak Terbangun</label>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-box">
-                    <i class="fas fa-water text-primary"></i>
-                    <span class="val text-primary" id="stat-sipil">0 Unit</span>
-                    <label>Sumur & Biopori</label>
-                </div>
-            </div>
+            <div class="col-md-4"><div class="stat-box"><i class="fas fa-tree text-success"></i><span class="val" id="stat-trees">0</span><label>Pohon Ditanam</label></div></div>
+            <div class="col-md-4"><div class="stat-box"><i class="fas fa-inbox" style="color:#795548"></i><span class="val" id="stat-rorak">0</span><label>Rorak Terbangun</label></div></div>
+            <div class="col-md-4"><div class="stat-box"><i class="fas fa-water text-primary"></i><span class="val text-primary" id="stat-sipil">0 Unit</span><label>Sumur & Biopori</label></div></div>
         </div>
 
-        <!-- PETA & KOMPOSISI -->
         <div class="row g-4 mb-4">
-            <div class="col-lg-7">
-                <div class="ui-card">
-                    <div class="ui-title">Peta Sebaran</div>
-                    <div id="map-detail"></div>
-                </div>
-            </div>
-            <div class="col-lg-5">
-                <div class="ui-card">
-                    <div class="ui-title">Komposisi Tanaman</div>
-                    <div style="height: 200px;"><canvas id="chartSpecies"></canvas></div>
-                    <div id="sp-list" class="mt-4">
-                        <!-- List dari Firebase -->
+            <div class="col-lg-7"><div class="ui-card"><div class="ui-title">Peta Sebaran</div><div id="map-detail"></div></div></div>
+            <div class="col-lg-5"><div class="ui-card"><div class="ui-title">Komposisi Tanaman</div><div style="height: 250px;"><canvas id="chartSpecies"></canvas></div><div id="sp-list" class="mt-3" style="max-height: 150px; overflow-y: auto;"></div></div></div>
+        </div>
+
+        <div class="ui-card border-top border-4 border-primary">
+            <div class="ui-title text-primary"><i class="fas fa-calculator me-2"></i> Analisis & Perhitungan Infiltrasi Air</div>
+            <div class="row g-4 mb-4 align-items-center">
+                <div class="col-lg-8"><div style="height: 250px;"><canvas id="chartWater"></canvas></div></div>
+                <div class="col-lg-4">
+                    <div class="water-summary-box shadow">
+                        <i class="fas fa-tint fa-3x mb-3 opacity-25"></i>
+                        <h2 class="fw-bold display-5 mb-0" id="total-water">0,00</h2>
+                        <span class="fw-bold small uppercase tracking-widest">ML / Year Kumulatif</span>
+                        <p class="small opacity-75 mt-2 mb-0">Total Replenished Water</p>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ANALISIS HIDROLOGI -->
-<div class="ui-card border-top border-4 border-primary">
-    <div class="ui-title text-primary"><i class="fas fa-calculator me-2"></i> Analisis & Perhitungan Infiltrasi Air</div>
-    <div class="row g-4 mb-4 align-items-center">
-        <!-- Diagram -->
-        <div class="col-lg-8">
-            <div style="height: 250px;">
-                <canvas id="chartWaterDetail"></canvas>
+            <div class="table-responsive">
+                <table class="table table-formula align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Item & Dimensi</th>
+                            <th style="width: 15%;">Volume</th>
+                            <th style="width: 45%;">Formula Perhitungan (Manual Detail)</th>
+                            <th class="text-end">Hasil (ML/Y)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="formula-body"></tbody>
+                </table>
             </div>
         </div>
-        <!-- Kotak Total -->
-        <div class="col-lg-4">
-            <div class="water-summary-box shadow">
-                <i class="fas fa-tint fa-3x mb-3 opacity-25"></i>
-                <h2 class="fw-bold display-5 mb-0" id="total-water-val">0,00</h2>
-                <span class="fw-bold small uppercase tracking-widest">Total Replenished Water</span>
-                <p class="small opacity-75 mt-2 mb-0">(ML/Year Kumulatif)</p>
-            </div>
-        </div>
-    </div>
 
-    <!-- TABEL RUMUS MANUAL -->
-    <div class="table-responsive">
-        <table class="table table-formula align-middle mb-0">
-            <thead>
-                <tr>
-                    <th style="width: 25%;">ITEM & DIMENSI</th>
-                    <th style="width: 15%;">VOLUME SATUAN</th>
-                    <th style="width: 45%;">FORMULA PERHITUNGAN (MANUAL DETAIL)</th>
-                    <th class="text-end">HASIL (ML/Y)</th>
-                </tr>
-            </thead>
-            <tbody id="formula-body">
-                <!-- Baris akan diisi oleh JavaScript -->
-            </tbody>
-            <tfoot>
-                <tr style="background-color: #f8fbff; font-weight: bold;">
-                    <td colspan="3" class="text-end text-primary uppercase small tracking-widest">Total Infiltrasi Tahun <span id="footer-year">...</span></td>
-                    <td class="text-end text-primary" id="footer-total">0,00</td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-    <!-- Catatan Formula -->
-    <div class="alert alert-light border mt-3 py-2 px-3 small text-muted">
-        <i class="fas fa-info-circle me-1"></i> <strong>Catatan Formula:</strong> Perhitungan menggunakan parameter hidrologi spesifik tahun terkait (Curah hujan, VWB, dan Dimensi Fisik).
-    </div>
-</div>
-
-        <!-- DOKUMENTASI -->
         <div class="ui-card mt-4 mb-5">
             <div class="ui-title"><i class="fas fa-camera me-2"></i> Dokumentasi Lapangan</div>
-            <div class="row g-3" id="gallery">
-                <!-- Foto-foto -->
-            </div>
+            <div class="row g-3" id="gallery"></div>
         </div>
     </div>
 
-    <!-- Scripting -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -231,136 +133,96 @@
 
                 document.getElementById('title-year').innerText = "PROGRAM TAHUN " + d.year;
                 document.getElementById('title-loc').innerText = d.location;
-                document.getElementById('stat-trees').innerText = s.trees.toLocaleString();
-                document.getElementById('stat-rorak').innerText = s.rorak.toLocaleString();
+                document.getElementById('stat-trees').innerText = s.trees.toLocaleString('id-ID');
+                document.getElementById('stat-rorak').innerText = s.rorak.toLocaleString('id-ID');
                 document.getElementById('stat-sipil').innerText = `${s.sumur} Sumur + ${s.biopori} Biopori`;
 
                 // Peta
                 const map = L.map('map-detail', {zoomControl: false}).setView([-7.810, 112.908], 13);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-                if(d.areaPolygon) L.polygon(d.areaPolygon, {color: '#c6ff00', weight: 2, fillOpacity: 0.2}).addTo(map);
-                if(d.points) d.points.forEach(p => L.circleMarker([p.latitude, p.longitude], {radius: 5, color: '#ffab00', fillOpacity: 1}).addTo(map));
-                if(d.areaPolygon) map.fitBounds(L.polygon(d.areaPolygon).getBounds());
+                
+                if(d.areaPolygon) {
+                    try {
+                        const polyData = JSON.parse(d.areaPolygon);
+                        L.polygon(polyData, {color: '#c6ff00', weight: 2, fillOpacity: 0.2}).addTo(map);
+                        map.fitBounds(L.polygon(polyData).getBounds());
+                    } catch(e) {}
+                }
+                
+                if(d.points) {
+                    d.points.forEach(p => {
+                        if(p.koordinat) {
+                            L.circleMarker([p.koordinat.latitude, p.koordinat.longitude], {radius: 5, color: '#ffab00', fillOpacity: 1}).addTo(map).bindPopup(p.nama_pohon);
+                        }
+                    });
+                }
 
                 // Species Chart
                 const spKeys = Object.keys(d.species);
                 const spVals = Object.values(d.species);
                 new Chart(document.getElementById('chartSpecies'), {
                     type: 'doughnut',
-                    data: { labels: spKeys, datasets: [{ data: spVals, backgroundColor: ['#1b5e20', '#c6ff00', '#2e7d32', '#66bb6a', '#a5d6a7'] }] },
+                    data: { labels: spKeys, datasets: [{ data: spVals, backgroundColor: ['#1b5e20', '#c6ff00', '#2e7d32', '#66bb6a', '#a5d6a7', '#004d40', '#00c853'] }] },
                     options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
                 const spList = document.getElementById('sp-list');
-                spKeys.forEach((key, index) => {
-                    spList.innerHTML += `<div class="sp-list-item"><span>${key}</span> <b>${spVals[index]}</b></div>`;
+                spKeys.forEach((key, i) => {
+                    spList.innerHTML += `<div style="display:flex; justify-content:space-between; font-size:0.75rem; padding:4px 0; border-bottom:1px solid #222; opacity:0.8;"><span>${key}</span> <b>${spVals[i]}</b></div>`;
                 });
 
-                // Perhitungan Air (Sesuai Referensi SS Anda)
+                // Analisis Air
                 renderAnalysis(d.year, s);
 
                 // Gallery
                 const gal = document.getElementById('gallery');
-                const photos = d.photos || [
-                    "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=500",
-                    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=500",
-                    "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=500"
-                ];
-                photos.slice(0,3).forEach(src => {
-                    gal.innerHTML += `<div class="col-md-4 col-6"><img src="${src}" class="gallery-img"></div>`;
-                });
+                if(d.photos && d.photos.length > 0) {
+                    d.photos.forEach(src => { gal.innerHTML += `<div class="col-md-4 col-6"><img src="${src}" class="gallery-img" onclick="window.open(this.src)"></div>`; });
+                }
             }
         }
 
         function renderAnalysis(year, s) {
-    const tbody = document.getElementById('formula-body');
-    tbody.innerHTML = ""; // Bersihkan tabel
-    
-    const RAIN_DAYS = 163;
-    const TIME_FACTOR = 31.536;
-    const VWB = 0.02495;
+            const tbody = document.getElementById('formula-body');
+            const VWB = 0.02495;
+            const TIME = 31.536;
+            const RAIN = 163;
 
-    // Perhitungan Sesuai Gambar
-    const resPohon = (s.trees / 400) * VWB * TIME_FACTOR * 0.75;
-    const resRorak = (s.rorak * 490 * 3 * RAIN_DAYS) / 1000000;
-    const resSumur = (s.sumur * 754 * 3 * RAIN_DAYS) / 1000000;
-    const resBiopori = (s.biopori / 300) * 1.5;
-    
-    const total = resPohon + resRorak + resSumur + resBiopori;
-
-    // Update Angka di UI
-    document.getElementById('total-water-val').innerText = total.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2});
-    document.getElementById('footer-total').innerText = total.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2});
-    document.getElementById('footer-year').innerText = year;
-
-    // Susun Baris Tabel Manual (Persis Gambar)
-    const rows = [
-        { 
-            item: 'Pohon / Vegetasi', 
-            dim: `VWB: ${VWB} l/s/ha`, 
-            vol: 'Asumsi 400 phn/ha', 
-            formula: `(${s.trees.toLocaleString()}/400) * ${VWB} * ${TIME_FACTOR} * 75%`, 
-            val: resPohon 
-        },
-        { 
-            item: 'Rorak (Trench)', 
-            dim: '1m x 0.7m x 0.7m', 
-            vol: '490 Liter', 
-            formula: `(${s.rorak.toLocaleString()} * 490 * 3 * ${RAIN_DAYS}) / 1.000.000`, 
-            val: resRorak 
-        },
-        { 
-            item: 'Sumur Resapan', 
-            dim: 'Dia 0.8m x T 1.5m', 
-            vol: '754 Liter', 
-            formula: `(${s.sumur.toLocaleString()} * 754 * 3 * ${RAIN_DAYS}) / 1.000.000`, 
-            val: resSumur 
-        },
-        { 
-            item: 'Biopori', 
-            dim: '-', 
-            vol: 'Std Biopori', 
-            formula: `(${s.biopori.toLocaleString()} / 300) * 1,5 ML`, 
-            val: resBiopori 
-        }
-    ];
-
-    rows.forEach(d => {
-        if(d.val > 0 || d.val === 0) {
-            tbody.innerHTML += `
-            <tr>
-                <td><b>${d.item}</b><br><span class="badge-dim">${d.dim}</span></td>
-                <td>${d.vol}</td>
-                <td class="formula-text">${d.formula}</td>
-                <td class="text-end fw-bold">${d.val.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-            </tr>`;
-        }
-    });
-
-    // Render Diagram Batang (Chart.js)
-    new Chart(document.getElementById('chartWaterDetail'), {
-        type: 'bar',
-        data: {
-            labels: ['Pohon', 'Rorak', 'Sipil Teknis Lain'],
-            datasets: [{
-                data: [resPohon.toFixed(1), resRorak.toFixed(1), (resSumur + resBiopori).toFixed(1)],
-                backgroundColor: ['#4caf50', '#795548', '#03a9f4'],
-                borderRadius: 5,
-                barThickness: 50
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: { enabled: true }
-            },
-            scales: {
-                y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
-                x: { grid: { display: false } }
+            let res = { tree: 0, rorak: 0, sumur: 0, biopori: 0 };
+            
+            if (year == 2024) {
+                res.tree = (s.trees / 400) * 1.5;
+                res.rorak = s.rorak * 0.17;
+                res.sumur = s.sumur * 1.1;
+                res.biopori = 0;
+            } else {
+                res.tree = (s.trees / 400) * VWB * TIME * 0.75;
+                res.rorak = (s.rorak * 490 * 3 * RAIN) / 1000000;
+                res.sumur = (s.sumur * 754 * 3 * RAIN) / 1000000;
+                res.biopori = (s.biopori / 300) * 1.5;
             }
+
+            const total = res.tree + res.rorak + res.sumur + res.biopori;
+            document.getElementById('total-water').innerText = total.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+            const data = [
+                { item: 'Pohon / Vegetasi', dim: `VWB: ${VWB} l/s/ha`, vol: '400 phn/ha', formula: `(${s.trees}/400)*${VWB}*${TIME}*75%`, val: res.tree },
+                { item: 'Rorak (Trench)', dim: '1m x 0.7m x 0.7m', vol: '490 Liter', formula: `(${s.rorak}*490*3*${RAIN})/1jt`, val: res.rorak },
+                { item: 'Sumur Resapan', dim: 'Dia 0.8m x T 1.5m', vol: '754 Liter', formula: `(${s.sumur}*754*3*${RAIN})/1jt`, val: res.sumur },
+                { item: 'Biopori', dim: '-', vol: 'Std Biopori', formula: `(${s.biopori}/300)*1.5`, val: res.biopori }
+            ];
+
+            data.forEach(r => {
+                if(r.val > 0 || r.val === 0) {
+                    tbody.innerHTML += `<tr><td><b>${r.item}</b><br><span class="badge-dim">${r.dim}</span></td><td>${r.vol}</td><td class="formula-text">${r.formula}</td><td class="text-end fw-bold">${r.val.toLocaleString('id-ID', {minimumFractionDigits:2})}</td></tr>`;
+                }
+            });
+
+            new Chart(document.getElementById('chartWater'), {
+                type: 'bar',
+                data: { labels: ['Pohon', 'Rorak', 'Sipil Lain'], datasets: [{ data: [res.tree.toFixed(2), res.rorak.toFixed(2), (res.sumur + res.biopori).toFixed(2)], backgroundColor: ['#4caf50', '#795548', '#0277bd'], borderRadius: 5 }] },
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
         }
-    });
-}
 
         loadData();
     </script>
