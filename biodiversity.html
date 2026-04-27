@@ -18,11 +18,29 @@
             background: linear-gradient(rgba(0,0,0,0.6), var(--dark)), url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=1350') center/cover;
             padding: 120px 0 80px; text-align: center; border-bottom: 3px solid var(--accent);
         }
+        .logo-area { display: inline-flex; align-items: center; margin-bottom: 30px; }
+        .logo-img { height: 60px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
 
         /* NARRATIVE SECTION */
         .narrative-box { border-left: 4px solid var(--accent); padding-left: 25px; margin-bottom: 40px; }
         .global-title { font-weight: 800; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
         .text-justify { text-align: justify; line-height: 1.8; opacity: 0.9; }
+
+         /* --- MAP SECTION (GAYA SS2) --- */
+        .map-card { background: var(--card-bg); border-radius: 15px; border: 2px solid var(--accent); overflow: hidden; margin-top: 50px; }
+        .map-header { background: var(--accent); color: black; padding: 10px 20px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; }
+        #map-kehati { height: 450px; width: 100%; background: #222; }
+        
+        .map-side-collage { height: 450px; overflow: hidden; border-left: 2px solid var(--accent); }
+        .map-side-collage img { width: 100%; height: 100%; object-fit: cover; }
+
+        .map-footer { background: #000; padding: 20px; text-align: center; border-top: 1px solid #222; }
+        .btn-map-filter { 
+            background: transparent; border: 1px solid var(--accent); color: var(--accent);
+            padding: 6px 20px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; margin: 5px;
+            transition: 0.3s;
+        }
+        .btn-map-filter:hover, .btn-map-filter.active { background: var(--accent); color: black; }
 
         /* BOOK GALLERY - MOCKUP 3D */
         .book-container { perspective: 1000px; margin-bottom: 30px; }
@@ -57,11 +75,19 @@
 <body>
 
     <!-- HERO SECTION -->
-    <div class="hero-kehati">
+    <div class="hero-kehati text-center">
         <div class="container">
-            <h1 class="fw-black display-4 italic">BIODIVERSITY <span style="color:var(--accent)">MONITORING</span></h1>
-            <p class="small uppercase tracking-widest text-white-50 mb-5" style="letter-spacing: 6px;">Building Ecosystem Resilience for Future Generations</p>
-            <a href="index.html" class="btn btn-outline-light btn-sm rounded-pill px-4" style="font-size: 0.7rem; font-weight: 700;">KEMBALI KE MENU UTAMA</a>
+            <div class="logo-area">
+                <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" class="logo-img">
+                <div class="ms-3 text-start" style="line-height: 1.1;">
+                    <span class="fw-black d-block text-white" style="font-size: 1.2rem;">SEKOLA KONANG</span>
+                    <small style="font-size: 0.7rem; letter-spacing: 3px; color: var(--accent);">INDONESIA</small>
+                </div>
+            </div>
+            
+            <h1 class="fw-black display-5">MONITORING <span style="color:var(--accent)">KEHATI</span></h1>
+            <p class="small uppercase tracking-widest text-white-50 mb-4" style="letter-spacing: 4px;">Building Ecosystem Resilience for Future Generations</p>
+            <a href="index.html" class="btn btn-outline-light btn-sm rounded-pill px-4" style="font-size: 0.7rem; font-weight: 700;">KEMBALI KE MENU</a>
         </div>
     </div>
 
@@ -77,6 +103,31 @@
                         Mengadopsi standar <em>Baseline Study</em> yang komprehensif dan monitoring berkala, kami menerapkan metodologi ilmiah kelas dunia seperti Indeks Shanon-Wiener (H') dan Indeks Kekayaan Margalef (DMg). Kami menciptakan model pelestarian yang dapat direplikasi di berbagai wilayah nusantara bersama mitra strategis kami untuk mencapai target keberlanjutan global.
                     </div>
                 </div>
+
+                <!-- MAP SECTION (GAYA SS2) -->
+        <div class="map-card">
+            <div class="map-header d-flex justify-content-between">
+                <span><i class="fas fa-map-marker-alt me-2"></i> Peta Sebaran & Delineasi Area Monitoring</span>
+                <span class="badge bg-dark">GOOGLE HYBRID</span>
+            </div>
+            <div class="row g-0">
+                <div class="col-lg-8">
+                    <div id="map-kehati"></div>
+                </div>
+                <div class="col-lg-4 map-side-collage">
+                    <!-- Bapak bisa ganti dengan foto kolase Kehati Bapak -->
+                    <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/kehati_kbc.jpg" alt="Biodiversity Collage">
+                </div>
+            </div>
+            <div class="map-footer">
+                <div class="small fw-bold text-accent uppercase mb-2" style="letter-spacing: 2px;">Zona Monitoring Kehati</div>
+                <div class="d-flex justify-content-center flex-wrap">
+                    <button class="btn-map-filter active"><i class="fas fa-leaf me-2"></i> Vegetasi</button>
+                    <button class="btn-map-filter"><i class="fas fa-paw me-2"></i> Satwa Liar</button>
+                    <button class="btn-map-filter"><i class="fas fa-route me-2"></i> Jalur Pantau</button>
+                </div>
+            </div>
+        </div>
                 
                 <!-- STATS HIGHLIGHT -->
                 <div class="row g-3">
@@ -178,6 +229,10 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // --- LOAD MAP ---
+        var map = L.map('map-kehati', {zoomControl: true}).setView([-7.810, 112.908], 13);
+        L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}').addTo(map);
 
         async function loadKehatiData() {
             const tbody = document.getElementById('kehati-table-body');
