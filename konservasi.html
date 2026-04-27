@@ -41,6 +41,11 @@
         #map { height: 300px; }
         .main-title { font-size: 1.3rem; }
     }
+
+    /* Tambahkan ini di bagian CSS */
+.leaflet-interactive {
+    cursor: pointer !important;
+}
 </style>
 </head>
 <body>
@@ -201,20 +206,50 @@
 
                 if(d.species) { for(let sp in d.species) speciesAgg[sp] = (speciesAgg[sp] || 0) + d.species[sp]; }
 
-                if(d.areaPolygon) {
-                    try {
-                        const polyData = JSON.parse(d.areaPolygon);
-                        L.polygon(polyData, {color: '#c6ff00', fillOpacity: 0.1, weight: 1}).addTo(map);
-                    } catch(e) {}
-                }
-                
-                if(d.points) {
-                    d.points.forEach(pt => {
-                        if(pt.koordinat) {
-                            L.circleMarker([pt.koordinat.latitude, pt.koordinat.longitude], {radius: 3, color: '#c6ff00'}).addTo(map).bindPopup(pt.nama_pohon);
-                        }
-                    });
-                }
+                // --- REVISI LOGIKA PETA AGAR BISA DIKLIK ---
+
+// 1. Bagian Polygon (Area Desa)
+if(d.areaPolygon) {
+    try {
+        const polyData = JSON.parse(d.areaPolygon);
+        // Buat area menjadi interaktif
+        const area = L.polygon(polyData, {
+            color: '#c6ff00', 
+            fillOpacity: 0.1, 
+            weight: 2,
+            interactive: true // Memastikan area bisa diklik
+        }).addTo(map);
+
+        // Munculkan keterangan saat diklik (Desa Galih / Desa Petung berdasarkan data lokasi)
+        area.bindPopup(`<b>Area Konservasi</b><br>${d.location}<br>Tahun: ${d.year}`);
+
+        // Efek Hover (Warna berubah saat kursor lewat)
+        area.on('mouseover', function() {
+            this.setStyle({ fillOpacity: 0.3, weight: 3 });
+        });
+        area.on('mouseout', function() {
+            this.setStyle({ fillOpacity: 0.1, weight: 2 });
+        });
+    } catch(e) { console.error("Gagal memproses Polygon:", e); }
+}
+
+// 2. Bagian Titik (Pohon/Rorak)
+if(d.points) {
+    d.points.forEach(pt => {
+        if(pt.koordinat) {
+            const marker = L.circleMarker([pt.koordinat.latitude, pt.koordinat.longitude], {
+                radius: 4, 
+                color: '#ffab00', 
+                fillColor: '#c6ff00',
+                fillOpacity: 1,
+                weight: 2
+            }).addTo(map);
+
+            // Keterangan pada titik
+            marker.bindPopup(`<b>Jenis: ${pt.nama_pohon}</b><br>Lokasi: ${d.location}`);
+        }
+    });
+}
 
                 tbody.innerHTML += `<tr>
                     <td class="fw-bold">${year}</td>
