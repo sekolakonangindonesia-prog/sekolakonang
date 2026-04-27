@@ -211,50 +211,68 @@
 
     <!-- Scripts -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Konfigurasi Firebase Bapak
-        const firebaseConfig = {
-            apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
-            authDomain: "sekola-konang.firebaseapp.com",
-            projectId: "sekola-konang",
-            storageBucket: "sekola-konang.firebasestorage.app",
-            messagingSenderId: "9338352073",
-            appId: "1:9338352073:web:b56481b836888b1a8bf818"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    // Konfigurasi Firebase Bapak
+    const firebaseConfig = {
+        apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+        authDomain: "sekola-konang.firebaseapp.com",
+        projectId: "sekola-konang",
+        storageBucket: "sekola-konang.firebasestorage.app",
+        messagingSenderId: "9338352073",
+        appId: "1:9338352073:web:b56481b836888b1a8bf818"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        // --- LOAD MAP ---
-        var map = L.map('map-kehati', {zoomControl: true}).setView([-7.810, 112.908], 13);
-        L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}').addTo(map);
+    // --- INISIALISASI PETA (VERSI STABIL) ---
+    // Gunakan id 'map-kehati' sesuai dengan div di HTML
+    var map = L.map('map-kehati', {
+        zoomControl: true,
+        scrollWheelZoom: false // Supaya tidak mengganggu saat scroll halaman
+    }).setView([-7.810, 112.908], 13);
 
-        async function loadKehatiData() {
-            const tbody = document.getElementById('kehati-table-body');
-            try {
-                const querySnapshot = await getDocs(collection(db, "monitoring_kehati"));
-                querySnapshot.forEach((doc) => {
-                    const d = doc.data();
-                    let statusColor = d.index_h > 3 ? 'success' : (d.index_h > 2 ? 'warning' : 'danger');
-                    
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><i class="fas fa-map-marker-alt text-danger me-2"></i> ${d.location}</td>
-                            <td class="text-center">${d.year}</td>
-                            <td class="text-center fw-bold text-primary">${d.index_h}</td>
-                            <td class="text-center">
-                                <span class="badge bg-${statusColor} uppercase p-2" style="font-size:0.6rem; width:100px;">${d.status}</span>
-                            </td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-dark fw-bold rounded-pill px-3" style="font-size:0.6rem">DETAIL</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } catch (e) { console.error(e); }
-        }
-        loadKehatiData();
-    </script>
+    // --- PILIHAN TILE LAYER (Ganti ke Esri atau Google yang lebih stabil) ---
+    // Esri World Imagery (Satelit yang sangat stabil dan tajam)
+    var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Esri, DigitalGlobe, GeoEye, Earthstar Geographics'
+    }).addTo(map);
+
+    // Tambahkan label jalan/nama tempat di atas satelit (Hybrid)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+        pane: 'shadowPane' // Menaruh label di lapisan atas
+    }).addTo(map);
+
+    // Memastikan peta merender ulang saat halaman terbuka
+    setTimeout(function(){ map.invalidateSize()}, 500);
+
+    // --- LOAD DATA DARI FIREBASE ---
+    async function loadKehatiData() {
+        const tbody = document.getElementById('kehati-table-body');
+        try {
+            const querySnapshot = await getDocs(collection(db, "monitoring_kehati"));
+            querySnapshot.forEach((doc) => {
+                const d = doc.data();
+                let statusColor = d.index_h > 3 ? 'success' : (d.index_h > 2 ? 'warning' : 'danger');
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td><i class="fas fa-map-marker-alt text-danger me-2"></i> ${d.location}</td>
+                        <td class="text-center">${d.year}</td>
+                        <td class="text-center fw-bold text-primary">${d.index_h}</td>
+                        <td class="text-center">
+                            <span class="badge bg-${statusColor} uppercase p-2" style="font-size:0.6rem; width:100px;">${d.status}</span>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-dark fw-bold rounded-pill px-3" style="font-size:0.6rem">DETAIL</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (e) { console.error("Gagal ambil data:", e); }
+    }
+    loadKehatiData();
+</script>
 </body>
 </html>
