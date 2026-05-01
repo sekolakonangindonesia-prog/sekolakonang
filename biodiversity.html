@@ -3,196 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Biodiversity Monitoring - Sekola Konang</title>
+    <title>Biodiversity Monitoring - Sekola Konang</title>
+    
+    <!-- Library CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        :root { --accent: #c6ff00; --dark: #050505; --sk-blue: #0277bd; }
-        body { font-family: 'Montserrat', sans-serif; background-color: var(--dark); color: #eee; overflow-x: hidden; }
+        :root { --accent: #c6ff00; --dark: #050505; --card-bg: #121212; }
+        body { font-family: 'Montserrat', sans-serif; background-color: var(--dark); color: #eee; margin: 0; padding: 0; }
 
-        /* HERO - Sinematik */
+        /* HERO & LOGO */
         .hero-kehati {
-            background: linear-gradient(rgba(0,0,0,0.6), var(--dark)), url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=1350') center/cover;
-            padding: 120px 0 80px; text-align: center; border-bottom: 3px solid var(--accent);
+            background: linear-gradient(rgba(0,0,0,0.8), var(--dark)), url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=1350') center/cover;
+            padding: 50px 0 60px; text-align: center; border-bottom: 3px solid var(--accent);
         }
         .logo-area { display: inline-flex; align-items: center; margin-bottom: 30px; }
-        .logo-img { height: 60px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+        .logo-img { height: 50px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
 
-        /* NARRATIVE SECTION */
-        .narrative-box { border-left: 4px solid var(--accent); padding-left: 25px; margin-bottom: 40px; }
-        .global-title { font-weight: 800; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
-        .text-justify { text-align: justify; line-height: 1.8; opacity: 0.9; }
+        /* NARRATIVE */
+        .narrative-box { border-left: 4px solid var(--accent); padding-left: 20px; text-align: justify; margin-bottom: 40px; }
+        .global-title { font-weight: 800; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; }
 
-         /* --- MAP SECTION (GAYA SS2) --- */
-       .map-card { 
-    background: var(--card-bg); border-radius: 15px; border: 2px solid var(--accent); 
-    overflow: hidden; margin: 40px 0; width: 100%;
-}
+        /* PUBLIKASI 5 KOTAK */
+        .book-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-top: 20px; }
+        .book-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 10px; transition: 0.3s; cursor: pointer; text-align: center; }
+        .book-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .book-cover { width: 100%; height: 240px; background: #222; border-radius: 5px; margin-bottom: 10px; overflow: hidden; }
+        .book-cover img { width: 100%; height: 100%; object-fit: cover; }
 
-        .stats-highlight-area { margin-top: 50px; margin-bottom: 50px; }
-
-        .map-header { background: var(--accent); color: black; padding: 10px 20px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; }
+        /* MAP AREA FULL */
+        .map-card { background: var(--card-bg); border-radius: 15px; border: 1px solid var(--accent); overflow: hidden; margin: 40px 0; }
         #map-kehati { height: 500px; width: 100%; background: #222; }
-        
-        .map-side-collage { height: 450px; overflow: hidden; border-left: 2px solid var(--accent); }
-        .map-side-collage img { width: 100%; height: 100%; object-fit: cover; }
-
-        .map-footer { background: #000; padding: 20px; text-align: center; border-top: 1px solid #222; }
-        .btn-map-filter { 
-            background: transparent; border: 1px solid var(--accent); color: var(--accent);
-            padding: 6px 20px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; margin: 5px;
-            transition: 0.3s;
-        }
+        .map-footer { background: #000; padding: 15px; text-align: center; }
+        .btn-map-filter { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 5px 15px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; margin: 3px; transition: 0.3s; }
         .btn-map-filter:hover, .btn-map-filter.active { background: var(--accent); color: black; }
 
-        /* BOOK GALLERY - MOCKUP 3D */
-        .book-container { perspective: 1000px; margin-bottom: 30px; }
-       .book-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
-    gap: 15px; 
-    margin-top: 20px; 
-}
-.book-card { 
-    background: #111; border: 1px solid #222; border-radius: 12px; padding: 10px; 
-    transition: 0.3s; cursor: pointer; text-align: center;
-}
-.book-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-.book-cover { width: 100%; height: 220px; background: #222; border-radius: 5px; margin-bottom: 10px; overflow: hidden; }
-.book-cover img { width: 100%; height: 100%; object-fit: cover; }
+        /* STATS BOXES */
+        .stat-card-badge { background: #111; border: 1px solid #333; border-radius: 15px; padding: 15px; text-align: center; transition: 0.3s; }
+        .stat-card-badge h2 { font-weight: 900; color: var(--accent); margin-bottom: 0; font-size: 1.5rem; }
+        .stat-card-badge small { font-size: 0.6rem; color: #777; text-transform: uppercase; font-weight: 700; }
 
-        /* DATA TABLE - Professional White */
+        /* TABLE */
         .card-table { background: white; border-radius: 20px; overflow: hidden; color: #333; margin-top: 50px; }
-        .table-kehati th { background: #f8f9fa; color: #000; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; padding: 15px; border-bottom: 2px solid #eee; }
-        .table-kehati td { padding: 15px; border-bottom: 1px solid #f0f0f0; font-weight: 600; font-size: 0.85rem; }
+        .table-kehati th { background: #f8f9fa; color: #000; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; padding: 15px; }
 
-        /* MOBILE OPTIMIZATION */
-        @media (max-width: 768px) {
-            .hero-kehati { padding: 80px 0 40px; }
-            .display-4 { font-size: 2rem; }
-            .book-cover { height: 250px; }
-            .stat-badge { font-size: 1.5rem !important; }
-        }
-
-        .footer-sk { 
-    text-align: center; padding: 40px 0; font-size: 0.65rem; 
-    font-weight: 700; letter-spacing: 3px; opacity: 0.3; color: white;
-}
+        .footer-sk { text-align: center; padding: 40px 0; font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; opacity: 0.3; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <!-- HERO SECTION -->
-    <div class="hero-kehati text-center">
-        <div class="container">
+    <div class="hero-kehati">
+        <div class="container text-center">
             <div class="logo-area">
-                <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" class="logo-img">
+                <img src="./LOGO YSKI.png" class="logo-img" onerror="this.src='https://sekolakonangindonesia-prog.github.io/sekolakonang/LOGO%20YSKI.png'">
                 <div class="ms-3 text-start" style="line-height: 1.1;">
-                    <span class="fw-black d-block text-white" style="font-size: 1.2rem;">SEKOLA KONANG</span>
-                    <small style="font-size: 0.7rem; letter-spacing: 3px; color: var(--accent);">INDONESIA</small>
+                    <span class="fw-bold d-block text-white" style="font-size: 1rem;">SEKOLA KONANG</span>
+                    <small style="font-size: 0.6rem; letter-spacing: 3px; color: var(--accent);">INDONESIA</small>
                 </div>
             </div>
-            
             <h1 class="fw-black display-5">MONITORING <span style="color:var(--accent)">KEHATI</span></h1>
-            <p class="small uppercase tracking-widest text-white-50 mb-4" style="letter-spacing: 4px;">Building Ecosystem Resilience for Future Generations</p>
-            <a href="index.html" class="btn btn-outline-light btn-sm rounded-pill px-4" style="font-size: 0.7rem; font-weight: 700;">KEMBALI KE MENU</a>
+            <p class="small uppercase tracking-widest text-white-50">Building Ecosystem Resilience for Future Generations</p>
+            <a href="index.html" class="btn btn-outline-light btn-sm rounded-pill mt-4 px-4" style="font-size: 0.6rem; font-weight: 700;">KEMBALI KE MENU</a>
         </div>
     </div>
 
-   <div class="container mt-5">
-    <!-- 1. NARRATIVE (FULL WIDTH) -->
-    <div class="row">
-        <div class="col-12 mb-5">
-            <div class="narrative-box">
-                <h2 class="global-title">Lentera Hayati: Dari Lereng Bromo untuk Keseimbangan Global</h2>
-                <div class="text-justify">
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="narrative-box">
+                    <h2 class="global-title">Lentera Hayati: Lereng Bromo untuk Keseimbangan Global</h2>
+                                    <div class="text-justify">
                     Biodiversitas bukan sekadar statistik, melainkan jaring penyangga kehidupan global. Di tengah ancaman krisis iklim dan degradasi lahan, <strong>Yayasan Sekola Konang Indonesia</strong> hadir sebagai jembatan ilmiah untuk memulihkan ekosistem. Kami percaya bahwa kesehatan sebuah kawasan industri atau perkotaan dapat diukur dari seberapa tangguh keanekaragaman hayati di dalamnya.
                     <br><br>
                     Mengadopsi standar <em>Baseline Study</em> yang komprehensif dan monitoring berkala, kami menerapkan metodologi ilmiah kelas dunia seperti Indeks Shanon-Wiener (H') dan Indeks Kekayaan Margalef (DMg). Kami menciptakan model pelestarian yang dapat direplikasi di berbagai wilayah nusantara bersama mitra strategis kami untuk mencapai target keberlanjutan global.
                 </div>
-            </div>
+                </div>
 
-            <!-- 2. PUBLIKASI (5 KOTAK DI BAWAH NARASI) -->
-            <h6 class="small fw-bold text-white-50 mt-5 mb-3 uppercase tracking-widest text-center">
-                <i class="fas fa-book-open me-2 text-accent"></i> Publikasi Ilmiah Kami
-            </h6>
-            <div class="book-grid">
-                <div class="book-card">
-                    <div class="book-cover"><img src="kehatigambar.jpg"></div>
-                    <span class="small fw-bold d-block">BASELINE 2020</span>
-                </div>
-                <div class="book-card">
-                    <div class="book-cover"><img src="kehatigambar2.jpg"></div>
-                    <span class="small fw-bold d-block">MONITORING 2023</span>
-                </div>
-                <div class="book-card">
-                    <div class="book-cover"><img src="https://via.placeholder.com/200x300?text=Next+Report"></div>
-                    <span class="small fw-bold d-block">REPORT 2024</span>
-                </div>
-                <div class="book-card">
-                    <div class="book-cover"><img src="https://via.placeholder.com/200x300?text=Next+Report"></div>
-                    <span class="small fw-bold d-block">REPORT 2025</span>
-                </div>
-                <div class="book-card">
-                    <div class="book-cover"><img src="https://via.placeholder.com/200x300?text=Next+Report"></div>
-                    <span class="small fw-bold d-block">COMING SOON</span>
+                <h6 class="small fw-bold text-white-50 mt-5 mb-3 uppercase tracking-widest text-center">
+                    <i class="fas fa-book-open me-2 text-accent"></i> Publikasi Ilmiah Kami
+                </h6>
+                <div class="book-grid">
+                    <div class="book-card"><div class="book-cover"><img src="./kehatigambar.jpg" onerror="this.src='https://via.placeholder.com/200x300?text=Report'"></div><span class="small fw-bold">BASELINE 2020</span></div>
+                    <div class="book-card"><div class="book-cover"><img src="./kehatigambar2.jpg" onerror="this.src='https://via.placeholder.com/200x300?text=Report'"></div><span class="small fw-bold">MONITORING 2023</span></div>
+                    <div class="book-card"><div class="book-cover"><img src="https://via.placeholder.com/200x300?text=2024"></div><span class="small fw-bold">REPORT 2024</span></div>
+                    <div class="book-card"><div class="book-cover"><img src="https://via.placeholder.com/200x300?text=2025"></div><span class="small fw-bold">REPORT 2025</span></div>
+                    <div class="book-card"><div class="book-cover"><img src="https://via.placeholder.com/200x300?text=Future"></div><span class="small fw-bold">COMING SOON</span></div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- 3. MAP SECTION (FULL ADJUSTED) -->
-    <div class="map-card">
-        <div class="map-header d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-map-marker-alt me-2"></i> Peta Sebaran & Delineasi Area Monitoring</span>
-            <span class="badge bg-dark border border-secondary">GOOGLE HYBRID</span>
-        </div>
-        <div id="map-kehati"></div>
-        <div class="map-footer">
-            <div class="small fw-bold text-accent uppercase mb-2">Zona Monitoring Kehati</div>
-            <div class="d-flex justify-content-center flex-wrap">
-                <button class="btn-map-filter active"><i class="fas fa-leaf me-2"></i> Vegetasi</button>
-                <button class="btn-map-filter"><i class="fas fa-paw me-2"></i> Satwa Liar</button>
-                <button class="btn-map-filter"><i class="fas fa-route me-2"></i> Jalur Pantau</button>
+        <div class="map-card">
+            <div class="map-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-map-marker-alt me-2"></i> PETA SEBARAN & DELINEASI AREA MONITORING</span>
+                <span class="badge bg-dark border border-secondary">GLOBAL HYBRID</span>
+            </div>
+            <div id="map-kehati"></div>
+            <div class="map-footer">
+                <button class="btn-map-filter active"><i class="fas fa-leaf me-1"></i> Vegetasi</button>
+                <button class="btn-map-filter"><i class="fas fa-paw me-1"></i> Satwa Liar</button>
+                <button class="btn-map-filter"><i class="fas fa-route me-1"></i> Jalur Pantau</button>
             </div>
         </div>
-    </div>
 
-    <!-- 4. STATS HIGHLIGHT (DI BAWAH PETA) -->
-    <div class="row g-3 justify-content-center">
-        <div class="col-md-3">
-            <div class="p-3 rounded-4 bg-dark border border-secondary text-center">
-                <h2 class="fw-black mb-0" style="color:var(--accent); font-size: 1.5rem;">201+</h2>
-                <small class="text-muted uppercase font-bold" style="font-size: 0.55rem;">Spesies Flora</small>
-            </div>
+        <div class="row g-3 justify-content-center">
+            <div class="col-6 col-md-3"><div class="stat-card-badge"><h2>201+</h2><small>Spesies Flora</small></div></div>
+            <div class="col-6 col-md-3"><div class="stat-card-badge"><h2>25+</h2><small>Spesies Burung</small></div></div>
+            <div class="col-6 col-md-3"><div class="stat-card-badge"><h2>Sangat Baik</h2><small>Status Indeks H'</small></div></div>
         </div>
-        <div class="col-md-3">
-            <div class="p-3 rounded-4 bg-dark border border-secondary text-center">
-                <h2 class="fw-black mb-0" style="color:var(--accent); font-size: 1.5rem;">25+</h2>
-                <small class="text-muted uppercase font-bold" style="font-size: 0.55rem;">Spesies Burung</small>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="p-3 rounded-4 bg-dark border border-secondary text-center">
-                <h2 class="fw-black mb-0" style="color:var(--accent); font-size: 1.5rem;">Sangat Baik</h2>
-                <small class="text-muted uppercase font-bold" style="font-size: 0.55rem;">Status Indeks H'</small>
-            </div>
-        </div>
-    </div>
 
-        <!-- TABEL DATA (LOG DATA TERKINI) -->
         <div class="card-table shadow-lg">
             <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
-                <h5 class="m-0 fw-bold small uppercase tracking-widest text-dark"><i class="fas fa-database me-2 text-primary"></i> Log Database Kehati</h5>
-                <span class="badge bg-success rounded-pill" style="font-size:0.6rem">UPDATED 2025</span>
+                <h6 class="m-0 fw-bold uppercase tracking-widest text-dark"><i class="fas fa-database me-2 text-primary"></i> Log Database Kehati</h6>
+                <span class="badge bg-success" style="font-size:0.5rem">UPDATED 2025</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-kehati mb-0 align-middle">
                     <thead>
-                        <tr>
+                        <tr class="bg-dark text-white">
                             <th>Lokasi Pantau</th>
                             <th class="text-center">Tahun</th>
                             <th class="text-center">Indeks Shanon (H')</th>
@@ -201,7 +131,7 @@
                         </tr>
                     </thead>
                     <tbody id="kehati-table-body">
-                        <!-- Data otomatis dari Firebase -->
+                        <tr><td colspan="5" class="text-center py-5">Memuat data dari database...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -211,76 +141,50 @@
     </div>
 
     <!-- Scripts -->
-   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // 1. Konfigurasi Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
-        authDomain: "sekola-konang.firebaseapp.com",
-        projectId: "sekola-konang",
-        storageBucket: "sekola-konang.firebasestorage.app",
-        messagingSenderId: "9338352073",
-        appId: "1:9338352073:web:b56481b836888b1a8bf818"
-    };
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+        const firebaseConfig = {
+            apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+            authDomain: "sekola-konang.firebaseapp.com",
+            projectId: "sekola-konang",
+            storageBucket: "sekola-konang.firebasestorage.app",
+            messagingSenderId: "9338352073",
+            appId: "1:9338352073:web:b56481b836888b1a8bf818"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-    // 2. INISIALISASI PETA (DIPINDAH KE ATAS AGAR CEPAT MUNCUL)
-    // Kita gunakan link CartoDB yang sangat ringan dan stabil
-    var map = L.map('map-kehati', {
-        zoomControl: true,
-        scrollWheelZoom: false
-    }).setView([-7.810, 112.908], 13);
+        // --- INISIALISASI PETA (VERSI STABIL) ---
+        var map = L.map('map-kehati').setView([-7.810, 112.908], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    // Gunakan sumber Esri (Sangat stabil untuk satelit)
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri'
-    }).addTo(map);
+        setTimeout(function(){ map.invalidateSize(); }, 500);
 
-    // Tambahkan label jalan agar tidak polos satelit saja
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png').addTo(map);
-
-    // Perintah wajib agar peta tidak polos saat pertama buka
-    setTimeout(function(){ 
-        map.invalidateSize();
-    }, 500);
-
-    // 3. LOAD DATA DARI FIREBASE (JALAN DI BELAKANG LAYAR)
-    async function loadKehatiData() {
-        const tbody = document.getElementById('kehati-table-body');
-        if(!tbody) return;
-
-        try {
-            const querySnapshot = await getDocs(collection(db, "monitoring_kehati"));
-            tbody.innerHTML = ""; // Bersihkan loading
-            
-            querySnapshot.forEach((doc) => {
-                const d = doc.data();
-                let statusColor = d.index_h > 3 ? 'success' : (d.index_h > 2 ? 'warning' : 'danger');
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td><i class="fas fa-map-marker-alt text-danger me-2"></i> ${d.location}</td>
-                        <td class="text-center">${d.year}</td>
-                        <td class="text-center fw-bold text-primary">${d.index_h}</td>
-                        <td class="text-center">
-                            <span class="badge bg-${statusColor} uppercase p-2" style="font-size:0.6rem; width:100px;">${d.status}</span>
-                        </td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-dark fw-bold rounded-pill px-3" style="font-size:0.6rem">DETAIL</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        } catch (e) { 
-            console.error("Firebase Error:", e);
-            tbody.innerHTML = "<tr><td colspan='5' class='text-center'>Gagal memuat data dari database.</td></tr>";
+        // --- LOAD DATA ---
+        async function loadKehatiData() {
+            const tbody = document.getElementById('kehati-table-body');
+            try {
+                const querySnapshot = await getDocs(collection(db, "monitoring_kehati"));
+                tbody.innerHTML = ""; 
+                querySnapshot.forEach((doc) => {
+                    const d = doc.data();
+                    let statusColor = d.index_h > 3 ? 'success' : 'warning';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><i class="fas fa-map-marker-alt text-danger me-2"></i> ${d.location}</td>
+                            <td class="text-center">${d.year}</td>
+                            <td class="text-center fw-bold text-primary">${d.index_h}</td>
+                            <td class="text-center"><span class="badge bg-${statusColor} p-2" style="font-size:0.6rem; width:100px;">${d.status}</span></td>
+                            <td class="text-center"><button class="btn btn-sm btn-dark fw-bold rounded-pill px-3" style="font-size:0.6rem">DETAIL</button></td>
+                        </tr>
+                    `;
+                });
+            } catch (e) { tbody.innerHTML = "<tr><td colspan='5' class='center'>Database Belum Terisi</td></tr>"; }
         }
-    }
-
-    loadKehatiData();
-</script>
+        loadKehatiData();
+    </script>
 </body>
 </html>
