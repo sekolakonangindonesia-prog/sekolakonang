@@ -206,25 +206,25 @@
                 const data = locs[id];
                 // Kita simpan ke koleksi 'monitoring_kehati'
                 await setDoc(doc(db, "monitoring_kehati", id), {
-                    location: data.name,
-                    desc: data.desc,
-                    year: data.year,
-                    status: data.status,
-                    index_h: data.indices.H,
-                    index_e: data.indices.E,
-                    index_r: data.indices.R,
-                    category: data.indices.cat,
-                    lat: data.lat,
-                    lng: data.lng,
-                    flora_total: data.floraStats.total,
-                    flora_famili: data.floraStats.famili,
-                    bird_species: data.birdStats.species,
-                    bird_family: data.birdStats.family,
-                    // Kita bungkus data rumit jadi teks (Stringify)
-                    history_h: JSON.stringify(data.historyH),
-                    history_labels: JSON.stringify(data.chartLabels),
-                    protected_list: JSON.stringify(data.protectedList),
-                    area_polygon: JSON.stringify(data.detailPolygon)
+                    location: data.name || "",
+                    desc: data.desc || "",
+                    year: data.year || "",
+                    status: data.status || "",
+                    index_h: data.indices?.H || 0,
+                    index_e: data.indices?.E || 0,
+                    index_r: data.indices?.R || 0,
+                    category: data.indices?.cat || "",
+                    lat: data.lat || 0,
+                    lng: data.lng || 0,
+                    flora_total: data.floraStats?.total || 0,
+                    flora_famili: data.floraStats?.famili || 0,
+                    bird_species: data.birdStats?.species || 0,
+                    bird_family: data.birdStats?.family || 0,
+                    // Tambahkan pengecekan array kosong [] agar tidak error stringify
+                    history_h: JSON.stringify(data.historyH || []),
+                    history_labels: JSON.stringify(data.chartLabels || []),
+                    protected_list: JSON.stringify(data.protectedList || []),
+                    area_polygon: JSON.stringify(data.detailPolygon || [])
                 });
             }
 
