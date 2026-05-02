@@ -55,6 +55,10 @@
 </head>
 <body>
 
+    <button id="btnMigrasiKehati" style="position:fixed; top:150px; right:20px; z-index:9999; padding:15px; background:red; color:white; font-weight:bold; border-radius:10px; border:2px solid white; cursor:pointer;">
+    🚀 PINDAHKAN DATA KEHATI KE FIREBASE
+</button>
+    
     <div class="hero-kehati">
         <div class="container text-center">
             <div class="logo-area">
@@ -141,6 +145,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="database.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -184,6 +189,57 @@
                 });
             } catch (e) { tbody.innerHTML = "<tr><td colspan='5' class='center'>Database Belum Terisi</td></tr>"; }
         }
+
+        // --- ROBOT MIGRASI DATA KEHATI ---
+    document.getElementById('btnMigrasiKehati').addEventListener('click', async () => {
+        if (typeof db_kehati === 'undefined') {
+            alert("Gagal: File database.js tidak terbaca!");
+            return;
+        }
+        if (!confirm("Pindahkan data Lokasi & Poligon Kehati ke Firebase?")) return;
+
+        alert("Proses migrasi dimulai... Mohon tunggu.");
+
+        try {
+            // 1. PINDAHKAN DATA LOKASI (Untuk Tabel & Detail)
+            const locs = db_kehati.locations;
+            for (let id in locs) {
+                const data = locs[id];
+                // Kita simpan ke koleksi 'monitoring_kehati'
+                await setDoc(doc(db, "monitoring_kehati", id), {
+                    location: data.name,
+                    desc: data.desc,
+                    year: data.year,
+                    status: data.status,
+                    index_h: data.indices.H,
+                    index_e: data.indices.E,
+                    index_r: data.indices.R,
+                    category: data.indices.cat,
+                    lat: data.lat,
+                    lng: data.lng,
+                    flora_total: data.floraStats.total,
+                    flora_famili: data.floraStats.famili,
+                    bird_species: data.birdStats.species,
+                    bird_family: data.birdStats.family,
+                    // Kita bungkus data rumit jadi teks (Stringify)
+                    history_h: JSON.stringify(data.historyH),
+                    history_labels: JSON.stringify(data.chartLabels),
+                    protected_list: JSON.stringify(data.protectedList),
+                    area_polygon: JSON.stringify(data.detailPolygon)
+                });
+            }
+
+            // 2. PINDAHKAN DATA POLYGON PETA UTAMA
+            await setDoc(doc(db, "kehati_map_config", "master_polygons"), {
+                geojson: JSON.stringify(db_kehati.polygons)
+            });
+
+            alert("✅ MIGRASI KEHATI BERHASIL! Sekarang web Bapak sudah punya data.");
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
+    });
+        
         loadKehatiData();
     </script>
 </body>
