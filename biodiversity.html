@@ -147,99 +147,128 @@
     <!-- Scripts -->
     <script src="database.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        const firebaseConfig = {
-            apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
-            authDomain: "sekola-konang.firebaseapp.com",
-            projectId: "sekola-konang",
-            storageBucket: "sekola-konang.firebasestorage.app",
-            messagingSenderId: "9338352073",
-            appId: "1:9338352073:web:b56481b836888b1a8bf818"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+   <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, collection, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // --- INISIALISASI PETA (VERSI STABIL) ---
-        var map = L.map('map-kehati').setView([-7.810, 112.908], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    const firebaseConfig = {
+        apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+        authDomain: "sekola-konang.firebaseapp.com",
+        projectId: "sekola-konang",
+        storageBucket: "sekola-konang.firebasestorage.app",
+        messagingSenderId: "9338352073",
+        appId: "1:9338352073:web:b56481b836888b1a8bf818"
+    };
 
-        setTimeout(function(){ map.invalidateSize(); }, 500);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        // --- LOAD DATA ---
-        async function loadKehatiData() {
-            const tbody = document.getElementById('kehati-table-body');
-            try {
-                const querySnapshot = await getDocs(collection(db, "monitoring_kehati"));
-                tbody.innerHTML = ""; 
-                querySnapshot.forEach((doc) => {
-                    const d = doc.data();
-                    let statusColor = d.index_h > 3 ? 'success' : 'warning';
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><i class="fas fa-map-marker-alt text-danger me-2"></i> ${d.location}</td>
-                            <td class="text-center">${d.year}</td>
-                            <td class="text-center fw-bold text-primary">${d.index_h}</td>
-                            <td class="text-center"><span class="badge bg-${statusColor} p-2" style="font-size:0.6rem; width:100px;">${d.status}</span></td>
-                            <td class="text-center"><button class="btn btn-sm btn-dark fw-bold rounded-pill px-3" style="font-size:0.6rem">DETAIL</button></td>
-                        </tr>
-                    `;
-                });
-            } catch (e) { tbody.innerHTML = "<tr><td colspan='5' class='center'>Database Belum Terisi</td></tr>"; }
+    // --- 1. INISIALISASI PETA (FIX AGAR TIDAK POLOS) ---
+    var map = L.map('map-kehati', {
+        zoomControl: true,
+        scrollWheelZoom: false
+    }).setView([-7.723, 112.932], 13);
+
+    // Sumber Peta Satelit Esri (Sangat Stabil)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(map);
+    // Tambah Label Jalan & Desa
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png').addTo(map);
+
+    setTimeout(() => { map.invalidateSize(); }, 500);
+
+    // --- 2. FUNGSI TAMPIL DATA (DENGAN PENGAMAN) ---
+    async function loadKehatiData() {
+        const tbody = document.getElementById('kehati-table-body');
+        if(!tbody) return;
+        
+        try {
+            const querySnapshot = await getDocs(collection(db, "monitoring_kehati"));
+            if (querySnapshot.empty) {
+                tbody.innerHTML = "<tr><td colspan='5' class='text-center py-4'>Firebase masih kosong. Klik tombol merah untuk migrasi data.</td></tr>";
+                return;
+            }
+
+            tbody.innerHTML = ""; 
+            querySnapshot.forEach((doc) => {
+                const d = doc.data();
+                const hVal = d.index_h || 0;
+                let statusColor = hVal >= 3 ? 'success' : (hVal >= 2 ? 'warning' : 'danger');
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td><i class="fas fa-map-marker-alt text-danger me-2"></i> ${d.location || 'Tanpa Nama'}</td>
+                        <td class="text-center">${d.year || '-'}</td>
+                        <td class="text-center fw-bold text-primary">${hVal}</td>
+                        <td class="text-center">
+                            <span class="badge bg-${statusColor} uppercase p-2" style="font-size:0.6rem; width:100px;">${d.status || 'Sedang'}</span>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-dark fw-bold rounded-pill px-3" style="font-size:0.6rem" onclick="window.location.href='detail.html?id=${doc.id}'">DETAIL</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (e) { 
+            console.error("Gagal load:", e);
+            tbody.innerHTML = "<tr><td colspan='5' class='text-center'>Terjadi gangguan koneksi database.</td></tr>";
         }
+    }
 
-        // --- ROBOT MIGRASI DATA KEHATI ---
+    // --- 3. ROBOT MIGRASI (VERSI SUPER AMAN) ---
     document.getElementById('btnMigrasiKehati').addEventListener('click', async () => {
         if (typeof db_kehati === 'undefined') {
-            alert("Gagal: File database.js tidak terbaca!");
+            alert("Gagal: File database.js tidak ditemukan!");
             return;
         }
-        if (!confirm("Pindahkan data Lokasi & Poligon Kehati ke Firebase?")) return;
+        if (!confirm("Pindahkan semua data ke Firebase sekarang?")) return;
 
-        alert("Proses migrasi dimulai... Mohon tunggu.");
+        alert("Sedang mengirim data... Jangan tutup halaman ini.");
 
         try {
-            // 1. PINDAHKAN DATA LOKASI (Untuk Tabel & Detail)
             const locs = db_kehati.locations;
             for (let id in locs) {
                 const data = locs[id];
-                // Kita simpan ke koleksi 'monitoring_kehati'
-                await setDoc(doc(db, "monitoring_kehati", id), {
+                
+                // Gunakan Optional Chaining (?.) dan Fallback (||) di SETIAP baris
+                const payload = {
                     location: data.name || "",
-                    desc: data.desc || "",
-                    year: data.year || "",
-                    status: data.status || "",
+                    desc: data.desc || "Monitoring keanekaragaman hayati berkala.",
+                    year: data.year || "2025",
+                    status: data.status || "Sedang",
                     index_h: data.indices?.H || 0,
                     index_e: data.indices?.E || 0,
                     index_r: data.indices?.R || 0,
-                    category: data.indices?.cat || "",
+                    category: data.indices?.cat || "Sedang",
                     lat: data.lat || 0,
                     lng: data.lng || 0,
                     flora_total: data.floraStats?.total || 0,
                     flora_famili: data.floraStats?.famili || 0,
                     bird_species: data.birdStats?.species || 0,
                     bird_family: data.birdStats?.family || 0,
-                    // Tambahkan pengecekan array kosong [] agar tidak error stringify
                     history_h: JSON.stringify(data.historyH || []),
                     history_labels: JSON.stringify(data.chartLabels || []),
                     protected_list: JSON.stringify(data.protectedList || []),
                     area_polygon: JSON.stringify(data.detailPolygon || [])
-                });
+                };
+
+                await setDoc(doc(db, "monitoring_kehati", id), payload);
+                console.log("Berhasil migrasi: " + id);
             }
 
-            // 2. PINDAHKAN DATA POLYGON PETA UTAMA
+            // Migrasi Peta Master
             await setDoc(doc(db, "kehati_map_config", "master_polygons"), {
                 geojson: JSON.stringify(db_kehati.polygons)
             });
 
-            alert("✅ MIGRASI KEHATI BERHASIL! Sekarang web Bapak sudah punya data.");
+            alert("✅ SEMUA DATA BERHASIL MASUK! Silakan refresh (F5).");
+            loadKehatiData(); // Refresh tabel otomatis
         } catch (err) {
-            alert("Error: " + err.message);
+            alert("Gagal di tengah jalan: " + err.message);
         }
     });
-        
-        loadKehatiData();
-    </script>
+
+    // Jalankan fungsi utama
+    loadKehatiData();
+</script>
 </body>
 </html>
