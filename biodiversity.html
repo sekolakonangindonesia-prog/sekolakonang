@@ -1,274 +1,935 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biodiversity Monitoring - Sekola Konang</title>
-    
-    <!-- Library CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <style>
-        :root { --accent: #c6ff00; --dark: #050505; --card-bg: #121212; }
-        body { font-family: 'Montserrat', sans-serif; background-color: var(--dark); color: #eee; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoring Kehati — Sekola Konang Indonesia</title>
 
-        /* HERO & LOGO */
-        .hero-kehati {
-            background: linear-gradient(rgba(0,0,0,0.8), var(--dark)), url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=1350') center/cover;
-            padding: 50px 0 60px; text-align: center; border-bottom: 3px solid var(--accent);
-        }
-        .logo-area { display: inline-flex; align-items: center; margin-bottom: 30px; }
-        .logo-img { height: 50px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        /* NARRATIVE */
-        .narrative-box { border-left: 4px solid var(--accent); padding-left: 20px; text-align: justify; margin-bottom: 40px; }
-        .global-title { font-weight: 800; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; }
+<style>
+/* ============================================================
+   DESIGN TOKENS — selaras dengan index.html & konservasi.html
+============================================================ */
+:root {
+  --deep-forest: #050505;
+  --canopy: #353736;
+  --lime: #C6FF00;
+  --lime-dim: rgba(198,255,0,0.10);
+  --parchment: #F5F5F0;
+  --white: #FFFFFF;
+  --text-muted: rgba(245,245,240,0.55);
+  --border: rgba(198,255,0,0.15);
+  --border-subtle: rgba(255,255,255,0.07);
+  --orange: #ffab00;
+  --blue: #2196f3;
 
-        /* PUBLIKASI 5 KOTAK */
-        .book-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-top: 20px; }
-        .book-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 10px; transition: 0.3s; cursor: pointer; text-align: center; }
-        .book-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-        .book-cover { width: 100%; height: 240px; background: #222; border-radius: 5px; margin-bottom: 10px; overflow: hidden; }
-        .book-cover img { width: 100%; height: 100%; object-fit: cover; }
+  --display: 'Playfair Display', Georgia, serif;
+  --body: 'Inter', system-ui, sans-serif;
+  --r-sm: 12px; --r-md: 20px; --r-lg: 32px;
+}
 
-        /* MAP AREA FULL */
-        .map-card { background: var(--card-bg); border-radius: 15px; border: 1px solid var(--accent); overflow: hidden; margin: 40px 0; }
-        #map-kehati { height: 500px; width: 100%; background: #222; }
-        .map-footer { background: #000; padding: 15px; text-align: center; }
-        .btn-map-filter { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 5px 15px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; margin: 3px; transition: 0.3s; }
-        .btn-map-filter:hover, .btn-map-filter.active { background: var(--accent); color: black; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--body);
+  background: var(--deep-forest);
+  color: var(--parchment);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+img { display: block; max-width: 100%; }
+a { text-decoration: none; color: inherit; }
 
-        /* STATS BOXES */
-        .stat-card-badge { background: #111; border: 1px solid #333; border-radius: 15px; padding: 15px; text-align: center; transition: 0.3s; }
-        .stat-card-badge h2 { font-weight: 900; color: var(--accent); margin-bottom: 0; font-size: 1.5rem; }
-        .stat-card-badge small { font-size: 0.6rem; color: #777; text-transform: uppercase; font-weight: 700; }
+/* ============================================================
+   UTILITY
+============================================================ */
+.container-page { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+.lime { color: var(--lime); }
+.section-label {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--lime);
+  margin-bottom: 8px; display: block;
+}
+.divider { width: 40px; height: 3px; background: var(--lime); margin: 14px 0 20px; border-radius: 2px; }
 
-        /* TABLE */
-        .card-table { background: white; border-radius: 20px; overflow: hidden; color: #333; margin-top: 50px; }
-        .table-kehati th { background: #f8f9fa; color: #000; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; padding: 15px; }
+/* ============================================================
+   NAV
+============================================================ */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 64px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(5,5,5,0.92);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-brand { display: flex; align-items: center; gap: 12px; }
+.nav-brand img { height: 34px; }
+.nav-brand-text strong { display: block; font-family: var(--display); font-size: 0.88rem; color: var(--white); }
+.nav-brand-text small { font-size: 0.52rem; letter-spacing: 3px; color: var(--lime); text-transform: uppercase; font-weight: 600; }
+.nav-back {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--parchment);
+  border: 1px solid var(--border-subtle); padding: 9px 18px; border-radius: 50px; transition: 0.2s;
+}
+.nav-back:hover { border-color: var(--lime); color: var(--lime); }
 
-        .footer-sk { text-align: center; padding: 40px 0; font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; opacity: 0.3; text-transform: uppercase; }
-    </style>
+/* ============================================================
+   PAGE HERO
+============================================================ */
+.page-hero {
+  padding: 120px 0 70px;
+  background:
+    linear-gradient(to bottom, rgba(5,5,5,0.55) 0%, rgba(5,5,5,0.88) 65%, var(--deep-forest) 100%),
+    url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=1350&auto=format&fit=crop')
+    center/cover no-repeat;
+  border-bottom: 1px solid var(--border);
+}
+.page-hero h1 {
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  font-weight: 900; color: var(--white);
+  line-height: 1.08; letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+.page-hero h1 em { font-style: normal; color: var(--lime); }
+.page-hero p { font-size: 0.92rem; color: var(--text-muted); line-height: 1.75; max-width: 560px; }
+
+/* ============================================================
+   STAT STRIP (lime bg)
+============================================================ */
+.stat-strip { background: var(--lime); padding: 0; }
+.stat-strip-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+}
+.strip-item {
+  text-align: center; padding: 28px 16px;
+  border-right: 1px solid rgba(5,5,5,0.15);
+}
+.strip-item:last-child { border-right: none; }
+.strip-num {
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 900; color: var(--deep-forest); line-height: 1; display: block;
+}
+.strip-label {
+  font-size: 0.58rem; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(5,5,5,0.55); margin-top: 5px; display: block;
+}
+.strip-icon { font-size: 0.9rem; color: rgba(5,5,5,0.4); margin-bottom: 6px; }
+
+/* ============================================================
+   SECTION GENERIC
+============================================================ */
+.section-dark { padding: 80px 0; background: var(--deep-forest); }
+.section-mid { padding: 80px 0; background: var(--canopy); }
+.section-title {
+  font-family: var(--display);
+  font-size: clamp(1.7rem, 3.5vw, 2.5rem);
+  font-weight: 900; color: var(--white); margin-bottom: 12px;
+}
+.section-subtitle { font-size: 0.88rem; color: var(--text-muted); line-height: 1.7; max-width: 500px; }
+
+/* ============================================================
+   NARRATIVE BOX
+============================================================ */
+.narrative-box {
+  border-left: 4px solid var(--lime);
+  padding: 24px 28px;
+  background: var(--lime-dim);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  margin-bottom: 40px;
+}
+.narrative-box p { font-size: 0.9rem; line-height: 1.8; color: var(--parchment); }
+.narrative-box strong { color: var(--lime); }
+
+/* ============================================================
+   METODOLOGI BADGES
+============================================================ */
+.metode-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 48px;
+}
+.metode-card {
+  background: var(--canopy); border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md); padding: 20px; display: flex; gap: 14px; align-items: flex-start;
+}
+.metode-icon {
+  width: 40px; height: 40px; flex-shrink: 0;
+  background: var(--lime-dim); border: 1px solid var(--border);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+}
+.metode-icon i { color: var(--lime); font-size: 1rem; }
+.metode-card h6 { font-size: 0.72rem; font-weight: 700; color: var(--lime); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.metode-card p { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; }
+
+/* ============================================================
+   PUBLIKASI / BOOK GRID
+============================================================ */
+.pub-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 0;
+}
+.pub-card {
+  background: var(--canopy); border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md); overflow: hidden; transition: 0.25s; cursor: pointer;
+}
+.pub-card:hover { border-color: var(--lime); transform: translateY(-4px); }
+.pub-cover { width: 100%; height: 200px; object-fit: cover; background: #1a1a1a; display: block; }
+.pub-cover-placeholder {
+  width: 100%; height: 200px;
+  background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+  display: flex; align-items: center; justify-content: center;
+}
+.pub-cover-placeholder i { font-size: 2rem; color: rgba(198,255,0,0.2); }
+.pub-body { padding: 14px; }
+.pub-body span { font-size: 0.7rem; font-weight: 700; color: var(--parchment); letter-spacing: 0.5px; display: block; }
+.pub-body small { font-size: 0.6rem; color: var(--text-muted); }
+.pub-badge-soon {
+  font-size: 0.55rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-muted); border: 1px dashed var(--border); padding: 3px 8px; border-radius: 50px;
+  display: inline-block; margin-top: 4px;
+}
+
+/* ============================================================
+   PETA
+============================================================ */
+.ui-card {
+  background: var(--canopy); border-radius: var(--r-lg);
+  border: 1px solid var(--border-subtle); overflow: hidden; margin-bottom: 24px;
+}
+.ui-card-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 22px;
+  background: rgba(255,171,0,0.1); border-bottom: 1px solid rgba(255,171,0,0.2);
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--orange);
+}
+#map-kehati { height: 460px; width: 100%; background: #111; }
+.map-filter-bar {
+  padding: 14px 20px; background: rgba(0,0,0,0.3);
+  border-top: 1px solid var(--border-subtle);
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.btn-mf {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-muted); padding: 6px 16px; border-radius: 8px;
+  font-size: 0.68rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+  letter-spacing: 0.5px;
+}
+.btn-mf.active, .btn-mf:hover { background: var(--lime-dim); color: var(--lime); border-color: var(--border); }
+
+/* ============================================================
+   TABEL MONITORING
+============================================================ */
+.sk-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.78rem; color: #222; background: var(--white);
+}
+.sk-table thead th {
+  background: #f4f4f4; font-weight: 800; font-size: 0.6rem;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 13px 14px; border-bottom: 2px solid #ddd; color: #444; white-space: nowrap;
+}
+.sk-table tbody td {
+  padding: 12px 14px; border-bottom: 1px solid #eee; vertical-align: middle; font-weight: 500;
+}
+.sk-table tbody tr:hover td { background: #fafff0; }
+.badge-status {
+  display: inline-block; font-size: 0.58rem; font-weight: 800;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 50px; width: 110px; text-align: center;
+}
+.badge-status.sangat-baik { background: #e8f5e9; color: #2e7d32; }
+.badge-status.baik { background: #e3f2fd; color: #1565c0; }
+.badge-status.sedang { background: #fff8e1; color: #f57f17; }
+.btn-detail {
+  display: inline-block; font-size: 0.6rem; font-weight: 800;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 6px 14px; border-radius: 6px; border: 1px solid #ccc; color: #555; transition: 0.2s;
+}
+.btn-detail:hover { background: var(--deep-forest); color: var(--lime); border-color: transparent; }
+
+/* ============================================================
+   FLAGSHIP SPECIES HIGHLIGHT
+============================================================ */
+.flagship-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;
+}
+.flagship-card {
+  background: var(--deep-forest); border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md); overflow: hidden; transition: 0.25s; cursor: pointer;
+}
+.flagship-card:hover { border-color: var(--lime); transform: translateY(-4px); }
+.flagship-img { width: 100%; height: 160px; object-fit: cover; opacity: 0.85; }
+.flagship-img-placeholder {
+  width: 100%; height: 160px;
+  background: linear-gradient(135deg, #1a2a1a, #0a1a0a);
+  display: flex; align-items: center; justify-content: center;
+}
+.flagship-img-placeholder i { font-size: 2.5rem; color: rgba(198,255,0,0.15); }
+.flagship-body { padding: 16px; }
+.flagship-body h5 { font-family: var(--display); font-size: 0.95rem; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+.flagship-body p { font-size: 0.72rem; color: var(--text-muted); line-height: 1.55; }
+.flagship-badge {
+  display: inline-block; margin-top: 10px;
+  font-size: 0.55rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 50px; background: rgba(244,67,54,0.1); color: #ef5350;
+  border: 1px solid rgba(244,67,54,0.2);
+}
+
+/* ============================================================
+   ADMIN PANEL (tersembunyi — akses via logo 5x klik)
+============================================================ */
+.admin-backdrop {
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(0,0,0,0.8);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.admin-backdrop.show { display: flex; }
+.admin-panel {
+  background: var(--canopy); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 32px; width: 100%; max-width: 420px; position: relative;
+}
+.admin-panel h3 { font-family: var(--display); color: var(--white); font-size: 1.2rem; margin-bottom: 6px; }
+.admin-panel p { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 20px; }
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block; font-size: 0.62rem; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--lime); margin-bottom: 6px;
+}
+.form-group input {
+  width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  border-radius: var(--r-sm); color: var(--parchment);
+  font-family: var(--body); font-size: 0.85rem; padding: 12px 14px; outline: none; transition: border-color 0.2s;
+}
+.form-group input:focus { border-color: var(--lime); }
+.btn-admin-login {
+  width: 100%; padding: 14px; background: var(--lime); color: var(--deep-forest);
+  font-family: var(--body); font-size: 0.78rem; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; border: none; border-radius: 50px; cursor: pointer; transition: 0.2s;
+}
+.btn-admin-login:hover { background: var(--white); }
+.admin-close-btn {
+  position: absolute; top: 14px; right: 14px;
+  background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer;
+}
+.admin-error { font-size: 0.72rem; color: #ff6b6b; margin-top: 10px; display: none; }
+
+/* Migrasi panel — tampil setelah login, menggantikan form login */
+.migr-panel { display: none; }
+.migr-panel.show { display: block; }
+.login-panel.hide { display: none; }
+.migr-log {
+  background: rgba(0,0,0,0.4); border-radius: var(--r-sm); padding: 14px;
+  font-size: 0.7rem; color: var(--text-muted); height: 150px;
+  overflow-y: auto; font-family: monospace; line-height: 1.6;
+  border: 1px solid var(--border-subtle); margin-bottom: 14px;
+}
+.migr-log .ok { color: var(--lime); }
+.migr-log .err { color: #ff6b6b; }
+.btn-migr {
+  width: 100%; padding: 14px; background: rgba(244,67,54,0.15);
+  border: 1px solid rgba(244,67,54,0.4); color: #ef5350;
+  font-family: var(--body); font-size: 0.78rem; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; border-radius: 50px; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
+}
+.btn-migr:hover { background: rgba(244,67,54,0.25); }
+.btn-migr:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ============================================================
+   FOOTER
+============================================================ */
+footer {
+  background: #050e08; border-top: 1px solid var(--border);
+  padding: 32px 24px; text-align: center;
+  font-size: 0.62rem; font-weight: 600; letter-spacing: 2px;
+  color: var(--text-muted); text-transform: uppercase;
+}
+
+/* ============================================================
+   REVEAL ANIMATION
+============================================================ */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.55s ease, transform 0.55s ease; }
+.reveal.visible { opacity: 1; transform: none; }
+.rd1 { transition-delay: 0.1s; } .rd2 { transition-delay: 0.2s; } .rd3 { transition-delay: 0.3s; }
+
+/* ============================================================
+   MOBILE
+============================================================ */
+@media (max-width: 768px) {
+  nav { padding: 0 16px; height: 58px; }
+  .nav-back span { display: none; }
+  .page-hero { padding: 90px 0 50px; }
+  .stat-strip-grid { grid-template-columns: repeat(2, 1fr); }
+  .strip-item { border-right: none; border-bottom: 1px solid rgba(5,5,5,0.15); }
+  .strip-item:nth-child(odd) { border-right: 1px solid rgba(5,5,5,0.15); }
+  .strip-item:nth-last-child(-n+2) { border-bottom: none; }
+  .pub-grid { grid-template-columns: repeat(2, 1fr); }
+  #map-kehati { height: 300px; }
+  .metode-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
+</style>
 </head>
 <body>
 
-    <button id="btnMigrasiKehati" style="position:fixed; top:150px; right:20px; z-index:9999; padding:15px; background:red; color:white; font-weight:bold; border-radius:10px; border:2px solid white; cursor:pointer;">
-    🚀 PINDAHKAN DATA KEHATI KE FIREBASE
-</button>
-    
-    <div class="hero-kehati">
-        <div class="container text-center">
-            <div class="logo-area">
-                <img src="./LOGO YSKI.png" class="logo-img" onerror="this.src='https://sekolakonangindonesia-prog.github.io/sekolakonang/LOGO%20YSKI.png'">
-                <div class="ms-3 text-start" style="line-height: 1.1;">
-                    <span class="fw-bold d-block text-white" style="font-size: 1rem;">SEKOLA KONANG</span>
-                    <small style="font-size: 0.6rem; letter-spacing: 3px; color: var(--accent);">INDONESIA</small>
-                </div>
-            </div>
-            <h1 class="fw-black display-5">MONITORING <span style="color:var(--accent)">KEHATI</span></h1>
-            <p class="small uppercase tracking-widest text-white-50">Building Ecosystem Resilience for Future Generations</p>
-            <a href="index.html" class="btn btn-outline-light btn-sm rounded-pill mt-4 px-4" style="font-size: 0.6rem; font-weight: 700;">KEMBALI KE MENU</a>
-        </div>
+<!-- NAV -->
+<nav>
+  <div class="nav-brand" id="logoTrigger" style="cursor:pointer;" title="">
+    <img src="https://raw.githubusercontent.com/sekolakonangindonesiaprog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
+    <div class="nav-brand-text">
+      <strong>Sekola Konang</strong>
+      <small>Indonesia</small>
+    </div>
+  </div>
+  <a href="index.html" class="nav-back">
+    <i class="fas fa-arrow-left"></i>
+    <span>Kembali ke Menu</span>
+  </a>
+</nav>
+
+<!-- HERO -->
+<section class="page-hero">
+  <div class="container-page">
+    <span class="section-label">Program Biodiversity</span>
+    <h1>Monitoring <em>Keanekaragaman Hayati</em></h1>
+    <p>Baseline study dan monitoring berkala flora, fauna, dan burung menggunakan metodologi ilmiah kelas dunia — untuk memastikan ekosistem tetap sehat dan terukur.</p>
+  </div>
+</section>
+
+<!-- STAT STRIP -->
+<section class="stat-strip">
+  <div class="container-page">
+    <div class="stat-strip-grid">
+      <div class="strip-item">
+        <i class="fas fa-leaf strip-icon"></i>
+        <span class="strip-num" id="stat-flora">201+</span>
+        <span class="strip-label">Spesies Flora</span>
+      </div>
+      <div class="strip-item">
+        <i class="fas fa-feather-alt strip-icon"></i>
+        <span class="strip-num" id="stat-burung">30+</span>
+        <span class="strip-label">Spesies Burung</span>
+      </div>
+      <div class="strip-item">
+        <i class="fas fa-map-marker-alt strip-icon"></i>
+        <span class="strip-num" id="stat-lokasi">5</span>
+        <span class="strip-label">Lokasi Pantau Aktif</span>
+      </div>
+      <div class="strip-item">
+        <i class="fas fa-chart-line strip-icon"></i>
+        <span class="strip-num" id="stat-index">3.99</span>
+        <span class="strip-label">Indeks H' Tertinggi</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION: NARASI & METODOLOGI -->
+<section class="section-dark">
+  <div class="container-page">
+
+    <div class="narrative-box reveal">
+      <p>
+        Biodiversitas bukan sekadar statistik — melainkan jaring penyangga kehidupan global. Di tengah ancaman degradasi lahan,
+        <strong>Yayasan Sekola Konang Indonesia</strong> hadir sebagai jembatan ilmiah untuk memulihkan ekosistem.
+        Kami mengadopsi standar <em>Baseline Study</em> komprehensif dan monitoring berkala dengan metodologi yang dapat direplikasi
+        dan dipertanggungjawabkan kepada mitra strategis.
+      </p>
     </div>
 
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-12">
-                <div class="narrative-box">
-                    <h2 class="global-title">Biodiversity untuk Keseimbangan Global</h2>
-                                    <div class="text-justify">
-                    Biodiversitas bukan sekadar statistik, melainkan jaring penyangga kehidupan global. Di tengah ancaman krisis iklim dan degradasi lahan, <strong>Yayasan Sekola Konang Indonesia</strong> hadir sebagai jembatan ilmiah untuk memulihkan ekosistem. Kami percaya bahwa kesehatan sebuah kawasan industri atau perkotaan dapat diukur dari seberapa tangguh keanekaragaman hayati di dalamnya.
-                    <br><br>
-                    Mengadopsi standar <em>Baseline Study</em> yang komprehensif dan monitoring berkala, kami menerapkan metodologi ilmiah kelas dunia seperti Indeks Shanon-Wiener (H') dan Indeks Kekayaan Margalef (DMg). Kami menciptakan model pelestarian yang dapat direplikasi di berbagai wilayah nusantara bersama mitra strategis kami untuk mencapai target keberlanjutan global.
-                </div>
-                </div>
-
-                <h6 class="small fw-bold text-white-50 mt-5 mb-3 uppercase tracking-widest text-center">
-                    <i class="fas fa-book-open me-2 text-accent"></i> Publikasi Ilmiah Kami
-                </h6>
-                <div class="book-grid">
-                    <div class="book-card"><div class="book-cover"><img src="./kehatigambar.jpg" onerror="this.src='https://via.placeholder.com/200x300?text=Report'"></div><span class="small fw-bold">BASELINE 2020</span></div>
-                    <div class="book-card"><div class="book-cover"><img src="./kehatigambar2.jpg" onerror="this.src='https://via.placeholder.com/200x300?text=Report'"></div><span class="small fw-bold">MONITORING 2023</span></div>
-                    <div class="book-card"><div class="book-cover"><img src="https://via.placeholder.com/200x300?text=2024"></div><span class="small fw-bold">REPORT 2024</span></div>
-                    <div class="book-card"><div class="book-cover"><img src="https://via.placeholder.com/200x300?text=2025"></div><span class="small fw-bold">REPORT 2025</span></div>
-                    <div class="book-card"><div class="book-cover"><img src="https://via.placeholder.com/200x300?text=Future"></div><span class="small fw-bold">COMING SOON</span></div>
-                </div>
-            </div>
+    <div class="metode-grid reveal">
+      <div class="metode-card">
+        <div class="metode-icon"><i class="fas fa-calculator"></i></div>
+        <div>
+          <h6>Indeks Shannon (H')</h6>
+          <p>Mengukur tingkat keanekaragaman jenis dalam suatu komunitas ekosistem.</p>
         </div>
-
-        <div class="map-card">
-            <div class="map-header d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-map-marker-alt me-2"></i> PETA SEBARAN & DELINEASI AREA MONITORING</span>
-                <span class="badge bg-dark border border-secondary">GLOBAL HYBRID</span>
-            </div>
-            <div id="map-kehati"></div>
-            <div class="map-footer">
-                <button class="btn-map-filter active"><i class="fas fa-leaf me-1"></i> Vegetasi</button>
-                <button class="btn-map-filter"><i class="fas fa-paw me-1"></i> Satwa Liar</button>
-                <button class="btn-map-filter"><i class="fas fa-route me-1"></i> Jalur Pantau</button>
-            </div>
+      </div>
+      <div class="metode-card">
+        <div class="metode-icon"><i class="fas fa-balance-scale"></i></div>
+        <div>
+          <h6>Indeks Kemerataan (E)</h6>
+          <p>Menilai distribusi individu antar spesies — apakah dominan atau merata.</p>
         </div>
-
-        <div class="row g-3 justify-content-center">
-            <div class="col-6 col-md-3"><div class="stat-card-badge"><h2>201+</h2><small>Spesies Flora</small></div></div>
-            <div class="col-6 col-md-3"><div class="stat-card-badge"><h2>25+</h2><small>Spesies Burung</small></div></div>
-            <div class="col-6 col-md-3"><div class="stat-card-badge"><h2>Sangat Baik</h2><small>Status Indeks H'</small></div></div>
+      </div>
+      <div class="metode-card">
+        <div class="metode-icon"><i class="fas fa-layer-group"></i></div>
+        <div>
+          <h6>Indeks Kekayaan Margalef (R)</h6>
+          <p>Mengukur kekayaan spesies relatif terhadap jumlah individu yang diamati.</p>
         </div>
-
-        <div class="card-table shadow-lg">
-            <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
-                <h6 class="m-0 fw-bold uppercase tracking-widest text-dark"><i class="fas fa-database me-2 text-primary"></i> Log Database Kehati</h6>
-                <span class="badge bg-success" style="font-size:0.5rem">UPDATED 2025</span>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-kehati mb-0 align-middle">
-                    <thead>
-                        <tr class="bg-dark text-white">
-                            <th>Lokasi Pantau</th>
-                            <th class="text-center">Tahun</th>
-                            <th class="text-center">Indeks Shanon (H')</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="kehati-table-body">
-                        <tr><td colspan="5" class="text-center py-5">Memuat data dari database...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+      </div>
+      <div class="metode-card">
+        <div class="metode-icon"><i class="fas fa-binoculars"></i></div>
+        <div>
+          <h6>Point Count Burung</h6>
+          <p>Pencacahan burung pada titik-titik pantau standar untuk estimasi populasi.</p>
         </div>
-
-        <div class="footer-sk">@ Yayasan Sekola Konang Indonesia</div>
+      </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="database.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, collection, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <!-- PUBLIKASI -->
+    <span class="section-label reveal">Publikasi Ilmiah Kami</span>
+    <div class="pub-grid reveal" id="pubGrid">
+      <!-- Diisi JS dari Firebase; fallback statis -->
+      <div class="pub-card">
+        <img class="pub-cover" src="https://via.placeholder.com/200x200/1a1a1a/C6FF00?text=2020" alt="Baseline 2020">
+        <div class="pub-body"><span>Baseline Study</span><small>2020</small></div>
+      </div>
+      <div class="pub-card">
+        <img class="pub-cover" src="https://via.placeholder.com/200x200/1a1a1a/C6FF00?text=2023" alt="Monitoring 2023">
+        <div class="pub-body"><span>Monitoring</span><small>2023</small></div>
+      </div>
+      <div class="pub-card">
+        <div class="pub-cover-placeholder"><i class="fas fa-file-alt"></i></div>
+        <div class="pub-body"><span>Report 2024</span><small>2024</small><div class="pub-badge-soon">Soon</div></div>
+      </div>
+      <div class="pub-card">
+        <div class="pub-cover-placeholder"><i class="fas fa-file-alt"></i></div>
+        <div class="pub-body"><span>Report 2025</span><small>2025</small><div class="pub-badge-soon">Soon</div></div>
+      </div>
+      <div class="pub-card">
+        <div class="pub-cover-placeholder"><i class="fas fa-plus"></i></div>
+        <div class="pub-body"><span>Coming Soon</span><small>—</small></div>
+      </div>
+    </div>
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
-        authDomain: "sekola-konang.firebaseapp.com",
-        projectId: "sekola-konang",
-        storageBucket: "sekola-konang.firebasestorage.app",
-        messagingSenderId: "9338352073",
-        appId: "1:9338352073:web:b56481b836888b1a8bf818"
-    };
+  </div>
+</section>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+<!-- SECTION: PETA -->
+<section class="section-mid">
+  <div class="container-page">
+    <div class="section-header text-center mb-4 reveal">
+      <span class="section-label">Peta Monitoring</span>
+      <div class="section-title">Sebaran &amp; Delineasi Area Pantau</div>
+    </div>
+    <div class="ui-card reveal">
+      <div class="ui-card-header">
+        <i class="fas fa-map-marked-alt"></i> Peta Sebaran Lokasi Monitoring Kehati
+        <span style="margin-left:auto; font-size:0.6rem; opacity:0.6;">HYBRID SATELIT + LABEL</span>
+      </div>
+      <div id="map-kehati"></div>
+      <div class="map-filter-bar">
+        <button class="btn-mf active" data-filter="all"><i class="fas fa-globe me-1"></i> Semua Lokasi</button>
+        <button class="btn-mf" data-filter="sangat-baik"><i class="fas fa-check-circle me-1"></i> Sangat Baik</button>
+        <button class="btn-mf" data-filter="baik"><i class="fas fa-circle me-1"></i> Baik</button>
+        <button class="btn-mf" data-filter="sedang"><i class="fas fa-minus-circle me-1"></i> Sedang</button>
+      </div>
+    </div>
+  </div>
+</section>
 
-    // --- 1. INISIALISASI PETA (FIX AGAR TIDAK POLOS) ---
-    var map = L.map('map-kehati', {
-        zoomControl: true,
-        scrollWheelZoom: false
-    }).setView([-7.723, 112.932], 13);
+<!-- SECTION: TABEL LOG DATABASE -->
+<section class="section-dark">
+  <div class="container-page">
+    <div class="row align-items-end mb-4 reveal">
+      <div class="col">
+        <span class="section-label">Log Database</span>
+        <div class="section-title">Rekap Monitoring per Lokasi</div>
+        <p class="section-subtitle" style="margin-top:8px;">Data indeks keanekaragaman hayati dari seluruh lokasi pantau aktif.</p>
+      </div>
+    </div>
+    <div class="ui-card reveal">
+      <div class="table-responsive">
+        <table class="sk-table">
+          <thead>
+            <tr>
+              <th>Lokasi Pantau</th>
+              <th class="text-center">Tahun</th>
+              <th class="text-center">Indeks H'</th>
+              <th class="text-center">Kemerataan (E)</th>
+              <th class="text-center">Kekayaan (R)</th>
+              <th class="text-center">Status</th>
+              <th class="text-center">Detail</th>
+            </tr>
+          </thead>
+          <tbody id="kehatiTableBody">
+            <tr><td colspan="7" class="text-center" style="padding:30px; color:#999;">Memuat data dari database...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
 
-    // Sumber Peta Satelit Esri (Sangat Stabil)
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(map);
-    // Tambah Label Jalan & Desa
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png').addTo(map);
+<!-- SECTION: FLAGSHIP SPECIES -->
+<section class="section-mid">
+  <div class="container-page">
+    <div class="section-header mb-4 reveal">
+      <span class="section-label">Spesies Penting</span>
+      <div class="section-title">Spesies Lindung &amp; Indikator</div>
+      <p class="section-subtitle" style="margin-top:8px;">Kehadiran spesies-spesies ini menjadi bukti nyata pemulihan ekosistem di area monitoring kami.</p>
+    </div>
+    <div class="flagship-grid" id="flagshipGrid">
+      <!-- Diisi JS -->
+      <div style="text-align:center; color:var(--text-muted); font-size:0.85rem; grid-column:1/-1; padding:30px 0;">Memuat data spesies...</div>
+    </div>
+  </div>
+</section>
 
-    setTimeout(() => { map.invalidateSize(); }, 500);
+<!-- FOOTER -->
+<footer>© Yayasan Sekola Konang Indonesia — The Firefly Movement, Probolinggo</footer>
 
-    // --- 2. FUNGSI TAMPIL DATA (DENGAN PENGAMAN) ---
-    async function loadKehatiData() {
-        const tbody = document.getElementById('kehati-table-body');
-        if(!tbody) return;
-        
-        try {
-            const querySnapshot = await getDocs(collection(db, "monitoring_kehati"));
-            if (querySnapshot.empty) {
-                tbody.innerHTML = "<tr><td colspan='5' class='text-center py-4'>Firebase masih kosong. Klik tombol merah untuk migrasi data.</td></tr>";
-                return;
-            }
+<!-- ADMIN PANEL (tersembunyi) -->
+<div class="admin-backdrop" id="adminBackdrop">
+  <div class="admin-panel">
+    <button class="admin-close-btn" id="adminClose"><i class="fas fa-times"></i></button>
 
-            tbody.innerHTML = ""; 
-            querySnapshot.forEach((doc) => {
-                const d = doc.data();
-                const hVal = d.index_h || 0;
-                let statusColor = hVal >= 3 ? 'success' : (hVal >= 2 ? 'warning' : 'danger');
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td><i class="fas fa-map-marker-alt text-danger me-2"></i> ${d.location || 'Tanpa Nama'}</td>
-                        <td class="text-center">${d.year || '-'}</td>
-                        <td class="text-center fw-bold text-primary">${hVal}</td>
-                        <td class="text-center">
-                            <span class="badge bg-${statusColor} uppercase p-2" style="font-size:0.6rem; width:100px;">${d.status || 'Sedang'}</span>
-                        </td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-dark fw-bold rounded-pill px-3" style="font-size:0.6rem" onclick="window.location.href='detail.html?id=${doc.id}'">DETAIL</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        } catch (e) { 
-            console.error("Gagal load:", e);
-            tbody.innerHTML = "<tr><td colspan='5' class='text-center'>Terjadi gangguan koneksi database.</td></tr>";
+    <!-- LOGIN FORM -->
+    <div id="loginPanel" class="login-panel">
+      <h3>Panel Admin</h3>
+      <p>Login untuk mengakses fungsi migrasi data kehati ke Firebase.</p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="adminEmail" placeholder="admin@sekolakonang.id">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="adminPassword" placeholder="••••••••">
+      </div>
+      <button class="btn-admin-login" id="adminLoginBtn">Masuk</button>
+      <div class="admin-error" id="adminError">Email atau password salah.</div>
+    </div>
+
+    <!-- MIGRASI PANEL (tampil setelah login) -->
+    <div id="migrPanel" class="migr-panel">
+      <h3>Migrasi Data Kehati</h3>
+      <p>Pindahkan data dari <code style="color:var(--lime)">database.js</code> ke Firebase Firestore.</p>
+      <div class="migr-log" id="migrLog">
+        <span style="color:var(--text-muted)">Siap untuk migrasi. Klik tombol di bawah untuk mulai.</span>
+      </div>
+      <button class="btn-migr" id="btnMigrasi">
+        <i class="fas fa-database me-2"></i> Mulai Migrasi Data Kehati
+      </button>
+      <button class="btn-migr" id="btnMigrasiMap" style="background:rgba(33,150,243,0.1); border-color:rgba(33,150,243,0.4); color:#64b5f6;">
+        <i class="fas fa-map me-2"></i> Migrasi Polygon Peta
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="database.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+  import { initializeApp }        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, collection, getDocs, getDoc }
+                                   from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword }
+                                   from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+    authDomain: "sekola-konang.firebaseapp.com",
+    projectId: "sekola-konang",
+    storageBucket: "sekola-konang.firebasestorage.app",
+    messagingSenderId: "9338352073",
+    appId: "1:9338352073:web:b56481b836888b1a8bf818"
+  };
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+  const auth = getAuth(app);
+
+  /* ============================================================
+     PETA
+  ============================================================ */
+  const map = L.map('map-kehati', { zoomControl: true, scrollWheelZoom: false })
+    .setView([-7.76, 112.92], 12);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { attribution: '© Esri' }).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png').addTo(map);
+  setTimeout(() => map.invalidateSize(), 600);
+
+  let allMarkers = []; // { marker, status }
+
+  /* ============================================================
+     LOAD DATA KEHATI
+  ============================================================ */
+  async function loadKehati() {
+    const tbody = document.getElementById('kehatiTableBody');
+    const flagshipEl = document.getElementById('flagshipGrid');
+    let flagshipItems = [];
+
+    try {
+      const snap = await getDocs(collection(db, "monitoring_kehati"));
+
+      if (snap.empty) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:30px; color:#999;">
+          Firebase masih kosong. Gunakan panel admin (klik logo 5x) untuk migrasi data.
+        </td></tr>`;
+        flagshipEl.innerHTML = `<div style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:30px 0;">Belum ada data spesies.</div>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      let maxH = 0, totalFlora = 0, totalBurung = 0, lokasiCount = 0;
+
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const hVal = d.index_h || 0;
+        if (hVal > maxH) maxH = hVal;
+        totalFlora  += (d.flora_total || 0);
+        totalBurung += (d.bird_species || 0);
+        lokasiCount++;
+
+        // Status
+        let statusClass = hVal >= 3 ? 'sangat-baik' : (hVal >= 2 ? 'baik' : 'sedang');
+        let statusLabel = hVal >= 3 ? 'Sangat Baik' : (hVal >= 2 ? 'Baik' : 'Sedang');
+
+        // Tabel row
+        tbody.innerHTML += `
+          <tr>
+            <td style="font-weight:600; color:#111;">
+              <i class="fas fa-map-marker-alt" style="color:#e53935; margin-right:8px; font-size:0.75rem;"></i>
+              ${d.location || '—'}
+            </td>
+            <td class="text-center">${d.year || '—'}</td>
+            <td class="text-center" style="font-weight:800; color:#0277bd; font-size:1rem;">${hVal}</td>
+            <td class="text-center">${d.index_e || '—'}</td>
+            <td class="text-center">${d.index_r || '—'}</td>
+            <td class="text-center">
+              <span class="badge-status ${statusClass}">${statusLabel}</span>
+            </td>
+            <td class="text-center">
+              <a href="detail.html?id=${docSnap.id}" class="btn-detail">Detail</a>
+            </td>
+          </tr>`;
+
+        // Marker peta
+        const lat = d.lat, lng = d.lng;
+        if (lat && lng) {
+          const dotColor = hVal >= 3 ? '#C6FF00' : (hVal >= 2 ? '#2196f3' : '#ffab00');
+          const marker = L.circleMarker([lat, lng], {
+            radius: 9, color: dotColor, fillColor: dotColor, fillOpacity: 0.9, weight: 2
+          }).addTo(map)
+          .bindPopup(`
+            <div style="font-family:'Inter',sans-serif; min-width:180px; padding:4px;">
+              <strong style="font-size:0.85rem;">${d.location || ''}</strong><br>
+              <span style="font-size:0.75rem; color:#555;">H' = ${hVal} · ${statusLabel}</span>
+            </div>
+          `);
+          allMarkers.push({ marker, status: statusClass });
         }
+
+        // Flagship species
+        if (d.location && hVal >= 2) {
+          flagshipItems.push({
+            name: d.location,
+            hVal, statusClass, statusLabel,
+            flora: d.flora_total || 0,
+            burung: d.bird_species || 0,
+            img: d.header_image || null
+          });
+        }
+      });
+
+      // Update stats strip
+      if (totalFlora)  document.getElementById('stat-flora').textContent  = totalFlora + '+';
+      if (totalBurung) document.getElementById('stat-burung').textContent = totalBurung + '+';
+      if (lokasiCount) document.getElementById('stat-lokasi').textContent = lokasiCount;
+      if (maxH)        document.getElementById('stat-index').textContent  = maxH.toFixed(2);
+
+      // Flagship cards
+      renderFlagship(flagshipItems);
+
+    } catch (e) {
+      console.error("Gagal load kehati:", e);
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:30px; color:#f44336;">Gagal memuat data. Cek koneksi.</td></tr>`;
     }
+  }
 
-    // --- 3. ROBOT MIGRASI (VERSI SUPER AMAN) ---
-    document.getElementById('btnMigrasiKehati').addEventListener('click', async () => {
-        if (typeof db_kehati === 'undefined') {
-            alert("Gagal: File database.js tidak ditemukan!");
-            return;
-        }
-        if (!confirm("Pindahkan semua data ke Firebase sekarang?")) return;
-
-        alert("Sedang mengirim data... Jangan tutup halaman ini.");
-
-        try {
-            const locs = db_kehati.locations;
-            for (let id in locs) {
-                const data = locs[id];
-                
-                // Gunakan Optional Chaining (?.) dan Fallback (||) di SETIAP baris
-                const payload = {
-                    location: data.name || "",
-                    desc: data.desc || "Monitoring keanekaragaman hayati berkala.",
-                    year: data.year || "2025",
-                    status: data.status || "Sedang",
-                    index_h: data.indices?.H || 0,
-                    index_e: data.indices?.E || 0,
-                    index_r: data.indices?.R || 0,
-                    category: data.indices?.cat || "Sedang",
-                    lat: data.lat || 0,
-                    lng: data.lng || 0,
-                    flora_total: data.floraStats?.total || 0,
-                    flora_famili: data.floraStats?.famili || 0,
-                    bird_species: data.birdStats?.species || 0,
-                    bird_family: data.birdStats?.family || 0,
-                    history_h: JSON.stringify(data.historyH || []),
-                    history_labels: JSON.stringify(data.chartLabels || []),
-                    protected_list: JSON.stringify(data.protectedList || []),
-                    area_polygon: JSON.stringify(data.detailPolygon || [])
-                };
-
-                await setDoc(doc(db, "monitoring_kehati", id), payload);
-                console.log("Berhasil migrasi: " + id);
-            }
-
-            // Migrasi Peta Master
-            await setDoc(doc(db, "kehati_map_config", "master_polygons"), {
-                geojson: JSON.stringify(db_kehati.polygons)
-            });
-
-            alert("✅ SEMUA DATA BERHASIL MASUK! Silakan refresh (F5).");
-            loadKehatiData(); // Refresh tabel otomatis
-        } catch (err) {
-            alert("Gagal di tengah jalan: " + err.message);
-        }
+  function renderFlagship(items) {
+    const el = document.getElementById('flagshipGrid');
+    if (!items.length) {
+      el.innerHTML = `<div style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:30px 0;">Belum ada data spesies unggulan.</div>`;
+      return;
+    }
+    el.innerHTML = '';
+    items.forEach(d => {
+      el.innerHTML += `
+        <div class="flagship-card">
+          ${d.img
+            ? `<img class="flagship-img" src="${d.img}" alt="${d.name}" onerror="this.style.display='none'">`
+            : `<div class="flagship-img-placeholder"><i class="fas fa-map-marker-alt"></i></div>`
+          }
+          <div class="flagship-body">
+            <h5>${d.name}</h5>
+            <p>Indeks H' = <strong style="color:var(--lime)">${d.hVal}</strong> &nbsp;·&nbsp; ${d.flora} spesies flora &nbsp;·&nbsp; ${d.burung} spesies burung</p>
+            <span class="flagship-badge">${d.statusLabel}</span>
+          </div>
+        </div>`;
     });
+  }
 
-    // Jalankan fungsi utama
-    loadKehatiData();
+  loadKehati();
+
+  /* ============================================================
+     PETA FILTER BUTTONS
+  ============================================================ */
+  document.querySelectorAll('.btn-mf').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.btn-mf').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      allMarkers.forEach(({ marker, status }) => {
+        if (filter === 'all' || status === filter) {
+          marker.addTo(map);
+        } else {
+          map.removeLayer(marker);
+        }
+      });
+    });
+  });
+
+  /* ============================================================
+     POLYGON PETA dari Firebase
+  ============================================================ */
+  async function loadMapPolygons() {
+    try {
+      const docSnap = await getDoc(doc(db, "kehati_map_config", "master_polygons"));
+      if (docSnap.exists()) {
+        const geoData = JSON.parse(docSnap.data().geojson);
+        L.geoJSON(geoData, {
+          style: feat => ({
+            color: feat.properties?.color || '#C6FF00',
+            weight: 2, fillOpacity: 0.1
+          }),
+          onEachFeature: (feat, layer) => {
+            if (feat.properties?.name) layer.bindPopup(`<b>${feat.properties.name}</b>`);
+          }
+        }).addTo(map);
+      }
+    } catch (e) { console.warn("Polygon peta belum ada:", e); }
+  }
+  loadMapPolygons();
+
+  /* ============================================================
+     ADMIN PANEL — LOGO 5X KLIK
+  ============================================================ */
+  let clickCount = 0, clickTimer = null;
+  const backdrop = document.getElementById('adminBackdrop');
+  const loginPanel = document.getElementById('loginPanel');
+  const migrPanel  = document.getElementById('migrPanel');
+
+  document.getElementById('logoTrigger').addEventListener('click', () => {
+    clickCount++;
+    clearTimeout(clickTimer);
+    clickTimer = setTimeout(() => clickCount = 0, 1500);
+    if (clickCount >= 5) { clickCount = 0; backdrop.classList.add('show'); }
+  });
+  document.getElementById('adminClose').addEventListener('click', () => backdrop.classList.remove('show'));
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('show'); });
+
+  /* Login */
+  document.getElementById('adminLoginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('adminEmail').value.trim();
+    const pass  = document.getElementById('adminPassword').value;
+    document.getElementById('adminError').style.display = 'none';
+    if (!email || !pass) return;
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      loginPanel.classList.add('hide');
+      migrPanel.classList.add('show');
+    } catch (e) {
+      document.getElementById('adminError').style.display = 'block';
+    }
+  });
+
+  /* Migrasi Data Kehati */
+  function logMigr(msg, type = 'ok') {
+    const log = document.getElementById('migrLog');
+    log.innerHTML += `<div class="${type}">${msg}</div>`;
+    log.scrollTop = log.scrollHeight;
+  }
+
+  document.getElementById('btnMigrasi').addEventListener('click', async () => {
+    if (typeof db_kehati === 'undefined') {
+      logMigr('❌ File database.js tidak ditemukan!', 'err'); return;
+    }
+    if (!confirm('Mulai migrasi data kehati ke Firebase? Proses ini tidak bisa dibatalkan.')) return;
+
+    const btn = document.getElementById('btnMigrasi');
+    btn.disabled = true;
+    document.getElementById('migrLog').innerHTML = '';
+    logMigr('🚀 Memulai migrasi...');
+
+    const locs = db_kehati.locations;
+    let success = 0, fail = 0;
+
+    for (let id in locs) {
+      try {
+        const data = locs[id];
+        const payload = {
+          location:       data.name           || "",
+          desc:           data.desc           || "",
+          year:           data.year           || "2025",
+          status:         data.status         || "Sedang",
+          index_h:        data.indices?.H     || 0,
+          index_e:        data.indices?.E     || 0,
+          index_r:        data.indices?.R     || 0,
+          category:       data.indices?.cat   || "Sedang",
+          lat:            data.lat            || 0,
+          lng:            data.lng            || 0,
+          flora_total:    data.floraStats?.total   || 0,
+          flora_famili:   data.floraStats?.famili  || 0,
+          bird_species:   data.birdStats?.species  || 0,
+          bird_family:    data.birdStats?.family   || 0,
+          history_h:      JSON.stringify(data.historyH     || []),
+          history_labels: JSON.stringify(data.chartLabels  || []),
+          protected_list: JSON.stringify(data.protectedList || []),
+          area_polygon:   JSON.stringify(data.detailPolygon || []),
+          header_image:   data.headerImage    || "",
+          flagship:       JSON.stringify(data.flagshipSpecies || null),
+          bird_indices:   JSON.stringify(data.birdIndices  || {}),
+          flora_stats:    JSON.stringify(data.floraStats   || {}),
+          bird_data_graph:JSON.stringify(data.birdDataGraph|| {})
+        };
+        await setDoc(doc(db, "monitoring_kehati", id), payload);
+        logMigr(`✓ ${id} — ${data.name}`);
+        success++;
+      } catch (e) {
+        logMigr(`✗ GAGAL: ${id} — ${e.message}`, 'err');
+        fail++;
+      }
+    }
+    logMigr(`━━━ Selesai: ${success} berhasil, ${fail} gagal.`);
+    btn.disabled = false;
+  });
+
+  /* Migrasi Polygon */
+  document.getElementById('btnMigrasiMap').addEventListener('click', async () => {
+    if (typeof db_kehati === 'undefined') {
+      logMigr('❌ File database.js tidak ditemukan!', 'err'); return;
+    }
+    logMigr('🗺️ Migrasi polygon peta...');
+    try {
+      await setDoc(doc(db, "kehati_map_config", "master_polygons"), {
+        geojson: JSON.stringify(db_kehati.polygons)
+      });
+      logMigr('✓ Polygon peta berhasil disimpan!');
+    } catch (e) {
+      logMigr(`✗ Gagal: ${e.message}`, 'err');
+    }
+  });
+
+  /* ============================================================
+     SCROLL REVEAL
+  ============================================================ */
+  const obs = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.08 }
+  );
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 </script>
 </body>
 </html>
