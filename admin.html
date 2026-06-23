@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — Sekola Konang Indonesia</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+  :root {
+    --deep-forest: #0A2818;
+    --canopy: #1A4A2E;
+    --lime: #C6FF00;
+    --lime-dim: rgba(198,255,0,0.12);
+    --parchment: #F5F5F0;
+    --white: #FFFFFF;
+    --text-muted: rgba(245,245,240,0.55);
+    --border: rgba(198,255,0,0.15);
+    --danger: #ff6b6b;
+    --display: 'Playfair Display', Georgia, serif;
+    --body: 'Inter', system-ui, sans-serif;
+    --r-sm: 10px;
+    --r-md: 16px;
+    --r-lg: 24px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--body);
+    background: var(--deep-forest);
+    color: var(--parchment);
+    min-height: 100vh;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* ===== LOGIN GATE ===== */
+  #loginGate {
+    position: fixed; inset: 0; z-index: 500;
+    background: var(--deep-forest);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .login-box {
+    background: var(--canopy);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 40px;
+    width: 100%; max-width: 380px;
+    text-align: center;
+  }
+  .login-box img { height: 50px; margin-bottom: 16px; }
+  .login-box h2 { font-family: var(--display); font-size: 1.4rem; margin-bottom: 6px; }
+  .login-box p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 24px; }
+  .form-group { margin-bottom: 14px; text-align: left; }
+  .form-group label {
+    display: block; font-size: 0.65rem; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--lime); margin-bottom: 6px;
+  }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: var(--r-sm); color: var(--parchment); font-family: var(--body);
+    font-size: 0.85rem; padding: 12px 14px; outline: none; transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--lime); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 22px; border-radius: 50px; font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; border: none; cursor: pointer; transition: 0.2s;
+  }
+  .btn-lime { background: var(--lime); color: var(--deep-forest); }
+  .btn-lime:hover { background: var(--white); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--parchment); }
+  .btn-outline:hover { border-color: var(--lime); color: var(--lime); }
+  .btn-danger { background: rgba(255,107,107,0.12); color: var(--danger); border: 1px solid rgba(255,107,107,0.3); }
+  .btn-danger:hover { background: var(--danger); color: var(--white); }
+  .btn-block { width: 100%; }
+  .login-error { font-size: 0.75rem; color: var(--danger); margin-top: 12px; display: none; }
+
+  /* ===== LAYOUT ===== */
+  #appShell { display: none; min-height: 100vh; }
+  #appShell.show { display: flex; }
+
+  .sidebar {
+    width: 240px;
+    background: #06180F;
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+  }
+  .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .sidebar-brand img { height: 32px; }
+  .sidebar-brand strong { font-family: var(--display); font-size: 0.85rem; display: block; }
+  .sidebar-brand small { font-size: 0.55rem; color: var(--lime); letter-spacing: 2px; text-transform: uppercase; }
+
+  .menu-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: var(--r-sm);
+    font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+    cursor: pointer; transition: 0.15s; margin-bottom: 4px;
+  }
+  .menu-item i { width: 18px; text-align: center; color: var(--text-muted); }
+  .menu-item:hover { background: rgba(255,255,255,0.04); color: var(--parchment); }
+  .menu-item.active { background: var(--lime-dim); color: var(--lime); }
+  .menu-item.active i { color: var(--lime); }
+
+  .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+  .sidebar-footer .menu-item { color: var(--danger); }
+  .sidebar-footer .menu-item i { color: var(--danger); }
+  .sidebar-footer .menu-item:hover { background: rgba(255,107,107,0.08); }
+  .view-site-link { font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 10px; text-align:center; }
+  .view-site-link:hover { color: var(--lime); }
+
+  .main {
+    margin-left: 240px;
+    flex: 1;
+    padding: 36px 44px;
+    max-width: 880px;
+  }
+  .main-header { margin-bottom: 32px; }
+  .main-header h1 { font-family: var(--display); font-size: 1.7rem; color: var(--white); }
+  .main-header p { font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; }
+
+  .panel {
+    background: var(--canopy);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 32px;
+    display: none;
+  }
+  .panel.active { display: block; }
+
+  .panel-section-title {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--lime); margin: 24px 0 12px;
+  }
+  .panel-section-title:first-child { margin-top: 0; }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .row-2 { grid-template-columns: 1fr; } }
+
+  .misi-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .misi-row input { flex: 1; }
+  .icon-btn {
+    width: 38px; height: 38px; flex-shrink: 0;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: var(--r-sm); color: var(--text-muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: 0.15s;
+  }
+  .icon-btn:hover { border-color: var(--lime); color: var(--lime); }
+  .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+  .save-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .save-status { font-size: 0.75rem; color: var(--lime); align-self: center; opacity: 0; transition: opacity 0.3s; }
+  .save-status.show { opacity: 1; }
+
+  /* ===== LIST TABLE (mitra/laporan/berita) ===== */
+  .list-toolbar { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+  .list-table { width: 100%; border-collapse: collapse; }
+  .list-table th {
+    text-align: left; font-size: 0.62rem; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--text-muted); padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .list-table td { padding: 12px; font-size: 0.82rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+  .list-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .list-table img.thumb { height: 28px; max-width: 70px; object-fit: contain; }
+  .list-actions { display: flex; gap: 6px; }
+  .list-actions button { width: 30px; height: 30px; font-size: 0.75rem; }
+  .empty-row td { text-align: center; color: var(--text-muted); padding: 30px; }
+
+  /* ===== MODAL (item editor) ===== */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 600;
+    background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal-box {
+    background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-lg);
+    padding: 28px; width: 100%; max-width: 440px; max-height: 86vh; overflow-y: auto;
+    position: relative;
+  }
+  .modal-box h3 { font-family: var(--display); font-size: 1.15rem; margin-bottom: 18px; }
+  .modal-close { position: absolute; top: 18px; right: 18px; background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 700;
+    background: var(--lime); color: var(--deep-forest); padding: 14px 22px;
+    border-radius: var(--r-sm); font-size: 0.8rem; font-weight: 700;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    transform: translateY(20px); opacity: 0; transition: 0.25s; pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { background: var(--danger); color: var(--white); }
+
+  .hamburger {
+    display: none;
+    position: fixed; top: 16px; left: 16px; z-index: 200;
+    background: var(--canopy); border: 1px solid var(--border); color: var(--parchment);
+    width: 42px; height: 42px; border-radius: var(--r-sm); font-size: 1rem; cursor: pointer;
+  }
+  @media (max-width: 900px) {
+    .hamburger { display: flex; align-items: center; justify-content: center; }
+    .sidebar { transform: translateX(-100%); transition: transform 0.25s; z-index: 150; }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; padding: 80px 20px 40px; }
+    .row-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============== LOGIN GATE ============== -->
+<div id="loginGate">
+  <div class="login-box">
+    <img src="https://raw.githubusercontent.com/sekolakonangindonesiaprog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
+    <h2>Admin Panel</h2>
+    <p>Sekola Konang Indonesia</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="admin@sekolakonang.id">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••">
+    </div>
+    <button class="btn btn-lime btn-block" id="loginBtn">Masuk</button>
+    <div class="login-error" id="loginError">Email atau password salah.</div>
+  </div>
+</div>
+
+<!-- ============== APP SHELL ============== -->
+<button class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+
+<div id="appShell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="https://raw.githubusercontent.com/sekolakonangindonesiaprog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
+      <div>
+        <strong>Sekola Konang</strong>
+        <small>Admin Panel</small>
+      </div>
+    </div>
+
+    <div class="menu-item active" data-panel="hero"><i class="fas fa-image"></i> Hero</div>
+    <div class="menu-item" data-panel="impact"><i class="fas fa-chart-line"></i> Impact Stats</div>
+    <div class="menu-item" data-panel="tentang"><i class="fas fa-id-card"></i> Tentang Kami</div>
+    <div class="menu-item" data-panel="program"><i class="fas fa-leaf"></i> Program</div>
+    <div class="menu-item" data-panel="mitra"><i class="fas fa-handshake"></i> Mitra</div>
+    <div class="menu-item" data-panel="laporan"><i class="fas fa-file-contract"></i> Laporan Tim</div>
+    <div class="menu-item" data-panel="berita"><i class="fas fa-newspaper"></i> Berita</div>
+
+    <div class="sidebar-footer">
+      <a href="index.html" class="view-site-link" target="_blank"><i class="fas fa-external-link-alt"></i> Lihat Website</a>
+      <div class="menu-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Keluar</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- ===== HERO PANEL ===== -->
+    <section class="panel active" id="panel-hero">
+      <div class="main-header">
+        <h1>Hero Section</h1>
+        <p>Teks utama yang muncul di bagian paling atas website.</p>
+      </div>
+      <div class="form-group">
+        <label>Judul Utama (baris putih)</label>
+        <input type="text" id="hero-title-main" placeholder="Memulihkan Alam,">
+      </div>
+      <div class="form-group">
+        <label>Judul Penegas (baris hijau lime)</label>
+        <input type="text" id="hero-title-em" placeholder="Memastikan Masa Depan.">
+      </div>
+      <div class="form-group">
+        <label>Deskripsi</label>
+        <textarea id="hero-desc" placeholder="Deskripsi singkat di bawah judul..."></textarea>
+      </div>
+      <div class="save-row">
+        <span class="save-status" id="save-status-hero">Tersimpan ✓</span>
+        <button class="btn btn-lime" data-save="hero">Simpan Perubahan</button>
+      </div>
+    </section>
+
+    <!-- ===== IMPACT PANEL ===== -->
+    <section class="panel" id="panel-impact">
+      <div class="main-header">
+        <h1>Impact Stats</h1>
+        <p>4 angka yang tampil di strip hijau lime bawah hero.</p>
+      </div>
+      <div class="row-2">
+        <div class="form-group"><label>Total Pohon Ditanam</label><input type="number" id="impact-pohon" placeholder="22000"></div>
+        <div class="form-group"><label>Infiltrasi Air / Tahun (ML)</label><input type="number" step="0.1" id="impact-air" placeholder="47.0"></div>
+        <div class="form-group"><label>Jumlah Spesies Flora</label><input type="number" id="impact-spesies" placeholder="201"></div>
+        <div class="form-group"><label>Jumlah Lokasi Aktif</label><input type="number" id="impact-lokasi" placeholder="6"></div>
+      </div>
+      <div class="save-row">
+        <span class="save-status" id="save-status-impact">Tersimpan ✓</span>
+        <button class="btn btn-lime" data-save="impact">Simpan Perubahan</button>
+      </div>
+    </section>
+
+    <!-- ===== TENTANG PANEL ===== -->
+    <section class="panel" id="panel-tentang">
+      <div class="main-header">
+        <h1>Tentang Kami</h1>
+        <p>Sejarah, visi, dan misi yayasan.</p>
+      </div>
+      <div class="form-group">
+        <label>Sejarah & Perjalanan</label>
+        <textarea id="tentang-sejarah" style="min-height:120px;" placeholder="Tuliskan sejarah yayasan..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Visi</label>
+        <textarea id="tentang-visi" placeholder="Tuliskan visi yayasan..."></textarea>
+      </div>
+      <div class="panel-section-title">Misi</div>
+      <div id="misi-list"></div>
+      <button class="btn btn-outline" id="addMisiBtn"><i class="fas fa-plus"></i> Tambah Poin Misi</button>
+      <div class="save-row">
+        <span class="save-status" id="save-status-tentang">Tersimpan ✓</span>
+        <button class="btn btn-lime" data-save="tentang">Simpan Perubahan</button>
+      </div>
+    </section>
+
+    <!-- ===== PROGRAM PANEL ===== -->
+    <section class="panel" id="panel-program">
+      <div class="main-header">
+        <h1>Program</h1>
+        <p>Deskripsi dan statistik untuk 3 kartu program di halaman utama.</p>
+      </div>
+
+      <div class="panel-section-title"><i class="fas fa-water"></i> Konservasi Lahan & Air</div>
+      <div class="form-group"><label>Deskripsi</label><textarea id="prog-konservasi-desc"></textarea></div>
+      <div class="row-2">
+        <div class="form-group"><label>Statistik: Total Pohon</label><input type="number" id="prog-konservasi-pohon"></div>
+        <div class="form-group"><label>Statistik: Rorak & Sipil Teknis</label><input type="number" id="prog-konservasi-sipil"></div>
+      </div>
+
+      <div class="panel-section-title"><i class="fas fa-leaf"></i> Monitoring Kehati</div>
+      <div class="form-group"><label>Deskripsi</label><textarea id="prog-biodiversity-desc"></textarea></div>
+      <div class="row-2">
+        <div class="form-group"><label>Statistik: Spesies Flora</label><input type="number" id="prog-biodiversity-flora"></div>
+        <div class="form-group"><label>Statistik: Spesies Burung</label><input type="number" id="prog-biodiversity-burung"></div>
+      </div>
+
+      <div class="panel-section-title"><i class="fas fa-users"></i> Pemberdayaan Komunitas (ComDev)</div>
+      <div class="form-group"><label>Deskripsi</label><textarea id="prog-comdev-desc"></textarea></div>
+
+      <div class="save-row">
+        <span class="save-status" id="save-status-program">Tersimpan ✓</span>
+        <button class="btn btn-lime" data-save="program">Simpan Perubahan</button>
+      </div>
+    </section>
+
+    <!-- ===== MITRA PANEL ===== -->
+    <section class="panel" id="panel-mitra">
+      <div class="main-header">
+        <h1>Mitra</h1>
+        <p>Daftar logo mitra — ditampilkan dalam satu grid tanpa kategori.</p>
+      </div>
+      <div class="list-toolbar">
+        <button class="btn btn-lime" id="addMitraBtn"><i class="fas fa-plus"></i> Tambah Mitra</button>
+      </div>
+      <table class="list-table">
+        <thead><tr><th>Logo</th><th>Nama</th><th style="text-align:right;">Aksi</th></tr></thead>
+        <tbody id="mitra-table-body"><tr class="empty-row"><td colspan="3">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- ===== LAPORAN PANEL ===== -->
+    <section class="panel" id="panel-laporan">
+      <div class="main-header">
+        <h1>Laporan Tim</h1>
+        <p>Dokumen laporan tahunan dan publikasi tim.</p>
+      </div>
+      <div class="list-toolbar">
+        <button class="btn btn-lime" id="addLaporanBtn"><i class="fas fa-plus"></i> Tambah Laporan</button>
+      </div>
+      <table class="list-table">
+        <thead><tr><th>Judul</th><th>Tahun</th><th>Kategori</th><th style="text-align:right;">Aksi</th></tr></thead>
+        <tbody id="laporan-table-body"><tr class="empty-row"><td colspan="4">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+
+    <!-- ===== BERITA PANEL ===== -->
+    <section class="panel" id="panel-berita">
+      <div class="main-header">
+        <h1>Berita</h1>
+        <p>Warta internal dan liputan media eksternal.</p>
+      </div>
+      <div class="list-toolbar">
+        <button class="btn btn-lime" id="addBeritaBtn"><i class="fas fa-plus"></i> Tambah Berita</button>
+      </div>
+      <table class="list-table">
+        <thead><tr><th>Judul</th><th>Tanggal</th><th>Tipe</th><th style="text-align:right;">Aksi</th></tr></thead>
+        <tbody id="berita-table-body"><tr class="empty-row"><td colspan="4">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<!-- ============== MODAL: MITRA ITEM ============== -->
+<div class="modal-backdrop" id="modal-mitra">
+  <div class="modal-box">
+    <button class="modal-close" data-close="modal-mitra"><i class="fas fa-times"></i></button>
+    <h3 id="modal-mitra-title">Tambah Mitra</h3>
+    <input type="hidden" id="mitra-id">
+    <div class="form-group"><label>Nama Mitra</label><input type="text" id="mitra-name" placeholder="PT Contoh Tbk"></div>
+    <div class="form-group"><label>URL Logo (opsional)</label><input type="text" id="mitra-logo" placeholder="https://..."></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" data-close="modal-mitra">Batal</button>
+      <button class="btn btn-lime" id="saveMitraBtn">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== MODAL: LAPORAN ITEM ============== -->
+<div class="modal-backdrop" id="modal-laporan">
+  <div class="modal-box">
+    <button class="modal-close" data-close="modal-laporan"><i class="fas fa-times"></i></button>
+    <h3 id="modal-laporan-title">Tambah Laporan</h3>
+    <input type="hidden" id="laporan-id">
+    <div class="form-group"><label>Judul Laporan</label><input type="text" id="laporan-judul" placeholder="Laporan Tahunan 2025"></div>
+    <div class="row-2">
+      <div class="form-group"><label>Tahun</label><input type="number" id="laporan-tahun" placeholder="2025"></div>
+      <div class="form-group"><label>Kategori</label><input type="text" id="laporan-kategori" placeholder="Laporan Tahunan"></div>
+    </div>
+    <div class="form-group"><label>URL Dokumen (PDF/Drive)</label><input type="text" id="laporan-url" placeholder="https://..."></div>
+    <div class="form-group"><label>Icon (Font Awesome class, opsional)</label><input type="text" id="laporan-icon" placeholder="fa-file-contract"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" data-close="modal-laporan">Batal</button>
+      <button class="btn btn-lime" id="saveLaporanBtn">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== MODAL: BERITA ITEM ============== -->
+<div class="modal-backdrop" id="modal-berita">
+  <div class="modal-box">
+    <button class="modal-close" data-close="modal-berita"><i class="fas fa-times"></i></button>
+    <h3 id="modal-berita-title">Tambah Berita</h3>
+    <input type="hidden" id="berita-id">
+    <div class="form-group"><label>Judul</label><input type="text" id="berita-judul" placeholder="Judul berita..."></div>
+    <div class="row-2">
+      <div class="form-group"><label>Tanggal</label><input type="text" id="berita-tanggal" placeholder="25 April 2024"></div>
+      <div class="form-group">
+        <label>Tipe</label>
+        <select id="berita-tipe">
+          <option value="internal">Warta Internal</option>
+          <option value="external">Media Luar</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Ringkasan (Excerpt)</label><textarea id="berita-excerpt" placeholder="Ringkasan singkat..."></textarea></div>
+    <div class="form-group"><label>URL Gambar</label><input type="text" id="berita-gambar" placeholder="https://..."></div>
+    <div class="form-group"><label>URL Tautan (artikel lengkap / sumber)</label><input type="text" id="berita-link" placeholder="https://..."></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" data-close="modal-berita">Batal</button>
+      <button class="btn btn-lime" id="saveBeritaBtn">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Tersimpan</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import {
+    getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+    authDomain: "sekola-konang.firebaseapp.com",
+    projectId: "sekola-konang",
+    storageBucket: "sekola-konang.firebasestorage.app",
+    messagingSenderId: "9338352073",
+    appId: "1:9338352073:web:b56481b836888b1a8bf818"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  /* =========================================================
+     AUTH GATE
+  ========================================================= */
+  const loginGate = document.getElementById('loginGate');
+  const appShell = document.getElementById('appShell');
+  const loginError = document.getElementById('loginError');
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginGate.style.display = 'none';
+      appShell.classList.add('show');
+      loadAllData();
+    } else {
+      loginGate.style.display = 'flex';
+      appShell.classList.remove('show');
+    }
+  });
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    loginError.style.display = 'none';
+    if (!email || !password) return;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      console.error(e);
+      loginError.style.display = 'block';
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await signOut(auth);
+  });
+
+  /* =========================================================
+     TOAST HELPER
+  ========================================================= */
+  const toastEl = document.getElementById('toast');
+  function showToast(msg, isError) {
+    toastEl.textContent = msg;
+    toastEl.classList.toggle('error', !!isError);
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 2200);
+  }
+  function flashSaved(panelKey) {
+    const el = document.getElementById('save-status-' + panelKey);
+    if (!el) return;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  /* =========================================================
+     SIDEBAR NAV
+  ========================================================= */
+  document.querySelectorAll('.menu-item[data-panel]').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.menu-item[data-panel]').forEach(i => i.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      item.classList.add('active');
+      document.getElementById('panel-' + item.dataset.panel).classList.add('active');
+      document.getElementById('sidebar').classList.remove('open');
+    });
+  });
+  document.getElementById('hamburgerBtn').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+
+  /* =========================================================
+     LOAD ALL DATA (on login)
+  ========================================================= */
+  async function loadAllData() {
+    await loadHero();
+    await loadImpact();
+    await loadTentang();
+    await loadProgram();
+    await loadMitra();
+    await loadLaporan();
+    await loadBerita();
+  }
+
+  /* =========================================================
+     1. HERO
+  ========================================================= */
+  async function loadHero() {
+    try {
+      const snap = await getDoc(doc(db, "profil_yayasan", "hero"));
+      if (snap.exists()) {
+        const d = snap.data();
+        document.getElementById('hero-title-main').value = d.title_main || '';
+        document.getElementById('hero-title-em').value = d.title_em || '';
+        document.getElementById('hero-desc').value = d.desc || '';
+      }
+    } catch (e) { console.error(e); }
+  }
+  document.querySelector('[data-save="hero"]').addEventListener('click', async () => {
+    try {
+      await setDoc(doc(db, "profil_yayasan", "hero"), {
+        title_main: document.getElementById('hero-title-main').value,
+        title_em: document.getElementById('hero-title-em').value,
+        desc: document.getElementById('hero-desc').value
+      });
+      flashSaved('hero');
+      showToast('Hero tersimpan');
+    } catch (e) { console.error(e); showToast('Gagal menyimpan', true); }
+  });
+
+  /* =========================================================
+     2. IMPACT STATS
+  ========================================================= */
+  async function loadImpact() {
+    try {
+      const snap = await getDoc(doc(db, "profil_yayasan", "impact_stats"));
+      if (snap.exists()) {
+        const d = snap.data();
+        document.getElementById('impact-pohon').value = d.pohon ?? '';
+        document.getElementById('impact-air').value = d.air ?? '';
+        document.getElementById('impact-spesies').value = d.spesies ?? '';
+        document.getElementById('impact-lokasi').value = d.lokasi ?? '';
+      }
+    } catch (e) { console.error(e); }
+  }
+  document.querySelector('[data-save="impact"]').addEventListener('click', async () => {
+    try {
+      await setDoc(doc(db, "profil_yayasan", "impact_stats"), {
+        pohon: Number(document.getElementById('impact-pohon').value) || 0,
+        air: Number(document.getElementById('impact-air').value) || 0,
+        spesies: Number(document.getElementById('impact-spesies').value) || 0,
+        lokasi: Number(document.getElementById('impact-lokasi').value) || 0
+      });
+      flashSaved('impact');
+      showToast('Impact stats tersimpan');
+    } catch (e) { console.error(e); showToast('Gagal menyimpan', true); }
+  });
+
+  /* =========================================================
+     3. TENTANG KAMI (+ misi dinamis)
+  ========================================================= */
+  function addMisiRow(value) {
+    const wrap = document.getElementById('misi-list');
+    const row = document.createElement('div');
+    row.className = 'misi-row';
+    row.innerHTML = `
+      <input type="text" value="${(value || '').replace(/"/g, '&quot;')}" placeholder="Poin misi...">
+      <button class="icon-btn danger remove-misi"><i class="fas fa-trash"></i></button>
+    `;
+    row.querySelector('.remove-misi').addEventListener('click', () => row.remove());
+    wrap.appendChild(row);
+  }
+  document.getElementById('addMisiBtn').addEventListener('click', () => addMisiRow(''));
+
+  async function loadTentang() {
+    try {
+      const snap = await getDoc(doc(db, "profil_yayasan", "tentang_kami"));
+      document.getElementById('misi-list').innerHTML = '';
+      if (snap.exists()) {
+        const d = snap.data();
+        document.getElementById('tentang-sejarah').value = d.sejarah || '';
+        document.getElementById('tentang-visi').value = d.visi || '';
+        (d.misi || []).forEach(m => addMisiRow(m));
+      }
+      if (!document.getElementById('misi-list').children.length) addMisiRow('');
+    } catch (e) { console.error(e); }
+  }
+  document.querySelector('[data-save="tentang"]').addEventListener('click', async () => {
+    const misi = Array.from(document.querySelectorAll('#misi-list input'))
+      .map(i => i.value.trim()).filter(Boolean);
+    try {
+      await setDoc(doc(db, "profil_yayasan", "tentang_kami"), {
+        sejarah: document.getElementById('tentang-sejarah').value,
+        visi: document.getElementById('tentang-visi').value,
+        misi
+      });
+      flashSaved('tentang');
+      showToast('Tentang Kami tersimpan');
+    } catch (e) { console.error(e); showToast('Gagal menyimpan', true); }
+  });
+
+  /* =========================================================
+     4. PROGRAM
+  ========================================================= */
+  async function loadProgram() {
+    try {
+      const ids = ['konservasi', 'biodiversity', 'comdev'];
+      for (const id of ids) {
+        const snap = await getDoc(doc(db, "programs", id));
+        if (snap.exists()) {
+          const d = snap.data();
+          const descEl = document.getElementById('prog-' + id + '-desc');
+          if (descEl) descEl.value = d.desc || '';
+          if (id === 'konservasi') {
+            document.getElementById('prog-konservasi-pohon').value = d.statPohon ?? '';
+            document.getElementById('prog-konservasi-sipil').value = d.statSipil ?? '';
+          }
+          if (id === 'biodiversity') {
+            document.getElementById('prog-biodiversity-flora').value = d.statFlora ?? '';
+            document.getElementById('prog-biodiversity-burung').value = d.statBurung ?? '';
+          }
+        }
+      }
+    } catch (e) { console.error(e); }
+  }
+  document.querySelector('[data-save="program"]').addEventListener('click', async () => {
+    try {
+      await setDoc(doc(db, "programs", "konservasi"), {
+        desc: document.getElementById('prog-konservasi-desc').value,
+        statPohon: Number(document.getElementById('prog-konservasi-pohon').value) || 0,
+        statSipil: Number(document.getElementById('prog-konservasi-sipil').value) || 0,
+        icon: 'fas fa-water'
+      }, { merge: true });
+      await setDoc(doc(db, "programs", "biodiversity"), {
+        desc: document.getElementById('prog-biodiversity-desc').value,
+        statFlora: Number(document.getElementById('prog-biodiversity-flora').value) || 0,
+        statBurung: Number(document.getElementById('prog-biodiversity-burung').value) || 0,
+        icon: 'fas fa-leaf'
+      }, { merge: true });
+      await setDoc(doc(db, "programs", "comdev"), {
+        desc: document.getElementById('prog-comdev-desc').value,
+        icon: 'fas fa-users'
+      }, { merge: true });
+      flashSaved('program');
+      showToast('Program tersimpan');
+    } catch (e) { console.error(e); showToast('Gagal menyimpan', true); }
+  });
+
+  /* =========================================================
+     5. MITRA (list CRUD)
+  ========================================================= */
+  async function loadMitra() {
+    const tbody = document.getElementById('mitra-table-body');
+    try {
+      const snap = await getDocs(collection(db, "mitra"));
+      if (snap.empty) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Belum ada mitra. Klik "Tambah Mitra" untuk menambahkan.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      snap.forEach(docu => {
+        const d = docu.data();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${d.logoUrl ? `<img class="thumb" src="${d.logoUrl}">` : '<span style="color:var(--text-muted)">—</span>'}</td>
+          <td>${d.name || ''}</td>
+          <td><div class="list-actions" style="justify-content:flex-end;">
+            <button class="icon-btn edit-mitra" data-id="${docu.id}"><i class="fas fa-pen"></i></button>
+            <button class="icon-btn danger del-mitra" data-id="${docu.id}"><i class="fas fa-trash"></i></button>
+          </div></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      attachMitraRowEvents();
+    } catch (e) { console.error(e); tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Gagal memuat data.</td></tr>'; }
+  }
+  function attachMitraRowEvents() {
+    document.querySelectorAll('.edit-mitra').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const snap = await getDoc(doc(db, "mitra", id));
+        const d = snap.data();
+        document.getElementById('mitra-id').value = id;
+        document.getElementById('mitra-name').value = d.name || '';
+        document.getElementById('mitra-logo').value = d.logoUrl || '';
+        document.getElementById('modal-mitra-title').textContent = 'Edit Mitra';
+        openModal('modal-mitra');
+      });
+    });
+    document.querySelectorAll('.del-mitra').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Hapus mitra ini?')) return;
+        try {
+          await deleteDoc(doc(db, "mitra", btn.dataset.id));
+          showToast('Mitra dihapus');
+          loadMitra();
+        } catch (e) { console.error(e); showToast('Gagal menghapus', true); }
+      });
+    });
+  }
+  document.getElementById('addMitraBtn').addEventListener('click', () => {
+    document.getElementById('mitra-id').value = '';
+    document.getElementById('mitra-name').value = '';
+    document.getElementById('mitra-logo').value = '';
+    document.getElementById('modal-mitra-title').textContent = 'Tambah Mitra';
+    openModal('modal-mitra');
+  });
+  document.getElementById('saveMitraBtn').addEventListener('click', async () => {
+    const name = document.getElementById('mitra-name').value.trim();
+    if (!name) { showToast('Nama mitra wajib diisi', true); return; }
+    const id = document.getElementById('mitra-id').value || ('mitra_' + Date.now());
+    try {
+      await setDoc(doc(db, "mitra", id), {
+        name,
+        logoUrl: document.getElementById('mitra-logo').value.trim()
+      });
+      closeModal('modal-mitra');
+      showToast('Mitra tersimpan');
+      loadMitra();
+    } catch (e) { console.error(e); showToast('Gagal menyimpan', true); }
+  });
+
+  /* =========================================================
+     6. LAPORAN TIM (list CRUD)
+  ========================================================= */
+  async function loadLaporan() {
+    const tbody = document.getElementById('laporan-table-body');
+    try {
+      const snap = await getDocs(collection(db, "laporan_tim"));
+      if (snap.empty) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Belum ada laporan. Klik "Tambah Laporan" untuk menambahkan.</td></tr>';
+        return;
+      }
+      let items = [];
+      snap.forEach(docu => items.push({ id: docu.id, ...docu.data() }));
+      items.sort((a, b) => (b.year || 0) - (a.year || 0));
+      tbody.innerHTML = '';
+      items.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${d.title || ''}</td>
+          <td>${d.year || '-'}</td>
+          <td>${d.category || '-'}</td>
+          <td><div class="list-actions" style="justify-content:flex-end;">
+            <button class="icon-btn edit-laporan" data-id="${d.id}"><i class="fas fa-pen"></i></button>
+            <button class="icon-btn danger del-laporan" data-id="${d.id}"><i class="fas fa-trash"></i></button>
+          </div></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      attachLaporanRowEvents();
+    } catch (e) { console.error(e); tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Gagal memuat data.</td></tr>'; }
+  }
+  function attachLaporanRowEvents() {
+    document.querySelectorAll('.edit-laporan').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const snap = await getDoc(doc(db, "laporan_tim", id));
+        const d = snap.data();
+        document.getElementById('laporan-id').value = id;
+        document.getElementById('laporan-judul').value = d.title || '';
+        document.getElementById('laporan-tahun').value = d.year || '';
+        document.getElementById('laporan-kategori').value = d.category || '';
+        document.getElementById('laporan-url').value = d.fileUrl || '';
+        document.getElementById('laporan-icon').value = d.icon || '';
+        document.getElementById('modal-laporan-title').textContent = 'Edit Laporan';
+        openModal('modal-laporan');
+      });
+    });
+    document.querySelectorAll('.del-laporan').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Hapus laporan ini?')) return;
+        try {
+          await deleteDoc(doc(db, "laporan_tim", btn.dataset.id));
+          showToast('Laporan dihapus');
+          loadLaporan();
+        } catch (e) { console.error(e); showToast('Gagal menghapus', true); }
+      });
+    });
+  }
+  document.getElementById('addLaporanBtn').addEventListener('click', () => {
+    document.getElementById('laporan-id').value = '';
+    document.getElementById('laporan-judul').value = '';
+    document.getElementById('laporan-tahun').value = '';
+    document.getElementById('laporan-kategori').value = '';
+    document.getElementById('laporan-url').value = '';
+    document.getElementById('laporan-icon').value = '';
+    document.getElementById('modal-laporan-title').textContent = 'Tambah Laporan';
+    openModal('modal-laporan');
+  });
+  document.getElementById('saveLaporanBtn').addEventListener('click', async () => {
+    const title = document.getElementById('laporan-judul').value.trim();
+    if (!title) { showToast('Judul laporan wajib diisi', true); return; }
+    const id = document.getElementById('laporan-id').value || ('laporan_' + Date.now());
+    try {
+      await setDoc(doc(db, "laporan_tim", id), {
+        title,
+        year: Number(document.getElementById('laporan-tahun').value) || null,
+        category: document.getElementById('laporan-kategori').value.trim(),
+        fileUrl: document.getElementById('laporan-url').value.trim(),
+        icon: document.getElementById('laporan-icon').value.trim() || 'fa-file-contract'
+      });
+      closeModal('modal-laporan');
+      showToast('Laporan tersimpan');
+      loadLaporan();
+    } catch (e) { console.error(e); showToast('Gagal menyimpan', true); }
+  });
+
+  /* =========================================================
+     7. BERITA (list CRUD)
+  ========================================================= */
+  async function loadBerita() {
+    const tbody = document.getElementById('berita-table-body');
+    try {
+      const snap = await getDocs(collection(db, "news"));
+      if (snap.empty) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Belum ada berita. Klik "Tambah Berita" untuk menambahkan.</td></tr>';
+        return;
+      }
+      let items = [];
+      snap.forEach(docu => items.push({ id: docu.id, ...docu.data() }));
+      items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+      tbody.innerHTML = '';
+      items.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${d.title || ''}</td>
+          <td>${d.date || '-'}</td>
+          <td>${d.type === 'external' ? 'Media Luar' : 'Warta Internal'}</td>
+          <td><div class="list-actions" style="justify-content:flex-end;">
+            <button class="icon-btn edit-berita" data-id="${d.id}"><i class="fas fa-pen"></i></button>
+            <button class="icon-btn danger del-berita" data-id="${d.id}"><i class="fas fa-trash"></i></button>
+          </div></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      attachBeritaRowEvents();
+    } catch (e) { console.error(e); tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Gagal memuat data.</td></tr>'; }
+  }
+  function attachBeritaRowEvents() {
+    document.querySelectorAll('.edit-berita').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const snap = await getDoc(doc(db, "news", id));
+        const d = snap.data();
+        document.getElementById('berita-id').value = id;
+        document.getElementById('berita-judul').value = d.title || '';
+        document.getElementById('berita-tanggal').value = d.date || '';
+        document.getElementById('berita-tipe').value = d.type || 'internal';
+        document.getElementById('berita-excerpt').value = d.excerpt || '';
+        document.getElementById('berita-gambar').value = d.image || '';
+        document.getElementById('berita-link').value = d.url || '';
+        document.getElementById('modal-berita-title').textContent = 'Edit Berita';
+        openModal('modal-berita');
+      });
+    });
+    document.querySelectorAll('.del-berita').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Hapus berita ini?')) return;
+        try {
+          await deleteDoc(doc(db, "news", btn.dataset.id));
+          showToast('Berita dihapus');
+          loadBerita();
+        } catch (e) { console.error(e); showToast('Gagal menghapus', true); }
+      });
+    });
+  }
+  document.getElementById('addBeritaBtn').addEventListener('click', () => {
+    document.getElementById('berita-id').value = '';
+    document.getElementById('berita-judul').value = '';
+    document.getElementById('berita-tanggal').value = '';
+    document.getElementById('berita-tipe').value = 'internal';
+    document.getElementById('berita-excerpt').value = '';
+    document.getElementById('berita-gambar').value = '';
+    document.getElementById('berita-link').value = '';
+    document.getElementById('modal-berita-title').textContent = 'Tambah Berita';
+    openModal('modal-berita');
+  });
+  document.getElementById('saveBeritaBtn').addEventListener('click', async () => {
+    const title = document.getElementById('berita-judul').value.trim();
+    if (!title) { showToast('Judul berita wajib diisi', true); return; }
+    const id = document.getElementById('berita-id').value || ('news_' + Date.now());
+    try {
+      await setDoc(doc(db, "news", id), {
+        title,
+        date: document.getElementById('berita-tanggal').value.trim(),
+        type: document.getElementById('berita-tipe').value,
+        excerpt: document.getElementById('berita-excerpt').value.trim(),
+        image: document.getElementById('berita-gambar').value.trim(),
+        url: document.getElementById('berita-link').value.trim()
+      });
+      closeModal('modal-berita');
+      showToast('Berita tersimpan');
+      loadBerita();
+    } catch (e) { console.error(e); showToast('Gagal menyimpan', true); }
+  });
+
+  /* =========================================================
+     MODAL HELPERS
+  ========================================================= */
+  function openModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => closeModal(btn.dataset.close));
+  });
+  document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.classList.remove('show'); });
+  });
+</script>
+</body>
+</html>
