@@ -167,7 +167,10 @@
   }
   .list-table td { padding: 12px; font-size: 0.82rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
   .list-table tr:hover td { background: rgba(255,255,255,0.02); }
-  .list-table img.thumb { height: 28px; max-width: 70px; object-fit: contain; }
+  .list-table img.thumb {
+    height: 32px; max-width: 90px; object-fit: contain;
+    background: rgba(255,255,255,0.92); border-radius: 6px; padding: 4px 8px;
+  }
   .list-actions { display: flex; gap: 6px; }
   .list-actions button { width: 30px; height: 30px; font-size: 0.75rem; }
   .empty-row td { text-align: center; color: var(--text-muted); padding: 30px; }
@@ -187,6 +190,27 @@
   .modal-box h3 { font-family: var(--display); font-size: 1.15rem; margin-bottom: 18px; }
   .modal-close { position: absolute; top: 18px; right: 18px; background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; }
   .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  /* ===== IMAGE UPLOAD BOX ===== */
+  .upload-box {
+    border: 1.5px dashed var(--border);
+    border-radius: var(--r-sm);
+    background: rgba(255,255,255,0.03);
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.15s;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .upload-box:hover { border-color: var(--lime); background: var(--lime-dim); }
+  .upload-placeholder { color: var(--text-muted); font-size: 0.78rem; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .upload-placeholder i { font-size: 1.6rem; color: var(--lime); opacity: 0.7; }
+  .upload-preview { max-height: 70px; max-width: 100%; object-fit: contain; }
+  .upload-progress { height: 6px; background: rgba(255,255,255,0.08); border-radius: 4px; margin-top: 10px; overflow: hidden; }
+  .upload-progress-bar { height: 100%; width: 0%; background: var(--lime); transition: width 0.2s; }
 
   .toast {
     position: fixed; bottom: 24px; right: 24px; z-index: 700;
@@ -410,8 +434,22 @@
     <button class="modal-close" data-close="modal-mitra"><i class="fas fa-times"></i></button>
     <h3 id="modal-mitra-title">Tambah Mitra</h3>
     <input type="hidden" id="mitra-id">
+    <input type="hidden" id="mitra-logo-existing">
     <div class="form-group"><label>Nama Mitra</label><input type="text" id="mitra-name" placeholder="PT Contoh Tbk"></div>
-    <div class="form-group"><label>URL Logo (opsional)</label><input type="text" id="mitra-logo" placeholder="https://..."></div>
+    <div class="form-group">
+      <label>Logo Mitra</label>
+      <div class="upload-box" id="mitraUploadBox">
+        <img id="mitra-logo-preview" class="upload-preview" style="display:none;">
+        <div id="mitra-upload-placeholder" class="upload-placeholder">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <span>Klik untuk pilih gambar (PNG/JPG, maks 5MB)</span>
+        </div>
+        <input type="file" id="mitra-logo-file" accept="image/*" style="display:none;">
+      </div>
+      <div class="upload-progress" id="mitra-upload-progress" style="display:none;">
+        <div class="upload-progress-bar" id="mitra-upload-progress-bar"></div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-mitra">Batal</button>
       <button class="btn btn-lime" id="saveMitraBtn">Simpan</button>
@@ -488,6 +526,32 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
+
+  // ImgBB — layanan hosting gambar gratis, dipakai untuk upload logo/foto dari admin panel
+  const IMGBB_API_KEY = "55d7ca53d5f6b664003086faa7311182";
+  async function uploadImageToImgBB(file, onProgress) {
+    const formData = new FormData();
+    formData.append('image', file);
+    const xhr = new XMLHttpRequest();
+    return new Promise((resolve, reject) => {
+      xhr.open('POST', `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`);
+      xhr.upload.onprogress = (e) => {
+        if (onProgress && e.lengthComputable) onProgress((e.loaded / e.total) * 100);
+      };
+      xhr.onload = () => {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          if (res.success) {
+            resolve({ url: res.data.url, deleteUrl: res.data.delete_url || null });
+          } else {
+            reject(new Error(res.error?.message || 'Upload gagal'));
+          }
+        } catch (e) { reject(e); }
+      };
+      xhr.onerror = () => reject(new Error('Koneksi gagal saat upload'));
+      xhr.send(formData);
+    });
+  }
 
   /* =========================================================
      AUTH GATE
@@ -715,7 +779,7 @@
   });
 
   /* =========================================================
-     5. MITRA (list CRUD)
+     5. MITRA (list CRUD + upload gambar ke Storage)
   ========================================================= */
   async function loadMitra() {
     const tbody = document.getElementById('mitra-table-body');
@@ -730,7 +794,7 @@
         const d = docu.data();
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${d.logoUrl ? `<img class="thumb" src="${d.logoUrl}">` : '<span style="color:var(--text-muted)">—</span>'}</td>
+          <td>${d.logoUrl ? `<img class="thumb" src="${d.logoUrl}">` : '<span style="color:var(--text-muted)">Tanpa logo</span>'}</td>
           <td>${d.name || ''}</td>
           <td><div class="list-actions" style="justify-content:flex-end;">
             <button class="icon-btn edit-mitra" data-id="${docu.id}"><i class="fas fa-pen"></i></button>
@@ -750,7 +814,8 @@
         const d = snap.data();
         document.getElementById('mitra-id').value = id;
         document.getElementById('mitra-name').value = d.name || '';
-        document.getElementById('mitra-logo').value = d.logoUrl || '';
+        document.getElementById('mitra-logo-existing').value = d.logoUrl || '';
+        resetMitraUploadUI(d.logoUrl || '');
         document.getElementById('modal-mitra-title').textContent = 'Edit Mitra';
         openModal('modal-mitra');
       });
@@ -766,26 +831,89 @@
       });
     });
   }
+
+  // --- Upload UI state ---
+  let mitraSelectedFile = null;
+  const mitraUploadBox = document.getElementById('mitraUploadBox');
+  const mitraFileInput = document.getElementById('mitra-logo-file');
+  const mitraPreview = document.getElementById('mitra-logo-preview');
+  const mitraPlaceholder = document.getElementById('mitra-upload-placeholder');
+  const mitraProgressWrap = document.getElementById('mitra-upload-progress');
+  const mitraProgressBar = document.getElementById('mitra-upload-progress-bar');
+
+  function resetMitraUploadUI(existingUrl) {
+    mitraSelectedFile = null;
+    mitraFileInput.value = '';
+    mitraProgressWrap.style.display = 'none';
+    mitraProgressBar.style.width = '0%';
+    if (existingUrl) {
+      mitraPreview.src = existingUrl;
+      mitraPreview.style.display = 'block';
+      mitraPlaceholder.style.display = 'none';
+    } else {
+      mitraPreview.style.display = 'none';
+      mitraPlaceholder.style.display = 'flex';
+    }
+  }
+  mitraUploadBox.addEventListener('click', () => mitraFileInput.click());
+  mitraFileInput.addEventListener('change', () => {
+    const file = mitraFileInput.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Ukuran gambar maksimal 5MB', true);
+      mitraFileInput.value = '';
+      return;
+    }
+    mitraSelectedFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      mitraPreview.src = e.target.result;
+      mitraPreview.style.display = 'block';
+      mitraPlaceholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+
   document.getElementById('addMitraBtn').addEventListener('click', () => {
     document.getElementById('mitra-id').value = '';
     document.getElementById('mitra-name').value = '';
-    document.getElementById('mitra-logo').value = '';
+    document.getElementById('mitra-logo-existing').value = '';
+    resetMitraUploadUI('');
     document.getElementById('modal-mitra-title').textContent = 'Tambah Mitra';
     openModal('modal-mitra');
   });
+
+  function uploadMitraLogo(file) {
+    mitraProgressWrap.style.display = 'block';
+    mitraProgressBar.style.width = '0%';
+    return uploadImageToImgBB(file, (pct) => { mitraProgressBar.style.width = pct + '%'; });
+  }
+
   document.getElementById('saveMitraBtn').addEventListener('click', async () => {
     const name = document.getElementById('mitra-name').value.trim();
     if (!name) { showToast('Nama mitra wajib diisi', true); return; }
     const id = document.getElementById('mitra-id').value || ('mitra_' + Date.now());
+    const saveBtn = document.getElementById('saveMitraBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Menyimpan...';
     try {
-      await setDoc(doc(db, "mitra", id), {
-        name,
-        logoUrl: document.getElementById('mitra-logo').value.trim()
-      });
+      let logoUrl = document.getElementById('mitra-logo-existing').value;
+      if (mitraSelectedFile) {
+        const result = await uploadMitraLogo(mitraSelectedFile);
+        logoUrl = result.url;
+      }
+      const payload = { name, logoUrl: logoUrl || '' };
+      await setDoc(doc(db, "mitra", id), payload, { merge: true });
       closeModal('modal-mitra');
       showToast('Mitra tersimpan');
       loadMitra();
-    } catch (e) { console.error(e); showToast('Gagal menyimpan', true); }
+    } catch (e) {
+      console.error(e);
+      showToast('Gagal menyimpan / upload', true);
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Simpan';
+    }
   });
 
   /* =========================================================
