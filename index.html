@@ -12,13 +12,13 @@
      TOKEN SYSTEM
   ============================================================ */
   :root {
-    --deep-forest: #050505;
-    --canopy: #353736;
+    --deep-forest: #0A2818;
+    --canopy: #1A4A2E;
     --lime: #C6FF00;
     --lime-dim: rgba(198,255,0,0.12);
     --parchment: #F5F5F0;
     --white: #FFFFFF;
-    --mid-green: #4d4d4d;
+    --mid-green: #2D7A4F;
     --text-muted: rgba(245,245,240,0.55);
     --border: rgba(198,255,0,0.15);
 
@@ -519,10 +519,10 @@
     justify-content: center;
   }
   .mitra-logo-card {
-    background: rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.92);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: var(--r-sm);
-    padding: 16px 24px;
+    padding: 14px 22px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -531,24 +531,25 @@
     transition: 0.2s;
   }
   .mitra-logo-card:hover {
-    background: var(--lime-dim);
-    border-color: var(--border);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.3);
   }
   .mitra-logo-card img {
-    max-height: 32px;
-    max-width: 100px;
+    max-height: 36px;
+    max-width: 110px;
     object-fit: contain;
-    filter: brightness(0) invert(1);
-    opacity: 0.6;
-    transition: opacity 0.2s;
   }
-  .mitra-logo-card:hover img { opacity: 1; }
   .mitra-logo-text {
     font-size: 0.75rem;
     font-weight: 700;
-    color: var(--text-muted);
+    color: var(--deep-forest);
     letter-spacing: 1px;
     text-transform: uppercase;
+  }
+  .mitra-empty-msg {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 20px 0;
   }
 
   /* ============================================================
@@ -878,7 +879,7 @@
 <!-- ========== NAV ========== -->
 <nav id="mainNav">
   <div class="nav-brand" id="logoTrigger" title="">
-    <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png">
+    <img src="https://raw.githubusercontent.com/sekolakonangindonesiaprog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="Logo YSKI">
     <div class="nav-brand-text">
       <strong>Sekola Konang</strong>
       <small>Indonesia</small>
@@ -1107,15 +1108,15 @@
           </div>
           <div class="contact-row">
             <i class="fas fa-envelope"></i>
-            <span>sekolakonang@gmail.com</span>
+            <span>info@sekolakonang.id</span>
           </div>
           <div class="contact-row">
             <i class="fab fa-instagram"></i>
-            <span>@sekolakonangindonesia</span>
+            <span>@sekolakonang.indonesia</span>
           </div>
           <div class="contact-row">
             <i class="fab fa-youtube"></i>
-            <span>Sekola Konang</span>
+            <span>Sekola Konang Indonesia</span>
           </div>
         </div>
       </div>
@@ -1131,14 +1132,10 @@
         <div class="form-group">
           <label>Jenis Kemitraan</label>
           <select>
-            <option>Konservasi & Keragaman hayati</option>
-            <option>Pengembangan Budaya & Perikehidupan Berkelanjutan</option>
-            <option>Community development</option>
-            <option>Pengembangan Ekowisata & Ekonomi Kreatif</option>
-            <option>Leadership Training</option>
-            <option>Informed and Social reset</option>
-            <option>Informed and Social reset</option>
-            <option>Kolaborasi lainnya</option>
+            <option>CSR Perusahaan</option>
+            <option>Program Kementerian</option>
+            <option>Penelitian / Riset</option>
+            <option>Kolaborasi Lainnya</option>
           </select>
         </div>
         <div class="form-group">
@@ -1156,7 +1153,7 @@
   <div class="container">
     <div class="footer-inner">
       <div class="footer-brand">
-        <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
+        <img src="https://raw.githubusercontent.com/sekolakonangindonesiaprog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
         <span>© 2025 Yayasan Sekola Konang Indonesia</span>
       </div>
       <div class="footer-links">
@@ -1311,7 +1308,7 @@
     try {
       const querySnapshot = await getDocs(collection(db, "mitra"));
       if (querySnapshot.empty) {
-        wrap.innerHTML = '<div class="mitra-logo-card"><span class="mitra-logo-text">Belum ada mitra terdaftar</span></div>';
+        wrap.innerHTML = '<div class="mitra-empty-msg">Belum ada mitra terdaftar</div>';
         return;
       }
       wrap.innerHTML = '';
@@ -1328,7 +1325,7 @@
       });
     } catch (e) {
       console.error("Gagal ambil data mitra", e);
-      wrap.innerHTML = '<div class="mitra-logo-card"><span class="mitra-logo-text">Gagal memuat data mitra</span></div>';
+      wrap.innerHTML = '<div class="mitra-empty-msg">Gagal memuat data mitra</div>';
     }
   }
 
