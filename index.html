@@ -8,19 +8,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
-  /* ============================================================
-     TOKEN SYSTEM
-  ============================================================ */
   :root {
-    --deep-forest: #0A2818;
-    --canopy: #1A4A2E;
+    --deep-forest: #050505;
+    --canopy: #353736;
     --lime: #C6FF00;
     --lime-dim: rgba(198,255,0,0.12);
     --parchment: #F5F5F0;
     --white: #FFFFFF;
-    --mid-green: #2D7A4F;
+    --mid-green: #4d4d4d;
     --text-muted: rgba(245,245,240,0.55);
     --border: rgba(198,255,0,0.15);
+    --nav-bg: rgba(5,5,5,0.92);
 
     --display: 'Playfair Display', Georgia, serif;
     --body: 'Inter', system-ui, sans-serif;
@@ -31,855 +29,204 @@
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   html { scroll-behavior: smooth; }
-
-  body {
-    font-family: var(--body);
-    background: var(--deep-forest);
-    color: var(--parchment);
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-
+  body { font-family: var(--body); background: var(--deep-forest); color: var(--parchment); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
   img { display: block; max-width: 100%; }
   a { text-decoration: none; color: inherit; }
-
-  /* ============================================================
-     UTILITY
-  ============================================================ */
   .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
   .lime { color: var(--lime); }
-  .tag {
-    display: inline-block;
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--lime);
-    background: var(--lime-dim);
-    border: 1px solid var(--border);
-    padding: 6px 14px;
-    border-radius: 50px;
-    margin-bottom: 18px;
-  }
-  .section-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--lime);
-    margin-bottom: 12px;
-    display: block;
-  }
-  .divider {
-    width: 48px;
-    height: 3px;
-    background: var(--lime);
-    margin: 18px 0 24px;
-    border-radius: 2px;
-  }
+  .section-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--lime); margin-bottom: 12px; display: block; }
+  .divider { width: 48px; height: 3px; background: var(--lime); margin: 18px 0 24px; border-radius: 2px; }
 
-  /* ============================================================
-     NAV
-  ============================================================ */
   nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    padding: 0 20px;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: rgba(10,40,24,0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    transition: box-shadow 0.3s;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 0 20px; height: 64px; display: flex; align-items: center; justify-content: space-between;
+    background: var(--nav-bg);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border); transition: box-shadow 0.3s;
   }
   nav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
-
-  .nav-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    user-select: none;
-  }
+  .nav-brand { display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
   .nav-brand img { height: 36px; }
   .nav-brand-text { line-height: 1.1; }
-  .nav-brand-text strong {
-    display: block;
-    font-family: var(--display);
-    font-size: 0.9rem;
-    color: var(--white);
-    letter-spacing: 0.5px;
-  }
-  .nav-brand-text small {
-    font-size: 0.55rem;
-    letter-spacing: 3px;
-    color: var(--lime);
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-
-  .nav-cta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--lime);
-    color: var(--deep-forest);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 10px 20px;
-    border-radius: 50px;
-    transition: 0.2s;
-  }
+  .nav-brand-text strong { display: block; font-family: var(--display); font-size: 0.9rem; color: var(--white); letter-spacing: 0.5px; }
+  .nav-brand-text small { font-size: 0.55rem; letter-spacing: 3px; color: var(--lime); text-transform: uppercase; font-weight: 600; }
+  .nav-cta { display: flex; align-items: center; gap: 8px; background: var(--lime); color: var(--deep-forest); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 10px 20px; border-radius: 50px; transition: 0.2s; }
   .nav-cta:hover { background: var(--white); }
 
-  /* ============================================================
-     HERO
-  ============================================================ */
-  .hero {
-    position: relative;
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 100px 0 60px;
-    overflow: hidden;
-  }
-
+  .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; padding: 100px 0 60px; overflow: hidden; }
   .hero-bg {
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(to bottom, rgba(10,40,24,0.5) 0%, rgba(10,40,24,0.85) 60%, var(--deep-forest) 100%),
-      url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80')
-      center/cover no-repeat;
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(5,5,5,0.5) 0%, rgba(5,5,5,0.85) 60%, var(--deep-forest) 100%),
+      url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
     z-index: 0;
   }
-
-  /* Firefly dots ambient */
-  .fireflies {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  .firefly {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: var(--lime);
-    opacity: 0;
-    animation: float var(--dur, 6s) ease-in-out infinite var(--delay, 0s);
-  }
-  @keyframes float {
-    0%,100% { opacity: 0; transform: translateY(0) scale(0.5); }
-    40%,60% { opacity: 0.7; transform: translateY(-30px) scale(1); }
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 2;
-  }
-
-  .hero-eyebrow {
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--lime);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .hero-eyebrow::before {
-    content: '';
-    width: 30px;
-    height: 2px;
-    background: var(--lime);
-    display: inline-block;
-  }
-
-  .hero-title {
-    font-family: var(--display);
-    font-size: clamp(2.4rem, 7vw, 5rem);
-    font-weight: 900;
-    line-height: 1.05;
-    color: var(--white);
-    letter-spacing: -1px;
-    margin-bottom: 20px;
-    max-width: 720px;
-  }
-  .hero-title em {
-    font-style: normal;
-    color: var(--lime);
-  }
-
-  .hero-desc {
-    font-size: 0.95rem;
-    line-height: 1.7;
-    color: var(--text-muted);
-    max-width: 520px;
-    margin-bottom: 36px;
-  }
-
-  .hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-  }
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--lime);
-    color: var(--deep-forest);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 16px 28px;
-    border-radius: 50px;
-    transition: 0.2s;
-    border: none;
-    cursor: pointer;
-  }
+  .fireflies { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+  .firefly { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--lime); opacity: 0; animation: float var(--dur, 6s) ease-in-out infinite var(--delay, 0s); }
+  @keyframes float { 0%,100% { opacity: 0; transform: translateY(0) scale(0.5); } 40%,60% { opacity: 0.7; transform: translateY(-30px) scale(1); } }
+  .hero-content { position: relative; z-index: 2; }
+  .hero-eyebrow { font-size: 0.6rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--lime); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .hero-eyebrow::before { content: ''; width: 30px; height: 2px; background: var(--lime); display: inline-block; }
+  .hero-title { font-family: var(--display); font-size: clamp(2.4rem, 7vw, 5rem); font-weight: 900; line-height: 1.05; color: var(--white); letter-spacing: -1px; margin-bottom: 20px; max-width: 720px; }
+  .hero-title em { font-style: normal; color: var(--lime); }
+  .hero-desc { font-size: 0.95rem; line-height: 1.7; color: var(--text-muted); max-width: 520px; margin-bottom: 36px; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--lime); color: var(--deep-forest); font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 16px 28px; border-radius: 50px; transition: 0.2s; border: none; cursor: pointer; }
   .btn-primary:hover { background: var(--white); transform: translateY(-2px); }
-
-  .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: transparent;
-    color: var(--parchment);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 16px 24px;
-    border-radius: 50px;
-    border: 1px solid rgba(245,245,240,0.25);
-    transition: 0.2s;
-    cursor: pointer;
-  }
+  .btn-ghost { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--parchment); font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 16px 24px; border-radius: 50px; border: 1px solid rgba(245,245,240,0.25); transition: 0.2s; cursor: pointer; }
   .btn-ghost:hover { border-color: var(--lime); color: var(--lime); }
 
-  /* ============================================================
-     IMPACT STRIP — SIGNATURE ELEMENT
-  ============================================================ */
-  .impact-strip {
-    background: var(--lime);
-    padding: 48px 0;
-  }
-  .impact-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0;
-  }
-  .impact-item {
-    text-align: center;
-    padding: 8px 16px;
-    border-right: 1px solid rgba(10,40,24,0.2);
-  }
+  .impact-strip { background: var(--lime); padding: 48px 0; }
+  .impact-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .impact-item { text-align: center; padding: 8px 16px; border-right: 1px solid rgba(5,5,5,0.2); }
   .impact-item:last-child { border-right: none; }
-  .impact-num {
-    font-family: var(--display);
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 900;
-    color: var(--deep-forest);
-    line-height: 1;
-    display: block;
-  }
-  .impact-suffix {
-    font-size: 1.2rem;
-    font-weight: 900;
-    color: var(--canopy);
-  }
-  .impact-label {
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--canopy);
-    margin-top: 6px;
-    display: block;
-  }
-  .impact-icon {
-    font-size: 1rem;
-    color: var(--canopy);
-    margin-bottom: 8px;
-    opacity: 0.6;
-  }
+  .impact-num { font-family: var(--display); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; color: var(--deep-forest); line-height: 1; display: block; }
+  .impact-suffix { font-size: 1.2rem; font-weight: 900; color: var(--canopy); }
+  .impact-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--canopy); margin-top: 6px; display: block; }
+  .impact-icon { font-size: 1rem; color: var(--canopy); margin-bottom: 8px; opacity: 0.6; }
 
-  /* ============================================================
-     ABOUT
-  ============================================================ */
-  .section-about {
-    padding: 90px 0;
-    background: var(--deep-forest);
-  }
-  .about-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 60px;
-    align-items: center;
-  }
-  .about-visual {
-    position: relative;
-    border-radius: var(--r-lg);
-    overflow: hidden;
-  }
-  .about-visual img {
-    width: 100%;
-    height: 420px;
-    object-fit: cover;
-    border-radius: var(--r-lg);
-    filter: brightness(0.9) saturate(1.1);
-  }
-  .about-badge {
-    position: absolute;
-    bottom: 24px;
-    left: 24px;
-    background: var(--lime);
-    color: var(--deep-forest);
-    padding: 14px 20px;
-    border-radius: var(--r-md);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-  }
+  .section-about { padding: 90px 0; background: var(--deep-forest); }
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .about-visual { position: relative; border-radius: var(--r-lg); overflow: hidden; }
+  .about-visual img { width: 100%; height: 420px; object-fit: cover; border-radius: var(--r-lg); filter: brightness(0.9) saturate(1.1); }
+  .about-badge { position: absolute; bottom: 24px; left: 24px; background: var(--lime); color: var(--deep-forest); padding: 14px 20px; border-radius: var(--r-md); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; }
   .about-badge strong { display: block; font-size: 1.4rem; font-family: var(--display); }
-  .about-text h2 {
-    font-family: var(--display);
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
-    font-weight: 900;
-    line-height: 1.15;
-    color: var(--white);
-    margin-bottom: 20px;
-  }
-  .about-text p {
-    font-size: 0.9rem;
-    line-height: 1.8;
-    color: var(--text-muted);
-    margin-bottom: 16px;
-  }
-  .about-pillars {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-top: 28px;
-  }
-  .pillar {
-    background: var(--lime-dim);
-    border: 1px solid var(--border);
-    border-radius: var(--r-sm);
-    padding: 16px;
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-  }
+  .about-text h2 { font-family: var(--display); font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; line-height: 1.15; color: var(--white); margin-bottom: 20px; }
+  .about-text p { font-size: 0.9rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 16px; }
+  .about-pillars { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 28px; }
+  .pillar { background: var(--lime-dim); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
   .pillar i { color: var(--lime); font-size: 1rem; margin-top: 2px; flex-shrink: 0; }
   .pillar h6 { font-size: 0.7rem; font-weight: 700; color: var(--lime); text-transform: uppercase; letter-spacing: 1px; }
   .pillar p { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; margin-top: 3px; }
 
-  /* ============================================================
-     PROGRAM
-  ============================================================ */
-  .section-program {
-    padding: 90px 0;
-    background: var(--canopy);
-  }
+  .section-program { padding: 90px 0; background: var(--canopy); }
   .section-header { text-align: center; margin-bottom: 50px; }
-  .section-header h2 {
-    font-family: var(--display);
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
-    font-weight: 900;
-    color: var(--white);
-  }
-  .section-header p {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    max-width: 480px;
-    margin: 12px auto 0;
-    line-height: 1.7;
-  }
-
-  .program-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-  .program-card {
-    background: var(--deep-forest);
-    border: 1px solid var(--border);
-    border-radius: var(--r-lg);
-    overflow: hidden;
-    transition: transform 0.25s, box-shadow 0.25s;
-    cursor: pointer;
-    display: block;
-  }
-  .program-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px var(--lime);
-  }
-  .program-card-img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    opacity: 0.85;
-  }
+  .section-header h2 { font-family: var(--display); font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; color: var(--white); }
+  .section-header p { font-size: 0.9rem; color: var(--text-muted); max-width: 480px; margin: 12px auto 0; line-height: 1.7; }
+  .program-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .program-card { background: var(--deep-forest); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; display: block; }
+  .program-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px var(--lime); }
+  .program-card-img { width: 100%; height: 180px; object-fit: cover; opacity: 0.85; }
   .program-card-body { padding: 24px 22px 28px; }
-  .program-icon {
-    width: 44px;
-    height: 44px;
-    background: var(--lime-dim);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-  }
+  .program-icon { width: 44px; height: 44px; background: var(--lime-dim); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
   .program-icon i { color: var(--lime); font-size: 1.1rem; }
-  .program-card h3 {
-    font-family: var(--display);
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--white);
-    margin-bottom: 8px;
-  }
-  .program-card p {
-    font-size: 0.8rem;
-    line-height: 1.65;
-    color: var(--text-muted);
-    margin-bottom: 20px;
-    min-height: 60px;
-  }
-  .program-stats {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-  }
+  .program-card h3 { font-family: var(--display); font-size: 1.2rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+  .program-card p { font-size: 0.8rem; line-height: 1.65; color: var(--text-muted); margin-bottom: 20px; min-height: 60px; }
+  .program-stats { display: flex; gap: 16px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--border); }
   .pstat { text-align: left; }
   .pstat strong { display: block; font-size: 1.1rem; font-weight: 700; color: var(--lime); font-family: var(--display); }
   .pstat span { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-  .program-card .badge-soon {
-    display: inline-block;
-    margin-top: 4px;
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    border: 1px dashed var(--border);
-    padding: 4px 10px;
-    border-radius: 50px;
-  }
+  .program-card .badge-soon { display: inline-block; margin-top: 4px; font-size: 0.6rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); border: 1px dashed var(--border); padding: 4px 10px; border-radius: 50px; }
 
-  /* ============================================================
-     MITRA — SINGLE GRID (NO CATEGORY SPLIT)
-  ============================================================ */
-  .section-mitra {
-    padding: 80px 0;
-    background: var(--deep-forest);
-    border-top: 1px solid var(--border);
-  }
-  .mitra-header {
-    text-align: center;
-    margin-bottom: 48px;
-  }
-  .mitra-header h2 {
-    font-family: var(--display);
-    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
-    font-weight: 900;
-    color: var(--white);
-  }
-  .mitra-header p {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-top: 10px;
-  }
-  .mitra-logos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-  }
-  .mitra-logo-card {
-    background: rgba(255,255,255,0.92);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: var(--r-sm);
-    padding: 14px 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 120px;
-    height: 64px;
-    transition: 0.2s;
-  }
-  .mitra-logo-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 24px rgba(0,0,0,0.3);
-  }
-  .mitra-logo-card img {
-    max-height: 36px;
-    max-width: 110px;
-    object-fit: contain;
-  }
-  .mitra-logo-text {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--deep-forest);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-  .mitra-empty-msg {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    padding: 20px 0;
-  }
+  .section-mitra { padding: 80px 0; background: var(--deep-forest); border-top: 1px solid var(--border); }
+  .mitra-header { text-align: center; margin-bottom: 48px; }
+  .mitra-header h2 { font-family: var(--display); font-size: clamp(1.5rem, 3.5vw, 2.2rem); font-weight: 900; color: var(--white); }
+  .mitra-header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; }
+  .mitra-logos { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; }
+  .mitra-logo-card { background: rgba(255,255,255,0.92); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--r-sm); padding: 14px 22px; display: flex; align-items: center; justify-content: center; min-width: 120px; height: 64px; transition: 0.2s; }
+  .mitra-logo-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,0.3); }
+  .mitra-logo-card img { max-height: 36px; max-width: 110px; object-fit: contain; }
+  .mitra-logo-text { font-size: 0.75rem; font-weight: 700; color: var(--deep-forest); letter-spacing: 1px; text-transform: uppercase; }
+  .mitra-empty-msg { color: var(--text-muted); font-size: 0.85rem; padding: 20px 0; }
 
-  /* ============================================================
-     LAPORAN TIM — NEW SECTION
-  ============================================================ */
-  .section-laporan {
-    padding: 90px 0;
-    background: var(--canopy);
-  }
-  .laporan-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
-  }
-  .laporan-card {
-    background: var(--deep-forest);
-    border: 1px solid var(--border);
-    border-radius: var(--r-md);
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    transition: 0.25s;
-  }
+  .section-laporan { padding: 90px 0; background: var(--canopy); }
+  .laporan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+  .laporan-card { background: var(--deep-forest); border: 1px solid var(--border); border-radius: var(--r-md); padding: 24px; display: flex; flex-direction: column; gap: 14px; transition: 0.25s; }
   .laporan-card:hover { border-color: var(--lime); transform: translateY(-4px); }
-  .laporan-icon {
-    width: 44px;
-    height: 44px;
-    background: var(--lime-dim);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  .laporan-icon { width: 44px; height: 44px; background: var(--lime-dim); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
   .laporan-icon i { color: var(--lime); font-size: 1.1rem; }
-  .laporan-card h4 {
-    font-family: var(--display);
-    font-size: 1rem;
-    color: var(--white);
-  }
-  .laporan-card .laporan-meta {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-  .laporan-card a.laporan-link {
-    margin-top: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--lime);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  .laporan-empty {
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    padding: 30px 0;
-  }
+  .laporan-card h4 { font-family: var(--display); font-size: 1rem; color: var(--white); }
+  .laporan-card .laporan-meta { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+  .laporan-card a.laporan-link { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 0.7rem; font-weight: 700; color: var(--lime); text-transform: uppercase; letter-spacing: 1px; }
+  .laporan-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 30px 0; }
 
-  /* ============================================================
-     NEWS / BERITA
-  ============================================================ */
-  .section-news {
-    padding: 90px 0;
-    background: var(--deep-forest);
-  }
-  .news-grid {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr;
-    gap: 20px;
-  }
-  .news-card {
-    background: var(--canopy);
-    border-radius: var(--r-md);
-    overflow: hidden;
-    border: 1px solid var(--border);
-    transition: 0.25s;
-    display: flex;
-    flex-direction: column;
-  }
+  .section-news { padding: 90px 0; background: var(--deep-forest); }
+  .news-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 20px; }
+  .news-card { background: var(--canopy); border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); transition: 0.25s; display: flex; flex-direction: column; }
   .news-card:hover { transform: translateY(-4px); border-color: rgba(198,255,0,0.4); }
   .news-card img { width: 100%; object-fit: cover; }
   .news-card.featured img { height: 240px; }
   .news-card:not(.featured) img { height: 160px; }
   .news-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
-  .news-type {
-    font-size: 0.55rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: 50px;
-    display: inline-block;
-    margin-bottom: 12px;
-    width: fit-content;
-  }
+  .news-type { font-size: 0.55rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px; border-radius: 50px; display: inline-block; margin-bottom: 12px; width: fit-content; }
   .news-type.internal { background: var(--lime-dim); color: var(--lime); border: 1px solid var(--border); }
   .news-type.external { background: rgba(2,119,189,0.15); color: #64b5f6; border: 1px solid rgba(2,119,189,0.3); }
   .news-date { font-size: 0.62rem; color: var(--text-muted); margin-bottom: 8px; }
-  .news-card h4 {
-    font-family: var(--display);
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.35;
-    color: var(--white);
-    margin-bottom: 10px;
-  }
+  .news-card h4 { font-family: var(--display); font-size: 1rem; font-weight: 700; line-height: 1.35; color: var(--white); margin-bottom: 10px; }
   .news-card.featured h4 { font-size: 1.3rem; }
   .news-card p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; flex: 1; }
-  .news-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: var(--lime);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 16px;
-  }
+  .news-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 700; color: var(--lime); text-transform: uppercase; letter-spacing: 1px; margin-top: 16px; }
   .news-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; grid-column: 1 / -1; padding: 30px 0; }
 
-  /* ============================================================
-     CONTACT
-  ============================================================ */
-  .section-contact {
-    padding: 90px 0;
-    background: var(--canopy);
-  }
-  .contact-inner {
-    background: var(--deep-forest);
-    border-radius: var(--r-lg);
-    border: 1px solid var(--border);
-    padding: 60px 50px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 60px;
-    align-items: center;
-  }
-  .contact-text h2 {
-    font-family: var(--display);
-    font-size: clamp(1.8rem, 4vw, 2.5rem);
-    font-weight: 900;
-    color: var(--white);
-    margin-bottom: 14px;
-  }
+  .section-contact { padding: 90px 0; background: var(--canopy); }
+  .contact-inner { background: var(--deep-forest); border-radius: var(--r-lg); border: 1px solid var(--border); padding: 60px 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .contact-text h2 { font-family: var(--display); font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 900; color: var(--white); margin-bottom: 14px; }
   .contact-text p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 28px; }
   .contact-info { display: flex; flex-direction: column; gap: 14px; }
-  .contact-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    font-size: 0.85rem;
-    color: var(--parchment);
-  }
+  .contact-row { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: var(--parchment); }
   .contact-row i { color: var(--lime); width: 20px; text-align: center; }
   .contact-form { display: flex; flex-direction: column; gap: 14px; }
-  .form-group label {
-    display: block;
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--lime);
-    margin-bottom: 6px;
-  }
-  .form-group input,
-  .form-group textarea,
-  .form-group select {
-    width: 100%;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border);
-    border-radius: var(--r-sm);
-    color: var(--parchment);
-    font-family: var(--body);
-    font-size: 0.85rem;
-    padding: 14px 16px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .form-group input:focus,
-  .form-group textarea:focus,
-  .form-group select:focus { border-color: var(--lime); }
+  .form-group label { display: block; font-size: 0.65rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--lime); margin-bottom: 6px; }
+  .form-group input, .form-group textarea, .form-group select { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--parchment); font-family: var(--body); font-size: 0.85rem; padding: 14px 16px; outline: none; transition: border-color 0.2s; }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--lime); }
   .form-group textarea { resize: vertical; min-height: 100px; }
   .form-group select option { background: var(--canopy); }
-  .btn-submit {
-    width: 100%;
-    padding: 16px;
-    background: var(--lime);
-    color: var(--deep-forest);
-    font-family: var(--body);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: 0.2s;
-  }
+  .btn-submit { width: 100%; padding: 16px; background: var(--lime); color: var(--deep-forest); font-family: var(--body); font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border: none; border-radius: 50px; cursor: pointer; transition: 0.2s; }
   .btn-submit:hover { background: var(--white); }
 
-  /* ============================================================
-     FOOTER
-  ============================================================ */
-  footer {
-    background: #050e08;
-    padding: 40px 0;
-    border-top: 1px solid var(--border);
-  }
-  .footer-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 20px;
-  }
+  footer { background: #020202; padding: 40px 0; border-top: 1px solid var(--border); }
+  .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
   .footer-brand { display: flex; align-items: center; gap: 12px; }
   .footer-brand img { height: 32px; opacity: 0.8; }
-  .footer-brand span {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-  }
+  .footer-brand span { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; }
   .footer-links { display: flex; gap: 24px; }
   .footer-links a { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 1px; transition: color 0.2s; }
   .footer-links a:hover { color: var(--lime); }
   .footer-copy { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 1px; }
 
-  /* ============================================================
-     ADMIN LOGIN MODAL
-  ============================================================ */
-  .admin-modal-backdrop {
-    position: fixed; inset: 0; z-index: 999;
-    background: rgba(0,0,0,0.7);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
+  .admin-modal-backdrop { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; padding: 20px; }
   .admin-modal-backdrop.show { display: flex; }
-  .admin-modal {
-    background: var(--canopy);
-    border: 1px solid var(--border);
-    border-radius: var(--r-md);
-    padding: 32px;
-    width: 100%;
-    max-width: 360px;
-  }
-  .admin-modal h3 {
-    font-family: var(--display);
-    color: var(--white);
-    font-size: 1.2rem;
-    margin-bottom: 6px;
-  }
+  .admin-modal { background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-md); padding: 32px; width: 100%; max-width: 360px; position: relative; }
+  .admin-modal h3 { font-family: var(--display); color: var(--white); font-size: 1.2rem; margin-bottom: 6px; }
   .admin-modal p { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 20px; }
   .admin-modal .form-group { margin-bottom: 14px; }
   .admin-modal-actions { display: flex; gap: 10px; margin-top: 6px; }
   .admin-modal-actions button { flex: 1; }
   .admin-error { font-size: 0.72rem; color: #ff6b6b; margin-top: 10px; display: none; }
-  .admin-close {
-    position: absolute; top: 14px; right: 14px;
-    background: none; border: none; color: var(--text-muted);
-    font-size: 1rem; cursor: pointer;
-  }
-  .admin-modal { position: relative; }
+  .admin-close { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; }
 
-  /* ============================================================
-     MOBILE RESPONSIVE
-  ============================================================ */
   @media (max-width: 768px) {
     .impact-grid { grid-template-columns: repeat(2, 1fr); gap: 0; }
-    .impact-item { border-right: none; border-bottom: 1px solid rgba(10,40,24,0.2); padding: 20px 12px; }
-    .impact-item:nth-child(odd) { border-right: 1px solid rgba(10,40,24,0.2); }
+    .impact-item { border-right: none; border-bottom: 1px solid rgba(5,5,5,0.2); padding: 20px 12px; }
+    .impact-item:nth-child(odd) { border-right: 1px solid rgba(5,5,5,0.2); }
     .impact-item:nth-last-child(-n+2) { border-bottom: none; }
-
     .about-grid { grid-template-columns: 1fr; gap: 36px; }
-    .about-visual { display: none; } /* hide img on mobile, keep text focused */
+    .about-visual { display: none; }
     .about-pillars { grid-template-columns: 1fr; }
-
     .program-grid { grid-template-columns: 1fr; }
-
     .news-grid { grid-template-columns: 1fr; }
     .laporan-grid { grid-template-columns: 1fr; }
-
     .contact-inner { grid-template-columns: 1fr; padding: 36px 24px; gap: 36px; }
-
     .footer-inner { flex-direction: column; align-items: flex-start; }
     .footer-links { flex-wrap: wrap; gap: 14px; }
-
     .hero-title { font-size: 2.2rem; }
     nav { height: 58px; }
     .nav-cta span { display: none; }
   }
 
-  /* ============================================================
-     SCROLL ANIMATIONS
-  ============================================================ */
-  .reveal {
-    opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-  .reveal.visible {
-    opacity: 1;
-    transform: none;
-  }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
   .reveal-delay-1 { transition-delay: 0.1s; }
   .reveal-delay-2 { transition-delay: 0.2s; }
   .reveal-delay-3 { transition-delay: 0.3s; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .reveal { opacity: 1; transform: none; transition: none; }
-    .firefly { animation: none; opacity: 0; }
-  }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .firefly { animation: none; opacity: 0; } }
 </style>
 </head>
 <body>
 
-<!-- ========== NAV ========== -->
 <nav id="mainNav">
   <div class="nav-brand" id="logoTrigger" title="">
-    <img src="https://raw.githubusercontent.com/sekolakonangindonesiaprog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="Logo YSKI">
+    <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png">
     <div class="nav-brand-text">
       <strong>Sekola Konang</strong>
       <small>Indonesia</small>
@@ -891,7 +238,6 @@
   </a>
 </nav>
 
-<!-- ========== HERO ========== -->
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="fireflies" id="fireflies"></div>
@@ -915,7 +261,6 @@
   </div>
 </section>
 
-<!-- ========== IMPACT STRIP ========== -->
 <section class="impact-strip">
   <div class="container">
     <div class="impact-grid" id="impactGrid">
@@ -947,7 +292,6 @@
   </div>
 </section>
 
-<!-- ========== TENTANG ========== -->
 <section class="section-about" id="tentang">
   <div class="container">
     <div class="about-grid">
@@ -968,31 +312,19 @@
         <div class="about-pillars">
           <div class="pillar">
             <i class="fas fa-balance-scale"></i>
-            <div>
-              <h6>Measurement</h6>
-              <p>Surplus air, serapan karbon, indeks biodiversity.</p>
-            </div>
+            <div><h6>Measurement</h6><p>Surplus air, serapan karbon, indeks biodiversity.</p></div>
           </div>
           <div class="pillar">
             <i class="fas fa-route"></i>
-            <div>
-              <h6>Approach</h6>
-              <p>Mitigasi, adaptasi, dan development plan terpadu.</p>
-            </div>
+            <div><h6>Approach</h6><p>Mitigasi, adaptasi, dan development plan terpadu.</p></div>
           </div>
           <div class="pillar">
             <i class="fas fa-history"></i>
-            <div>
-              <h6>Governance</h6>
-              <p>Good governance, time planning, dan pelaporan transparan.</p>
-            </div>
+            <div><h6>Governance</h6><p>Good governance, time planning, dan pelaporan transparan.</p></div>
           </div>
           <div class="pillar">
             <i class="fas fa-users"></i>
-            <div>
-              <h6>Partnership</h6>
-              <p>Participatory development dan social enterprise.</p>
-            </div>
+            <div><h6>Partnership</h6><p>Participatory development dan social enterprise.</p></div>
           </div>
         </div>
       </div>
@@ -1000,7 +332,6 @@
   </div>
 </section>
 
-<!-- ========== PROGRAM ========== -->
 <section class="section-program" id="program">
   <div class="container">
     <div class="section-header reveal">
@@ -1009,7 +340,6 @@
       <p>Setiap program dirancang untuk saling mendukung — dari konservasi fisik hingga pemantauan hayati dan pemberdayaan masyarakat.</p>
     </div>
     <div class="program-grid" id="programGrid">
-      <!-- KONSERVASI -->
       <a href="konservasi.html" class="program-card reveal">
         <img class="program-card-img" src="https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=600&auto=format&fit=crop" alt="Konservasi">
         <div class="program-card-body">
@@ -1022,7 +352,6 @@
           </div>
         </div>
       </a>
-      <!-- BIODIVERSITY -->
       <a href="biodiversity.html" class="program-card reveal reveal-delay-1">
         <img class="program-card-img" src="https://images.unsplash.com/photo-1446941611757-91d2c3bd3d45?q=80&w=600&auto=format&fit=crop" alt="Biodiversity">
         <div class="program-card-body">
@@ -1035,7 +364,6 @@
           </div>
         </div>
       </a>
-      <!-- COMDEV -->
       <div class="program-card reveal reveal-delay-2" style="cursor:default;">
         <img class="program-card-img" src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=600&auto=format&fit=crop" alt="ComDev">
         <div class="program-card-body">
@@ -1049,7 +377,6 @@
   </div>
 </section>
 
-<!-- ========== MITRA (SATU GRID, TANPA KATEGORI) ========== -->
 <section class="section-mitra" id="mitra">
   <div class="container">
     <div class="mitra-header reveal">
@@ -1057,13 +384,10 @@
       <h2>Bersama Mitra Strategis</h2>
       <p>Kami bermitra dengan korporat, BUMN, lembaga pemerintah, dan akademisi untuk memperluas dampak konservasi.</p>
     </div>
-    <div class="mitra-logos reveal" id="mitraLogos">
-      <!-- diisi otomatis dari Firestore; fallback statis di bawah jika koleksi kosong -->
-    </div>
+    <div class="mitra-logos reveal" id="mitraLogos"></div>
   </div>
 </section>
 
-<!-- ========== LAPORAN TIM (BARU) ========== -->
 <section class="section-laporan" id="laporan">
   <div class="container">
     <div class="section-header reveal">
@@ -1077,7 +401,6 @@
   </div>
 </section>
 
-<!-- ========== BERITA ========== -->
 <section class="section-news" id="berita">
   <div class="container">
     <div class="section-header reveal">
@@ -1091,69 +414,47 @@
   </div>
 </section>
 
-<!-- ========== KONTAK ========== -->
 <section class="section-contact" id="kontak">
   <div class="container">
     <div class="contact-inner reveal">
       <div class="contact-text">
         <span class="section-label">Hubungi Kami</span>
         <h2>Mari Berkolaborasi untuk Alam</h2>
-        <p>
-          Kami terbuka untuk kemitraan CSR, program kementerian, riset ilmiah, maupun kolaborasi komunitas. Setiap bentuk dukungan adalah langkah nyata untuk ekosistem yang lebih sehat.
-        </p>
+        <p>Kami terbuka untuk kemitraan CSR, program kementerian, riset ilmiah, maupun kolaborasi komunitas. Setiap bentuk dukungan adalah langkah nyata untuk ekosistem yang lebih sehat.</p>
         <div class="contact-info">
-          <div class="contact-row">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>Probolinggo, Jawa Timur, Indonesia</span>
-          </div>
-          <div class="contact-row">
-            <i class="fas fa-envelope"></i>
-            <span>info@sekolakonang.id</span>
-          </div>
-          <div class="contact-row">
-            <i class="fab fa-instagram"></i>
-            <span>@sekolakonang.indonesia</span>
-          </div>
-          <div class="contact-row">
-            <i class="fab fa-youtube"></i>
-            <span>Sekola Konang Indonesia</span>
-          </div>
+          <div class="contact-row"><i class="fas fa-map-marker-alt"></i><span>Probolinggo, Jawa Timur, Indonesia</span></div>
+          <div class="contact-row"><i class="fas fa-envelope"></i><span>sekolakonang@gmail.com</span></div>
+          <div class="contact-row"><i class="fab fa-instagram"></i><span>@sekolakonangindonesia</span></div>
+          <div class="contact-row"><i class="fab fa-youtube"></i><span>Sekola Konang</span></div>
         </div>
       </div>
       <div class="contact-form reveal reveal-delay-1">
-        <div class="form-group">
-          <label>Nama / Institusi</label>
-          <input type="text" placeholder="PT. Contoh / Kementerian XYZ">
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" placeholder="nama@email.com">
-        </div>
+        <div class="form-group"><label>Nama / Institusi</label><input type="text" placeholder="PT. Contoh / Kementerian XYZ"></div>
+        <div class="form-group"><label>Email</label><input type="email" placeholder="nama@email.com"></div>
         <div class="form-group">
           <label>Jenis Kemitraan</label>
           <select>
-            <option>CSR Perusahaan</option>
-            <option>Program Kementerian</option>
-            <option>Penelitian / Riset</option>
-            <option>Kolaborasi Lainnya</option>
+            <option>Konservasi & Keragaman hayati</option>
+            <option>Pengembangan Budaya & Perikehidupan Berkelanjutan</option>
+            <option>Community development</option>
+            <option>Pengembangan Ekowisata & Ekonomi Kreatif</option>
+            <option>Leadership Training</option>
+            <option>Informed and Social reset</option>
+            <option>Kolaborasi lainnya</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Pesan</label>
-          <textarea placeholder="Ceritakan program atau kebutuhan Anda..."></textarea>
-        </div>
+        <div class="form-group"><label>Pesan</label><textarea placeholder="Ceritakan program atau kebutuhan Anda..."></textarea></div>
         <button class="btn-submit">Kirim Pesan <i class="fas fa-paper-plane ms-2"></i></button>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== FOOTER ========== -->
 <footer>
   <div class="container">
     <div class="footer-inner">
       <div class="footer-brand">
-        <img src="https://raw.githubusercontent.com/sekolakonangindonesiaprog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
+        <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
         <span>© 2025 Yayasan Sekola Konang Indonesia</span>
       </div>
       <div class="footer-links">
@@ -1169,28 +470,18 @@
   </div>
 </footer>
 
-<!-- ========== ADMIN LOGIN MODAL ========== -->
 <div class="admin-modal-backdrop" id="adminModalBackdrop">
   <div class="admin-modal">
     <button class="admin-close" id="adminModalClose"><i class="fas fa-times"></i></button>
     <h3>Login Admin</h3>
     <p>Khusus pengurus Yayasan Sekola Konang Indonesia.</p>
-    <div class="form-group">
-      <label>Email</label>
-      <input type="email" id="adminEmail" placeholder="admin@sekolakonang.id">
-    </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="adminPassword" placeholder="••••••••">
-    </div>
-    <div class="admin-modal-actions">
-      <button class="btn-submit" id="adminLoginBtn">Masuk</button>
-    </div>
+    <div class="form-group"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@sekolakonang.id"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="adminPassword" placeholder="••••••••"></div>
+    <div class="admin-modal-actions"><button class="btn-submit" id="adminLoginBtn">Masuk</button></div>
     <div class="admin-error" id="adminError">Email atau password salah.</div>
   </div>
 </div>
 
-<!-- ========== FIREBASE & DATA LOGIC ========== -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -1208,9 +499,6 @@
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  /* ---------------------------------------------------------
-     1. TENTANG KAMI (profil_yayasan/tentang_kami) — sama seperti kode lama
-  --------------------------------------------------------- */
   async function loadProfil() {
     try {
       const docSnap = await getDoc(doc(db, "profil_yayasan", "tentang_kami"));
@@ -1237,9 +525,6 @@
     }
   }
 
-  /* ---------------------------------------------------------
-     2. HERO TEXT (profil_yayasan/hero) — opsional, fallback ke teks default
-  --------------------------------------------------------- */
   async function loadHero() {
     try {
       const docSnap = await getDoc(doc(db, "profil_yayasan", "hero"));
@@ -1253,9 +538,6 @@
     } catch (e) { console.error("Gagal ambil data hero", e); }
   }
 
-  /* ---------------------------------------------------------
-     3. IMPACT STATS (profil_yayasan/impact_stats) — angka strip atas
-  --------------------------------------------------------- */
   async function loadImpactStats() {
     try {
       const docSnap = await getDoc(doc(db, "profil_yayasan", "impact_stats"));
@@ -1269,12 +551,9 @@
     } catch (e) {
       console.error("Gagal ambil impact stats, pakai nilai default", e);
     }
-    initCountUp(); // tetap jalankan count-up walau pakai default
+    initCountUp();
   }
 
-  /* ---------------------------------------------------------
-     4. PROGRAM (collection "programs") — sama seperti kode lama + stat angka
-  --------------------------------------------------------- */
   async function loadPrograms() {
     try {
       const querySnapshot = await getDocs(collection(db, "programs"));
@@ -1300,9 +579,6 @@
     }
   }
 
-  /* ---------------------------------------------------------
-     5. MITRA (collection "mitra") — satu grid gabungan, tanpa kategori
-  --------------------------------------------------------- */
   async function loadMitra() {
     const wrap = document.getElementById('mitraLogos');
     try {
@@ -1329,9 +605,6 @@
     }
   }
 
-  /* ---------------------------------------------------------
-     6. LAPORAN TIM (collection "laporan_tim") — section baru
-  --------------------------------------------------------- */
   async function loadLaporan() {
     const grid = document.getElementById('laporanGrid');
     try {
@@ -1361,9 +634,6 @@
     }
   }
 
-  /* ---------------------------------------------------------
-     7. NEWS (collection "news") — dengan fallback ke 3 berita contoh
-  --------------------------------------------------------- */
   async function loadNews() {
     const grid = document.getElementById('newsGrid');
     try {
@@ -1431,9 +701,6 @@
     `;
   }
 
-  /* ---------------------------------------------------------
-     INIT ALL DATA LOADERS
-  --------------------------------------------------------- */
   loadProfil();
   loadHero();
   loadImpactStats();
@@ -1442,9 +709,6 @@
   loadLaporan();
   loadNews();
 
-  /* ---------------------------------------------------------
-     ADMIN ACCESS: klik logo 5x -> modal login -> redirect admin.html
-  --------------------------------------------------------- */
   let logoClickCount = 0;
   let logoClickTimer = null;
   const logoTrigger = document.getElementById('logoTrigger');
@@ -1479,13 +743,11 @@
     }
   });
 
-  // === NAV SCROLL ===
   const navEl = document.getElementById('mainNav');
   window.addEventListener('scroll', () => {
     navEl.classList.toggle('scrolled', window.scrollY > 40);
   });
 
-  // === FIREFLIES GENERATOR ===
   const ff = document.getElementById('fireflies');
   for (let i = 0; i < 18; i++) {
     const el = document.createElement('div');
@@ -1502,14 +764,12 @@
     ff.appendChild(el);
   }
 
-  // === SCROLL REVEAL ===
   const revealEls = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
   }, { threshold: 0.12 });
   revealEls.forEach(el => observer.observe(el));
 
-  // === COUNT-UP ANIMATION ===
   function countUp(el, target, decimal) {
     const duration = 1800;
     const start = performance.now();
@@ -1538,7 +798,6 @@
     impactNums.forEach(el => impactObserver.observe(el));
   }
 
-  // === SMOOTH NAV SCROLL ===
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
       const id = a.getAttribute('href').slice(1);
