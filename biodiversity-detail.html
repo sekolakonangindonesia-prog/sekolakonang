@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detail Kawasan Kehati — Sekola Konang Indonesia</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* ============================================================
+   DESIGN TOKENS — identik dengan seluruh halaman lainnya
+============================================================ */
+:root {
+  --deep-forest: #050505;
+  --canopy:      #353736;
+  --lime:        #C6FF00;
+  --lime-dim:    rgba(198,255,0,0.10);
+  --parchment:   #F5F5F0;
+  --white:       #FFFFFF;
+  --text-muted:  rgba(245,245,240,0.55);
+  --border:      rgba(198,255,0,0.15);
+  --border-subtle: rgba(255,255,255,0.07);
+  --orange:      #ffab00;
+  --blue:        #2196f3;
+  --cyan:        #00e5ff;
+  --green:       #2e7d32;
+
+  --display: 'Playfair Display', Georgia, serif;
+  --body:    'Inter', system-ui, sans-serif;
+  --r-sm: 12px; --r-md: 20px; --r-lg: 32px;
+}
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--body);
+  background: var(--deep-forest);
+  color: var(--parchment);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 60px;
+}
+img { display:block; max-width:100%; }
+a { text-decoration:none; color:inherit; }
+
+/* ============================================================
+   UTILITY
+============================================================ */
+.container-page { width:100%; max-width:1140px; margin:0 auto; padding:0 20px; }
+.lime { color: var(--lime); }
+.section-label {
+  font-size:0.6rem; font-weight:700;
+  letter-spacing:4px; text-transform:uppercase;
+  color:var(--lime); margin-bottom:8px; display:block;
+}
+
+/* ============================================================
+   NAV
+============================================================ */
+nav {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  height:64px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px;
+  background:rgba(5,5,5,0.92);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.nav-brand { display:flex; align-items:center; gap:12px; }
+.nav-brand img { height:34px; }
+.nav-brand-text strong {
+  display:block; font-family:var(--display);
+  font-size:0.88rem; color:var(--white); letter-spacing:0.3px;
+}
+.nav-brand-text small {
+  font-size:0.52rem; letter-spacing:3px;
+  color:var(--lime); text-transform:uppercase; font-weight:600;
+}
+.nav-back {
+  display:inline-flex; align-items:center; gap:8px;
+  font-size:0.7rem; font-weight:700; letter-spacing:1px;
+  text-transform:uppercase; color:var(--parchment);
+  border:1px solid var(--border-subtle);
+  padding:9px 18px; border-radius:50px; transition:0.2s;
+}
+.nav-back:hover { border-color:var(--lime); color:var(--lime); }
+
+/* ============================================================
+   HERO — background dari foto kawasan
+============================================================ */
+.page-hero {
+  padding:110px 0 56px;
+  background-size: cover;
+  background-position: center;
+  border-bottom:1px solid var(--border);
+  position: relative;
+}
+.page-hero::before {
+  content:'';
+  position:absolute; inset:0;
+  background: linear-gradient(to bottom, rgba(5,5,5,0.5) 0%, rgba(5,5,5,0.88) 65%, var(--deep-forest) 100%);
+}
+.page-hero .hero-inner { position:relative; z-index:1; }
+.page-hero .section-label { margin-bottom:10px; }
+.page-hero h1 {
+  font-family:var(--display);
+  font-size:clamp(2rem, 5vw, 3.2rem);
+  font-weight:900; color:var(--white);
+  line-height:1.1; letter-spacing:-0.5px;
+}
+.page-hero h1 em { font-style:normal; color:var(--lime); }
+.page-hero p {
+  font-size:0.88rem; color:var(--text-muted);
+  line-height:1.7; max-width:560px; margin-top:10px;
+}
+
+/* Status badge */
+.status-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:0.65rem; font-weight:700; letter-spacing:2px;
+  text-transform:uppercase;
+  padding:6px 14px; border-radius:50px;
+  margin-top:14px;
+}
+.status-badge.sangat-baik { background:rgba(198,255,0,0.15); color:var(--lime); border:1px solid var(--border); }
+.status-badge.baik        { background:rgba(33,150,243,0.15); color:#64b5f6; border:1px solid rgba(33,150,243,0.3); }
+.status-badge.sedang      { background:rgba(255,171,0,0.15);  color:var(--orange); border:1px solid rgba(255,171,0,0.3); }
+
+/* ============================================================
+   INDEKS CARDS — 3 kolom (H', E, R)
+============================================================ */
+.index-row {
+  display:grid;
+  grid-template-columns: repeat(3,1fr);
+  gap:14px;
+  margin-top:-32px;
+  margin-bottom:40px;
+  position:relative; z-index:2;
+}
+.index-card {
+  background:var(--white);
+  border-radius:var(--r-md);
+  padding:22px 16px; text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,0.45);
+  border-top:3px solid var(--green);
+  transition:transform 0.2s;
+}
+.index-card:hover { transform:translateY(-3px); }
+.index-card.bird { border-top-color: var(--blue); }
+.index-label { font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#888; }
+.index-num {
+  font-family:var(--display);
+  font-size:2.2rem; font-weight:900;
+  color:#111; line-height:1.1; margin:6px 0 4px;
+}
+.index-num.green { color: var(--green); }
+.index-num.blue  { color: var(--blue); }
+.index-cat { font-size:0.65rem; font-weight:600; color:#555; }
+
+/* ============================================================
+   UI CARD
+============================================================ */
+.ui-card {
+  background:var(--canopy);
+  border-radius:var(--r-lg);
+  border:1px solid var(--border-subtle);
+  overflow:hidden; margin-bottom:24px;
+}
+.ui-card-header {
+  display:flex; align-items:center; gap:10px;
+  padding:14px 22px;
+  background:rgba(255,171,0,0.12);
+  border-bottom:1px solid rgba(255,171,0,0.2);
+  font-size:0.7rem; font-weight:800;
+  letter-spacing:1px; text-transform:uppercase;
+  color:var(--orange);
+}
+.ui-card-header.c-green {
+  background:rgba(46,125,50,0.12);
+  border-bottom-color:rgba(46,125,50,0.25);
+  color:#81c784;
+}
+.ui-card-header.c-blue {
+  background:rgba(33,150,243,0.1);
+  border-bottom-color:rgba(33,150,243,0.2);
+  color:#64b5f6;
+}
+.ui-card-header.c-red {
+  background:rgba(211,47,47,0.1);
+  border-bottom-color:rgba(211,47,47,0.2);
+  color:#ef9a9a;
+}
+.ui-card-header.c-subtle {
+  background:rgba(255,255,255,0.04);
+  border-bottom-color:var(--border-subtle);
+  color:var(--text-muted);
+}
+.ui-card-body { padding:22px; }
+
+/* ============================================================
+   PETA
+============================================================ */
+#miniMap { height:360px; width:100%; background:#111; }
+
+/* ============================================================
+   CHART
+============================================================ */
+.chart-wrap { position:relative; height:220px; padding:14px; }
+.chart-wrap-sm { position:relative; height:180px; padding:10px; }
+
+/* ============================================================
+   STATS INLINE (flora & burung)
+============================================================ */
+.inline-stats {
+  display:flex; gap:12px; margin-bottom:18px;
+}
+.inline-stat {
+  flex:1; background:rgba(255,255,255,0.05);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--r-sm); padding:14px 10px; text-align:center;
+}
+.inline-stat .num {
+  font-family:var(--display); font-size:1.8rem; font-weight:900;
+  color:var(--lime); line-height:1;
+}
+.inline-stat .num.blue { color:#64b5f6; }
+.inline-stat span { display:block; font-size:0.6rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-top:4px; }
+
+/* Alert note */
+.field-note {
+  background:rgba(255,171,0,0.08);
+  border-left:3px solid var(--orange);
+  color:rgba(255,171,0,0.9);
+  font-size:0.72rem; line-height:1.6;
+  padding:10px 14px; border-radius:0 var(--r-sm) var(--r-sm) 0;
+  margin-top:14px;
+}
+
+/* ============================================================
+   FLAGSHIP SPECIES
+============================================================ */
+.flagship-card {
+  background: linear-gradient(135deg, rgba(198,255,0,0.06) 0%, rgba(5,5,5,0) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:28px;
+  display:flex; gap:24px; align-items:center;
+  margin-bottom:24px;
+}
+.flagship-img {
+  width:180px; height:180px; object-fit:cover;
+  border-radius:var(--r-md);
+  border:2px solid var(--border);
+  flex-shrink:0;
+}
+.flagship-info h3 {
+  font-family:var(--display); font-size:1.5rem; font-weight:900;
+  color:var(--white); line-height:1.2; margin-bottom:8px;
+}
+.flagship-info .status-pill {
+  display:inline-block;
+  font-size:0.6rem; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  background:rgba(211,47,47,0.2); color:#ef9a9a;
+  border:1px solid rgba(211,47,47,0.3);
+  padding:4px 12px; border-radius:50px; margin-bottom:12px;
+}
+.flagship-info p {
+  font-size:0.82rem; color:var(--text-muted); line-height:1.7;
+}
+
+/* ============================================================
+   PROTECTED LIST
+============================================================ */
+.protected-item {
+  display:flex; align-items:center; gap:14px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--r-sm); padding:14px 16px;
+  margin-bottom:10px; transition:0.2s;
+}
+.protected-item:hover { border-color:rgba(211,47,47,0.3); }
+.protected-img {
+  width:56px; height:56px; object-fit:cover;
+  border-radius:var(--r-sm); flex-shrink:0;
+  border:1px solid var(--border-subtle);
+}
+.protected-info h6 { font-size:0.82rem; font-weight:700; color:var(--white); margin-bottom:4px; }
+.pill {
+  display:inline-block; font-size:0.55rem; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:3px 10px; border-radius:50px; margin-right:4px;
+}
+.pill.fauna { background:rgba(211,47,47,0.15); color:#ef9a9a; border:1px solid rgba(211,47,47,0.3); }
+.pill.flora { background:rgba(46,125,50,0.15); color:#81c784; border:1px solid rgba(46,125,50,0.3); }
+.pill.status { background:rgba(255,171,0,0.15); color:var(--orange); border:1px solid rgba(255,171,0,0.3); }
+
+/* ============================================================
+   TREN INDEKS — 3 chart kecil
+============================================================ */
+.trend-grid {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+  margin-bottom:24px;
+}
+.trend-card {
+  background:var(--canopy);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--r-md); overflow:hidden;
+}
+.trend-card-header {
+  padding:10px 14px;
+  font-size:0.62rem; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  border-bottom:1px solid var(--border-subtle);
+}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+footer {
+  background:#050e08;
+  border-top:1px solid var(--border);
+  padding:32px 24px; text-align:center;
+  font-size:0.62rem; font-weight:600;
+  letter-spacing:2px; color:var(--text-muted);
+  text-transform:uppercase;
+}
+
+/* ============================================================
+   REVEAL
+============================================================ */
+.reveal { opacity:0; transform:translateY(20px); transition:opacity 0.55s ease, transform 0.55s ease; }
+.reveal.visible { opacity:1; transform:none; }
+
+/* ============================================================
+   MOBILE
+============================================================ */
+@media (max-width: 768px) {
+  nav { padding:0 16px; height:58px; }
+  .nav-back span { display:none; }
+  .page-hero { padding:90px 0 44px; }
+  .page-hero h1 { font-size:1.9rem; }
+  .index-row { grid-template-columns:1fr; margin-top:-16px; }
+  .trend-grid { grid-template-columns:1fr; }
+  .flagship-card { flex-direction:column; }
+  .flagship-img { width:100%; height:220px; }
+  #miniMap { height:280px; }
+  .chart-wrap { height:190px; }
+  .chart-wrap-sm { height:160px; }
+  .inline-stats { flex-direction:column; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .reveal { opacity:1; transform:none; transition:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <img src="https://raw.githubusercontent.com/sekolakonangindonesiaprog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
+    <div class="nav-brand-text">
+      <strong>Sekola Konang</strong>
+      <small>Indonesia</small>
+    </div>
+  </div>
+  <a href="biodiversity.html" class="nav-back">
+    <i class="fas fa-arrow-left"></i>
+    <span>Kembali ke Monitoring Kehati</span>
+  </a>
+</nav>
+
+<!-- HERO — background diisi JS dari data -->
+<section class="page-hero" id="pageHero">
+  <div class="container-page hero-inner">
+    <span class="section-label">Monitoring Kehati</span>
+    <h1 id="heroTitle">Memuat data <em>kawasan...</em></h1>
+    <p id="heroDesc">Mohon tunggu sebentar.</p>
+    <div id="heroStatus"></div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<div class="container-page">
+
+  <!-- INDEKS FLORA -->
+  <div class="index-row reveal" id="indexRow">
+    <div class="index-card">
+      <div class="index-label">Keanekaragaman Hayati</div>
+      <div class="index-num green" id="valH">—</div>
+      <div class="index-cat" id="catH">—</div>
+      <div style="font-size:0.6rem;color:#aaa;margin-top:2px;">Indeks Shannon H'</div>
+    </div>
+    <div class="index-card">
+      <div class="index-label">Kemerataan Jenis</div>
+      <div class="index-num green" id="valE">—</div>
+      <div class="index-cat">Tinggi / Merata</div>
+      <div style="font-size:0.6rem;color:#aaa;margin-top:2px;">Indeks Evenness E</div>
+    </div>
+    <div class="index-card">
+      <div class="index-label">Kekayaan Jenis</div>
+      <div class="index-num green" id="valR">—</div>
+      <div class="index-cat">Kekayaan Tinggi</div>
+      <div style="font-size:0.6rem;color:#aaa;margin-top:2px;">Indeks Margalef R</div>
+    </div>
+  </div>
+
+  <!-- PETA -->
+  <div class="ui-card reveal">
+    <div class="ui-card-header"><i class="fas fa-map-marked-alt"></i> Area Delineasi &amp; Titik Pantau</div>
+    <div id="miniMap"></div>
+  </div>
+
+  <!-- TREN INDEKS H E R -->
+  <div class="trend-grid reveal">
+    <div class="trend-card">
+      <div class="trend-card-header" style="color:#81c784;">Tren Indeks H' (Shannon)</div>
+      <div class="chart-wrap-sm"><canvas id="chartH"></canvas></div>
+    </div>
+    <div class="trend-card">
+      <div class="trend-card-header" style="color:#64b5f6;">Tren Indeks E (Evenness)</div>
+      <div class="chart-wrap-sm"><canvas id="chartE"></canvas></div>
+    </div>
+    <div class="trend-card">
+      <div class="trend-card-header" style="color:var(--orange);">Tren Indeks R (Margalef)</div>
+      <div class="chart-wrap-sm"><canvas id="chartR"></canvas></div>
+    </div>
+  </div>
+
+  <!-- FLORA & BURUNG -->
+  <div class="row g-3 mb-3 reveal">
+    <!-- FLORA -->
+    <div class="col-lg-6">
+      <div class="ui-card h-100" style="margin-bottom:0;">
+        <div class="ui-card-header c-green"><i class="fas fa-leaf"></i> Inventarisasi Flora</div>
+        <div class="ui-card-body">
+          <div class="inline-stats">
+            <div class="inline-stat">
+              <div class="num" id="floraTotal">—</div>
+              <span>Jenis</span>
+            </div>
+            <div class="inline-stat">
+              <div class="num" id="floraFam">—</div>
+              <span>Famili</span>
+            </div>
+          </div>
+          <div style="font-size:0.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">
+            Tren Jumlah Spesies
+          </div>
+          <div class="chart-wrap" style="padding:0;"><canvas id="floraChart"></canvas></div>
+          <div class="field-note" id="floraNote" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BURUNG -->
+    <div class="col-lg-6">
+      <div class="ui-card h-100" style="margin-bottom:0;">
+        <div class="ui-card-header c-blue"><i class="fas fa-dove"></i> Avifauna — Indeks Kehati Burung</div>
+        <div class="ui-card-body">
+          <!-- Indeks burung -->
+          <div class="index-row" style="margin-top:0; margin-bottom:16px; grid-template-columns:repeat(3,1fr); gap:10px;">
+            <div class="index-card bird" style="padding:14px 10px;">
+              <div class="index-label">H' Burung</div>
+              <div class="index-num blue" id="birdH" style="font-size:1.5rem;">—</div>
+            </div>
+            <div class="index-card bird" style="padding:14px 10px;">
+              <div class="index-label">E Burung</div>
+              <div class="index-num blue" id="birdE" style="font-size:1.5rem;">—</div>
+            </div>
+            <div class="index-card bird" style="padding:14px 10px;">
+              <div class="index-label">R Burung</div>
+              <div class="index-num blue" id="birdR" style="font-size:1.5rem;">—</div>
+            </div>
+          </div>
+          <div class="inline-stats">
+            <div class="inline-stat">
+              <div class="num blue" id="birdSpecies">—</div>
+              <span>Spesies</span>
+            </div>
+            <div class="inline-stat">
+              <div class="num blue" id="birdFamily">—</div>
+              <span>Famili</span>
+            </div>
+          </div>
+          <div class="chart-wrap" style="padding:0;"><canvas id="birdChart"></canvas></div>
+          <div style="margin-top:12px; font-size:0.75rem; color:var(--text-muted); line-height:1.7;">
+            <b style="color:var(--parchment);">Dominasi:</b> <span id="birdDom">—</span><br>
+            <b style="color:var(--parchment);">Spesies Kunci:</b> <span id="birdKey">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLAGSHIP SPECIES -->
+  <div id="flagshipSection" style="display:none;" class="reveal">
+    <span class="section-label" style="margin-bottom:14px;">Flagship Species</span>
+    <div class="flagship-card">
+      <img src="" class="flagship-img" id="flagImg" alt="Flagship Species"
+        onerror="this.src='https://images.unsplash.com/photo-1471500455598-7905b9c19b54?q=80&w=400'">
+      <div class="flagship-info">
+        <div style="font-size:0.6rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:8px;">
+          <i class="fas fa-crown"></i> Flagship Species
+        </div>
+        <h3 id="flagName">—</h3>
+        <div class="status-pill" id="flagStatus">—</div>
+        <p id="flagDesc">—</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPESIES DILINDUNGI -->
+  <div class="ui-card reveal">
+    <div class="ui-card-header c-red"><i class="fas fa-shield-alt"></i> Daftar Spesies Dilindungi / Red List</div>
+    <div class="ui-card-body" id="protectedList">
+      <div style="text-align:center;color:var(--text-muted);padding:20px;">Memuat data...</div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- FOOTER -->
+<footer>© Yayasan Sekola Konang Indonesia — The Firefly Movement, Probolinggo</footer>
+
+<!-- SCRIPTS -->
+<script src="database.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+    authDomain: "sekola-konang.firebaseapp.com",
+    projectId: "sekola-konang",
+    storageBucket: "sekola-konang.firebasestorage.app",
+    messagingSenderId: "9338352073",
+    appId: "1:9338352073:web:b56481b836888b1a8bf818"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  /* ---- URL PARAM ---- */
+  const locId = new URLSearchParams(window.location.search).get('id') || 'kehati_aqua';
+
+  /* ---- CHART DEFAULTS ---- */
+  Chart.defaults.color = 'rgba(245,245,240,0.5)';
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.font.size   = 11;
+
+  /* ---- PETA INIT ---- */
+  const map = L.map('miniMap', { zoomControl:true }).setView([-7.723, 112.932], 15);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png').addTo(map);
+  setTimeout(() => map.invalidateSize(), 500);
+
+  /* ================================================================
+     MIGRASI OTOMATIS: Cek Firebase dulu, kalau kosong → migrasi
+  ================================================================ */
+  async function checkAndMigrate() {
+    try {
+      // Cek apakah data lokasi ini sudah ada di Firebase
+      const snap = await getDoc(doc(db, "monitoring_kehati", locId));
+
+      if (snap.exists()) {
+        // Data sudah ada — langsung render dari Firebase
+        renderFromFirebase(snap.data());
+      } else {
+        // Data belum ada — coba ambil dari database.js lokal & upload
+        if (typeof db_kehati !== 'undefined' && db_kehati.locations[locId]) {
+          await migrateToFirebase(locId);
+          // Setelah migrasi, ambil lagi dari Firebase
+          const snapAfter = await getDoc(doc(db, "monitoring_kehati", locId));
+          if (snapAfter.exists()) renderFromFirebase(snapAfter.data());
+          else renderFromLocal(db_kehati.locations[locId]);
+        } else {
+          showError('Data tidak ditemukan di database maupun Firebase.');
+        }
+      }
+    } catch(e) {
+      console.error('Error:', e);
+      // Fallback ke data lokal jika Firebase gagal
+      if (typeof db_kehati !== 'undefined' && db_kehati.locations[locId]) {
+        renderFromLocal(db_kehati.locations[locId]);
+      } else {
+        showError('Gagal memuat data. Periksa koneksi internet.');
+      }
+    }
+  }
+
+  /* ================================================================
+     MIGRASI: database.js → Firebase
+  ================================================================ */
+  async function migrateToFirebase(id) {
+    const raw = db_kehati.locations[id];
+    if (!raw) return;
+
+    const payload = {
+      location:        raw.name        || "",
+      desc:            raw.desc        || "",
+      year:            raw.year        || "2025",
+      status:          raw.status      || "Sedang",
+      lat:             raw.lat         || 0,
+      lng:             raw.lng         || 0,
+      // Indeks Flora
+      index_h:         raw.indices?.H  || 0,
+      index_e:         raw.indices?.E  || 0,
+      index_r:         raw.indices?.R  || 0,
+      index_cat:       raw.indices?.cat|| "Sedang",
+      // Indeks Burung
+      bird_h:          raw.birdIndices?.H  || 0,
+      bird_e:          raw.birdIndices?.E  || 0,
+      bird_r:          raw.birdIndices?.R  || 0,
+      // Flora stats
+      flora_total:     raw.floraStats?.total  || 0,
+      flora_famili:    raw.floraStats?.famili || 0,
+      flora_years:     JSON.stringify(raw.floraStats?.years  || []),
+      flora_values:    JSON.stringify(raw.floraStats?.values || []),
+      flora_note:      raw.floraStats?.note  || "",
+      // Burung stats
+      bird_species:    raw.birdStats?.species || 0,
+      bird_family:     raw.birdStats?.family  || 0,
+      bird_dom:        raw.birdStats?.dom     || "—",
+      bird_key:        raw.birdStats?.key     || "—",
+      bird_graph_years:   JSON.stringify(raw.birdDataGraph?.years   || []),
+      bird_graph_family:  JSON.stringify(raw.birdDataGraph?.family  || []),
+      bird_graph_species: JSON.stringify(raw.birdDataGraph?.species || []),
+      // Tren indeks
+      history_labels: JSON.stringify(raw.chartLabels || []),
+      history_h:      JSON.stringify(raw.historyH    || []),
+      history_e:      JSON.stringify(raw.historyE    || []),
+      history_r:      JSON.stringify(raw.historyR    || []),
+      // Flagship
+      flagship_name:   raw.flagshipSpecies?.name   || "",
+      flagship_desc:   raw.flagshipSpecies?.desc   || "",
+      flagship_status: raw.flagshipSpecies?.status || "",
+      flagship_img:    raw.flagshipSpecies?.img    || "",
+      // Protected list & polygon
+      protected_list:  JSON.stringify(raw.protectedList  || []),
+      area_polygon:    JSON.stringify(raw.detailPolygon  || []),
+      header_image:    raw.headerImage || "",
+    };
+
+    await setDoc(doc(db, "monitoring_kehati", id), payload);
+    console.log(`✅ Migrasi berhasil: ${id}`);
+  }
+
+  /* ================================================================
+     RENDER DARI FIREBASE
+  ================================================================ */
+  function renderFromFirebase(d) {
+    // Parse JSON fields
+    const histLabels  = safeJson(d.history_labels);
+    const histH       = safeJson(d.history_h);
+    const histE       = safeJson(d.history_e);
+    const histR       = safeJson(d.history_r);
+    const floraYears  = safeJson(d.flora_years);
+    const floraVals   = safeJson(d.flora_values);
+    const birdYears   = safeJson(d.bird_graph_years);
+    const birdFam     = safeJson(d.bird_graph_family);
+    const birdSp      = safeJson(d.bird_graph_species);
+    const protList    = safeJson(d.protected_list);
+    const polygons    = safeJson(d.area_polygon);
+
+    // Konversi ke format lokal untuk renderData
+    const mapped = {
+      name:         d.location,
+      desc:         d.desc,
+      status:       d.status,
+      lat:          d.lat,
+      lng:          d.lng,
+      headerImage:  d.header_image,
+      indices:      { H: d.index_h, E: d.index_e, R: d.index_r, cat: d.index_cat },
+      birdIndices:  { H: d.bird_h,  E: d.bird_e,  R: d.bird_r  },
+      floraStats:   { total: d.flora_total, famili: d.flora_famili, years: floraYears, values: floraVals, note: d.flora_note },
+      birdStats:    { species: d.bird_species, family: d.bird_family, dom: d.bird_dom, key: d.bird_key },
+      birdDataGraph:{ years: birdYears, family: birdFam, species: birdSp },
+      chartLabels:  histLabels,
+      historyH:     histH,
+      historyE:     histE,
+      historyR:     histR,
+      flagshipSpecies: d.flagship_name ? {
+        name: d.flagship_name, desc: d.flagship_desc,
+        status: d.flagship_status, img: d.flagship_img
+      } : null,
+      protectedList:  protList,
+      detailPolygon:  polygons,
+    };
+    renderData(mapped);
+  }
+
+  /* ================================================================
+     RENDER DARI LOKAL (fallback)
+  ================================================================ */
+  function renderFromLocal(raw) {
+    renderData(raw);
+  }
+
+  /* ================================================================
+     RENDER UTAMA
+  ================================================================ */
+  function renderData(d) {
+    /* HERO */
+    if (d.headerImage) {
+      document.getElementById('pageHero').style.backgroundImage = `url('${d.headerImage}')`;
+    }
+    document.getElementById('heroTitle').innerHTML = `${d.name || 'Kawasan'} <em>${d.year || ''}</em>`;
+    document.getElementById('heroDesc').textContent = d.desc || '';
+
+    // Status badge
+    const statusEl = document.getElementById('heroStatus');
+    const sc = (d.status || '').toLowerCase().replace(' ', '-');
+    statusEl.innerHTML = `<span class="status-badge ${sc}"><i class="fas fa-circle" style="font-size:6px;"></i> ${d.status}</span>`;
+
+    /* INDEKS FLORA */
+    document.getElementById('valH').textContent = d.indices?.H ?? '—';
+    document.getElementById('catH').textContent = d.indices?.cat ?? '—';
+    document.getElementById('valE').textContent = d.indices?.E ?? '—';
+    document.getElementById('valR').textContent = d.indices?.R ?? '—';
+
+    /* INDEKS BURUNG */
+    document.getElementById('birdH').textContent = d.birdIndices?.H ?? '—';
+    document.getElementById('birdE').textContent = d.birdIndices?.E ?? '—';
+    document.getElementById('birdR').textContent = d.birdIndices?.R ?? '—';
+
+    /* FLORA STATS */
+    document.getElementById('floraTotal').textContent = d.floraStats?.total ?? '—';
+    document.getElementById('floraFam').textContent   = d.floraStats?.famili ?? '—';
+    if (d.floraStats?.note) {
+      const noteEl = document.getElementById('floraNote');
+      noteEl.style.display = 'block';
+      noteEl.innerHTML = `<i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>${d.floraStats.note}`;
+    }
+
+    /* BURUNG STATS */
+    document.getElementById('birdSpecies').textContent = d.birdStats?.species ?? '—';
+    document.getElementById('birdFamily').textContent  = d.birdStats?.family  ?? '—';
+    document.getElementById('birdDom').textContent     = d.birdStats?.dom     ?? '—';
+    document.getElementById('birdKey').textContent     = d.birdStats?.key     ?? '—';
+
+    /* FLAGSHIP */
+    if (d.flagshipSpecies) {
+      document.getElementById('flagshipSection').style.display = 'block';
+      document.getElementById('flagImg').src         = d.flagshipSpecies.img    || '';
+      document.getElementById('flagName').textContent = d.flagshipSpecies.name  || '';
+      document.getElementById('flagStatus').textContent = d.flagshipSpecies.status || '';
+      document.getElementById('flagDesc').textContent = d.flagshipSpecies.desc  || '';
+    }
+
+    /* PROTECTED LIST */
+    const pl = document.getElementById('protectedList');
+    const list = d.protectedList || [];
+    if (list.length === 0) {
+      pl.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">Tidak ada catatan spesies dilindungi.</div>';
+    } else {
+      pl.innerHTML = '';
+      list.forEach(item => {
+        const typeClass = (item.type || '').toLowerCase() === 'fauna' ? 'fauna' : 'flora';
+        const imgSrc = item.img
+          ? `https://raw.githubusercontent.com/sekolakonangindonesia-prog/rejoso-biodiversity/refs/heads/main/${item.img}`
+          : 'https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=100';
+        pl.innerHTML += `
+          <div class="protected-item">
+            <img src="${imgSrc}" class="protected-img" alt="${item.name}"
+              onerror="this.src='https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=100'">
+            <div class="protected-info">
+              <h6>${item.name}</h6>
+              <span class="pill ${typeClass}">${item.type || 'Flora'}</span>
+              <span class="pill status">${item.status || ''}</span>
+            </div>
+          </div>`;
+      });
+    }
+
+    /* PETA */
+    if (d.lat && d.lng) map.setView([d.lat, d.lng], 15);
+    const polys = d.detailPolygon || [];
+    if (Array.isArray(polys) && polys.length > 0) {
+      polys.forEach(poly => {
+        if (Array.isArray(poly) && poly.length > 0) {
+          L.polygon(poly, { color:'#ffd700', fillColor:'#ffd700', fillOpacity:0.15, weight:2 }).addTo(map);
+        }
+      });
+      try {
+        const first = L.polygon(polys[0]);
+        map.fitBounds(first.getBounds(), { padding:[30,30] });
+      } catch(e) {}
+    } else {
+      if (d.lat && d.lng) L.marker([d.lat, d.lng]).addTo(map);
+    }
+    setTimeout(() => map.invalidateSize(), 300);
+
+    /* CHARTS */
+    const gridColor = 'rgba(255,255,255,0.05)';
+    const labels = d.chartLabels || [];
+
+    // Tren H
+    if (d.historyH?.length) {
+      new Chart(document.getElementById('chartH'), {
+        type:'line',
+        data:{ labels, datasets:[{ data:d.historyH, borderColor:'#81c784', backgroundColor:'rgba(129,199,132,0.08)', fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:'#81c784' }] },
+        options:{ maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:gridColor}}, y:{grid:{color:gridColor}, beginAtZero:false} } }
+      });
+    }
+    // Tren E
+    if (d.historyE?.length) {
+      new Chart(document.getElementById('chartE'), {
+        type:'line',
+        data:{ labels, datasets:[{ data:d.historyE, borderColor:'#64b5f6', backgroundColor:'rgba(100,181,246,0.08)', fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:'#64b5f6' }] },
+        options:{ maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:gridColor}}, y:{grid:{color:gridColor}, beginAtZero:false} } }
+      });
+    }
+    // Tren R
+    if (d.historyR?.length) {
+      new Chart(document.getElementById('chartR'), {
+        type:'line',
+        data:{ labels, datasets:[{ data:d.historyR, borderColor:var_orange(), backgroundColor:'rgba(255,171,0,0.08)', fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:var_orange() }] },
+        options:{ maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:gridColor}}, y:{grid:{color:gridColor}, beginAtZero:false} } }
+      });
+    }
+    // Flora chart
+    if (d.floraStats?.values?.length) {
+      new Chart(document.getElementById('floraChart'), {
+        type:'bar',
+        data:{ labels: d.floraStats.years || labels, datasets:[{ data:d.floraStats.values, backgroundColor:'#b2ff59', borderRadius:5, borderSkipped:false }] },
+        options:{ maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:gridColor}}, y:{grid:{color:gridColor}} } }
+      });
+    }
+    // Burung chart
+    if (d.birdDataGraph?.species?.length) {
+      new Chart(document.getElementById('birdChart'), {
+        type:'bar',
+        data:{
+          labels: d.birdDataGraph.years || labels,
+          datasets:[
+            { label:'Famili',  data:d.birdDataGraph.family,  backgroundColor:'rgba(127,140,141,0.7)', borderRadius:4 },
+            { label:'Spesies', data:d.birdDataGraph.species, backgroundColor:'#0288d1', borderRadius:4 }
+          ]
+        },
+        options:{ maintainAspectRatio:false, plugins:{ legend:{ labels:{boxWidth:10} } }, scales:{ x:{grid:{color:gridColor}}, y:{grid:{color:gridColor}, beginAtZero:true} } }
+      });
+    }
+
+    /* SCROLL REVEAL */
+    const obs = new IntersectionObserver(
+      entries => entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold:0.08 }
+    );
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  }
+
+  /* ---- HELPERS ---- */
+  function safeJson(str) {
+    if (!str) return [];
+    if (typeof str !== 'string') return str;
+    try { return JSON.parse(str); } catch(e) { return []; }
+  }
+  function var_orange() { return '#ffab00'; }
+  function showError(msg) {
+    document.getElementById('heroTitle').innerHTML = `Terjadi <em>Kesalahan</em>`;
+    document.getElementById('heroDesc').textContent = msg;
+  }
+
+  /* ---- RUN ---- */
+  checkAndMigrate();
+</script>
+</body>
+</html>
