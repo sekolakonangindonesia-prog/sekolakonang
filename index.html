@@ -253,6 +253,45 @@
   color: var(--white);
   font-size: 1.25rem;
 }
+  /* Spacer agar konten tidak tertutup bar bawah */
+.tabbar-spacer {
+    height: 80px; 
+    width: 100%;
+}
+
+/* Tampilan Tab Bar */
+.bottom-tabbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background: #050505; /* Warna dasar gelap */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid #333;
+    z-index: 1000;
+}
+
+.bottom-tabbar a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #888; /* Warna teks saat tidak aktif */
+    font-size: 0.65rem;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.bottom-tabbar a:hover, .bottom-tabbar a.active {
+    color: #C6FF00; /* Warna hijau lime */
+}
+
+.bottom-tabbar a i {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+}
 
   @media (max-width: 768px) {
     .impact-grid { grid-template-columns: repeat(2, 1fr); gap: 0; }
@@ -555,17 +594,17 @@
   </div>
 </footer>
     
-<nav class="floating-nav">
-  <div class="footer-nav">
-      <a href="#tentang"><i class="fas fa-info-circle"></i><span>Tentang</span></a>
-      <a href="#program"><i class="fas fa-leaf"></i><span>Program</span></a>
-      <a href="#mitra"><i class="fas fa-handshake"></i><span>Mitra</span></a>
-      <a href="#pjlh-section"><i class="fas fa-project-diagram"></i><span>PJLH</span></a>
-      <a href="tim.html"><i class="fas fa-lock"></i><span>Tim</span></a>
-      <a href="#berita"><i class="fas fa-newspaper"></i><span>Berita</span></a>
-      <a href="#kontak"><i class="fas fa-envelope"></i><span>Kontak</span></a>
-  </div>
-</nav>   
+<!-- BOTTOM TAB BAR -->
+<div class="tabbar-spacer"></div>
+<nav class="bottom-tabbar">
+    <a href="#tentang" class="active"><i class="fas fa-info-circle"></i><span>Tentang</span></a>
+    <a href="#program"><i class="fas fa-leaf"></i><span>Program</span></a>
+    <a href="#mitra"><i class="fas fa-handshake"></i><span>Mitra</span></a>
+    <a href="#pjlh-section"><i class="fas fa-project-diagram"></i><span>PJLH</span></a>
+    <a href="#berita"><i class="fas fa-newspaper"></i><span>Berita</span></a>  
+    <a href="tim.html"><i class="fas fa-lock"></i><span>Tim</span></a>
+    <a href="#kontak"><i class="fas fa-envelope"></i><span>Kontak</span></a>
+</nav>
 
 <div class="admin-modal-backdrop" id="adminModalBackdrop">
   <div class="admin-modal">
