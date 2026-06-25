@@ -15,22 +15,27 @@
     --lime-dim: rgba(198,255,0,0.12);
     --parchment: #F5F5F0;
     --white: #FFFFFF;
-    --mid-green: #4d4d4d;
     --text-muted: rgba(245,245,240,0.55);
     --border: rgba(198,255,0,0.15);
     --nav-bg: rgba(5,5,5,0.92);
-
     --display: 'Playfair Display', Georgia, serif;
     --body: 'Inter', system-ui, sans-serif;
-
-    --r-sm: 12px;
-    --r-md: 20px;
-    --r-lg: 32px;
+    --r-sm: 12px; --r-md: 20px; --r-lg: 32px;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
-  body { font-family: var(--body); background: var(--deep-forest); color: var(--parchment); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+  /* Tambah padding bawah agar konten tidak tertutup tab bar */
+  body {
+    font-family: var(--body);
+    background: var(--deep-forest);
+    color: var(--parchment);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 70px; /* tinggi tab bar */
+  }
+
   img { display: block; max-width: 100%; }
   a { text-decoration: none; color: inherit; }
   .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
@@ -38,14 +43,15 @@
   .section-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--lime); margin-bottom: 12px; display: block; }
   .divider { width: 48px; height: 3px; background: var(--lime); margin: 18px 0 24px; border-radius: 2px; }
 
-  nav {
+  /* ── TOP NAV ── */
+  nav#mainNav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     padding: 0 20px; height: 64px; display: flex; align-items: center; justify-content: space-between;
     background: var(--nav-bg);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border); transition: box-shadow 0.3s;
   }
-  nav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
+  nav#mainNav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
   .nav-brand { display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
   .nav-brand img { height: 36px; }
   .nav-brand-text { line-height: 1.1; }
@@ -54,6 +60,7 @@
   .nav-cta { display: flex; align-items: center; gap: 8px; background: var(--lime); color: var(--deep-forest); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 10px 20px; border-radius: 50px; transition: 0.2s; }
   .nav-cta:hover { background: var(--white); }
 
+  /* ── HERO ── */
   .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; padding: 100px 0 60px; overflow: hidden; }
   .hero-bg {
     position: absolute; inset: 0;
@@ -62,12 +69,12 @@
     z-index: 0;
   }
   .fireflies { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-  .firefly { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--lime); opacity: 0; animation: float var(--dur, 6s) ease-in-out infinite var(--delay, 0s); }
-  @keyframes float { 0%,100% { opacity: 0; transform: translateY(0) scale(0.5); } 40%,60% { opacity: 0.7; transform: translateY(-30px) scale(1); } }
+  .firefly { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--lime); opacity: 0; animation: float var(--dur,6s) ease-in-out infinite var(--delay,0s); }
+  @keyframes float { 0%,100%{opacity:0;transform:translateY(0) scale(0.5)} 40%,60%{opacity:.7;transform:translateY(-30px) scale(1)} }
   .hero-content { position: relative; z-index: 2; }
   .hero-eyebrow { font-size: 0.6rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--lime); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
   .hero-eyebrow::before { content: ''; width: 30px; height: 2px; background: var(--lime); display: inline-block; }
-  .hero-title { font-family: var(--display); font-size: clamp(2.4rem, 7vw, 5rem); font-weight: 900; line-height: 1.05; color: var(--white); letter-spacing: -1px; margin-bottom: 20px; max-width: 720px; }
+  .hero-title { font-family: var(--display); font-size: clamp(2.4rem,7vw,5rem); font-weight: 900; line-height: 1.05; color: var(--white); letter-spacing: -1px; margin-bottom: 20px; max-width: 720px; }
   .hero-title em { font-style: normal; color: var(--lime); }
   .hero-desc { font-size: 0.95rem; line-height: 1.7; color: var(--text-muted); max-width: 520px; margin-bottom: 36px; }
   .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
@@ -76,22 +83,24 @@
   .btn-ghost { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--parchment); font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 16px 24px; border-radius: 50px; border: 1px solid rgba(245,245,240,0.25); transition: 0.2s; cursor: pointer; }
   .btn-ghost:hover { border-color: var(--lime); color: var(--lime); }
 
+  /* ── IMPACT STRIP ── */
   .impact-strip { background: var(--lime); padding: 48px 0; }
-  .impact-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .impact-grid { display: grid; grid-template-columns: repeat(4,1fr); }
   .impact-item { text-align: center; padding: 8px 16px; border-right: 1px solid rgba(5,5,5,0.2); }
   .impact-item:last-child { border-right: none; }
-  .impact-num { font-family: var(--display); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; color: var(--deep-forest); line-height: 1; display: block; }
+  .impact-num { font-family: var(--display); font-size: clamp(2rem,5vw,3.5rem); font-weight: 900; color: var(--deep-forest); line-height: 1; display: block; }
   .impact-suffix { font-size: 1.2rem; font-weight: 900; color: var(--canopy); }
   .impact-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--canopy); margin-top: 6px; display: block; }
   .impact-icon { font-size: 1rem; color: var(--canopy); margin-bottom: 8px; opacity: 0.6; }
 
+  /* ── ABOUT ── */
   .section-about { padding: 90px 0; background: var(--deep-forest); }
   .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
   .about-visual { position: relative; border-radius: var(--r-lg); overflow: hidden; }
   .about-visual img { width: 100%; height: 420px; object-fit: cover; border-radius: var(--r-lg); filter: brightness(0.9) saturate(1.1); }
   .about-badge { position: absolute; bottom: 24px; left: 24px; background: var(--lime); color: var(--deep-forest); padding: 14px 20px; border-radius: var(--r-md); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; }
   .about-badge strong { display: block; font-size: 1.4rem; font-family: var(--display); }
-  .about-text h2 { font-family: var(--display); font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; line-height: 1.15; color: var(--white); margin-bottom: 20px; }
+  .about-text h2 { font-family: var(--display); font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 900; line-height: 1.15; color: var(--white); margin-bottom: 20px; }
   .about-text p { font-size: 0.9rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 16px; }
   .about-pillars { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 28px; }
   .pillar { background: var(--lime-dim); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
@@ -99,11 +108,12 @@
   .pillar h6 { font-size: 0.7rem; font-weight: 700; color: var(--lime); text-transform: uppercase; letter-spacing: 1px; }
   .pillar p { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; margin-top: 3px; }
 
+  /* ── PROGRAM ── */
   .section-program { padding: 90px 0; background: var(--canopy); }
   .section-header { text-align: center; margin-bottom: 50px; }
-  .section-header h2 { font-family: var(--display); font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; color: var(--white); }
+  .section-header h2 { font-family: var(--display); font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 900; color: var(--white); }
   .section-header p { font-size: 0.9rem; color: var(--text-muted); max-width: 480px; margin: 12px auto 0; line-height: 1.7; }
-  .program-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .program-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
   .program-card { background: var(--deep-forest); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; display: block; }
   .program-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px var(--lime); }
   .program-card-img { width: 100%; height: 180px; object-fit: cover; opacity: 0.85; }
@@ -113,33 +123,36 @@
   .program-card h3 { font-family: var(--display); font-size: 1.2rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
   .program-card p { font-size: 0.8rem; line-height: 1.65; color: var(--text-muted); margin-bottom: 20px; min-height: 60px; }
   .program-stats { display: flex; gap: 16px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--border); }
-  .pstat { text-align: left; }
   .pstat strong { display: block; font-size: 1.1rem; font-weight: 700; color: var(--lime); font-family: var(--display); }
   .pstat span { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-  .program-card .badge-soon { display: inline-block; margin-top: 4px; font-size: 0.6rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); border: 1px dashed var(--border); padding: 4px 10px; border-radius: 50px; }
+  .badge-soon { display: inline-block; margin-top: 4px; font-size: 0.6rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); border: 1px dashed var(--border); padding: 4px 10px; border-radius: 50px; }
 
+  /* ── PJLH (Konang Co-Investment) ── */
+  .section-pjlh { padding: 90px 0; background: var(--deep-forest); }
+  .konang-box { background: var(--canopy); border-left: 4px solid var(--lime); padding: 40px; border-radius: var(--r-sm); margin-bottom: 60px; }
+  .konang-box h3 { color: var(--lime); font-family: var(--display); margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase; font-size: 0.9rem; }
+  .konang-box p { color: var(--parchment); font-size: 0.95rem; line-height: 1.7; opacity: 0.9; }
+  .selection-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 24px; max-width: 800px; margin: 0 auto; }
+  .selection-card { background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-md); padding: 32px; text-align: center; transition: 0.3s; }
+  .selection-card:hover { border-color: var(--lime); transform: translateY(-5px); }
+  .selection-card .card-icon { font-size: 2rem; color: var(--lime); margin-bottom: 16px; }
+  .selection-card h3 { color: var(--white); font-family: var(--display); margin-bottom: 8px; }
+  .selection-card .card-num { font-size: 1.8rem; font-weight: 900; color: var(--lime); margin: 10px 0; }
+  .selection-card .card-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+  /* ── MITRA ── */
   .section-mitra { padding: 80px 0; background: var(--canopy); border-top: 1px solid var(--border); }
   .mitra-header { text-align: center; margin-bottom: 48px; }
-  .mitra-header h2 { font-family: var(--display); font-size: clamp(1.5rem, 3.5vw, 2.2rem); font-weight: 900; color: var(--white); }
+  .mitra-header h2 { font-family: var(--display); font-size: clamp(1.5rem,3.5vw,2.2rem); font-weight: 900; color: var(--white); }
   .mitra-header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; }
   .mitra-logos { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; }
-  .mitra-logo-card { background: rgba(255,255,255,0.92); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--r-sm); padding: 14px 22px; display: flex; align-items: center; justify-content: center; min-width: 120px; height: 64px; transition: 0.2s; }
+  .mitra-logo-card { background: rgba(255,255,255,0.92); border-radius: var(--r-sm); padding: 14px 22px; display: flex; align-items: center; justify-content: center; min-width: 120px; height: 64px; transition: 0.2s; }
   .mitra-logo-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,0.3); }
   .mitra-logo-card img { max-height: 36px; max-width: 110px; object-fit: contain; }
   .mitra-logo-text { font-size: 0.75rem; font-weight: 700; color: var(--deep-forest); letter-spacing: 1px; text-transform: uppercase; }
   .mitra-empty-msg { color: var(--text-muted); font-size: 0.85rem; padding: 20px 0; }
 
-  .section-laporan { padding: 90px 0; background: var(--deep-forest); }
-  .laporan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
-  .laporan-card { background: var(--deep-forest); border: 1px solid var(--border); border-radius: var(--r-md); padding: 24px; display: flex; flex-direction: column; gap: 14px; transition: 0.25s; }
-  .laporan-card:hover { border-color: var(--lime); transform: translateY(-4px); }
-  .laporan-icon { width: 44px; height: 44px; background: var(--lime-dim); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-  .laporan-icon i { color: var(--lime); font-size: 1.1rem; }
-  .laporan-card h4 { font-family: var(--display); font-size: 1rem; color: var(--white); }
-  .laporan-card .laporan-meta { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
-  .laporan-card a.laporan-link { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 0.7rem; font-weight: 700; color: var(--lime); text-transform: uppercase; letter-spacing: 1px; }
-  .laporan-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 30px 0; }
-
+  /* ── BERITA ── */
   .section-news { padding: 90px 0; background: var(--deep-forest); }
   .news-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 20px; }
   .news-card { background: var(--canopy); border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); transition: 0.25s; display: flex; flex-direction: column; }
@@ -156,11 +169,12 @@
   .news-card.featured h4 { font-size: 1.3rem; }
   .news-card p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; flex: 1; }
   .news-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 700; color: var(--lime); text-transform: uppercase; letter-spacing: 1px; margin-top: 16px; }
-  .news-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; grid-column: 1 / -1; padding: 30px 0; }
+  .news-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; grid-column: 1/-1; padding: 30px 0; }
 
+  /* ── KONTAK ── */
   .section-contact { padding: 90px 0; background: var(--canopy); }
   .contact-inner { background: var(--deep-forest); border-radius: var(--r-lg); border: 1px solid var(--border); padding: 60px 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-  .contact-text h2 { font-family: var(--display); font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 900; color: var(--white); margin-bottom: 14px; }
+  .contact-text h2 { font-family: var(--display); font-size: clamp(1.8rem,4vw,2.5rem); font-weight: 900; color: var(--white); margin-bottom: 14px; }
   .contact-text p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 28px; }
   .contact-info { display: flex; flex-direction: column; gap: 14px; }
   .contact-row { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: var(--parchment); }
@@ -173,50 +187,68 @@
   .form-group select option { background: var(--canopy); }
   .btn-submit { width: 100%; padding: 16px; background: var(--lime); color: var(--deep-forest); font-family: var(--body); font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border: none; border-radius: 50px; cursor: pointer; transition: 0.2s; }
   .btn-submit:hover { background: var(--white); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .form-status { font-size: 0.78rem; text-align: center; padding: 10px; border-radius: var(--r-sm); display: none; }
+  .form-status.success { background: rgba(198,255,0,0.1); color: var(--lime); border: 1px solid var(--border); }
+  .form-status.error { background: rgba(255,107,107,0.1); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); }
 
-footer {
+  /* ── FOOTER (tipis, di atas tab bar) ── */
+  footer {
     background: #020202;
-    padding: 20px 0;
+    padding: 16px 20px;
     border-top: 1px solid var(--border);
-    position: relative;    
-    border: 1px solid var(--border);   
-}
+  }
+  .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .footer-brand { display: flex; align-items: center; gap: 10px; }
+  .footer-brand img { height: 28px; opacity: 0.7; }
+  .footer-brand span { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 1px; }
+  .footer-copy { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 1px; }
 
-  .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
-  .footer-brand { display: flex; align-items: center; gap: 12px; }
-  .footer-brand img { height: 32px; opacity: 0.8; }
-  .footer-brand span { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; }
-  .footer-nav {
+  /* ══════════════════════════════════════
+     BOTTOM TAB BAR — satu-satunya nav bawah
+     z-index: 300 — di atas semua konten
+  ══════════════════════════════════════ */
+  .bottom-tabbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(5,5,5,0.97);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
     display: flex;
-    justify-content: space-around; /* Agar ikon terbagi rata */
-    align-items: center;
-}
-
-.footer-nav a {
+    align-items: stretch;
+    z-index: 300;   /* lebih tinggi dari nav atas (100) dan modal (999 dikurangi) */
+    padding: 0 4px;
+  }
+  .bottom-tabbar a {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    gap: 3px;
     color: var(--text-muted);
-    font-size: 0.6rem;   
-    transition: 0.3s;
-}
-.footer-nav a i { font-size: 1.1rem; }
-  .floating-nav {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
-    background: rgba(5, 5, 5, 0.9);
-    backdrop-filter: blur(15px);
-    border: 1px solid var(--border);
-    padding: 15px;
-    border-radius: 50px; /* Bentuk kapsul */
-    z-index: 999;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-    body { padding-bottom: 100px; } 
-  .admin-modal-backdrop { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; padding: 20px; }
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: color 0.2s;
+    padding: 6px 2px;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+  .bottom-tabbar a i { font-size: 1.15rem; transition: color 0.2s; }
+  .bottom-tabbar a:hover,
+  .bottom-tabbar a.active { color: var(--lime); }
+  .bottom-tabbar a span { line-height: 1; }
+
+  /* ── ADMIN MODAL ── */
+  .admin-modal-backdrop { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; padding: 20px; }
   .admin-modal-backdrop.show { display: flex; }
   .admin-modal { background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-md); padding: 32px; width: 100%; max-width: 360px; position: relative; }
   .admin-modal h3 { font-family: var(--display); color: var(--white); font-size: 1.2rem; margin-bottom: 6px; }
@@ -227,67 +259,16 @@ footer {
   .admin-error { font-size: 0.72rem; color: #ff6b6b; margin-top: 10px; display: none; }
   .admin-close { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; }
 
-  .selection-card {
-  background: var(--canopy);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  padding: 40px;
-  text-align: center;
-  transition: 0.3s;
-}
+  /* ── REVEAL ── */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
 
-.selection-card:hover {
-  border-color: var(--lime);
-  transform: translateY(-5px);
-}
-
-.selection-card h3 {
-  font-family: var(--display);
-  color: var(--white);
-  font-size: 1.25rem;
-}
-  /* Spacer agar konten tidak tertutup bar bawah */
-.tabbar-spacer {
-    height: 80px; 
-    width: 100%;
-}
-
-/* Tampilan Tab Bar */
-.bottom-tabbar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 70px;
-    background: #050505; /* Warna dasar gelap */
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    border-top: 1px solid #333;
-    z-index: 1000;
-}
-
-.bottom-tabbar a {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #888; /* Warna teks saat tidak aktif */
-    font-size: 0.65rem;
-    text-decoration: none;
-    transition: 0.2s;
-}
-
-.bottom-tabbar a:hover, .bottom-tabbar a.active {
-    color: #C6FF00; /* Warna hijau lime */
-}
-
-.bottom-tabbar a i {
-    font-size: 1.2rem;
-    margin-bottom: 4px;
-}
-
+  /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
-    .impact-grid { grid-template-columns: repeat(2, 1fr); gap: 0; }
+    .impact-grid { grid-template-columns: repeat(2,1fr); }
     .impact-item { border-right: none; border-bottom: 1px solid rgba(5,5,5,0.2); padding: 20px 12px; }
     .impact-item:nth-child(odd) { border-right: 1px solid rgba(5,5,5,0.2); }
     .impact-item:nth-last-child(-n+2) { border-bottom: none; }
@@ -296,29 +277,29 @@ footer {
     .about-pillars { grid-template-columns: 1fr; }
     .program-grid { grid-template-columns: 1fr; }
     .news-grid { grid-template-columns: 1fr; }
-    .laporan-grid { grid-template-columns: 1fr; }
     .contact-inner { grid-template-columns: 1fr; padding: 36px 24px; gap: 36px; }
-    .footer-inner { flex-direction: column; align-items: flex-start; }
-    .footer-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; }
-    .hero-title { font-size: 2.2rem; }
-    .nav { height: 58px; }
-    .nav-cta span { display: none; }
     .selection-grid { grid-template-columns: 1fr !important; }
+    .hero-title { font-size: 2.2rem; }
+    nav#mainNav { height: 58px; }
+    .nav-cta span { display: none; }
+    .bottom-tabbar { height: 58px; }
+    body { padding-bottom: 58px; }
+    .bottom-tabbar a span { display: none; }
+    .bottom-tabbar a i { font-size: 1.25rem; }
   }
 
-  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
-  .reveal.visible { opacity: 1; transform: none; }
-  .reveal-delay-1 { transition-delay: 0.1s; }
-  .reveal-delay-2 { transition-delay: 0.2s; }
-  .reveal-delay-3 { transition-delay: 0.3s; }
-  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .firefly { animation: none; opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .firefly { animation: none; opacity: 0; }
+  }
 </style>
 </head>
 <body>
 
+<!-- TOP NAV -->
 <nav id="mainNav">
-  <div class="nav-brand" id="logoTrigger" title="">
-    <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png">
+  <div class="nav-brand" id="logoTrigger">
+    <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="Logo YSKI">
     <div class="nav-brand-text">
       <strong>Sekola Konang</strong>
       <small>Indonesia</small>
@@ -330,29 +311,26 @@ footer {
   </a>
 </nav>
 
+<!-- HERO -->
 <section class="hero">
-  <div class="hero-bg"></div>
-  <div class="fireflies" id="fireflies"></div>
+  <div class="hero-bg" role="img" aria-label="Hutan konservasi"></div>
+  <div class="fireflies" id="fireflies" aria-hidden="true"></div>
   <div class="container hero-content">
     <div class="hero-eyebrow">The Firefly Movement</div>
     <h1 class="hero-title" id="heroTitle">
-      Memulihkan Alam,<br>
-      <em>Memastikan Masa Depan.</em>
+      Memulihkan Alam,<br><em>Memastikan Masa Depan.</em>
     </h1>
     <p class="hero-desc" id="heroDesc">
       Yayasan Sekola Konang Indonesia menjalankan program konservasi lahan dan air berbasis sains di wilayah Probolinggo — bermitra dengan perusahaan dan pemerintah untuk dampak nyata.
     </p>
     <div class="hero-actions">
-      <a href="#program" class="btn-primary">
-        <i class="fas fa-leaf"></i> Lihat Program
-      </a>
-      <a href="#tentang" class="btn-ghost">
-        <i class="fas fa-play-circle"></i> Tentang Kami
-      </a>
+      <a href="#program" class="btn-primary"><i class="fas fa-leaf"></i> Lihat Program</a>
+      <a href="#tentang" class="btn-ghost"><i class="fas fa-play-circle"></i> Tentang Kami</a>
     </div>
   </div>
 </section>
 
+<!-- IMPACT STRIP -->
 <section class="impact-strip">
   <div class="container">
     <div class="impact-grid" id="impactGrid">
@@ -384,15 +362,13 @@ footer {
   </div>
 </section>
 
+<!-- TENTANG -->
 <section class="section-about" id="tentang">
   <div class="container">
     <div class="about-grid">
       <div class="about-visual reveal">
-        <img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format&fit=crop" alt="Area Konservasi">
-        <div class="about-badge">
-          <strong>Est. 2019</strong>
-          Probolinggo, Jawa Timur
-        </div>
+        <img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format&fit=crop" alt="Area konservasi Sekola Konang">
+        <div class="about-badge"><strong>Est. 2019</strong>Probolinggo, Jawa Timur</div>
       </div>
       <div class="about-text reveal reveal-delay-1">
         <span class="section-label">Tentang Kami</span>
@@ -400,30 +376,19 @@ footer {
         <div class="divider"></div>
         <p id="p-sejarah">Memuat data...</p>
         <p id="p-visi"></p>
-        <ul id="p-misi" style="list-style:none; padding:0; margin: 0 0 16px;"></ul>
+        <ul id="p-misi" style="list-style:none;padding:0;margin:0 0 16px;"></ul>
         <div class="about-pillars">
-          <div class="pillar">
-            <i class="fas fa-balance-scale"></i>
-            <div><h6>Measurement</h6><p>Surplus air, serapan karbon, indeks biodiversity.</p></div>
-          </div>
-          <div class="pillar">
-            <i class="fas fa-route"></i>
-            <div><h6>Approach</h6><p>Mitigasi, adaptasi, dan development plan terpadu.</p></div>
-          </div>
-          <div class="pillar">
-            <i class="fas fa-history"></i>
-            <div><h6>Governance</h6><p>Good governance, time planning, dan pelaporan transparan.</p></div>
-          </div>
-          <div class="pillar">
-            <i class="fas fa-users"></i>
-            <div><h6>Partnership</h6><p>Participatory development dan social enterprise.</p></div>
-          </div>
+          <div class="pillar"><i class="fas fa-balance-scale"></i><div><h6>Measurement</h6><p>Surplus air, serapan karbon, indeks biodiversity.</p></div></div>
+          <div class="pillar"><i class="fas fa-route"></i><div><h6>Approach</h6><p>Mitigasi, adaptasi, dan development plan terpadu.</p></div></div>
+          <div class="pillar"><i class="fas fa-history"></i><div><h6>Governance</h6><p>Good governance, time planning, dan pelaporan transparan.</p></div></div>
+          <div class="pillar"><i class="fas fa-users"></i><div><h6>Partnership</h6><p>Participatory development dan social enterprise.</p></div></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- PROGRAM -->
 <section class="section-program" id="program">
   <div class="container">
     <div class="section-header reveal">
@@ -433,7 +398,7 @@ footer {
     </div>
     <div class="program-grid" id="programGrid">
       <a href="konservasi.html" class="program-card reveal">
-        <img class="program-card-img" src="https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=600&auto=format&fit=crop" alt="Konservasi">
+        <img class="program-card-img" src="https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=600&auto=format&fit=crop" alt="Konservasi Lahan dan Air">
         <div class="program-card-body">
           <div class="program-icon"><i class="fas fa-water" id="icon-konservasi"></i></div>
           <h3>Konservasi Lahan &amp; Air</h3>
@@ -445,7 +410,7 @@ footer {
         </div>
       </a>
       <a href="biodiversity.html" class="program-card reveal reveal-delay-1">
-        <img class="program-card-img" src="https://images.unsplash.com/photo-1446941611757-91d2c3bd3d45?q=80&w=600&auto=format&fit=crop" alt="Biodiversity">
+        <img class="program-card-img" src="https://images.unsplash.com/photo-1446941611757-91d2c3bd3d45?q=80&w=600&auto=format&fit=crop" alt="Monitoring Keanekaragaman Hayati">
         <div class="program-card-body">
           <div class="program-icon"><i class="fas fa-leaf" id="icon-biodiversity"></i></div>
           <h3>Monitoring Kehati</h3>
@@ -457,7 +422,7 @@ footer {
         </div>
       </a>
       <div class="program-card reveal reveal-delay-2" style="cursor:default;">
-        <img class="program-card-img" src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=600&auto=format&fit=crop" alt="ComDev">
+        <img class="program-card-img" src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=600&auto=format&fit=crop" alt="Pemberdayaan Komunitas">
         <div class="program-card-body">
           <div class="program-icon"><i class="fas fa-users" id="icon-comdev"></i></div>
           <h3>Pemberdayaan Komunitas</h3>
@@ -469,52 +434,43 @@ footer {
   </div>
 </section>
 
-  <section class="section-konang-co" id="pjlh-section" style="padding: 90px 0; background: var(--deep-forest);">
+<!-- PJLH -->
+<section class="section-pjlh" id="pjlh-section">
   <div class="container">
-    <!-- Header -->
-    <div class="section-header reveal" style="margin-bottom: 50px;">
-      <h2 style="color: var(--white); font-family: var(--display); font-size: clamp(1.8rem, 4vw, 2.5rem);">
-        Konang Co-Investment <em style="color: var(--lime); font-style: normal;">Initiative Project</em>
+    <div class="section-header reveal">
+      <span class="section-label">Perlindungan &amp; Jasa Lingkungan Hidup</span>
+      <h2 style="font-family:var(--display);font-size:clamp(1.8rem,4vw,2.5rem);color:var(--white);">
+        Konang Co-Investment <em style="color:var(--lime);font-style:normal;">Initiative Project</em>
       </h2>
-      <p style="color: var(--text-muted); max-width: 800px; margin: 20px auto; line-height: 1.6; font-style: italic;">
+      <p style="color:var(--text-muted);max-width:800px;margin:20px auto;line-height:1.6;font-style:italic;">
         "Sebagai model inovatif Program Konservasi Sumberdaya Air Lestari berbasis kolaborasi investasi terukur dan berkelanjutan, yang tidak hanya menjaga sumberdaya air tetapi juga memperkuat ekonomi lokal melalui insentif jasa lingkungan."
       </p>
     </div>
-
-    <!-- Latar Belakang (Dibuat Dark Mode agar sesuai tema) -->
-    <div class="konang-box reveal" style="background: var(--canopy); border-left: 4px solid var(--lime); padding: 40px; border-radius: var(--r-sm); margin-bottom: 60px;">
-      <h3 style="color: var(--lime); font-family: var(--display); margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase; font-size: 0.9rem;">Latar Belakang & Konsep Co-Investment</h3>
-      <p style="color: var(--parchment); font-size: 0.95rem; line-height: 1.7; opacity: 0.9;">
-        <strong>DAS Konang</strong> di Probolinggo adalah penyangga kehidupan. Konang Co-Investment Initiative hadir sebagai solusi. 
-        Melalui skema Imbal Jasa Lingkungan (PES), kami menghimpun Dana Konservasi dari sektor swasta dan mitra pembangunan 
-        untuk disalurkan kepada masyarakat lokal (petani) yang menerapkan praktik ramah lingkungan.
-      </p>
+    <div class="konang-box reveal">
+      <h3>Latar Belakang &amp; Konsep Co-Investment</h3>
+      <p><strong>DAS Konang</strong> di Probolinggo adalah penyangga kehidupan. Konang Co-Investment Initiative hadir sebagai solusi. Melalui skema Imbal Jasa Lingkungan (PES), kami menghimpun Dana Konservasi dari sektor swasta dan mitra pembangunan untuk disalurkan kepada masyarakat lokal (petani) yang menerapkan praktik ramah lingkungan.</p>
     </div>
-
-    <!-- Capaian Konservasi Kolektif -->
-    <div class="section-header reveal" style="margin-bottom: 30px;">
-      <h2 style="color: var(--white); font-size: 1.8rem;">Capaian Konservasi Kolektif</h2>
+    <div class="section-header reveal" style="margin-bottom:30px;">
+      <h2 style="font-family:var(--display);color:var(--white);font-size:1.8rem;">Capaian Konservasi Kolektif</h2>
     </div>
-    
-    <div class="selection-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; max-width: 800px; margin: 0 auto;">
-      <!-- Card 1 -->
-      <div class="selection-card" style="background: var(--canopy); border: 1px solid var(--border); padding: 32px; border-radius: var(--r-md); text-align: center;">
-        <i class="fas fa-tint" style="font-size: 2rem; color: var(--lime); margin-bottom: 16px;"></i>
-        <h3 style="color: var(--white); font-family: var(--display); margin-bottom: 8px;">Water Conservation Funds</h3>
-        <div style="font-size: 1.8rem; font-weight: 900; color: var(--lime); margin: 10px 0;">1.2 Juta m³</div>
-        <p style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Total Volume Air Terserap</p>
+    <div class="selection-grid reveal">
+      <div class="selection-card">
+        <div class="card-icon"><i class="fas fa-tint"></i></div>
+        <h3>Water Conservation Funds</h3>
+        <div class="card-num">1.2 Juta m³</div>
+        <p class="card-label">Total Volume Air Terserap</p>
       </div>
-      <!-- Card 2 -->
-      <div class="selection-card" style="background: var(--canopy); border: 1px solid var(--border); padding: 32px; border-radius: var(--r-md); text-align: center;">
-        <i class="fas fa-map-marked-alt" style="font-size: 2rem; color: var(--lime); margin-bottom: 16px;"></i>
-        <h3 style="color: var(--white); font-family: var(--display); margin-bottom: 8px;">Sebaran Penanaman</h3>
-        <div style="font-size: 1.8rem; font-weight: 900; color: var(--lime); margin: 10px 0;">55 Ha</div>
-        <p style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Land Cover Rehabilitation</p>
+      <div class="selection-card">
+        <div class="card-icon"><i class="fas fa-map-marked-alt"></i></div>
+        <h3>Sebaran Penanaman</h3>
+        <div class="card-num">55 Ha</div>
+        <p class="card-label">Land Cover Rehabilitation</p>
       </div>
     </div>
   </div>
 </section>
 
+<!-- MITRA -->
 <section class="section-mitra" id="mitra">
   <div class="container">
     <div class="mitra-header reveal">
@@ -526,6 +482,7 @@ footer {
   </div>
 </section>
 
+<!-- BERITA -->
 <section class="section-news" id="berita">
   <div class="container">
     <div class="section-header reveal">
@@ -539,13 +496,14 @@ footer {
   </div>
 </section>
 
+<!-- KONTAK -->
 <section class="section-contact" id="kontak">
   <div class="container">
     <div class="contact-inner reveal">
       <div class="contact-text">
         <span class="section-label">Hubungi Kami</span>
         <h2>Mari Berkolaborasi untuk Alam</h2>
-        <p>Kami terbuka untuk kemitraan CSR, program kementerian, riset ilmiah, maupun kolaborasi komunitas. Setiap bentuk dukungan adalah langkah nyata untuk ekosistem yang lebih sehat.</p>
+        <p>Kami terbuka untuk kemitraan CSR, program kementerian, riset ilmiah, maupun kolaborasi komunitas.</p>
         <div class="contact-info">
           <div class="contact-row"><i class="fas fa-map-marker-alt"></i><span>Probolinggo, Jawa Timur, Indonesia</span></div>
           <div class="contact-row"><i class="fas fa-envelope"></i><span>sekolakonang@gmail.com</span></div>
@@ -554,51 +512,51 @@ footer {
         </div>
       </div>
       <div class="contact-form reveal reveal-delay-1">
-        <div class="form-group"><label>Nama / Institusi</label><input type="text" placeholder="PT. Contoh / Kementerian XYZ"></div>
-        <div class="form-group"><label>Email</label><input type="email" placeholder="nama@email.com"></div>
+        <div class="form-group"><label for="cName">Nama / Institusi</label><input type="text" id="cName" placeholder="PT. Contoh / Kementerian XYZ" maxlength="200"></div>
+        <div class="form-group"><label for="cEmail">Email</label><input type="email" id="cEmail" placeholder="nama@email.com" maxlength="200"></div>
         <div class="form-group">
-          <label>Jenis Kemitraan</label>
-          <select>
-            <option>Konservasi & Keragaman hayati</option>
-            <option>Pengembangan Budaya & Perikehidupan Berkelanjutan</option>
+          <label for="cJenis">Jenis Kemitraan</label>
+          <select id="cJenis">
+            <option>Konservasi &amp; Keragaman hayati</option>
+            <option>Pengembangan Budaya &amp; Perikehidupan Berkelanjutan</option>
             <option>Community development</option>
-            <option>Pengembangan Ekowisata & Ekonomi Kreatif</option>
+            <option>Pengembangan Ekowisata &amp; Ekonomi Kreatif</option>
             <option>Leadership Training</option>
             <option>Informed and Social reset</option>
             <option>Kolaborasi lainnya</option>
           </select>
         </div>
-        <div class="form-group"><label>Pesan</label><textarea placeholder="Ceritakan program atau kebutuhan Anda..."></textarea></div>
-        <button class="btn-submit">Kirim Pesan <i class="fas fa-paper-plane ms-2"></i></button>
+        <div class="form-group"><label for="cPesan">Pesan</label><textarea id="cPesan" placeholder="Ceritakan program atau kebutuhan Anda..." maxlength="2000"></textarea></div>
+        <div class="form-status" id="formStatus"></div>
+        <button class="btn-submit" id="contactSubmitBtn" type="button">Kirim Pesan <i class="fas fa-paper-plane"></i></button>
       </div>
     </div>
   </div>
 </section>
 
+<!-- FOOTER tipis -->
 <footer>
-  <div class="container">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
-        <span>© 2025 Yayasan Sekola Konang Indonesia</span>
-      </div>
-      <div class="footer-copy">The Firefly Movement — Probolinggo</div>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
+      <span>© 2025 Yayasan Sekola Konang Indonesia</span>
     </div>
+    <div class="footer-copy">The Firefly Movement — Probolinggo</div>
   </div>
 </footer>
-    
-<!-- BOTTOM TAB BAR -->
-<div class="tabbar-spacer"></div>
-<nav class="bottom-tabbar">
-    <a href="#tentang" class="active"><i class="fas fa-info-circle"></i><span>Tentang</span></a>
-    <a href="#program"><i class="fas fa-leaf"></i><span>Program</span></a>
-    <a href="#pjlh-section"><i class="fas fa-project-diagram"></i><span>PJLH</span></a>
-    <a href="#mitra"><i class="fas fa-handshake"></i><span>Mitra</span></a>    
-    <a href="#berita"><i class="fas fa-newspaper"></i><span>Berita</span></a>
-    <a href="#kontak"><i class="fas fa-envelope"></i><span>Kontak</span></a>
-    <a href="tim.html"><i class="fas fa-lock"></i><span>Tim</span></a>
+
+<!-- ══ BOTTOM TAB BAR ══ -->
+<nav class="bottom-tabbar" aria-label="Navigasi utama">
+  <a href="#tentang" data-section="tentang"><i class="fas fa-info-circle"></i><span>Tentang</span></a>
+  <a href="#program" data-section="program"><i class="fas fa-leaf"></i><span>Program</span></a>
+  <a href="#pjlh-section" data-section="pjlh-section"><i class="fas fa-project-diagram"></i><span>PJLH</span></a>
+  <a href="#mitra" data-section="mitra"><i class="fas fa-handshake"></i><span>Mitra</span></a>
+  <a href="#berita" data-section="berita"><i class="fas fa-newspaper"></i><span>Berita</span></a>
+  <a href="#kontak" data-section="kontak"><i class="fas fa-envelope"></i><span>Kontak</span></a>
+  <a href="tim.html"><i class="fas fa-lock"></i><span>Tim</span></a>
 </nav>
 
+<!-- ADMIN MODAL -->
 <div class="admin-modal-backdrop" id="adminModalBackdrop">
   <div class="admin-modal">
     <button class="admin-close" id="adminModalClose"><i class="fas fa-times"></i></button>
@@ -613,7 +571,7 @@ footer {
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, getDocs, addDoc, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -625,180 +583,156 @@ footer {
     appId: "1:9338352073:web:b56481b836888b1a8bf818"
   };
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const db  = getFirestore(app);
   const auth = getAuth(app);
 
+  // ── Helper XSS escape ──
+  function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+  // ── loadProfil ──
   async function loadProfil() {
     try {
-      const docSnap = await getDoc(doc(db, "profil_yayasan", "tentang_kami"));
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.sejarah) document.getElementById('p-sejarah').innerText = data.sejarah;
-        if (data.visi) document.getElementById('p-visi').innerText = data.visi;
-        if (Array.isArray(data.misi)) {
-          const misiEl = document.getElementById('p-misi');
-          misiEl.innerHTML = '';
-          data.misi.forEach(m => {
+      const snap = await getDoc(doc(db,"profil_yayasan","tentang_kami"));
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.sejarah) document.getElementById('p-sejarah').textContent = d.sejarah;
+        else document.getElementById('p-sejarah').textContent = "Data sejarah belum diisi.";
+        if (d.visi) document.getElementById('p-visi').textContent = d.visi;
+        if (Array.isArray(d.misi) && d.misi.length) {
+          const ul = document.getElementById('p-misi');
+          ul.innerHTML = '';
+          d.misi.forEach(m => {
             const li = document.createElement('li');
             li.style.marginBottom = '6px';
-            li.innerHTML = `<i class="fas fa-circle" style="font-size:5px; color:var(--lime); margin-right:8px; vertical-align:middle;"></i>${m}`;
-            misiEl.appendChild(li);
+            li.innerHTML = `<i class="fas fa-circle" style="font-size:5px;color:var(--lime);margin-right:8px;vertical-align:middle;" aria-hidden="true"></i>`;
+            li.appendChild(document.createTextNode(m));
+            ul.appendChild(li);
           });
         }
-      } else {
-        document.getElementById('p-sejarah').innerText = "Data sejarah belum diisi.";
-      }
-    } catch (e) {
-      console.error("Gagal ambil data profil", e);
-      document.getElementById('p-sejarah').innerText = "Gagal memuat data dari database.";
-    }
+      } else { document.getElementById('p-sejarah').textContent = "Data sejarah belum diisi."; }
+    } catch(e) { document.getElementById('p-sejarah').textContent = "Gagal memuat data."; }
   }
 
+  // ── loadHero ──
   async function loadHero() {
     try {
-      const docSnap = await getDoc(doc(db, "profil_yayasan", "hero"));
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.title_main && data.title_em) {
-          document.getElementById('heroTitle').innerHTML = `${data.title_main}<br><em>${data.title_em}</em>`;
+      const snap = await getDoc(doc(db,"profil_yayasan","hero"));
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.title_main && d.title_em) {
+          const el = document.getElementById('heroTitle');
+          el.innerHTML = '';
+          el.appendChild(document.createTextNode(d.title_main));
+          el.appendChild(document.createElement('br'));
+          const em = document.createElement('em');
+          em.textContent = d.title_em;
+          el.appendChild(em);
         }
-        if (data.desc) document.getElementById('heroDesc').innerText = data.desc;
+        if (d.desc) document.getElementById('heroDesc').textContent = d.desc;
       }
-    } catch (e) { console.error("Gagal ambil data hero", e); }
+    } catch(e) { console.error("Hero load error",e); }
   }
 
+  // ── loadImpactStats ──
   async function loadImpactStats() {
     try {
-      const docSnap = await getDoc(doc(db, "profil_yayasan", "impact_stats"));
-      if (docSnap.exists()) {
-        const d = docSnap.data();
+      const snap = await getDoc(doc(db,"profil_yayasan","impact_stats"));
+      if (snap.exists()) {
+        const d = snap.data();
         if (d.pohon != null) document.getElementById('impactPohon').dataset.target = d.pohon;
-        if (d.air != null) document.getElementById('impactAir').dataset.target = d.air;
+        if (d.air != null)   document.getElementById('impactAir').dataset.target   = d.air;
         if (d.spesies != null) document.getElementById('impactSpesies').dataset.target = d.spesies;
-        if (d.lokasi != null) document.getElementById('impactLokasi').dataset.target = d.lokasi;
+        if (d.lokasi != null)  document.getElementById('impactLokasi').dataset.target  = d.lokasi;
       }
-    } catch (e) {
-      console.error("Gagal ambil impact stats, pakai nilai default", e);
-    }
-    initCountUp();
+    } catch(e) { console.error("Impact stats error",e); }
+    finally { initCountUp(); } // SELALU dipanggil
   }
 
+  // ── loadPrograms ──
   async function loadPrograms() {
     try {
-      const querySnapshot = await getDocs(collection(db, "programs"));
-      querySnapshot.forEach((docu) => {
-        const id = docu.id;
-        const data = docu.data();
-        const descEl = document.getElementById('desc-' + id);
-        const iconEl = document.getElementById('icon-' + id);
-        if (descEl && data.desc) descEl.innerText = data.desc;
-        if (iconEl && data.icon) iconEl.className = data.icon;
-
-        if (id === 'konservasi') {
-          if (data.statPohon != null) document.getElementById('stat-konservasi-pohon').innerText = Number(data.statPohon).toLocaleString('id-ID') + '+';
-          if (data.statSipil != null) document.getElementById('stat-konservasi-sipil').innerText = Number(data.statSipil).toLocaleString('id-ID') + '+';
+      const qs = await getDocs(collection(db,"programs"));
+      qs.forEach(docu => {
+        const id = docu.id, d = docu.data();
+        const descEl = document.getElementById('desc-'+id);
+        const iconEl = document.getElementById('icon-'+id);
+        if (descEl && d.desc) descEl.textContent = d.desc;
+        if (iconEl && d.icon) iconEl.className = d.icon.replace(/[^a-z0-9\s\-]/gi,'');
+        if (id==='konservasi') {
+          if (d.statPohon!=null) document.getElementById('stat-konservasi-pohon').textContent = Number(d.statPohon).toLocaleString('id-ID')+'+';
+          if (d.statSipil!=null) document.getElementById('stat-konservasi-sipil').textContent = Number(d.statSipil).toLocaleString('id-ID')+'+';
         }
-        if (id === 'biodiversity') {
-          if (data.statFlora != null) document.getElementById('stat-biodiversity-flora').innerText = Number(data.statFlora).toLocaleString('id-ID') + '+';
-          if (data.statBurung != null) document.getElementById('stat-biodiversity-burung').innerText = Number(data.statBurung).toLocaleString('id-ID') + '+';
+        if (id==='biodiversity') {
+          if (d.statFlora!=null) document.getElementById('stat-biodiversity-flora').textContent = Number(d.statFlora).toLocaleString('id-ID')+'+';
+          if (d.statBurung!=null) document.getElementById('stat-biodiversity-burung').textContent = Number(d.statBurung).toLocaleString('id-ID')+'+';
         }
       });
-    } catch (e) {
-      console.error("Gagal ambil data program", e);
-    }
+    } catch(e) { console.error("Programs error",e); }
   }
 
+  // ── loadMitra ──
   async function loadMitra() {
     const wrap = document.getElementById('mitraLogos');
     try {
-      const querySnapshot = await getDocs(collection(db, "mitra"));
-      if (querySnapshot.empty) {
-        wrap.innerHTML = '<div class="mitra-empty-msg">Belum ada mitra terdaftar</div>';
-        return;
-      }
-      wrap.innerHTML = '';
-      querySnapshot.forEach((docu) => {
+      const qs = await getDocs(collection(db,"mitra"));
+      if (qs.empty) { wrap.innerHTML='<div class="mitra-empty-msg">Belum ada mitra terdaftar</div>'; return; }
+      wrap.innerHTML='';
+      qs.forEach(docu => {
         const d = docu.data();
         const card = document.createElement('div');
-        card.className = 'mitra-logo-card';
+        card.className='mitra-logo-card';
         if (d.logoUrl) {
-          card.innerHTML = `<img src="${d.logoUrl}" alt="${d.name || 'Mitra'}">`;
+          const img = document.createElement('img');
+          img.alt = esc(d.name||'Mitra');
+          img.style.cssText='max-height:36px;max-width:110px;object-fit:contain;';
+          img.onerror = () => { card.innerHTML=''; const t=document.createElement('span'); t.className='mitra-logo-text'; t.textContent=d.name||'Mitra'; card.appendChild(t); };
+          img.src = d.logoUrl;
+          card.appendChild(img);
         } else {
-          card.innerHTML = `<span class="mitra-logo-text">${d.name || 'Mitra'}</span>`;
+          const t=document.createElement('span'); t.className='mitra-logo-text'; t.textContent=d.name||'Mitra'; card.appendChild(t);
         }
         wrap.appendChild(card);
       });
-    } catch (e) {
-      console.error("Gagal ambil data mitra", e);
-      wrap.innerHTML = '<div class="mitra-empty-msg">Gagal memuat data mitra</div>';
-    }
+    } catch(e) { wrap.innerHTML='<div class="mitra-empty-msg">Gagal memuat data mitra</div>'; }
   }
 
-  async function loadLaporan() {
-    const grid = document.getElementById('laporanGrid');
-    try {
-      const querySnapshot = await getDocs(collection(db, "laporan_tim"));
-      if (querySnapshot.empty) {
-        grid.innerHTML = '<div class="laporan-empty">Belum ada laporan yang dipublikasikan.</div>';
-        return;
-      }
-      let items = [];
-      querySnapshot.forEach((docu) => items.push(docu.data()));
-      items.sort((a, b) => (b.year || 0) - (a.year || 0));
-      grid.innerHTML = '';
-      items.forEach((d) => {
-        const card = document.createElement('div');
-        card.className = 'laporan-card';
-        card.innerHTML = `
-          <div class="laporan-icon"><i class="fas ${d.icon || 'fa-file-contract'}"></i></div>
-          <h4>${d.title || 'Laporan'}</h4>
-          <span class="laporan-meta">${d.year || ''} ${d.category ? '· ' + d.category : ''}</span>
-          ${d.fileUrl ? `<a href="${d.fileUrl}" target="_blank" class="laporan-link">Unduh Dokumen <i class="fas fa-download"></i></a>` : ''}
-        `;
-        grid.appendChild(card);
-      });
-    } catch (e) {
-      console.error("Gagal ambil data laporan", e);
-      grid.innerHTML = '<div class="laporan-empty">Gagal memuat data laporan.</div>';
-    }
-  }
-
+  // ── loadNews (server-side limit) ──
   async function loadNews() {
     const grid = document.getElementById('newsGrid');
     try {
-      const querySnapshot = await getDocs(collection(db, "news"));
-      if (querySnapshot.empty) {
-        renderFallbackNews(grid);
-        return;
-      }
-      let items = [];
-      querySnapshot.forEach((docu) => items.push(docu.data()));
-      items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-      grid.innerHTML = '';
-      items.slice(0, 3).forEach((d, i) => {
-        const card = document.createElement('div');
-        card.className = 'news-card' + (i === 0 ? ' featured' : '');
-        card.innerHTML = `
-          <img src="${d.image || 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=600&auto=format&fit=crop'}" alt="Berita">
+      const q = query(collection(db,"news"), orderBy("date","desc"), limit(3));
+      const qs = await getDocs(q);
+      if (qs.empty) { renderFallbackNews(grid); return; }
+      grid.innerHTML='';
+      let i=0;
+      qs.forEach(docu => {
+        const d=docu.data();
+        const card=document.createElement('div');
+        card.className='news-card'+(i===0?' featured':'');
+        const ext=d.type==='external';
+        const imgSrc=d.image?esc(d.image):'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=600&auto=format&fit=crop';
+        card.innerHTML=`
+          <img src="${imgSrc}" alt="${esc(d.title||'Berita')}" onerror="this.src='https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=600&auto=format&fit=crop'">
           <div class="news-body">
-            <span class="news-type ${d.type === 'external' ? 'external' : 'internal'}">${d.type === 'external' ? 'Media Luar' : 'Warta Internal'}</span>
-            <div class="news-date">${d.date || ''}</div>
-            <h4>${d.title || ''}</h4>
-            <p>${d.excerpt || ''}</p>
-            <a href="${d.url || '#'}" class="news-link" target="${d.url ? '_blank' : '_self'}">${d.type === 'external' ? 'Lihat Sumber' : 'Baca Selengkapnya'} <i class="fas ${d.type === 'external' ? 'fa-external-link-alt' : 'fa-arrow-right'}"></i></a>
-          </div>
-        `;
-        grid.appendChild(card);
+            <span class="news-type ${ext?'external':'internal'}">${ext?'Media Luar':'Warta Internal'}</span>
+            <div class="news-date">${esc(d.date||'')}</div>
+            <h4>${esc(d.title||'')}</h4>
+            <p>${esc(d.excerpt||'')}</p>
+            <a href="${d.url?esc(d.url):'news.html'}" class="news-link" ${d.url?'target="_blank" rel="noopener noreferrer"':''}>
+              ${ext?'Lihat Sumber':'Baca Selengkapnya'} <i class="fas ${ext?'fa-external-link-alt':'fa-arrow-right'}"></i>
+            </a>
+          </div>`;
+        grid.appendChild(card); i++;
       });
-    } catch (e) {
-      console.error("Gagal ambil data berita", e);
-      renderFallbackNews(grid);
-    }
+    } catch(e) { renderFallbackNews(grid); }
   }
   function renderFallbackNews(grid) {
-    grid.innerHTML = `
+    grid.innerHTML=`
       <div class="news-card featured">
-        <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=600&auto=format&fit=crop" alt="Berita">
+        <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=600&auto=format&fit=crop" alt="Tim lapangan Sekola Konang">
         <div class="news-body">
           <span class="news-type internal">Warta Internal</span>
           <div class="news-date">25 APRIL 2024</div>
@@ -808,7 +742,7 @@ footer {
         </div>
       </div>
       <div class="news-card">
-        <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=400&auto=format&fit=crop" alt="Berita">
+        <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=400&auto=format&fit=crop" alt="Radar Bromo liputan Sekola Konang">
         <div class="news-body">
           <span class="news-type external">Media Luar</span>
           <div class="news-date">10 MARET 2024</div>
@@ -818,7 +752,7 @@ footer {
         </div>
       </div>
       <div class="news-card">
-        <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?q=80&w=400&auto=format&fit=crop" alt="Berita">
+        <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?q=80&w=400&auto=format&fit=crop" alt="Sinergi petani lokal agroforestri">
         <div class="news-body">
           <span class="news-type internal">Warta Internal</span>
           <div class="news-date">01 FEBRUARI 2024</div>
@@ -826,117 +760,107 @@ footer {
           <p>Program agroforestri mulai membuahkan hasil ekonomi bagi warga sekitar hutan.</p>
           <a href="news.html" class="news-link">Baca Selengkapnya <i class="fas fa-arrow-right"></i></a>
         </div>
-      </div>
-    `;
+      </div>`;
   }
 
-  loadProfil();
-  loadHero();
-  loadImpactStats();
-  loadPrograms();
-  loadMitra();
-  loadLaporan();
-  loadNews();
+  // Panggil semua loader
+  loadProfil(); loadHero(); loadImpactStats(); loadPrograms(); loadMitra(); loadNews();
 
-  let logoClickCount = 0;
-  let logoClickTimer = null;
-  const logoTrigger = document.getElementById('logoTrigger');
-  const modalBackdrop = document.getElementById('adminModalBackdrop');
-  const modalClose = document.getElementById('adminModalClose');
-  const loginBtn = document.getElementById('adminLoginBtn');
-  const adminError = document.getElementById('adminError');
-
-  logoTrigger.addEventListener('click', () => {
-    logoClickCount++;
-    clearTimeout(logoClickTimer);
-    logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 1500);
-    if (logoClickCount >= 5) {
-      logoClickCount = 0;
-      modalBackdrop.classList.add('show');
-    }
+  // ── Admin modal ──
+  let logoClicks=0, logoTimer=null;
+  document.getElementById('logoTrigger').addEventListener('click',()=>{
+    logoClicks++;
+    clearTimeout(logoTimer);
+    logoTimer=setTimeout(()=>logoClicks=0,1500);
+    if(logoClicks>=5){ logoClicks=0; document.getElementById('adminModalBackdrop').classList.add('show'); document.getElementById('adminEmail').focus(); }
   });
-  modalClose.addEventListener('click', () => modalBackdrop.classList.remove('show'));
-  modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) modalBackdrop.classList.remove('show'); });
-
-  loginBtn.addEventListener('click', async () => {
-    const email = document.getElementById('adminEmail').value.trim();
-    const password = document.getElementById('adminPassword').value;
-    adminError.style.display = 'none';
-    if (!email || !password) return;
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      window.location.href = 'admin.html';
-    } catch (e) {
-      console.error(e);
-      adminError.style.display = 'block';
-    }
+  document.getElementById('adminModalClose').addEventListener('click',()=>document.getElementById('adminModalBackdrop').classList.remove('show'));
+  document.getElementById('adminModalBackdrop').addEventListener('click',e=>{ if(e.target===document.getElementById('adminModalBackdrop')) document.getElementById('adminModalBackdrop').classList.remove('show'); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.getElementById('adminModalBackdrop').classList.remove('show'); });
+  document.getElementById('adminLoginBtn').addEventListener('click',async()=>{
+    const email=document.getElementById('adminEmail').value.trim();
+    const pw=document.getElementById('adminPassword').value;
+    const errEl=document.getElementById('adminError');
+    errEl.style.display='none';
+    if(!email||!pw) return;
+    const btn=document.getElementById('adminLoginBtn');
+    btn.disabled=true; btn.textContent='Memproses...';
+    try { await signInWithEmailAndPassword(auth,email,pw); window.location.href='admin.html'; }
+    catch(e){ errEl.style.display='block'; btn.disabled=false; btn.textContent='Masuk'; }
   });
 
-  const navEl = document.getElementById('mainNav');
-  window.addEventListener('scroll', () => {
-    navEl.classList.toggle('scrolled', window.scrollY > 40);
-  });
+  // ── Scroll nav ──
+  window.addEventListener('scroll',()=>document.getElementById('mainNav').classList.toggle('scrolled',scrollY>40),{passive:true});
 
-  const ff = document.getElementById('fireflies');
-  for (let i = 0; i < 18; i++) {
-    const el = document.createElement('div');
-    el.className = 'firefly';
-    el.style.cssText = `
-      left: ${Math.random()*100}%;
-      top: ${Math.random()*80}%;
-      --dur: ${5 + Math.random()*6}s;
-      --delay: ${Math.random()*8}s;
-      width: ${3 + Math.random()*3}px;
-      height: ${3 + Math.random()*3}px;
-      box-shadow: 0 0 6px 2px rgba(198,255,0,0.5);
-    `;
+  // ── Fireflies ──
+  const ff=document.getElementById('fireflies');
+  for(let i=0;i<18;i++){
+    const el=document.createElement('div'); el.className='firefly'; el.setAttribute('aria-hidden','true');
+    el.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*80}%;--dur:${5+Math.random()*6}s;--delay:${Math.random()*8}s;width:${3+Math.random()*3}px;height:${3+Math.random()*3}px;box-shadow:0 0 6px 2px rgba(198,255,0,.5);`;
     ff.appendChild(el);
   }
 
-  const revealEls = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-  }, { threshold: 0.12 });
-  revealEls.forEach(el => observer.observe(el));
+  // ── Reveal ──
+  const revObs=new IntersectionObserver(entries=>entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); }),{threshold:0.12});
+  document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
 
-  function countUp(el, target, decimal) {
-    const duration = 1800;
-    const start = performance.now();
-    const step = (now) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
-      const val = ease * target;
-      el.textContent = decimal ? val.toFixed(1) : Math.floor(val).toLocaleString('id-ID');
-      if (progress < 1) requestAnimationFrame(step);
-    };
+  // ── Count-up ──
+  function countUp(el,target,decimal){
+    const dur=1800, start=performance.now();
+    const step=now=>{ const p=Math.min((now-start)/dur,1), ease=1-Math.pow(1-p,3), val=ease*target; el.textContent=decimal?val.toFixed(1):Math.floor(val).toLocaleString('id-ID'); if(p<1) requestAnimationFrame(step); };
     requestAnimationFrame(step);
   }
-  function initCountUp() {
-    const impactNums = document.querySelectorAll('.impact-num[data-target]');
-    const impactObserver = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          const el = e.target;
-          const target = parseFloat(el.dataset.target);
-          const decimal = el.dataset.decimal;
-          countUp(el, target, decimal);
-          impactObserver.unobserve(el);
-        }
-      });
-    }, { threshold: 0.5 });
-    impactNums.forEach(el => impactObserver.observe(el));
+  function initCountUp(){
+    const obs=new IntersectionObserver(entries=>entries.forEach(e=>{ if(e.isIntersecting){ countUp(e.target,parseFloat(e.target.dataset.target),e.target.dataset.decimal); obs.unobserve(e.target); } }),{threshold:0.5});
+    document.querySelectorAll('.impact-num[data-target]').forEach(el=>obs.observe(el));
   }
 
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', e => {
-      const id = a.getAttribute('href').slice(1);
-      const el = document.getElementById(id);
-      if (el) {
-        e.preventDefault();
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
+  // ── Smooth scroll (event delegation) ──
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a[href^="#"]');
+    if(!a) return;
+    const id=a.getAttribute('href').slice(1);
+    const target=document.getElementById(id);
+    if(target){ e.preventDefault(); target.scrollIntoView({behavior:'smooth',block:'start'}); }
   });
+
+  // ── Tab bar active state ──
+  const sections=['tentang','program','pjlh-section','mitra','berita','kontak'];
+  const tabLinks=document.querySelectorAll('.bottom-tabbar a[data-section]');
+  const secEls=sections.map(id=>document.getElementById(id)).filter(Boolean);
+  function updateTabs(){
+    let cur='';
+    secEls.forEach(s=>{ if(scrollY>=s.offsetTop-120) cur=s.id; });
+    tabLinks.forEach(a=>a.classList.toggle('active',a.dataset.section===cur));
+  }
+  window.addEventListener('scroll',updateTabs,{passive:true});
+  updateTabs();
+
+  // ── Form kontak ──
+  document.getElementById('contactSubmitBtn').addEventListener('click',async()=>{
+    const name=document.getElementById('cName').value.trim();
+    const email=document.getElementById('cEmail').value.trim();
+    const jenis=document.getElementById('cJenis').value;
+    const pesan=document.getElementById('cPesan').value.trim();
+    const statusEl=document.getElementById('formStatus');
+    statusEl.style.display='none'; statusEl.className='form-status';
+    if(!name){ showStatus('Mohon isi nama atau institusi Anda.','error'); return; }
+    if(!email||!isValidEmail(email)){ showStatus('Mohon masukkan email yang valid.','error'); return; }
+    if(!pesan){ showStatus('Mohon isi pesan Anda.','error'); return; }
+    const btn=document.getElementById('contactSubmitBtn');
+    btn.disabled=true; btn.textContent='Mengirim...';
+    try {
+      await addDoc(collection(db,"pesan_kontak"),{name,email,jenis,pesan,createdAt:serverTimestamp()});
+      showStatus('Pesan berhasil dikirim! Kami akan segera menghubungi Anda.','success');
+      document.getElementById('cName').value=''; document.getElementById('cEmail').value=''; document.getElementById('cPesan').value='';
+    } catch(e){ showStatus('Gagal mengirim. Silakan coba lagi atau hubungi kami langsung.','error'); }
+    finally { btn.disabled=false; btn.innerHTML='Kirim Pesan <i class="fas fa-paper-plane"></i>'; }
+  });
+  function showStatus(msg,type){
+    const el=document.getElementById('formStatus');
+    el.textContent=msg; el.className='form-status '+type; el.style.display='block';
+    el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
 </script>
 </body>
 </html>
