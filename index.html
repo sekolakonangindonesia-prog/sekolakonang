@@ -174,51 +174,46 @@
   .btn-submit { width: 100%; padding: 16px; background: var(--lime); color: var(--deep-forest); font-family: var(--body); font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border: none; border-radius: 50px; cursor: pointer; transition: 0.2s; }
   .btn-submit:hover { background: var(--white); }
 
- footer {
+footer {
     background: #020202;
     padding: 20px 0;
     border-top: 1px solid var(--border);
-    /* Membuat footer melayang */
-    position: relative; 
-    margin-bottom: 80px; /* Memberi ruang di bawah agar tidak menempel dasar layar */
-    border-radius: 20px;  /* Membuat sudut melengkung agar terlihat seperti tab bar */
-    border: 1px solid var(--border);
+    margin-bottom: 100px; /* Memberi ruang agar tidak tertutup nav */
 }
-  .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
-  .footer-brand { display: flex; align-items: center; gap: 12px; }
-  .footer-brand img { height: 32px; opacity: 0.8; }
-  .footer-brand span { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; }
- .footer-nav {
-    display: flex;
-    justify-content: space-around; /* Agar ikon terbagi rata */
-    align-items: center;
-}
- .footer-nav a {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    color: var(--text-muted);
-    font-size: 0.6rem;
-    transition: 0.3s;
-}
-  .footer-nav a i { font-size: 1.1rem; }
-  .footer-nav a:hover { color: var(--lime); }
-  .footer-copy { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 1px; }
 
-  .floating-nav {
+/* NAVIGATION FLOATING (Melayang di bawah) */
+.floating-nav {
     position: fixed;
     bottom: 20px;
     left: 20px;
     right: 20px;
-    background: rgba(5, 5, 5, 0.9);
+    background: rgba(5, 5, 5, 0.95);
     backdrop-filter: blur(15px);
     border: 1px solid var(--border);
     padding: 15px;
-    border-radius: 50px; /* Bentuk kapsul */
+    border-radius: 50px;
     z-index: 999;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
+
+.footer-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.footer-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.6rem;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.footer-nav a:hover { color: var(--lime); }
+.footer-nav a i { font-size: 1.1rem; margin-bottom: 4px; }
 
   body { padding-bottom: 100px; }
   
@@ -595,15 +590,16 @@
 </footer>
     
 <!-- BOTTOM TAB BAR -->
-<div class="tabbar-spacer"></div>
-<nav class="bottom-tabbar">
-    <a href="#tentang" class="active"><i class="fas fa-info-circle"></i><span>Tentang</span></a>
-    <a href="#program"><i class="fas fa-leaf"></i><span>Program</span></a>
-    <a href="#mitra"><i class="fas fa-handshake"></i><span>Mitra</span></a>
-    <a href="#pjlh-section"><i class="fas fa-project-diagram"></i><span>PJLH</span></a>
-    <a href="#berita"><i class="fas fa-newspaper"></i><span>Berita</span></a>  
-    <a href="tim.html"><i class="fas fa-lock"></i><span>Tim</span></a>
-    <a href="#kontak"><i class="fas fa-envelope"></i><span>Kontak</span></a>
+<nav class="floating-nav">
+    <div class="footer-nav">
+        <a href="#tentang"><i class="fas fa-info-circle"></i><span>Tentang</span></a>
+        <a href="#program"><i class="fas fa-leaf"></i><span>Program</span></a>
+        <a href="#mitra"><i class="fas fa-handshake"></i><span>Mitra</span></a>
+        <a href="#pjlh-section"><i class="fas fa-project-diagram"></i><span>PJLH</span></a>
+        <a href="tim.html"><i class="fas fa-lock"></i><span>Tim</span></a>
+        <a href="#berita"><i class="fas fa-newspaper"></i><span>Berita</span></a>
+        <a href="#kontak"><i class="fas fa-envelope"></i><span>Kontak</span></a>
+    </div>
 </nav>
 
 <div class="admin-modal-backdrop" id="adminModalBackdrop">
