@@ -88,7 +88,7 @@
   .impact-grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;}
   .impact-card { background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-md); padding: 30px 15px; text-align: center; transition: 0.3s; position: relative; overflow: hidden; }
   .impact-card:hover { border-color: var(--lime); transform: translateY(-5px); }
-  .impact-card::before { content: ''; position: absolute; top: 0; left: 30%; right: 30%; height: 3px; background: var(--lime); border-radius: 0 0 4px 4px; box-shadow: 0 0 8px 1px rgba(198,255,0,0.6); }
+  .impact-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--lime), transparent); border-radius: var(--r-md) var(--r-md) 0 0; }
   .impact-icon { font-size: 1.5rem; color: var(--lime); margin-bottom: 15px; display: block; }
   .impact-num { font-family: var(--display); font-size: 2rem; font-weight: 900; color: var(--white); display: block; }
   .impact-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 10px; display: block; }  
