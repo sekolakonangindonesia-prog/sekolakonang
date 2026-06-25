@@ -92,6 +92,17 @@
   .impact-num { font-family: var(--display); font-size: 2rem; font-weight: 900; color: var(--white); display: block; }
   .impact-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 10px; display: block; }  
 
+  .quick-actions-section { padding: 20px 0; background: var(--deep-forest); }
+  .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+  .quick-item { background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px 10px; text-align: center; color: var(--white); transition: 0.3s; text-decoration: none; }
+
+/* Garis neon di atas card */
+  .quick-item::before { content: ''; position: absolute; top: 0; left: 30%; right: 30%; height: 2px; background: var(--lime); opacity: 0; transition: 0.3s; }
+  .quick-item:hover { border-color: var(--lime); transform: translateY(-5px); }
+  .quick-item:hover::before { opacity: 1; }
+  .quick-icon { font-size: 1.5rem; color: var(--lime); margin-bottom: 10px; }
+  .quick-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
   /* ── ABOUT ── */
   .section-about { padding: 90px 0; background: var(--deep-forest); }
   .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
