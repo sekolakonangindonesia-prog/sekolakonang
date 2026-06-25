@@ -280,6 +280,8 @@
   .reveal-delay-2 { transition-delay: 0.2s; }
   .reveal-delay-3 { transition-delay: 0.3s; }
 
+  section[id] { scroll-margin-top: 64px; }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
     .impact-grid-container { grid-template-columns: repeat(4, 1fr); gap: 7px; }
@@ -301,8 +303,8 @@
     nav#mainNav { height: 58px; }
     .nav-cta span { display: none; }
     .bottom-tabbar { height: 58px; }
-    body { padding-bottom: 58px; }
-    .bottom-tabbar a span { display: none; }
+    body { padding-bottom: 58px; }    
+    .bottom-tabbar a span { display: block; font-size: 0.48rem; letter-spacing: 0; }
     .bottom-tabbar a i { font-size: 1.25rem; }
     .section-about,
     .section-program,
@@ -312,7 +314,9 @@
     .impact-strip { padding: 28px 0; }
     .konang-box { padding: 24px; }
     .selection-card { padding: 22px; }
-    .section-header { margin-bottom: 32px;}
+    .section-header { margin-bottom: 32px; }
+    section[id] { scroll-margin-top: 58px; }
+}
 
   /* Hero: kurangi "ruang kosong" di atas teks */
     .hero { min-height: 70svh; padding: 70px 0 30px; }
@@ -362,8 +366,7 @@
 </section>
 
 <!-- IMPACT STRIP -->
-<section class="impact-section">
-   <div class="fireflies" id="fireflies" aria-hidden="true"></div>
+<section class="impact-section">   
   <div class="container">
     <div class="impact-grid-container">
       <!-- Item 1 -->
