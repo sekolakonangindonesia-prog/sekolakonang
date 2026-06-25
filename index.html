@@ -84,14 +84,13 @@
   .btn-ghost:hover { border-color: var(--lime); color: var(--lime); }
 
   /* ── IMPACT STRIP ── */
-  .impact-strip { background: var(--lime); padding: 30px 0; }
-  .impact-grid { display: grid; grid-template-columns: repeat(4,1fr); }
-  .impact-item { text-align: center; padding: 8px 16px; border-right: 1px solid rgba(5,5,5,0.2); }
-  .impact-item:last-child { border-right: none; }
-  .impact-num { font-family: var(--display); font-size: clamp(2rem,5vw,3.5rem); font-weight: 900; color: var(--deep-forest); line-height: 1; display: block; }
-  .impact-suffix { font-size: 1.2rem; font-weight: 900; color: var(--canopy); }
-  .impact-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--canopy); margin-top: 6px; display: block; }
-  .impact-icon { font-size: 1rem; color: var(--canopy); margin-bottom: 8px; opacity: 0.6; }
+  .impact-section { padding: 60px 0; background: var(--deep-forest); }
+  .impact-grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;}
+  .impact-card { background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-md); padding: 30px 15px; text-align: center; transition: 0.3s; }
+  .impact-card:hover { border-color: var(--lime); transform: translateY(-5px); }
+  .impact-icon { font-size: 1.5rem; color: var(--lime); margin-bottom: 15px; display: block; }
+  .impact-num { font-family: var(--display); font-size: 2rem; font-weight: 900; color: var(--white); display: block; }
+  .impact-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 10px; display: block; }  
 
   /* ── ABOUT ── */
   .section-about { padding: 90px 0; background: var(--deep-forest); }
@@ -364,32 +363,32 @@
 </section>
 
 <!-- IMPACT STRIP -->
-<section class="impact-strip">
+<section class="impact-section">
   <div class="container">
-    <div class="impact-grid" id="impactGrid">
-      <div class="impact-item">
+    <div class="impact-grid-container">
+      <!-- Item 1 -->
+      <div class="impact-card">
         <i class="fas fa-tree impact-icon"></i>
-        <span class="impact-num" data-target="22000" id="impactPohon">0</span>
-        <span class="impact-suffix">+</span>
+        <span class="impact-num" data-target="22000">0</span>
         <span class="impact-label">Pohon Ditanam</span>
       </div>
-      <div class="impact-item">
+      <!-- Item 2 -->
+      <div class="impact-card">
         <i class="fas fa-tint impact-icon"></i>
-        <span class="impact-num" data-target="47" data-decimal="1" id="impactAir">0</span>
-        <span class="impact-suffix"> ML</span>
-        <span class="impact-label">Estimasi Infiltrasi Air / Tahun</span>
+        <span class="impact-num" data-target="47" data-decimal="1">0</span>
+        <span class="impact-label">ML Air / Tahun</span>
       </div>
-      <div class="impact-item">
+      <!-- Item 3 -->
+      <div class="impact-card">
         <i class="fas fa-paw impact-icon"></i>
-        <span class="impact-num" data-target="201" id="impactSpesies">0</span>
-        <span class="impact-suffix">+</span>
-        <span class="impact-label">Spesies Flora Terpantau</span>
+        <span class="impact-num" data-target="201">0</span>
+        <span class="impact-label">Spesies Flora</span>
       </div>
-      <div class="impact-item">
+      <!-- Item 4 -->
+      <div class="impact-card">
         <i class="fas fa-map-marked-alt impact-icon"></i>
-        <span class="impact-num" data-target="6" id="impactLokasi">0</span>
-        <span class="impact-suffix"> Lokasi</span>
-        <span class="impact-label">Area Monitoring Aktif</span>
+        <span class="impact-num" data-target="6">0</span>
+        <span class="impact-label">Lokasi Monitoring</span>
       </div>
     </div>
   </div>
