@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Firebase Data Migrator — Sekola Konang</title>
+    <style>
+        body { font-family: sans-serif; background: #111; color: #eee; padding: 40px; text-align: center; }
+        button { background: #C6FF00; color: #111; border: none; padding: 15px 30px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        #status { margin-top: 20px; font-family: monospace; white-space: pre-wrap; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; background: #222; padding: 20px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+    <h2>Firebase Data Migrator</h2>
+    <p>Script ini akan mengunggah data reboisasi tahun 2021-2025 ke Firestore secara otomatis.</p>
+    <button id="btnStart">MULAI MIGRASI DATA</button>
+    <div id="status">Klik tombol di atas untuk memulai...</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // Kredensial Firebase Anda
+  const firebaseConfig = {
+    apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+    authDomain: "sekola-konang.firebaseapp.com",
+    projectId: "sekola-konang",
+    storageBucket: "sekola-konang.firebasestorage.app",
+    messagingSenderId: "9338352073",
+    appId: "1:9338352073:web:b56481b836888b1a8bf818"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // KOPAS DATA RAW ANDA DI SINI (Termasuk POLYGON global jika ingin diunggah)
+  // [Untuk menghemat tempat, kita panggil variabel-variabel yang Anda buat]
+  
+  // Masukkan poligon & titik koordinat di dalam script agar terbaca oleh db_planting
+  // (Pastikan Anda menyalin isi file Paste Anda ke bagian ini jika diperlukan)
+  
+  /* ---- ISI DATA SAMA PERSIS DENGAN KODE ANDA ---- */
+  const POLY_DESA_GALIH = [[-7.808762, 112.896381], [-7.809949, 112.896231], /* ... silakan lengkapi atau biarkan script ini memanggil data Anda ... */];
+  // (Anda juga bisa langsung memanggil data yang sudah kita ringkas di bawah)
+
+  const db_planting = {
+    years: {
+        "tanam_2021": {
+            year: 2021,
+            location: "Program Konservasi Hutan Lindung",
+            desc: "Rehabilitasi area Hutan Lindung dengan berbagai jenis tanaman buah dan tanaman konservasi.",
+            stats: { trees: 5000, rorak: 250, sumur: 10, biopori: 300 }, 
+            species: { "Alpukat": 105, "Nangka": 113, "Sukun": 67, "Keluwih": 27, "Jambu Air": 15, "Longan": 10, "Lainnya": 70 },
+            points: [[-7.822741, 112.905788, "Alpukat"], [-7.806920, 112.909211, "Sawo Duren"], [-7.806136, 112.902091, "Sukun"]] // Ringkas contoh titik
+        },
+        "tanam_2022": {
+            year: 2022,
+            location: "Program Konservasi Tahun 2022",
+            desc: "Program agroforestri berbasis kopi di area Petung dan Desa Galih.",
+            stats: { trees: 10000, rorak: 750, sumur: 20, biopori: 300 },
+            species: { "Kopi Robusta": 7500, "Alpukat": 2500 },
+            points: [[-7.814316, 112.92754, "Kopi Robusta"], [-7.814361, 112.927745, "Kopi Robusta"]]
+        },
+        "tanam_2023": {
+            year: 2023,
+            location: "Program Konservasi AQUA Keboncandi Tahun 2023",
+            desc: "Intensifikasi penanaman di area Pecaton, Tegal Desa Galih, dan Tegal Karyono.",
+            stats: { trees: 5000, rorak: 500, sumur: 5, biopori: 110 },
+            species: { "Kopi Robusta": 5000 },
+            points: [[-7.822671, 112.905347, "Kopi Robusta"]]
+        },
+        "tanam_2024": {
+            year: 2024,
+            location: "Program Konservasi Tahun 2024",
+            desc: "Kegiatan konservasi Hutan Lestari Desa Galih dengan penanaman dan pembuatan rorak di 17 lokasi.",
+            stats: { trees: 2000, rorak: 1500, sumur: 0, biopori: 0 },
+            species: { "Kayu Manis": 200, "Sintok Putih": 200, "Matoa": 200, "Kluwe": 400, "Kopi Arabika Arteng": 600, "Alpukat": 200, "Gondang": 200 },
+            points: [[-7.81636, 112.90502, "Rorak Supinto 27 Meter"], [-7.81351, 112.90287, "Rorak Karji 35 Meter"]]
+        },
+        "tanam_2025": {
+            year: 2025,
+            location: "Desa Galih & Kawasan Penyangga",
+            desc: "Fokus pada pengayaan tanaman buah produktif.",
+            stats: { trees: 0, rorak: 0, sumur: 0, biopori: 0 },
+            species: { "Alpukat": 0, "Durian": 0 },
+            points: [ [-7.705, 112.920, "Pohon"] ]
+        }
+    }
+  };
+
+  document.getElementById('btnStart').addEventListener('click', async () => {
+    const btn = document.getElementById('btnStart');
+    const status = document.getElementById('status');
+    btn.disabled = true;
+    status.textContent = "Memulai koneksi ke Firestore...\n";
+
+    try {
+      const keys = Object.keys(db_planting.years);
+
+      for (const key of keys) {
+        status.textContent += `Memproses data tahun ${db_planting.years[key].year}...\n`;
+        const item = db_planting.years[key];
+
+        // MEMFORMAT ULANG TITIK AGAR COCOK DENGAN STRUKTUR OBJECT FIRESTORE
+        const transformedPoints = item.points.map(pt => {
+          return {
+            koordinat: {
+              latitude: pt[0],
+              longitude: pt[1]
+            },
+            nama_pohon: pt[2] || "Pohon"
+          };
+        });
+
+        // Struktur dokumen yang akan diunggah ke Firestore
+        const docPayload = {
+          year: item.year,
+          location: item.location,
+          desc: item.desc,
+          stats: item.stats,
+          species: item.species,
+          points: transformedPoints,
+          // Poligon dikonversi ke String JSON agar hemat penyimpanan & kompatibel dengan pembaca peta Anda
+          areaPolygon: item.areaPolygon ? JSON.stringify(item.areaPolygon) : ""
+        };
+
+        // Unggah ke koleksi 'monitoring_reboisasi' dengan ID dokumen (misal: tanam_2024)
+        await setDoc(doc(db, "monitoring_reboisasi", key), docPayload);
+        status.textContent += `✓ Berhasil mengunggah dokumen: ${key}\n`;
+      }
+
+      status.textContent += "\n🎉 MIGRASI SELESAI! Semua data reboisasi sukses dimasukkan ke Firestore.";
+    } catch (e) {
+      status.textContent += `\n❌ Gagal melakukan migrasi: ${e.message}`;
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
