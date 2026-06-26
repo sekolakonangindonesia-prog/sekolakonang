@@ -92,7 +92,7 @@ nav#mainNav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 70px 0 30px;
+  padding: 80px 0 40px;
   overflow: hidden;
 }
 .page-hero-bg {
@@ -138,7 +138,7 @@ nav#mainNav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
 }
 .page-hero h1 {
   font-family: var(--display);
-  font-size: clamp(2rem, 3.6vw, 3rem);
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
   font-weight: 900;
   color: var(--white);
   line-height: 1.15;
@@ -612,10 +612,14 @@ footer {
         sipilCounts.push(s.sumur + s.biopori);
         waterCounts.push(parseFloat(air.toFixed(1)));
 
+        // Agregasi species & bangun colorMap per tahun
+        const spColors = ['#1b5e20','#C6FF00','#2e7d32','#66bb6a','#a5d6a7','#ffab00','#0277bd','#ff9800','#fbc02d','#e91e63'];
+        const colorMap = {};
         if (d.species) {
-          for (let sp in d.species) {
-            speciesAgg[sp] = (speciesAgg[sp] || 0) + d.species[sp];
-          }
+          Object.keys(d.species).forEach((k, i) => {
+            colorMap[k] = spColors[i % spColors.length];
+            speciesAgg[k] = (speciesAgg[k] || 0) + d.species[k];
+          });
         }
 
         if (d.areaPolygon) {
@@ -630,9 +634,16 @@ footer {
           d.points.forEach(pt => {
             try {
               if (pt.koordinat && pt.koordinat.latitude && pt.koordinat.longitude) {
+                const nama = pt.nama_pohon || 'Pohon';
+                const c = colorMap[nama] || '#C6FF00';
                 L.circleMarker([pt.koordinat.latitude, pt.koordinat.longitude], {
-                  radius: 4, color: '#C6FF00', fillColor: '#C6FF00', fillOpacity: 0.9, weight: 0
-                }).addTo(map).bindPopup(`<b>${pt.nama_pohon || 'Pohon'}</b>`);
+                  radius: 5, color: c, fillColor: c, fillOpacity: 0.95, weight: 0
+                }).addTo(map).bindPopup(
+                  `<div style="font-family:Inter,sans-serif;min-width:120px;">
+                    <b style="color:#111;font-size:0.8rem;">${nama}</b><br>
+                    <span style="color:#555;font-size:0.7rem;">Tahun: ${year}</span>
+                  </div>`
+                );
               }
             } catch (errPoint) { console.warn("Gagal merender titik:", errPoint); }
           });
