@@ -163,15 +163,6 @@ nav {
 .index-num.blue  { color: var(--blue); }
 .index-cat { font-size:0.65rem; font-weight:600; color:#555; }
 
-/* Versi mini — dipakai di dalam kartu "Indeks Kehati Burung" */
-.index-row-sm {
-  display:grid;
-  grid-template-columns: repeat(3,1fr);
-  gap:10px;
-}
-.index-row-sm .index-card { padding:14px 10px; }
-.index-row-sm .index-num { font-size:1.5rem; margin:4px 0 2px; }
-
 /* ============================================================
    UI CARD
 ============================================================ */
@@ -205,11 +196,6 @@ nav {
   border-bottom-color:rgba(211,47,47,0.2);
   color:#ef9a9a;
 }
-.ui-card-header.c-orange {
-  background:rgba(255,171,0,0.12);
-  border-bottom-color:rgba(255,171,0,0.25);
-  color:var(--orange);
-}
 .ui-card-header.c-subtle {
   background:rgba(255,255,255,0.04);
   border-bottom-color:var(--border-subtle);
@@ -227,11 +213,6 @@ nav {
 ============================================================ */
 .chart-wrap { position:relative; height:220px; padding:14px; }
 .chart-wrap-sm { position:relative; height:180px; padding:10px; }
-.chart-label {
-  font-size:0.65rem; font-weight:700; letter-spacing:1px;
-  text-transform:uppercase; color:var(--text-muted);
-  margin-bottom:8px;
-}
 
 /* ============================================================
    STATS INLINE (flora & burung)
@@ -251,12 +232,6 @@ nav {
 .inline-stat .num.blue { color:#64b5f6; }
 .inline-stat span { display:block; font-size:0.6rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-top:4px; }
 
-/* Avifauna dominasi/spesies kunci */
-.bird-meta {
-  margin-top:12px; font-size:0.75rem; color:var(--text-muted); line-height:1.7;
-}
-.bird-meta b { color:var(--parchment); }
-
 /* Alert note */
 .field-note {
   background:rgba(255,171,0,0.08);
@@ -268,56 +243,34 @@ nav {
 }
 
 /* ============================================================
-   SECTION DIVIDER ("Detail Data Monitoring Flora & Fauna")
+   FLAGSHIP SPECIES
 ============================================================ */
-.section-divider {
-  border-left:4px solid var(--lime);
-  padding-left:16px;
-  margin:36px 0 20px;
-}
-.section-divider span {
-  font-family:var(--display);
-  font-size:1.1rem; font-weight:800;
-  letter-spacing:0.5px; text-transform:uppercase;
-  color:var(--lime);
-}
-
-/* ============================================================
-   ROW GRID — 2 kolom kartu (Flora/Burung & Statistik/Flagship)
-============================================================ */
-.row-grid {
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:18px;
+.flagship-card {
+  background: linear-gradient(135deg, rgba(198,255,0,0.06) 0%, rgba(5,5,5,0) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:28px;
+  display:flex; gap:24px; align-items:center;
   margin-bottom:24px;
-  align-items:stretch;
 }
-.row-grid .ui-card { display:flex; flex-direction:column; height:100%; }
-
-/* ============================================================
-   FLAGSHIP SPECIES — versi compact (setengah lebar)
-============================================================ */
-.flagship-body-sm {
-  display:flex; gap:16px; align-items:center; padding:22px;
-}
-.flagship-img-sm {
-  width:110px; height:110px; object-fit:cover;
-  border-radius:var(--r-sm); flex-shrink:0;
+.flagship-img {
+  width:180px; height:180px; object-fit:cover;
+  border-radius:var(--r-md);
   border:2px solid var(--border);
+  flex-shrink:0;
 }
-.flagship-name-sm {
-  font-family:var(--display); font-size:1.05rem; font-weight:900;
-  color:var(--white); line-height:1.2; margin-bottom:6px;
+.flagship-info h3 {
+  font-family:var(--display); font-size:1.5rem; font-weight:900;
+  color:var(--white); line-height:1.2; margin-bottom:8px;
 }
-.flagship-desc-sm {
-  font-size:0.72rem; color:var(--text-muted); line-height:1.6; margin-top:8px;
-}
-.status-pill {
+.flagship-info .status-pill {
   display:inline-block;
-  font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  font-size:0.6rem; font-weight:700; letter-spacing:2px; text-transform:uppercase;
   background:rgba(211,47,47,0.2); color:#ef9a9a;
   border:1px solid rgba(211,47,47,0.3);
-  padding:4px 12px; border-radius:50px;
+  padding:4px 12px; border-radius:50px; margin-bottom:12px;
+}
+.flagship-info p {
+  font-size:0.82rem; color:var(--text-muted); line-height:1.7;
 }
 
 /* ============================================================
@@ -393,13 +346,12 @@ footer {
   .page-hero h1 { font-size:1.9rem; }
   .index-row { grid-template-columns:1fr; margin-top:-16px; }
   .trend-grid { grid-template-columns:1fr; }
-  .row-grid { grid-template-columns:1fr; }
+  .flagship-card { flex-direction:column; }
+  .flagship-img { width:100%; height:220px; }
   #miniMap { height:280px; }
   .chart-wrap { height:190px; }
   .chart-wrap-sm { height:160px; }
   .inline-stats { flex-direction:column; }
-  .flagship-body-sm { flex-direction:column; text-align:center; }
-  .flagship-img-sm { width:100%; height:170px; }
 }
 @media (prefers-reduced-motion:reduce) {
   .reveal { opacity:1; transform:none; transition:none; }
@@ -436,7 +388,7 @@ footer {
 <!-- MAIN -->
 <div class="container-page">
 
-  <!-- INDEKS FLORA (utama, melayang di atas hero) -->
+  <!-- INDEKS FLORA -->
   <div class="index-row reveal" id="indexRow">
     <div class="index-card">
       <div class="index-label">Keanekaragaman Hayati</div>
@@ -480,82 +432,87 @@ footer {
     </div>
   </div>
 
-  <!-- DIVIDER -->
-  <div class="section-divider reveal">
-    <span>Detail Data Monitoring Flora &amp; Fauna</span>
-  </div>
-
-  <!-- ROW 1: FLORA INVENTORY + INDEKS BURUNG -->
-  <div class="row-grid reveal">
+  <!-- FLORA & BURUNG -->
+  <div class="row g-3 mb-3 reveal">
     <!-- FLORA -->
-    <div class="ui-card">
-      <div class="ui-card-header c-green"><i class="fas fa-leaf"></i> Inventarisasi Flora</div>
-      <div class="ui-card-body">
-        <div class="inline-stats">
-          <div class="inline-stat">
-            <div class="num" id="floraTotal">—</div>
-            <span>Jenis</span>
+    <div class="col-lg-6">
+      <div class="ui-card h-100" style="margin-bottom:0;">
+        <div class="ui-card-header c-green"><i class="fas fa-leaf"></i> Inventarisasi Flora</div>
+        <div class="ui-card-body">
+          <div class="inline-stats">
+            <div class="inline-stat">
+              <div class="num" id="floraTotal">—</div>
+              <span>Jenis</span>
+            </div>
+            <div class="inline-stat">
+              <div class="num" id="floraFam">—</div>
+              <span>Famili</span>
+            </div>
           </div>
-          <div class="inline-stat">
-            <div class="num" id="floraFam">—</div>
-            <span>Famili</span>
+          <div style="font-size:0.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">
+            Tren Jumlah Spesies
           </div>
+          <div class="chart-wrap" style="padding:0;"><canvas id="floraChart"></canvas></div>
+          <div class="field-note" id="floraNote" style="display:none;"></div>
         </div>
-        <div class="chart-label">Tren Jumlah Spesies</div>
-        <div class="chart-wrap" style="padding:0;"><canvas id="floraChart"></canvas></div>
-        <div class="field-note" id="floraNote" style="display:none;"></div>
       </div>
     </div>
 
-    <!-- INDEKS BURUNG -->
-    <div class="ui-card">
-      <div class="ui-card-header c-blue"><i class="fas fa-dove"></i> Indeks Kehati Burung</div>
-      <div class="ui-card-body">
-        <div class="index-row-sm">
-          <div class="index-card bird">
-            <div class="index-label">H' Burung</div>
-            <div class="index-num blue" id="birdH">—</div>
+    <!-- BURUNG -->
+    <div class="col-lg-6">
+      <div class="ui-card h-100" style="margin-bottom:0;">
+        <div class="ui-card-header c-blue"><i class="fas fa-dove"></i> Avifauna — Indeks Kehati Burung</div>
+        <div class="ui-card-body">
+          <!-- Indeks burung -->
+          <div class="index-row" style="margin-top:0; margin-bottom:16px; grid-template-columns:repeat(3,1fr); gap:10px;">
+            <div class="index-card bird" style="padding:14px 10px;">
+              <div class="index-label">H' Burung</div>
+              <div class="index-num blue" id="birdH" style="font-size:1.5rem;">—</div>
+            </div>
+            <div class="index-card bird" style="padding:14px 10px;">
+              <div class="index-label">E Burung</div>
+              <div class="index-num blue" id="birdE" style="font-size:1.5rem;">—</div>
+            </div>
+            <div class="index-card bird" style="padding:14px 10px;">
+              <div class="index-label">R Burung</div>
+              <div class="index-num blue" id="birdR" style="font-size:1.5rem;">—</div>
+            </div>
           </div>
-          <div class="index-card bird">
-            <div class="index-label">E Burung</div>
-            <div class="index-num blue" id="birdE">—</div>
+          <div class="inline-stats">
+            <div class="inline-stat">
+              <div class="num blue" id="birdSpecies">—</div>
+              <span>Spesies</span>
+            </div>
+            <div class="inline-stat">
+              <div class="num blue" id="birdFamily">—</div>
+              <span>Famili</span>
+            </div>
           </div>
-          <div class="index-card bird">
-            <div class="index-label">R Burung</div>
-            <div class="index-num blue" id="birdR">—</div>
+          <div class="chart-wrap" style="padding:0;"><canvas id="birdChart"></canvas></div>
+          <div style="margin-top:12px; font-size:0.75rem; color:var(--text-muted); line-height:1.7;">
+            <b style="color:var(--parchment);">Dominasi:</b> <span id="birdDom">—</span><br>
+            <b style="color:var(--parchment);">Spesies Kunci:</b> <span id="birdKey">—</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ROW 2: STATISTIK AVIFAUNA + FLAGSHIP -->
-  <div class="row-grid reveal">
-    <!-- STATISTIK AVIFAUNA -->
-    <div class="ui-card">
-      <div class="ui-card-header c-blue"><i class="fas fa-binoculars"></i> Statistik Avifauna</div>
-      <div class="ui-card-body">
-        <div class="inline-stats">
-          <div class="inline-stat">
-            <div class="num blue" id="birdSpecies">—</div>
-            <span>Spesies</span>
-          </div>
-          <div class="inline-stat">
-            <div class="num blue" id="birdFamily">—</div>
-            <span>Famili</span>
-          </div>
+  <!-- FLAGSHIP SPECIES -->
+  <div id="flagshipSection" style="display:none;" class="reveal">
+    <span class="section-label" style="margin-bottom:14px;">Flagship Species</span>
+    <div class="flagship-card">
+      <img src="" class="flagship-img" id="flagImg" alt="Flagship Species"
+        onerror="this.src='https://images.unsplash.com/photo-1471500455598-7905b9c19b54?q=80&w=400'">
+      <div class="flagship-info">
+        <div style="font-size:0.6rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:8px;">
+          <i class="fas fa-crown"></i> Flagship Species
         </div>
-        <div class="chart-label">Tren Jumlah Spesies Burung</div>
-        <div class="chart-wrap" style="padding:0;"><canvas id="birdChart"></canvas></div>
-        <div class="bird-meta">
-          <b>Dominasi:</b> <span id="birdDom">—</span><br>
-          <b>Spesies Kunci:</b> <span id="birdKey">—</span>
-        </div>
+        <h3 id="flagName">—</h3>
+        <div class="status-pill" id="flagStatus">—</div>
+        <p id="flagDesc">—</p>
       </div>
     </div>
-
-    <!-- FLAGSHIP (diisi via JS — bisa berisi data atau placeholder) -->
-    <div class="ui-card" id="flagshipCard"></div>
   </div>
 
   <!-- SPESIES DILINDUNGI -->
@@ -608,13 +565,17 @@ footer {
   ================================================================ */
   async function checkAndMigrate() {
     try {
+      // Cek apakah data lokasi ini sudah ada di Firebase
       const snap = await getDoc(doc(db, "monitoring_kehati", locId));
 
       if (snap.exists()) {
+        // Data sudah ada — langsung render dari Firebase
         renderFromFirebase(snap.data());
       } else {
+        // Data belum ada — coba ambil dari database.js lokal & upload
         if (typeof db_kehati !== 'undefined' && db_kehati.locations[locId]) {
           await migrateToFirebase(locId);
+          // Setelah migrasi, ambil lagi dari Firebase
           const snapAfter = await getDoc(doc(db, "monitoring_kehati", locId));
           if (snapAfter.exists()) renderFromFirebase(snapAfter.data());
           else renderFromLocal(db_kehati.locations[locId]);
@@ -624,6 +585,7 @@ footer {
       }
     } catch(e) {
       console.error('Error:', e);
+      // Fallback ke data lokal jika Firebase gagal
       if (typeof db_kehati !== 'undefined' && db_kehati.locations[locId]) {
         renderFromLocal(db_kehati.locations[locId]);
       } else {
@@ -634,20 +596,10 @@ footer {
 
   /* ================================================================
      MIGRASI: database.js → Firebase
-     CATATAN PENTING: chartLabels di-fallback ke floraStats.years,
-     karena di database.js asli label sumbu tahun untuk grafik H/E/R
-     memang memakai floraStats.years (tidak ada field "chartLabels"
-     terpisah). Tanpa fallback ini, label tahun di grafik tren
-     akan kosong walau datanya tetap tampil — inilah yang membuat
-     sebagian data terlihat "tidak kecopy".
   ================================================================ */
   async function migrateToFirebase(id) {
     const raw = db_kehati.locations[id];
     if (!raw) return;
-
-    const fallbackLabels = (raw.chartLabels && raw.chartLabels.length)
-      ? raw.chartLabels
-      : (raw.floraStats?.years || []);
 
     const payload = {
       location:        raw.name        || "",
@@ -679,8 +631,8 @@ footer {
       bird_graph_years:   JSON.stringify(raw.birdDataGraph?.years   || []),
       bird_graph_family:  JSON.stringify(raw.birdDataGraph?.family  || []),
       bird_graph_species: JSON.stringify(raw.birdDataGraph?.species || []),
-      // Tren indeks (dengan fallback label)
-      history_labels: JSON.stringify(fallbackLabels),
+      // Tren indeks
+      history_labels: JSON.stringify(raw.chartLabels || []),
       history_h:      JSON.stringify(raw.historyH    || []),
       history_e:      JSON.stringify(raw.historyE    || []),
       history_r:      JSON.stringify(raw.historyR    || []),
@@ -689,7 +641,7 @@ footer {
       flagship_desc:   raw.flagshipSpecies?.desc   || "",
       flagship_status: raw.flagshipSpecies?.status || "",
       flagship_img:    raw.flagshipSpecies?.img    || "",
-      // Protected list & polygon (disalin utuh, semua field ikut)
+      // Protected list & polygon
       protected_list:  JSON.stringify(raw.protectedList  || []),
       area_polygon:    JSON.stringify(raw.detailPolygon  || []),
       header_image:    raw.headerImage || "",
@@ -703,6 +655,7 @@ footer {
      RENDER DARI FIREBASE
   ================================================================ */
   function renderFromFirebase(d) {
+    // Parse JSON fields
     const histLabels  = safeJson(d.history_labels);
     const histH       = safeJson(d.history_h);
     const histE       = safeJson(d.history_e);
@@ -715,6 +668,7 @@ footer {
     const protList    = safeJson(d.protected_list);
     const polygons    = safeJson(d.area_polygon);
 
+    // Konversi ke format lokal untuk renderData
     const mapped = {
       name:         d.location,
       desc:         d.desc,
@@ -759,6 +713,7 @@ footer {
     document.getElementById('heroTitle').innerHTML = `${d.name || 'Kawasan'} <em>${d.year || ''}</em>`;
     document.getElementById('heroDesc').textContent = d.desc || '';
 
+    // Status badge
     const statusEl = document.getElementById('heroStatus');
     const sc = (d.status || '').toLowerCase().replace(' ', '-');
     statusEl.innerHTML = `<span class="status-badge ${sc}"><i class="fas fa-circle" style="font-size:6px;"></i> ${d.status}</span>`;
@@ -789,26 +744,13 @@ footer {
     document.getElementById('birdDom').textContent     = d.birdStats?.dom     ?? '—';
     document.getElementById('birdKey').textContent     = d.birdStats?.key     ?? '—';
 
-    /* FLAGSHIP — kartu dibangun via JS, ada state "kosong" kalau tidak ada data */
-    const flagCard = document.getElementById('flagshipCard');
-    if (d.flagshipSpecies && d.flagshipSpecies.name) {
-      flagCard.innerHTML = `
-        <div class="ui-card-header c-orange"><i class="fas fa-crown"></i> Flagship Species</div>
-        <div class="flagship-body-sm">
-          <img src="${d.flagshipSpecies.img || ''}" class="flagship-img-sm" alt="${d.flagshipSpecies.name}"
-            onerror="this.src='https://images.unsplash.com/photo-1471500455598-7905b9c19b54?q=80&w=300'">
-          <div>
-            <h3 class="flagship-name-sm">${d.flagshipSpecies.name}</h3>
-            <div class="status-pill">${d.flagshipSpecies.status || ''}</div>
-            <p class="flagship-desc-sm">${d.flagshipSpecies.desc || ''}</p>
-          </div>
-        </div>`;
-    } else {
-      flagCard.innerHTML = `
-        <div class="ui-card-header c-subtle"><i class="fas fa-crown"></i> Flagship Species</div>
-        <div class="ui-card-body" style="text-align:center;color:var(--text-muted);padding:46px 20px;">
-          Tidak ada flagship species tercatat untuk kawasan ini.
-        </div>`;
+    /* FLAGSHIP */
+    if (d.flagshipSpecies) {
+      document.getElementById('flagshipSection').style.display = 'block';
+      document.getElementById('flagImg').src         = d.flagshipSpecies.img    || '';
+      document.getElementById('flagName').textContent = d.flagshipSpecies.name  || '';
+      document.getElementById('flagStatus').textContent = d.flagshipSpecies.status || '';
+      document.getElementById('flagDesc').textContent = d.flagshipSpecies.desc  || '';
     }
 
     /* PROTECTED LIST */
@@ -856,12 +798,9 @@ footer {
 
     /* CHARTS */
     const gridColor = 'rgba(255,255,255,0.05)';
-    // Fallback label: kalau chartLabels kosong, pakai floraStats.years
-    // (lihat catatan di migrateToFirebase soal ini)
-    const labels = (d.chartLabels && d.chartLabels.length)
-      ? d.chartLabels
-      : (d.floraStats?.years || []);
+    const labels = d.chartLabels || [];
 
+    // Tren H
     if (d.historyH?.length) {
       new Chart(document.getElementById('chartH'), {
         type:'line',
@@ -869,6 +808,7 @@ footer {
         options:{ maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:gridColor}}, y:{grid:{color:gridColor}, beginAtZero:false} } }
       });
     }
+    // Tren E
     if (d.historyE?.length) {
       new Chart(document.getElementById('chartE'), {
         type:'line',
@@ -876,6 +816,7 @@ footer {
         options:{ maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:gridColor}}, y:{grid:{color:gridColor}, beginAtZero:false} } }
       });
     }
+    // Tren R
     if (d.historyR?.length) {
       new Chart(document.getElementById('chartR'), {
         type:'line',
