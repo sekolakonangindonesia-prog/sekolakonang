@@ -155,13 +155,13 @@ nav#mainNav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
   margin-bottom: 0;
 }
 
-/* ── STAT CARDS (style index — card + border atas + ikon berwarna) ── */
+/* ── STAT CARDS — sama persis impact-card di index ── */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 14px;
-  margin-top: -32px;
-  margin-bottom: 48px;
+  gap: 12px;
+  margin-top: -28px;
+  margin-bottom: 44px;
   position: relative;
   z-index: 2;
 }
@@ -169,40 +169,39 @@ nav#mainNav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
   background: var(--canopy);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  padding: 20px 15px;
+  padding: 16px 10px;
   text-align: center;
   position: relative;
   overflow: hidden;
   transition: 0.3s;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.4);
 }
-.stat-card:hover { transform: translateY(-5px); }
+.stat-card:hover { border-color: var(--lime); transform: translateY(-5px); }
 
-/* Garis neon di atas, sama seperti impact-card di index */
+/* Garis gradient di atas — sama persis index */
 .stat-card::before {
   content: '';
   position: absolute; top: 0; left: 0; right: 0;
   height: 2px;
   border-radius: var(--r-md) var(--r-md) 0 0;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
 }
-/* Warna garis per kartu — tetap sesuai aslinya */
-.stat-card.c-lime::before   { background: var(--lime); }
-.stat-card.c-orange::before { background: var(--orange); }
-.stat-card.c-blue::before   { background: #2196f3; }
-.stat-card.c-indigo::before { background: #1565c0; }
-.stat-card.c-cyan::before   { background: #00e5ff; }
+.stat-card.c-lime::before   { background: linear-gradient(90deg,transparent,var(--lime),transparent); }
+.stat-card.c-orange::before { background: linear-gradient(90deg,transparent,var(--orange),transparent); }
+.stat-card.c-blue::before   { background: linear-gradient(90deg,transparent,#2196f3,transparent); }
+.stat-card.c-indigo::before { background: linear-gradient(90deg,transparent,#1565c0,transparent); }
+.stat-card.c-cyan::before   { background: linear-gradient(90deg,transparent,#00e5ff,transparent); }
 
-/* Hover border glow per warna */
+/* Hover border per warna */
 .stat-card.c-lime:hover   { border-color: var(--lime); }
 .stat-card.c-orange:hover { border-color: var(--orange); }
 .stat-card.c-blue:hover   { border-color: #2196f3; }
 .stat-card.c-indigo:hover { border-color: #1565c0; }
 .stat-card.c-cyan:hover   { border-color: #00e5ff; }
 
-/* Ikon — warna tetap asli */
+/* Ikon */
 .stat-card i {
-  font-size: 1.5rem;
-  margin-bottom: 12px;
+  font-size: 1.4rem;
+  margin-bottom: 10px;
   display: block;
 }
 .stat-card.c-lime   i { color: var(--lime); }
@@ -211,22 +210,24 @@ nav#mainNav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
 .stat-card.c-indigo i { color: #1565c0; }
 .stat-card.c-cyan   i { color: #00e5ff; }
 
+/* Angka — lebih kecil, proporsional */
 .stat-num {
   display: block;
   font-family: var(--display);
-  font-size: 2rem;
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
   font-weight: 900;
   color: var(--white);
   line-height: 1;
 }
 .stat-label {
   display: block;
-  font-size: 0.55rem;
+  font-size: 0.52rem;
   font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--text-muted);
   margin-top: 8px;
+  line-height: 1.3;
 }
 
 /* ── UI CARD (tidak berubah) ── */
@@ -313,18 +314,40 @@ footer {
 @media (max-width: 768px) {
   nav#mainNav { height: 58px; }
   .nav-back span { display: none; }
-  .page-hero { min-height: 60svh; padding: 70px 0 36px; }
-  .page-hero h1 { font-size: 2.2rem; }
+
+  /* Hero mobile */
+  .page-hero { min-height: 55svh; padding: 68px 0 30px; }
+  .page-hero h1 { font-size: 1.9rem; letter-spacing: -0.5px; }
+  .page-hero p { font-size: 0.82rem; }
+
+  /* Stat cards: 2 kolom di HP, card ke-5 full width */
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
-    margin-top: -20px; gap: 10px;
+    margin-top: -18px;
+    margin-bottom: 28px;
+    gap: 8px;
   }
   .stats-row .stat-card:last-child { grid-column: 1 / -1; }
-  #map { height: 300px; }
-  .chart-wrap { height: 200px; }
+  .stat-card { padding: 12px 8px; }
+  .stat-card i { font-size: 1.1rem; margin-bottom: 7px; }
+  .stat-num { font-size: 1.4rem !important; }
+  .stat-label { font-size: 0.48rem; letter-spacing: 0.8px; margin-top: 6px; }
+
+  #map { height: 280px; }
+  .chart-wrap { height: 190px; }
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
-  .sk-table { font-size: 0.7rem; }
-  .sk-table thead th, .sk-table tbody td { padding: 10px 10px; }
+  .sk-table { font-size: 0.65rem; }
+  .sk-table thead th, .sk-table tbody td { padding: 8px 8px; }
+  .main-content { padding: 0 0 40px; }
+  .ui-card { border-radius: var(--r-md); }
+}
+
+/* Ekstra kecil (< 400px) */
+@media (max-width: 400px) {
+  .page-hero h1 { font-size: 1.6rem; }
+  .stats-row { gap: 6px; }
+  .stat-num { font-size: 1.2rem !important; }
+  .stat-label { font-size: 0.44rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -654,7 +677,7 @@ footer {
     entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
     { threshold: 0.08 }
   );
-  revealEls.forEach(el => obs.observe(el));  
+  revealEls.forEach(el => obs.observe(el));
 </script>
 </body>
 </html>
