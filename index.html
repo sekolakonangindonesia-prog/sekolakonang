@@ -321,8 +321,7 @@
   /* Hero: kurangi "ruang kosong" di atas teks */
     .hero { min-height: 70svh; padding: 70px 0 30px; }
     .hero-desc { margin-bottom: 20px; }
-    }
-
+    
   @media (prefers-reduced-motion: reduce) {
     .reveal { opacity: 1; transform: none; transition: none; }
     .firefly { animation: none; opacity: 0; }
@@ -378,19 +377,19 @@
       <!-- Item 2 -->
       <div class="impact-card">
         <i class="fas fa-tint impact-icon"></i>
-        <span class="impact-num" data-target="47" data-decimal="1">0</span>
+        <span id="impactAir" class="impact-num" data-target="47" data-decimal="1">0</span>
         <span class="impact-label">ML Air / Tahun</span>
       </div>
       <!-- Item 3 -->
       <div class="impact-card">
         <i class="fas fa-paw impact-icon"></i>
-        <span class="impact-num" data-target="201">0</span>
+       <span id="impactSpesies" class="impact-num" data-target="201">0</span>
         <span class="impact-label">Spesies Flora</span>
       </div>
       <!-- Item 4 -->
       <div class="impact-card">
         <i class="fas fa-map-marked-alt impact-icon"></i>
-        <span class="impact-num" data-target="6">0</span>
+        <span id="impactLokasi" class="impact-num" data-target="6">0</span>
         <span class="impact-label">Lokasi Monitoring</span>
       </div>
     </div>
