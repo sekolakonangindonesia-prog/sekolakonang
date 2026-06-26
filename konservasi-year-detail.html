@@ -406,9 +406,10 @@ footer {
           </div>
           <div class="col-lg-4">
             <div class="water-badge">
+              <i class="fas fa-water" style="font-size:2rem;color:var(--cyan);opacity:0.8;margin-bottom:6px;"></i>
               <span class="total-num" id="total-water">—</span>
-              <span class="total-label">ML / Year</span>
-              <span style="font-size:0.65rem;opacity:0.6;margin-top:4px;">Estimasi Infiltrasi Air</span>
+              <span class="total-label">Total Replenished Water</span>
+              <span style="font-size:0.62rem;opacity:0.65;margin-top:2px;">(ML/Year Kumulatif)</span>
             </div>
           </div>
         </div>
@@ -424,7 +425,22 @@ footer {
               </tr>
             </thead>
             <tbody id="formulaBody"></tbody>
+            <tfoot>
+              <tr id="totalRow" style="border-top:2px solid rgba(33,150,243,0.4);">
+                <td colspan="4" class="text-end" style="padding:13px 16px;font-size:0.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);">
+                  Total Infiltrasi Tahun <span id="totalYear">—</span>
+                </td>
+                <td class="text-end" style="padding:13px 16px;font-weight:900;font-size:1rem;color:var(--cyan);" id="totalRowVal">—</td>
+              </tr>
+            </tfoot>
           </table>
+        </div>
+        <!-- Catatan Formula -->
+        <div style="margin-top:16px;padding:12px 16px;background:rgba(33,150,243,0.06);border:1px solid rgba(33,150,243,0.15);border-radius:var(--r-sm);display:flex;align-items:flex-start;gap:10px;">
+          <i class="fas fa-info-circle" style="color:var(--blue);margin-top:2px;flex-shrink:0;"></i>
+          <p style="font-size:0.72rem;color:var(--text-muted);line-height:1.6;margin:0;">
+            <b style="color:var(--parchment);">Catatan Formula:</b> Perhitungan menggunakan parameter hidrologi spesifik tahun terkait (Curah hujan, VWB, dan Dimensi Fisik).
+          </p>
         </div>
       </div>
     </div>
@@ -633,6 +649,8 @@ footer {
     }
     const total = resP + resR + resS + resB;
     document.getElementById('total-water').textContent = total.toFixed(2);
+    document.getElementById('totalYear').textContent = year;
+    document.getElementById('totalRowVal').textContent = total.toFixed(2);
 
     const rows = [
       { item:'Pohon / Vegetasi', dim:`VWB: ${VWB} l/s/ha`, vol:'400 phn/ha', f:`(${s.trees}/400)×${VWB}×${TIME}×75%`, val:resP },
@@ -676,7 +694,6 @@ footer {
   document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
   loadData();
-  
 </script>
 </body>
 </html>
