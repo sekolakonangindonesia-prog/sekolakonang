@@ -249,8 +249,8 @@ nav {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.78rem;
-  color: #222;
-  background: var(--white);
+  color: var(--parchment);
+  background: rgba(5,5,5,0.4); /* Transparan gelap */
 }
 .sk-table thead th {
   background: #f4f4f4;
@@ -265,11 +265,13 @@ nav {
 }
 .sk-table tbody td {
   padding: 12px 14px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-subtle);
   vertical-align: middle;
-  font-weight: 500;
 }
-.sk-table tbody tr:hover td { background: #fafff0; }
+.sk-table tbody tr:hover td { 
+  background: var(--lime-dim); /* Efek hover menyala hijau lembut */
+}
+   
 .btn-detail {
   display: inline-block;
   font-size: 0.6rem;
@@ -560,13 +562,18 @@ footer {
         const s = d.stats;
         const year = d.year;
 
-        // Hitung infiltrasi (formula sama dengan kode lama)
-        let air = (year === 2024)
-          ? ((s.trees/400)*1.5) + (s.rorak*0.17)
-          : ((s.trees/400)*0.02495*31.536*0.75)
-            + ((s.rorak*490*3*163)/1000000)
-            + ((s.sumur*754*3*163)/1000000)
-            + ((s.biopori/300)*1.5);
+       // Sebelum melakukan kalkulasi, definisikan nilai aman
+      const trees = s.trees || 0;
+      const rorak = s.rorak || 0;
+      const sumur = s.sumur || 0;
+      const biopori = s.biopori || 0;
+
+   let air = (year === 2024)
+     ? ((trees/400)*1.5) + (rorak*0.17)
+     : ((trees/400)*0.02495*31.536*0.75)
+       + ((rorak*490*3*163)/1000000)
+       + ((sumur*754*3*163)/1000000)
+       + ((biopori/300)*1.5);
 
         total.p += s.trees; total.r += s.rorak;
         total.s += s.sumur; total.b += s.biopori; total.a += air;
@@ -586,22 +593,31 @@ footer {
 
         // Peta — polygon
         if (d.areaPolygon) {
-          try {
-            const poly = JSON.parse(d.areaPolygon);
-            L.polygon(poly, { color: '#C6FF00', fillOpacity: 0.08, weight: 1.5 }).addTo(map);
-          } catch(e) {}
-        }
+     try {
+       let poly = d.areaPolygon;
+       if (typeof poly === 'string') {
+         poly = JSON.parse(poly);
+       }
+       L.polygon(poly, { color: '#C6FF00', fillOpacity: 0.08, weight: 1.5 }).addTo(map);
+     } catch(e) {
+       console.error("Gagal menggambar poligon:", e);
+     }
+   }
 
         // Peta — titik
         if (d.points) {
-          d.points.forEach(pt => {
-            if (pt.koordinat) {
-              L.circleMarker([pt.koordinat.latitude, pt.koordinat.longitude], {
-                radius: 4, color: '#C6FF00', fillColor: '#C6FF00', fillOpacity: 0.9, weight: 0
-              }).addTo(map).bindPopup(`<b>${pt.nama_pohon || ''}</b>`);
-            }
-          });
-        }
+  d.points.forEach(pt => {
+    try {
+      if (pt.koordinat && pt.koordinat.latitude && pt.koordinat.longitude) {
+        L.circleMarker([pt.koordinat.latitude, pt.koordinat.longitude], {
+          radius: 4, color: '#C6FF00', fillColor: '#C6FF00', fillOpacity: 0.9, weight: 0
+        }).addTo(map).bindPopup(`<b>${pt.nama_pohon || 'Pohon'}</b>`);
+      }
+    } catch (errPoint) {
+      console.warn("Gagal merender salah satu titik koordinat:", errPoint);
+    }
+  });
+}
 
         // Galeri
         if (d.photos) {
