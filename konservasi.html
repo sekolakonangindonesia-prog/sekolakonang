@@ -127,7 +127,7 @@ nav#mainNav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
 
 /* eyebrow sama persis index */
 .hero-eyebrow {
-  font-size: 0.6rem; font-weight: 500;
+  font-size: 0.6rem; font-weight: 700;
   letter-spacing: 4px; text-transform: uppercase;
   color: var(--lime); margin-bottom: 16px;
   display: flex; align-items: center; gap: 10px;
@@ -138,11 +138,11 @@ nav#mainNav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
 }
 .page-hero h1 {
   font-family: var(--display);
-  font-size: clamp(2rem, 7vw, 5rem);
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
   font-weight: 900;
   color: var(--white);
-  line-height: 1.05;
-  letter-spacing: -1px;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
   margin-bottom: 20px;
   max-width: 720px;
 }
@@ -317,7 +317,7 @@ footer {
 
   /* Hero mobile */
   .page-hero { min-height: 55svh; padding: 68px 0 30px; }
-  .page-hero h1 { font-size: 1.9rem; letter-spacing: -0.5px; }
+  .page-hero h1 { font-size: 1.5rem; letter-spacing: -0.3px; }
   .page-hero p { font-size: 0.82rem; }
 
   /* Stat cards: 2 kolom di HP, card ke-5 full width */
@@ -678,7 +678,6 @@ footer {
     { threshold: 0.08 }
   );
   revealEls.forEach(el => obs.observe(el));
-  
 </script>
 </body>
 </html>
