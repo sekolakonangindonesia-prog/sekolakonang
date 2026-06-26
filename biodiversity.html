@@ -115,23 +115,16 @@ nav {
 .page-hero h1 em { font-style: normal; color: var(--lime); }
 .page-hero p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.75; max-width: 580px; }
 
-/* ============================================================
-   STAT STRIP (LIME)
-============================================================ */
-.stat-strip { background: var(--lime); }
-.stat-strip-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
-.strip-item {
-  text-align: center; padding: 30px 16px;
-  border-right: 1px solid rgba(5,5,5,0.15);
-}
-.strip-item:last-child { border-right: none; }
-.strip-num {
-  font-family: var(--display);
-  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
-  font-weight: 900; color: var(--deep-forest); line-height: 1; display: block;
-}
-.strip-label { font-size: 0.58rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(5,5,5,0.5); margin-top: 5px; display: block; }
-.strip-icon { font-size: 0.9rem; color: rgba(5,5,5,0.35); margin-bottom: 6px; }
+
+    /* ── IMPACT STRIP ── */
+  .impact-section { padding: 30px 0; background: var(--deep-forest); }
+  .impact-grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;}
+  .impact-card { background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px 15px; text-align: center; transition: 0.3s; position: relative; overflow: hidden; }
+  .impact-card:hover { border-color: var(--lime); transform: translateY(-5px); }
+  .impact-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--lime), transparent); border-radius: var(--r-md) var(--r-md) 0 0; }
+  .impact-icon { font-size: 1.5rem; color: var(--lime); margin-bottom: 15px; display: block; }
+  .impact-num { font-family: var(--display); font-size: 2rem; font-weight: 900; color: var(--white); display: block; }
+  .impact-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 10px; display: block; } 
 
 /* ============================================================
    SECTION WRAPPERS
@@ -484,34 +477,40 @@ footer {
   </div>
 </section>
 
-<!-- STAT STRIP -->
-<section class="stat-strip">
-  <div class="container-page">
-    <div class="stat-strip-grid">
-      <div class="strip-item">
-        <i class="fas fa-leaf strip-icon"></i>
-        <span class="strip-num" id="stat-flora">201+</span>
-        <span class="strip-label">Spesies Flora</span>
+
+   <!-- IMPACT STRIP -->
+<section class="impact-section">   
+  <div class="container">
+    <div class="impact-grid-container">
+      <!-- Item 1 -->
+      <div class="impact-card">
+        <i class="fas fa-tree impact-icon"></i>
+        <span class="impact-num" id="stat-flora">201+"></span>
+        <span class="impact-label">Spesies Flora</span>
       </div>
-      <div class="strip-item">
+      <!-- Item 2 -->
+      <div class="impact-card">
         <i class="fas fa-feather-alt strip-icon"></i>
-        <span class="strip-num" id="stat-burung">43+</span>
-        <span class="strip-label">Spesies Burung</span>
+        <span class="impact-num"  id="stat-burung">43+</span>
+        <span class="impact-label">Spesies Burung</span>
       </div>
-      <div class="strip-item">
+      <!-- Item 3 -->
+      <div class="impact-card">
         <i class="fas fa-map-marker-alt strip-icon"></i>
-        <span class="strip-num" id="stat-lokasi">4</span>
-        <span class="strip-label">Situs Monitoring</span>
+        <span class="impact-num"id="stat-lokasi">4</span>
+        <span class="impact-label">Situs Monitoring</span>
       </div>
-      <div class="strip-item">
+      <!-- Item 4 -->
+      <div class="impact-card">
         <i class="fas fa-chart-line strip-icon"></i>
-        <span class="strip-num" id="stat-index">3.99</span>
-        <span class="strip-label">Indeks H' Tertinggi</span>
+        <span class="impact-num"id="stat-index">3.99</span>
+        <span class="impact-label">Indeks H' Tertinggi</span>
       </div>
     </div>
   </div>
 </section>
 
+   
 <!-- ============================================================
      SECTION 1 — KONTRIBUSI STRATEGIS IBSAP
 ============================================================ -->
