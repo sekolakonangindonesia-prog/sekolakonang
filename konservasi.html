@@ -657,19 +657,18 @@ footer {
 
         tbody.innerHTML += `
           <tr>
-            <td style="font-weight:700; color:#111;">${year}</td>
-            <td style="color:#555; font-size:0.72rem;">${d.location || '—'}</td>
+            <td style="font-weight:700;">${year}</td>
+            <td style="font-size:0.72rem; color: rgba(245,245,240,0.75);">${d.location || '—'}</td>
             <td class="text-center" style="font-weight:600;">${s.trees.toLocaleString('id-ID')}</td>
             <td class="text-center">${s.rorak.toLocaleString('id-ID')}</td>
             <td class="text-center">${s.sumur.toLocaleString('id-ID')}</td>
             <td class="text-center">${s.biopori.toLocaleString('id-ID')}</td>
-            <td class="text-end" style="font-weight:700; color:#0277bd;">${air.toFixed(1)}</td>
+            <td class="text-end" style="font-weight:700;">${air.toFixed(1)}</td>
             <td class="text-center">
               <a href="konservasi-year-detail.html?id=${year}" class="btn-detail">Detail</a>
             </td>
           </tr>
         `;
-      });
 
       document.getElementById('t-pohon').textContent   = total.p.toLocaleString('id-ID');
       document.getElementById('t-rorak').textContent   = total.r.toLocaleString('id-ID');
