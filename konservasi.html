@@ -575,6 +575,7 @@ footer {
   Chart.defaults.font.size = 11;
 
   /* ---- LOAD DATA ---- */
+  /* ---- LOAD DATA ---- */
   async function loadAllData() {
     try {
       const snap = await getDocs(collection(db, "monitoring_reboisasi"));
@@ -588,6 +589,9 @@ footer {
       snap.forEach(doc => dataArr.push({ id: doc.id, ...doc.data() }));
       dataArr.sort((a, b) => a.year - b.year);
 
+      // ============================================================
+      // TAHAP 1: Menghitung Statistik, Mengisi Tabel, & Galeri
+      // ============================================================
       dataArr.forEach(d => {
         const s = d.stats;
         const year = d.year;
@@ -612,48 +616,88 @@ footer {
         sipilCounts.push(s.sumur + s.biopori);
         waterCounts.push(parseFloat(air.toFixed(1)));
 
-        // Agregasi species & bangun colorMap per tahun
+        // Agregasi spesies secara global untuk chart doughnut
+        if (d.species) {
+          Object.keys(d.species).forEach((k) => {
+            speciesAgg[k] = (speciesAgg[k] || 0) + d.species[k];
+          });
+        }
+
+        if (d.photos) {
+          d.photos.forEach(src => {
+            gallery.innerHTML += `<img src="${src}" class="gallery-img" loading="lazy" onclick="window.open(this.src)" alt="Dokumentasi ${year}">`;
+          });
+        }
+
+        // Teks tabel diperbaiki agar terbaca jelas
+        tbody.innerHTML += `
+          <tr>
+            <td style="font-weight:700; color: var(--lime);">${year}</td>
+            <td style="font-size:0.72rem; color: rgba(245,245,240,0.75);">${d.location || '—'}</td>
+            <td class="text-center" style="font-weight:600; color: var(--white);">${s.trees.toLocaleString('id-ID')}</td>
+            <td class="text-center">${s.rorak.toLocaleString('id-ID')}</td>
+            <td class="text-center">${s.sumur.toLocaleString('id-ID')}</td>
+            <td class="text-center">${s.biopori.toLocaleString('id-ID')}</td>
+            <td class="text-end" style="font-weight:700; color: #00e5ff;">${air.toFixed(1)}</td>
+            <td class="text-center">
+              <a href="konservasi-year-detail.html?id=${year}" class="btn-detail">Detail</a>
+            </td>
+          </tr>
+        `;
+      });
+
+      // Update kartu statistik di atas
+      document.getElementById('t-pohon').textContent   = total.p.toLocaleString('id-ID');
+      document.getElementById('t-rorak').textContent   = total.r.toLocaleString('id-ID');
+      document.getElementById('t-sumur').textContent   = total.s.toLocaleString('id-ID');
+      document.getElementById('t-biopori').textContent = total.b.toLocaleString('id-ID');
+      document.getElementById('t-air').textContent     = total.a.toFixed(1);
+
+      // ============================================================
+      // TAHAP 2: Gambar Semua Poligon Wilayah Terlebih Dahulu (Lapisan Bawah)
+      // ============================================================
+      dataArr.forEach(d => {
+        if (d.areaPolygon) {
+          try {
+            let poly = d.areaPolygon;
+            if (typeof poly === 'string') poly = JSON.parse(poly);
+            L.polygon(poly, { color: '#C6FF00', fillOpacity: 0.06, weight: 1.2 }).addTo(map);
+          } catch(e) { console.error("Gagal menggambar poligon:", e); }
+        }
+      });
+
+      // ============================================================
+      // TAHAP 3: Gambar Semua Titik Pohon di Lapisan Paling Atas (Di atas Poligon)
+      // ============================================================
+      dataArr.forEach(d => {
+        const year = d.year;
         const spColors = ['#1b5e20','#C6FF00','#2e7d32','#66bb6a','#a5d6a7','#ffab00','#0277bd','#ff9800','#fbc02d','#e91e63'];
         const colorMap = {};
         if (d.species) {
           Object.keys(d.species).forEach((k, i) => {
             colorMap[k] = spColors[i % spColors.length];
-            speciesAgg[k] = (speciesAgg[k] || 0) + d.species[k];
           });
         }
 
-        if (d.areaPolygon) {
-          try {
-            let poly = d.areaPolygon;
-            if (typeof poly === 'string') poly = JSON.parse(poly);
-            L.polygon(poly, { color: '#C6FF00', fillOpacity: 0.08, weight: 1.5 }).addTo(map);
-          } catch(e) { console.error("Gagal menggambar poligon:", e); }
-        }
-
-       if (d.points) {
+        if (d.points) {
           d.points.forEach(pt => {
             try {
               if (pt.koordinat && pt.koordinat.latitude && pt.koordinat.longitude) {
-                // 1. SOLUSI FALLBACK NAMA FIELD:
-                // Mendeteksi berbagai variasi nama field jika di database berbeda-beda
                 const nama = pt.nama_pohon || pt.nama || pt.pohon || pt.jenis || 'Pohon';
                 const c = colorMap[nama] || '#C6FF00';
                 
-                // 2. SOLUSI OVERLAPPING (Opsional): 
-                // Tambahkan sedikit pergeseran acak sangat kecil (sekitar beberapa meter saja) 
-                // agar titik yang koordinatnya sama persis tidak menumpuk mutlak dan semua bisa diklik
-                const lat = pt.koordinat.latitude + (Math.random() - 0.5) * 0.00015;
-                const lng = pt.koordinat.longitude + (Math.random() - 0.5) * 0.00015;
+                // Jitter acak tipis agar tidak bertumpuk sempurna
+                const lat = pt.koordinat.latitude + (Math.random() - 0.5) * 0.00012;
+                const lng = pt.koordinat.longitude + (Math.random() - 0.5) * 0.00012;
 
                 L.circleMarker([lat, lng], {
-                  radius: 6,                 // Visual sedikit diperbesar ke 6px agar lebih jelas
-                  weight: 12,                // Trik "Click Buffer": membuat area sensitif klik sebesar 12px
-                  color: 'transparent',      // Garis lingkar luar transparan agar tidak merusak keindahan visual
+                  radius: 5,                 // Kembali berukuran imut (5px)
+                  weight: 1,                 // Garis tepi putih tipis yang tajam dan rapi
+                  color: '#ffffff',          
+                  opacity: 0.8,
                   fillColor: c,
                   fillOpacity: 0.95
                 }).addTo(map).bindPopup(
-                  // 3. SOLUSI KONTRAST TEKS POPUP:
-                  // Dipastikan memiliki latar belakang putih solid agar teks hitamnya terbaca sangat tajam
                   `<div style="font-family:'Inter',sans-serif; min-width:130px; background:#ffffff; color:#111111; padding:6px; border-radius:6px; box-shadow:0 2px 10px rgba(0,0,0,0.25);">
                     <b style="color:#111111; font-size:0.8rem; display:block; margin-bottom:2px;">🌲 ${nama}</b>
                     <span style="color:#555555; font-size:0.68rem; display:block;">Tahun Program: ${year}</span>
@@ -664,34 +708,7 @@ footer {
             } catch (errPoint) { console.warn("Gagal merender titik:", errPoint); }
           });
         }
-
-        if (d.photos) {
-          d.photos.forEach(src => {
-            gallery.innerHTML += `<img src="${src}" class="gallery-img" loading="lazy" onclick="window.open(this.src)" alt="Dokumentasi ${year}">`;
-          });
-        }
-
-        tbody.innerHTML += `
-          <tr>
-            <td style="font-weight:700;">${year}</td>
-            <td style="font-size:0.72rem; color: rgba(245,245,240,0.75);">${d.location || '—'}</td>
-            <td class="text-center" style="font-weight:600;">${s.trees.toLocaleString('id-ID')}</td>
-            <td class="text-center">${s.rorak.toLocaleString('id-ID')}</td>
-            <td class="text-center">${s.sumur.toLocaleString('id-ID')}</td>
-            <td class="text-center">${s.biopori.toLocaleString('id-ID')}</td>
-            <td class="text-end" style="font-weight:700;">${air.toFixed(1)}</td>
-            <td class="text-center">
-              <a href="konservasi-year-detail.html?id=${year}" class="btn-detail">Detail</a>
-            </td>
-          </tr>
-        `;
-         });
-
-      document.getElementById('t-pohon').textContent   = total.p.toLocaleString('id-ID');
-      document.getElementById('t-rorak').textContent   = total.r.toLocaleString('id-ID');
-      document.getElementById('t-sumur').textContent   = total.s.toLocaleString('id-ID');
-      document.getElementById('t-biopori').textContent = total.b.toLocaleString('id-ID');
-      document.getElementById('t-air').textContent     = total.a.toFixed(1);
+      });
 
       renderCharts(years, treeCounts, speciesAgg, rorakCounts, sipilCounts, waterCounts);
 
