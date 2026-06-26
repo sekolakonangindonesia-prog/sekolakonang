@@ -434,10 +434,14 @@ footer {
   nav { padding: 0 16px; height: 58px; }
   .nav-back span { display: none; }
   .page-hero { padding: 95px 0 55px; }
-  .stat-strip-grid { grid-template-columns: repeat(2, 1fr); }
-  .strip-item { border-right: none; border-bottom: 1px solid rgba(5,5,5,0.15); }
-  .strip-item:nth-child(odd) { border-right: 1px solid rgba(5,5,5,0.15); }
-  .strip-item:nth-last-child(-n+2) { border-bottom: none; }
+  .impact-grid-container { grid-template-columns: repeat(4, 1fr); gap: 7px; }
+  .impact-card { padding: 10px 9px; }
+  .impact-num { font-size: 1.2rem; }
+  .impact-item { border-right: none; border-bottom: 1px solid rgba(5,5,5,0.2); padding: 18px 9px; }
+  .impact-item:nth-child(odd) { border-right: 1px solid rgba(5,5,5,0.2); }
+  .impact-item:nth-last-child(-n+2) { border-bottom: none; }
+  .impact-icon { font-size: 1rem; }
+  .impact-label { font-size: 0.45rem; }
   .ibsap-grid { grid-template-columns: 1fr; }
   .species-card-grid { grid-template-columns: 1fr; }
   .indicator-grid { grid-template-columns: 1fr; }
