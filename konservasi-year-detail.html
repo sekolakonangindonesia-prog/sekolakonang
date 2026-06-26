@@ -4,18 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Detail Program Tahunan — Sekola Konang Indonesia</title>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-/* ============================================================
-   DESIGN TOKENS — identik dengan index.html & konservasi.html
-============================================================ */
 :root {
   --deep-forest: #050505;
   --canopy:      #353736;
@@ -29,7 +24,6 @@
   --orange:      #ffab00;
   --blue:        #2196f3;
   --cyan:        #00e5ff;
-
   --display: 'Playfair Display', Georgia, serif;
   --body:    'Inter', system-ui, sans-serif;
   --r-sm: 12px; --r-md: 20px; --r-lg: 32px;
@@ -46,9 +40,6 @@ body {
 img { display: block; max-width: 100%; }
 a { text-decoration: none; color: inherit; }
 
-/* ============================================================
-   UTILITY
-============================================================ */
 .container-page { width:100%; max-width:1140px; margin:0 auto; padding:0 20px; }
 .lime { color: var(--lime); }
 .section-label {
@@ -57,109 +48,133 @@ a { text-decoration: none; color: inherit; }
   color: var(--lime); margin-bottom: 8px; display: block;
 }
 
-/* ============================================================
-   NAV
-============================================================ */
-nav {
+/* ── NAV ── */
+nav#mainNav {
   position: fixed; top:0; left:0; right:0; z-index:100;
   height: 64px;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 24px;
   background: rgba(5,5,5,0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
+  transition: box-shadow 0.3s;
 }
+nav#mainNav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
 .nav-brand { display:flex; align-items:center; gap:12px; }
 .nav-brand img { height:34px; }
-.nav-brand-text strong {
-  display:block; font-family:var(--display);
-  font-size:0.88rem; color:var(--white); letter-spacing:0.3px;
-}
-.nav-brand-text small {
-  font-size:0.52rem; letter-spacing:3px;
-  color:var(--lime); text-transform:uppercase; font-weight:600;
-}
+.nav-brand-text strong { display:block; font-family:var(--display); font-size:0.88rem; color:var(--white); letter-spacing:0.3px; }
+.nav-brand-text small { font-size:0.52rem; letter-spacing:3px; color:var(--lime); text-transform:uppercase; font-weight:600; }
 .nav-back {
   display:inline-flex; align-items:center; gap:8px;
   font-size:0.7rem; font-weight:700; letter-spacing:1px;
   text-transform:uppercase; color:var(--parchment);
-  border:1px solid var(--border-subtle);
-  padding:9px 18px; border-radius:50px; transition:0.2s;
+  border:1px solid rgba(245,245,240,0.25);
+  padding:10px 20px; border-radius:50px; transition:0.2s;
 }
 .nav-back:hover { border-color:var(--lime); color:var(--lime); }
 
-/* ============================================================
-   HERO — dengan background dinamis dari data
-============================================================ */
+/* ── HERO dengan fireflies ── */
 .page-hero {
-  padding: 110px 0 56px;
+  position: relative;
+  min-height: 52svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 80px 0 44px;
+  overflow: hidden;
+}
+.page-hero-bg {
+  position: absolute; inset: 0;
   background:
-    linear-gradient(to bottom, rgba(5,5,5,0.55) 0%, rgba(5,5,5,0.88) 65%, var(--deep-forest) 100%),
+    linear-gradient(to bottom, rgba(5,5,5,0.45) 0%, rgba(5,5,5,0.82) 60%, var(--deep-forest) 100%),
     url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1350&q=80')
     center/cover no-repeat;
-  border-bottom: 1px solid var(--border);
-  transition: background-image 0.4s;
-}
-.page-hero .section-label { margin-bottom:10px; }
-.page-hero h1 {
-  font-family: var(--display);
-  font-size: clamp(2rem, 5vw, 3.2rem);
-  font-weight: 900; color: var(--white);
-  line-height: 1.1; letter-spacing: -0.5px;
-}
-.page-hero h1 em { font-style:normal; color:var(--lime); }
-.page-hero p {
-  font-size: 0.88rem; color: var(--text-muted);
-  line-height: 1.7; max-width: 480px; margin-top: 10px;
+  z-index: 0;
 }
 
-/* ============================================================
-   STAT CARDS
-============================================================ */
+/* Fireflies */
+.fireflies { position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+.firefly {
+  position: absolute; border-radius: 50%;
+  background: var(--lime); opacity: 0;
+  animation: float var(--dur,6s) ease-in-out infinite var(--delay,0s);
+}
+@keyframes float {
+  0%,100%  { opacity:0; transform:translateY(0) scale(0.5); }
+  40%,60%  { opacity:.7; transform:translateY(-30px) scale(1); }
+}
+.page-hero-content { position:relative; z-index:2; }
+
+.hero-eyebrow {
+  font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 4px; text-transform: uppercase;
+  color: var(--lime); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.hero-eyebrow::before { content:''; width:30px; height:2px; background:var(--lime); display:inline-block; }
+
+.page-hero h1 {
+  font-family: var(--display);
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+  font-weight: 900; color: var(--white);
+  line-height: 1.15; letter-spacing: -0.5px;
+  margin-bottom: 12px; max-width: 640px;
+}
+.page-hero h1 em { font-style:normal; color:var(--lime); }
+.page-hero p { font-size:0.88rem; color:var(--text-muted); line-height:1.7; max-width:480px; }
+
+/* ── STAT CARDS — sama persis konservasi.html ── */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-top: -32px;
-  margin-bottom: 48px;
+  gap: 12px;
+  margin-top: -28px;
+  margin-bottom: 44px;
   position: relative; z-index: 2;
 }
 .stat-card {
-  background: var(--white);
+  background: var(--canopy);
+  border: 1px solid var(--border);
   border-radius: var(--r-md);
-  padding: 22px 18px;
+  padding: 16px 10px;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
-  transition: transform 0.2s;
+  position: relative; overflow: hidden;
+  transition: 0.3s;
 }
-.stat-card:hover { transform: translateY(-3px); }
-.stat-card i { font-size: 1.2rem; margin-bottom: 10px; }
-.stat-card.c-green i { color: #2e7d32; }
+.stat-card:hover { transform: translateY(-5px); }
+.stat-card::before {
+  content: ''; position:absolute; top:0; left:0; right:0;
+  height: 2px; border-radius: var(--r-md) var(--r-md) 0 0;
+}
+.stat-card.c-green::before  { background: linear-gradient(90deg,transparent,#4caf50,transparent); }
+.stat-card.c-brown::before  { background: linear-gradient(90deg,transparent,#795548,transparent); }
+.stat-card.c-blue::before   { background: linear-gradient(90deg,transparent,var(--blue),transparent); }
+.stat-card.c-green:hover { border-color: #4caf50; }
+.stat-card.c-brown:hover { border-color: #795548; }
+.stat-card.c-blue:hover  { border-color: var(--blue); }
+
+.stat-card i { font-size:1.4rem; margin-bottom:10px; display:block; }
+.stat-card.c-green i { color: #4caf50; }
 .stat-card.c-brown i { color: #795548; }
 .stat-card.c-blue  i { color: var(--blue); }
+
 .stat-num {
-  display: block;
-  font-family: var(--display);
-  font-size: 2rem; font-weight: 900;
-  color: #111; line-height: 1;
+  display: block; font-family: var(--display);
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  font-weight: 900; color: var(--white); line-height: 1;
 }
 .stat-label {
-  display: block;
-  font-size: 0.55rem; font-weight: 700;
-  letter-spacing: 1.5px; text-transform: uppercase;
-  color: #888; margin-top: 6px;
+  display: block; font-size: 0.52rem; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-muted); margin-top: 8px; line-height: 1.3;
 }
 
-/* ============================================================
-   UI CARD
-============================================================ */
+/* ── UI CARD ── */
 .ui-card {
   background: var(--canopy);
   border-radius: var(--r-lg);
   border: 1px solid var(--border-subtle);
-  overflow: hidden;
-  margin-bottom: 24px;
+  overflow: hidden; margin-bottom: 24px;
 }
 .ui-card-header {
   display:flex; align-items:center; gap:10px;
@@ -182,61 +197,51 @@ nav {
 }
 .ui-card-body { padding: 22px; }
 
-/* ============================================================
-   PETA
-============================================================ */
-#map-detail {
-  height: 380px; width: 100%; background: #111;
-}
+/* ── PETA ── */
+#map-detail { height: 380px; width: 100%; background: #111; }
 
-/* ============================================================
-   SPECIES LIST
-============================================================ */
+/* ── SPECIES LIST ── */
 .species-list { margin-top: 14px; }
 .species-row {
-  display: flex; justify-content: space-between;
-  align-items: center;
-  font-size: 0.75rem;
-  padding: 7px 0;
+  display:flex; justify-content:space-between; align-items:center;
+  font-size: 0.75rem; padding: 7px 0;
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .species-row:last-child { border-bottom: none; }
 .species-row span { display:flex; align-items:center; gap:8px; }
-.species-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%; flex-shrink:0;
-}
+.species-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 .species-row b { color: var(--lime); font-size: 0.8rem; }
 
-/* ============================================================
-   ANALISIS AIR — TABEL FORMULA
-============================================================ */
+/* ── TABEL FORMULA — dark theme seperti konservasi.html ── */
 .formula-table {
   width: 100%; border-collapse: collapse;
-  font-size: 0.75rem; color: #222;
-  background: var(--white);
+  font-size: 0.75rem; color: var(--parchment);
+}
+.formula-table thead tr {
+  background: rgba(33,150,243,0.08);
+  border-top: 1px solid rgba(33,150,243,0.25);
+  border-bottom: 1px solid rgba(33,150,243,0.25);
 }
 .formula-table thead th {
-  background: #f4f4f4;
-  font-weight: 800; font-size: 0.6rem;
-  letter-spacing: 1px; text-transform: uppercase;
-  padding: 12px 14px;
-  border-bottom: 2px solid #ddd; color: #444;
+  font-weight: 700; font-size: 0.58rem;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 13px 16px; color: var(--blue); white-space: nowrap;
 }
-.formula-table tbody td {
-  padding: 11px 14px;
-  border-bottom: 1px solid #eee;
-  vertical-align: middle;
-}
+.formula-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
+.formula-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+.formula-table tbody td { padding: 12px 16px; vertical-align: middle; color: rgba(245,245,240,0.85); }
+.formula-table tbody td:first-child { color: var(--white); font-weight: 600; }
+.formula-table tbody td:last-child { font-weight: 700; color: var(--cyan); }
+.formula-table tbody tr:hover td { background: rgba(33,150,243,0.05); }
 .formula-code {
   font-family: 'Courier New', monospace;
-  color: #c62828; font-weight: 700;
-  font-size: 0.7rem;
+  color: var(--lime); font-weight: 600; font-size: 0.68rem;
 }
 
 /* Water total badge */
 .water-badge {
-  background: linear-gradient(135deg, #0277bd, #01579b);
+  background: linear-gradient(135deg, rgba(2,119,189,0.4), rgba(1,87,155,0.6));
+  border: 1px solid rgba(33,150,243,0.3);
   color: white; border-radius: var(--r-md);
   padding: 28px 20px; text-align: center;
   height: 100%; display:flex; flex-direction:column;
@@ -244,8 +249,8 @@ nav {
 }
 .water-badge .total-num {
   font-family: var(--display);
-  font-size: 2.8rem; font-weight: 900;
-  line-height: 1;
+  font-size: 2.8rem; font-weight: 900; line-height: 1;
+  color: var(--cyan);
 }
 .water-badge .total-label {
   font-size: 0.65rem; font-weight: 700;
@@ -253,89 +258,78 @@ nav {
   opacity: 0.8;
 }
 
-/* ============================================================
-   BERITA EXTERNAL
-============================================================ */
+/* ── BERITA ── */
 .news-link-card {
-  display: flex; align-items: center; gap: 14px;
+  display:flex; align-items:center; gap:14px;
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-sm);
-  padding: 14px 16px;
-  transition: 0.2s; color: var(--parchment);
-  text-decoration: none;
+  padding: 14px 16px; transition: 0.2s;
+  color: var(--parchment); text-decoration: none;
 }
-.news-link-card:hover { border-color: var(--lime); background: var(--lime-dim); }
-.news-link-card i { color: var(--lime); font-size: 1rem; flex-shrink: 0; }
-.news-link-card .news-title { font-size: 0.8rem; font-weight: 600; line-height: 1.4; }
-.news-link-card .news-src { font-size: 0.62rem; color: var(--text-muted); margin-top: 3px; }
+.news-link-card:hover { border-color:var(--lime); background:var(--lime-dim); }
+.news-link-card i { color:var(--lime); font-size:1rem; flex-shrink:0; }
+.news-link-card .news-title { font-size:0.8rem; font-weight:600; line-height:1.4; }
+.news-link-card .news-src { font-size:0.62rem; color:var(--text-muted); margin-top:3px; }
 
-/* ============================================================
-   GALERI
-============================================================ */
+/* ── GALERI ── */
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 10px; padding: 18px;
 }
 .gallery-img {
-  width: 100%; height: 130px;
-  object-fit: cover; border-radius: var(--r-sm);
-  cursor: pointer; transition: 0.25s;
-  border: 1px solid var(--border-subtle);
+  width:100%; height:130px; object-fit:cover;
+  border-radius:var(--r-sm); cursor:pointer; transition:0.25s;
+  border:1px solid var(--border-subtle);
 }
-.gallery-img:hover { border-color: var(--lime); transform: scale(1.03); }
+.gallery-img:hover { border-color:var(--lime); transform:scale(1.03); }
 
-/* ============================================================
-   CHART
-============================================================ */
+/* ── CHART ── */
 .chart-wrap { position:relative; height:240px; padding:14px; }
 .chart-wrap-sm { position:relative; height:200px; padding:14px; }
 
-/* ============================================================
-   FOOTER
-============================================================ */
+/* ── FOOTER ── */
 footer {
-  background: #050e08;
-  border-top: 1px solid var(--border);
+  background: #050e08; border-top: 1px solid var(--border);
   padding: 32px 24px; text-align: center;
   font-size: 0.62rem; font-weight: 600;
-  letter-spacing: 2px; color: var(--text-muted);
-  text-transform: uppercase;
+  letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase;
 }
 
-/* ============================================================
-   REVEAL
-============================================================ */
-.reveal { opacity:0; transform:translateY(20px); transition: opacity 0.55s ease, transform 0.55s ease; }
+/* ── REVEAL ── */
+.reveal { opacity:0; transform:translateY(20px); transition:opacity 0.55s ease, transform 0.55s ease; }
 .reveal.visible { opacity:1; transform:none; }
 
-/* ============================================================
-   MOBILE
-============================================================ */
+/* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  nav { padding:0 16px; height:58px; }
+  nav#mainNav { height:58px; padding:0 16px; }
   .nav-back span { display:none; }
-  .page-hero { padding:90px 0 44px; }
-  .page-hero h1 { font-size:1.9rem; }
-  .stats-row { grid-template-columns:1fr; margin-top:-20px; }
+  .page-hero { min-height:48svh; padding:68px 0 30px; }
+  .page-hero h1 { font-size:1.5rem; }
+  .stats-row { grid-template-columns:1fr; margin-top:-18px; margin-bottom:28px; gap:8px; }
+  .stat-card { padding:12px 8px; }
+  .stat-num { font-size:1.4rem !important; }
   #map-detail { height:280px; }
   .chart-wrap { height:200px; }
   .chart-wrap-sm { height:180px; }
   .gallery-grid { grid-template-columns:repeat(2,1fr); }
   .water-badge .total-num { font-size:2rem; }
+  .formula-table { font-size:0.65rem; }
+  .formula-table thead th, .formula-table tbody td { padding:8px 8px; }
 }
 @media (prefers-reduced-motion:reduce) {
   .reveal { opacity:1; transform:none; transition:none; }
+  .firefly { animation:none; opacity:0; }
 }
 </style>
 </head>
 <body>
 
 <!-- NAV -->
-<nav>
+<nav id="mainNav">
   <div class="nav-brand">
-    <img src="https://raw.githubusercontent.com/sekolakonangindonesiaprog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
+    <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
     <div class="nav-brand-text">
       <strong>Sekola Konang</strong>
       <small>Indonesia</small>
@@ -348,9 +342,11 @@ footer {
 </nav>
 
 <!-- HERO -->
-<section class="page-hero" id="pageHero">
-  <div class="container-page">
-    <span class="section-label" id="heroLabel">Program Konservasi</span>
+<section class="page-hero">
+  <div class="page-hero-bg" role="img" aria-label="Hutan konservasi"></div>
+  <div class="fireflies" id="fireflies" aria-hidden="true"></div>
+  <div class="container-page page-hero-content">
+    <div class="hero-eyebrow" id="heroEyebrow">Program Konservasi</div>
     <h1 id="heroTitle">Memuat data <em>program...</em></h1>
     <p id="heroLoc">Mohon tunggu sebentar.</p>
   </div>
@@ -397,7 +393,7 @@ footer {
     </div>
 
     <!-- ANALISIS INFILTRASI AIR -->
-    <div class="ui-card reveal" style="border-top: 3px solid var(--blue);">
+    <div class="ui-card reveal" style="border-top: 2px solid var(--blue);">
       <div class="ui-card-header c-blue">
         <i class="fas fa-calculator"></i> Analisis Infiltrasi Air
       </div>
@@ -412,7 +408,7 @@ footer {
             <div class="water-badge">
               <span class="total-num" id="total-water">—</span>
               <span class="total-label">ML / Year</span>
-              <span style="font-size:0.65rem; opacity:0.6; margin-top:4px;">Estimasi Infiltrasi Air</span>
+              <span style="font-size:0.65rem;opacity:0.6;margin-top:4px;">Estimasi Infiltrasi Air</span>
             </div>
           </div>
         </div>
@@ -452,10 +448,8 @@ footer {
   </div>
 </div>
 
-<!-- FOOTER -->
 <footer>© Yayasan Sekola Konang Indonesia — The Firefly Movement, Probolinggo</footer>
 
-<!-- SCRIPTS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -472,120 +466,124 @@ footer {
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
 
-  /* ---- URL PARAM ---- */
+  /* ── FIREFLIES ── */
+  const ff = document.getElementById('fireflies');
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'firefly';
+    el.setAttribute('aria-hidden','true');
+    el.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*80}%;--dur:${5+Math.random()*6}s;--delay:${Math.random()*8}s;width:${3+Math.random()*3}px;height:${3+Math.random()*3}px;box-shadow:0 0 6px 2px rgba(198,255,0,.5);`;
+    ff.appendChild(el);
+  }
+
+  /* ── SCROLL NAV ── */
+  window.addEventListener('scroll', () =>
+    document.getElementById('mainNav').classList.toggle('scrolled', scrollY > 40), {passive:true}
+  );
+
   const docId = new URLSearchParams(window.location.search).get('id');
 
-  /* ---- WARNA PALET ---- */
-  const COLORS = ['#1b5e20','#C6FF00','#2e7d32','#66bb6a','#a5d6a7','#ffab00','#0277bd','#ff9800','#fbc02d'];
+  /* Palet warna — sama persis konservasi.html */
+  const SP_COLORS = ['#1b5e20','#C6FF00','#2e7d32','#66bb6a','#a5d6a7','#ffab00','#0277bd','#ff9800','#fbc02d','#e91e63'];
 
-  /* ---- PETA ---- */
+  /* ── PETA ── */
   const map = L.map('map-detail', { zoomControl: true }).setView([-7.810, 112.908], 13);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; CartoDB'
   }).addTo(map);
 
-  /* ---- CHART DEFAULTS ---- */
+  /* ── CHART DEFAULTS ── */
   Chart.defaults.color = 'rgba(245,245,240,0.5)';
   Chart.defaults.font.family = "'Inter', sans-serif";
   Chart.defaults.font.size = 11;
 
-  /* ---- LOAD DATA ---- */
+  /* ── LOAD DATA ── */
   async function loadData() {
     if (!docId) {
       document.getElementById('heroTitle').innerHTML = 'Data <em>tidak ditemukan</em>';
       return;
     }
-
     try {
       const docSnap = await getDoc(doc(db, "monitoring_reboisasi", docId));
       if (!docSnap.exists()) {
         document.getElementById('heroTitle').innerHTML = 'Program <em>tidak ditemukan</em>';
         return;
       }
-
       const d = docSnap.data();
       const s = d.stats;
 
-      /* -- HERO -- */
-      document.getElementById('heroLabel').textContent = `Program Konservasi · ${d.year}`;
-      document.getElementById('heroTitle').innerHTML   = `Program Tahun <em>${d.year}</em>`;
-      document.getElementById('heroLoc').textContent   = d.location || '';
+      /* HERO */
+      document.getElementById('heroEyebrow').textContent = `Program Konservasi · ${d.year}`;
+      document.getElementById('heroTitle').innerHTML = `Program Tahun <em>${d.year}</em>`;
+      document.getElementById('heroLoc').textContent = d.location || '';
 
-      /* -- STAT CARDS -- */
+      /* STAT CARDS */
       document.getElementById('stat-trees').textContent = s.trees.toLocaleString('id-ID');
       document.getElementById('stat-rorak').textContent = s.rorak.toLocaleString('id-ID');
       document.getElementById('stat-sipil').textContent = `${(s.sumur + s.biopori)} Unit`;
 
-      /* -- PETA: POLYGON -- */
+      /* ── BANGUN colorMap dari species ── */
+      const spKeys = d.species ? Object.keys(d.species) : [];
+      const colorMap = {};
+      spKeys.forEach((k, i) => { colorMap[k] = SP_COLORS[i % SP_COLORS.length]; });
+
+      /* PETA: POLYGON */
       if (d.areaPolygon) {
         try {
-          const polyData = typeof d.areaPolygon === 'string'
-            ? JSON.parse(d.areaPolygon)
-            : d.areaPolygon;
-
-          // Support array of polygons atau single polygon
+          const polyData = typeof d.areaPolygon === 'string' ? JSON.parse(d.areaPolygon) : d.areaPolygon;
           const polys = Array.isArray(polyData[0][0]) ? polyData : [polyData];
           polys.forEach(poly => {
             L.polygon(poly, { color: '#C6FF00', fillOpacity: 0.08, weight: 1.5 }).addTo(map);
           });
-          // Fit bounds ke polygon pertama
           try {
-            const firstPoly = L.polygon(polys[0]);
-            map.fitBounds(firstPoly.getBounds(), { padding: [30, 30] });
+            map.fitBounds(L.polygon(polys[0]).getBounds(), { padding: [30, 30] });
           } catch(e) {}
         } catch(e) { console.warn('Polygon parse error:', e); }
       }
 
-      /* -- PETA: TITIK -- */
-      const spKeys = d.species ? Object.keys(d.species) : [];
-      const colorMap = {};
-      spKeys.forEach((k, i) => { colorMap[k] = COLORS[i % COLORS.length]; });
-
+      /* PETA: TITIK — warna dari colorMap, popup nama */
       if (d.points) {
         d.points.forEach(p => {
           if (!p.koordinat) return;
-          const c = colorMap[p.nama_pohon] || '#fff';
+          const nama = p.nama_pohon || 'Pohon';
+          const c = colorMap[nama] || '#C6FF00';
           L.circleMarker([p.koordinat.latitude, p.koordinat.longitude], {
-            radius: 5, color: c, fillColor: c, fillOpacity: 1, weight: 0
-          }).addTo(map).bindPopup(`<b>${p.nama_pohon || '—'}</b>`);
+            radius: 6, color: c, fillColor: c, fillOpacity: 0.95, weight: 0
+          }).addTo(map).bindPopup(
+            `<div style="font-family:Inter,sans-serif;min-width:130px;">
+              <b style="color:#111;font-size:0.82rem;">${nama}</b><br>
+              <span style="color:#555;font-size:0.7rem;">Tahun: ${d.year}</span><br>
+              <span style="display:inline-block;margin-top:4px;width:10px;height:10px;border-radius:50%;background:${c};vertical-align:middle;"></span>
+              <span style="color:#555;font-size:0.7rem;"> Spesies terdeteksi</span>
+            </div>`
+          );
         });
       }
 
-      /* -- CHART SPECIES (DOUGHNUT) -- */
-      if (d.species && spKeys.length > 0) {
+      /* CHART SPECIES */
+      if (spKeys.length > 0) {
         new Chart(document.getElementById('chartSpecies'), {
           type: 'doughnut',
           data: {
             labels: spKeys,
-            datasets: [{
-              data: Object.values(d.species),
-              backgroundColor: spKeys.map(k => colorMap[k]),
-              borderWidth: 0
-            }]
+            datasets: [{ data: Object.values(d.species), backgroundColor: spKeys.map(k => colorMap[k]), borderWidth: 0 }]
           },
-          options: {
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } }
-          }
+          options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
-
         const list = document.getElementById('speciesList');
         spKeys.forEach(k => {
           list.innerHTML += `
             <div class="species-row">
-              <span>
-                <span class="species-dot" style="background:${colorMap[k]};"></span>
-                ${k}
-              </span>
+              <span><span class="species-dot" style="background:${colorMap[k]};"></span>${k}</span>
               <b>${d.species[k].toLocaleString('id-ID')}</b>
             </div>`;
         });
       }
 
-      /* -- ANALISIS INFILTRASI -- */
+      /* ANALISIS INFILTRASI */
       renderAnalisis(d.year, s);
 
-      /* -- BERITA EXTERNAL -- */
+      /* BERITA */
       if (d.external_news && d.external_news.length > 0) {
         document.getElementById('newsSection').style.display = 'block';
         const nc = document.getElementById('newsContainer');
@@ -603,13 +601,11 @@ footer {
         });
       }
 
-      /* -- GALERI -- */
+      /* GALERI */
       if (d.photos && d.photos.length > 0) {
         const gal = document.getElementById('gallery');
         d.photos.forEach(src => {
-          gal.innerHTML += `
-            <img src="${src}" class="gallery-img" loading="lazy"
-              onclick="window.open(this.src)" alt="Dokumentasi ${d.year}">`;
+          gal.innerHTML += `<img src="${src}" class="gallery-img" loading="lazy" onclick="window.open(this.src)" alt="Dokumentasi ${d.year}">`;
         });
       } else {
         document.getElementById('gallery').closest('.ui-card').style.display = 'none';
@@ -621,10 +617,9 @@ footer {
     }
   }
 
-  /* ---- ANALISIS INFILTRASI ---- */
+  /* ── ANALISIS INFILTRASI ── */
   function renderAnalisis(year, s) {
     const VWB = 0.02495, TIME = 31.536, RAIN = 163;
-
     let resP, resR, resS, resB;
     if (year === 2024) {
       resP = (s.trees / 400) * 1.5;
@@ -639,38 +634,28 @@ footer {
     const total = resP + resR + resS + resB;
     document.getElementById('total-water').textContent = total.toFixed(2);
 
-    /* Tabel formula */
     const rows = [
-      { item:'Pohon / Vegetasi', dim:`VWB: ${VWB} l/s/ha`, vol:'400 phn/ha',
-        f:`(${s.trees}/400)×${VWB}×${TIME}×75%`, val:resP },
-      { item:'Rorak (Trench)',   dim:'1m × 0.7m × 0.7m',   vol:'490 L',
-        f:`(${s.rorak}×490×3×${RAIN})/1jt`, val:resR },
-      { item:'Sumur Resapan',    dim:'Dia 0.8m × T 1.5m',  vol:'754 L',
-        f:`(${s.sumur}×754×3×${RAIN})/1jt`, val:resS },
-      { item:'Biopori',          dim:'—',                   vol:'Standar',
-        f:`(${s.biopori}/300)×1.5`, val:resB }
+      { item:'Pohon / Vegetasi', dim:`VWB: ${VWB} l/s/ha`, vol:'400 phn/ha', f:`(${s.trees}/400)×${VWB}×${TIME}×75%`, val:resP },
+      { item:'Rorak (Trench)',   dim:'1m × 0.7m × 0.7m',   vol:'490 L',      f:`(${s.rorak}×490×3×${RAIN})/1jt`,     val:resR },
+      { item:'Sumur Resapan',    dim:'Dia 0.8m × T 1.5m',  vol:'754 L',      f:`(${s.sumur}×754×3×${RAIN})/1jt`,     val:resS },
+      { item:'Biopori',          dim:'—',                   vol:'Standar',    f:`(${s.biopori}/300)×1.5`,              val:resB }
     ];
     const tbody = document.getElementById('formulaBody');
     rows.filter(r => r.val > 0).forEach(r => {
       tbody.innerHTML += `
         <tr>
-          <td><b>${r.item}</b><br><small style="color:#888;font-size:0.6rem;">${r.dim}</small></td>
+          <td><b style="color:var(--white);">${r.item}</b><br><small style="color:var(--text-muted);font-size:0.6rem;">${r.dim}</small></td>
           <td>${r.vol}</td>
-          <td class="formula-code">${r.f}</td>
-          <td class="text-end" style="font-weight:700;">${r.val.toFixed(2)}</td>
+          <td><span class="formula-code">${r.f}</span></td>
+          <td class="text-end">${r.val.toFixed(2)}</td>
         </tr>`;
     });
 
-    /* Chart bar infiltrasi */
     new Chart(document.getElementById('chartWater'), {
       type: 'bar',
       data: {
         labels: ['Pohon/Vegetasi', 'Rorak', 'Sumur & Biopori'],
-        datasets: [{
-          data: [resP, resR, resS + resB],
-          backgroundColor: ['#4caf50', '#795548', '#0277bd'],
-          borderRadius: 6, borderSkipped: false
-        }]
+        datasets: [{ data: [resP, resR, resS + resB], backgroundColor: ['#4caf50','#795548','#0277bd'], borderRadius: 6, borderSkipped: false }]
       },
       options: {
         maintainAspectRatio: false,
@@ -683,14 +668,13 @@ footer {
     });
   }
 
-  /* ---- SCROLL REVEAL ---- */
+  /* ── SCROLL REVEAL ── */
   const obs = new IntersectionObserver(
     entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
     { threshold: 0.08 }
   );
   document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-  /* ---- RUN ---- */
   loadData();
 </script>
 </body>
