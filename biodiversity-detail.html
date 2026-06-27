@@ -100,13 +100,14 @@ nav {
   background-position: center;
   border-bottom:1px solid var(--border);
   position: relative;
+  overflow: hidden;
 }
 .page-hero::before {
   content:'';
-  position:absolute; inset:0;
-  background: linear-gradient(to bottom, rgba(5,5,5,0.5) 0%, rgba(5,5,5,0.88) 65%, var(--deep-forest) 100%);
+  position:absolute; inset:0; z-index:0;
+  background: linear-gradient(to bottom, rgba(5,5,5,0.45) 0%, rgba(5,5,5,0.88) 65%, var(--deep-forest) 100%);
 }
-.page-hero .hero-inner { position:relative; z-index:1; }
+.page-hero .hero-inner { position:relative; z-index:2; }
 .page-hero .section-label { margin-bottom:10px; }
 .page-hero h1 {
   font-family:var(--display);
@@ -226,7 +227,7 @@ nav {
    CHART
 ============================================================ */
 .chart-wrap { position:relative; height:220px; padding:14px; }
-.chart-wrap-sm { position:relative; height:180px; padding:10px; }
+.chart-wrap-sm { position:relative; height:200px; padding:10px 6px; }
 .chart-label {
   font-size:0.65rem; font-weight:700; letter-spacing:1px;
   text-transform:uppercase; color:var(--text-muted);
@@ -359,10 +360,11 @@ nav {
   border-radius:var(--r-md); overflow:hidden;
 }
 .trend-card-header {
-  padding:10px 14px;
-  font-size:0.62rem; font-weight:700;
+  padding:12px 16px;
+  font-size:0.68rem; font-weight:800;
   letter-spacing:1px; text-transform:uppercase;
   border-bottom:1px solid var(--border-subtle);
+  display:flex; align-items:center; gap:8px;
 }
 
 /* ============================================================
@@ -375,6 +377,23 @@ footer {
   font-size:0.62rem; font-weight:600;
   letter-spacing:2px; color:var(--text-muted);
   text-transform:uppercase;
+}
+
+/* ============================================================
+   FIREFLIES
+============================================================ */
+.fireflies {
+  position: absolute; inset: 0; z-index: 1;
+  pointer-events: none; overflow: hidden;
+}
+.firefly {
+  position: absolute; border-radius: 50%;
+  background: var(--lime); opacity: 0;
+  animation: ffloat var(--dur,6s) ease-in-out infinite var(--delay,0s);
+}
+@keyframes ffloat {
+  0%,100%  { opacity:0; transform:translateY(0) scale(0.5); }
+  40%,60%  { opacity:.75; transform:translateY(-28px) scale(1); }
 }
 
 /* ============================================================
@@ -425,6 +444,7 @@ footer {
 
 <!-- HERO — background diisi JS dari data -->
 <section class="page-hero" id="pageHero">
+  <div class="fireflies" id="fireflies" aria-hidden="true"></div>
   <div class="container-page hero-inner">
     <span class="section-label">Monitoring Kehati</span>
     <h1 id="heroTitle">Memuat data <em>kawasan...</em></h1>
@@ -467,15 +487,24 @@ footer {
   <!-- TREN INDEKS H E R -->
   <div class="trend-grid reveal">
     <div class="trend-card">
-      <div class="trend-card-header" style="color:#81c784;">Tren Indeks H' (Shannon)</div>
+      <div class="trend-card-header" style="color:#81c784;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#4caf50;flex-shrink:0;display:inline-block;"></span>
+        Tren Indeks H' (Shannon)
+      </div>
       <div class="chart-wrap-sm"><canvas id="chartH"></canvas></div>
     </div>
     <div class="trend-card">
-      <div class="trend-card-header" style="color:#64b5f6;">Tren Indeks E (Evenness)</div>
+      <div class="trend-card-header" style="color:#64b5f6;">
+        <span style="width:10px;height:10px;border-radius:50%;background:#2196f3;flex-shrink:0;display:inline-block;"></span>
+        Tren Indeks E (Evenness)
+      </div>
       <div class="chart-wrap-sm"><canvas id="chartE"></canvas></div>
     </div>
     <div class="trend-card">
-      <div class="trend-card-header" style="color:var(--orange);">Tren Indeks R (Margalef)</div>
+      <div class="trend-card-header" style="color:var(--orange);">
+        <span style="width:10px;height:10px;border-radius:50%;background:#ffab00;flex-shrink:0;display:inline-block;"></span>
+        Tren Indeks R (Margalef)
+      </div>
       <div class="chart-wrap-sm"><canvas id="chartR"></canvas></div>
     </div>
   </div>
@@ -934,23 +963,65 @@ footer {
 
     if (d.historyH?.length) {
       new Chart(document.getElementById('chartH'), {
-        type:'line',
-        data:{ labels, datasets:[{ data:d.historyH, borderColor:'#81c784', backgroundColor:'rgba(129,199,132,0.08)', fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:'#81c784' }] },
-        options:{ maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:gridColor}}, y:{grid:{color:gridColor}, beginAtZero:false} } }
+        type:'bar',
+        data:{ labels, datasets:[{ data:d.historyH, backgroundColor:'#4caf50', borderRadius:6, borderSkipped:false }] },
+        options:{
+          maintainAspectRatio:false,
+          layout:{ padding:{ top:18 } },
+          plugins:{
+            legend:{display:false},
+            tooltip:{ callbacks:{ label: ctx => ' H\' = ' + ctx.parsed.y } }
+          },
+          scales:{
+            x:{ grid:{color:gridColor}, ticks:{color:'rgba(245,245,240,0.6)', font:{size:10}} },
+            y:{ grid:{color:gridColor}, beginAtZero:false, ticks:{color:'rgba(245,245,240,0.6)', font:{size:10}} }
+          }
+        },
+        plugins:[{
+          id:'topLabel',
+          afterDatasetsDraw(chart){ const {ctx,data}=chart; ctx.save(); ctx.font='bold 9px Inter,sans-serif'; ctx.fillStyle='rgba(245,245,240,0.85)'; ctx.textAlign='center';
+            chart.getDatasetMeta(0).data.forEach((bar,i)=>{ const v=data.datasets[0].data[i]; if(v!==undefined) ctx.fillText(v, bar.x, bar.y-5); }); ctx.restore(); }
+        }]
       });
     }
     if (d.historyE?.length) {
       new Chart(document.getElementById('chartE'), {
-        type:'line',
-        data:{ labels, datasets:[{ data:d.historyE, borderColor:'#64b5f6', backgroundColor:'rgba(100,181,246,0.08)', fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:'#64b5f6' }] },
-        options:{ maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:gridColor}}, y:{grid:{color:gridColor}, beginAtZero:false} } }
+        type:'bar',
+        data:{ labels, datasets:[{ data:d.historyE, backgroundColor:'#2196f3', borderRadius:6, borderSkipped:false }] },
+        options:{
+          maintainAspectRatio:false,
+          layout:{ padding:{ top:18 } },
+          plugins:{ legend:{display:false} },
+          scales:{
+            x:{ grid:{color:gridColor}, ticks:{color:'rgba(245,245,240,0.6)', font:{size:10}} },
+            y:{ grid:{color:gridColor}, beginAtZero:false, ticks:{color:'rgba(245,245,240,0.6)', font:{size:10}} }
+          }
+        },
+        plugins:[{
+          id:'topLabel',
+          afterDatasetsDraw(chart){ const {ctx,data}=chart; ctx.save(); ctx.font='bold 9px Inter,sans-serif'; ctx.fillStyle='rgba(245,245,240,0.85)'; ctx.textAlign='center';
+            chart.getDatasetMeta(0).data.forEach((bar,i)=>{ const v=data.datasets[0].data[i]; if(v!==undefined) ctx.fillText(v, bar.x, bar.y-5); }); ctx.restore(); }
+        }]
       });
     }
     if (d.historyR?.length) {
       new Chart(document.getElementById('chartR'), {
-        type:'line',
-        data:{ labels, datasets:[{ data:d.historyR, borderColor:var_orange(), backgroundColor:'rgba(255,171,0,0.08)', fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:var_orange() }] },
-        options:{ maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{grid:{color:gridColor}}, y:{grid:{color:gridColor}, beginAtZero:false} } }
+        type:'bar',
+        data:{ labels, datasets:[{ data:d.historyR, backgroundColor:'#ffab00', borderRadius:6, borderSkipped:false }] },
+        options:{
+          maintainAspectRatio:false,
+          layout:{ padding:{ top:18 } },
+          plugins:{ legend:{display:false} },
+          scales:{
+            x:{ grid:{color:gridColor}, ticks:{color:'rgba(245,245,240,0.6)', font:{size:10}} },
+            y:{ grid:{color:gridColor}, beginAtZero:false, ticks:{color:'rgba(245,245,240,0.6)', font:{size:10}} }
+          }
+        },
+        plugins:[{
+          id:'topLabel',
+          afterDatasetsDraw(chart){ const {ctx,data}=chart; ctx.save(); ctx.font='bold 9px Inter,sans-serif'; ctx.fillStyle='rgba(245,245,240,0.85)'; ctx.textAlign='center';
+            chart.getDatasetMeta(0).data.forEach((bar,i)=>{ const v=data.datasets[0].data[i]; if(v!==undefined) ctx.fillText(v, bar.x, bar.y-5); }); ctx.restore(); }
+        }]
       });
     }
     // Flora chart
@@ -995,6 +1066,28 @@ footer {
     document.getElementById('heroTitle').innerHTML = `Terjadi <em>Kesalahan</em>`;
     document.getElementById('heroDesc').textContent = msg;
   }
+
+  /* ---- FIREFLIES ---- */
+  (function() {
+    const ff = document.getElementById('fireflies');
+    if (!ff) return;
+    for (let i = 0; i < 20; i++) {
+      const el = document.createElement('div');
+      el.className = 'firefly';
+      el.setAttribute('aria-hidden', 'true');
+      const size = 3 + Math.random() * 3;
+      el.style.cssText = [
+        `left:${Math.random()*100}%`,
+        `top:${Math.random()*85}%`,
+        `--dur:${5 + Math.random()*6}s`,
+        `--delay:${Math.random()*9}s`,
+        `width:${size}px`,
+        `height:${size}px`,
+        `box-shadow:0 0 7px 2px rgba(198,255,0,0.55)`
+      ].join(';');
+      ff.appendChild(el);
+    }
+  })();
 
   /* ---- RUN ---- */
   checkAndMigrate();
