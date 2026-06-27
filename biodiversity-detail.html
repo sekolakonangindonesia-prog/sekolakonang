@@ -703,37 +703,107 @@ footer {
      RENDER DARI FIREBASE
   ================================================================ */
   function renderFromFirebase(d) {
-    const histLabels  = safeJson(d.history_labels);
-    const histH       = safeJson(d.history_h);
-    const histE       = safeJson(d.history_e);
-    const histR       = safeJson(d.history_r);
-    const floraYears  = safeJson(d.flora_years);
-    const floraVals   = safeJson(d.flora_values);
-    const birdYears   = safeJson(d.bird_graph_years);
-    const birdFam     = safeJson(d.bird_graph_family);
-    const birdSp      = safeJson(d.bird_graph_species);
-    const protList    = safeJson(d.protected_list);
-    const polygons    = safeJson(d.area_polygon);
+    // Helper: baca array — support format JSON string ATAU nested Firestore array/map
+    function readArr(jsonField, nestedField) {
+      // Format baru (nested Firestore map/array)
+      if (nestedField && Array.isArray(nestedField)) return nestedField;
+      // Format lama (JSON string)
+      if (jsonField) return safeJson(jsonField);
+      return [];
+    }
+    function readNum(flatVal, nestedVal) {
+      if (flatVal !== undefined && flatVal !== null && flatVal !== 0) return flatVal;
+      if (nestedVal !== undefined && nestedVal !== null) return nestedVal;
+      return 0;
+    }
+    function readStr(flatVal, nestedVal) {
+      if (flatVal) return flatVal;
+      if (nestedVal) return nestedVal;
+      return '';
+    }
+
+    // ---- birdDataGraph: bisa nested object atau flat JSON string ----
+    const bdg = d.birdDataGraph || {};
+    const birdYears = readArr(d.bird_graph_years, bdg.years);
+    const birdFam   = readArr(d.bird_graph_family, bdg.family);
+    const birdSp    = readArr(d.bird_graph_species, bdg.species);
+
+    // ---- birdIndices: bisa nested object atau flat fields ----
+    const bi = d.birdIndices || {};
+    const birdH = readNum(d.bird_h, bi.H);
+    const birdE = readNum(d.bird_e, bi.E);
+    const birdR = readNum(d.bird_r, bi.R);
+
+    // ---- indices flora: bisa nested object atau flat fields ----
+    const idx = d.indices || {};
+    const idxH   = readNum(d.index_h, idx.H);
+    const idxE   = readNum(d.index_e, idx.E);
+    const idxR   = readNum(d.index_r, idx.R);
+    const idxCat = readStr(d.index_cat, idx.cat);
+
+    // ---- floraStats: bisa nested object atau flat fields ----
+    const fs = d.floraStats || {};
+    const floraTotal  = readNum(d.flora_total,  fs.total);
+    const floraFamili = readNum(d.flora_famili, fs.famili);
+    const floraYears  = readArr(d.flora_years,  fs.years);
+    const floraVals   = readArr(d.flora_values, fs.values);
+    const floraNote   = readStr(d.flora_note,   fs.note);
+
+    // ---- birdStats: bisa nested object atau flat fields ----
+    const bs = d.birdStats || {};
+    const birdSpecies = readNum(d.bird_species, bs.species);
+    const birdFamily  = readNum(d.bird_family,  bs.family);
+    const birdDom     = readStr(d.bird_dom, bs.dom);
+    const birdKey     = readStr(d.bird_key, bs.key);
+
+    // ---- historyH/E/R: bisa nested array atau JSON string ----
+    const hh = d.historyH || d.history_h;
+    const he = d.historyE || d.history_e;
+    const hr = d.historyR || d.history_r;
+    const histH = Array.isArray(hh) ? hh : safeJson(hh);
+    const histE = Array.isArray(he) ? he : safeJson(he);
+    const histR = Array.isArray(hr) ? hr : safeJson(hr);
+
+    // ---- chartLabels / history_labels ----
+    const hl = d.chartLabels || d.history_labels;
+    const histLabels = Array.isArray(hl) ? hl : safeJson(hl);
+
+    // ---- protectedList & polygon ----
+    const pl = d.protectedList || d.protected_list;
+    const protList = Array.isArray(pl) ? pl : safeJson(pl);
+    const ap = d.detailPolygon || d.area_polygon;
+    const polygons = Array.isArray(ap) ? ap : safeJson(ap);
+
+    // ---- flagship ----
+    const fs2 = d.flagshipSpecies || {};
+    const flagshipName = readStr(d.flagship_name, fs2.name);
+
+    // ---- nama kawasan & info dasar ----
+    const locName = d.location || d.name || '';
+    const headerImg = d.header_image || d.headerImage || '';
 
     const mapped = {
-      name:         d.location,
-      desc:         d.desc,
-      status:       d.status,
-      lat:          d.lat,
-      lng:          d.lng,
-      headerImage:  d.header_image,
-      indices:      { H: d.index_h, E: d.index_e, R: d.index_r, cat: d.index_cat },
-      birdIndices:  { H: d.bird_h,  E: d.bird_e,  R: d.bird_r  },
-      floraStats:   { total: d.flora_total, famili: d.flora_famili, years: floraYears, values: floraVals, note: d.flora_note },
-      birdStats:    { species: d.bird_species, family: d.bird_family, dom: d.bird_dom, key: d.bird_key },
+      name:         locName,
+      desc:         d.desc        || '',
+      status:       d.status      || '',
+      lat:          d.lat         || 0,
+      lng:          d.lng         || 0,
+      year:         d.year        || '',
+      headerImage:  headerImg,
+      indices:      { H: idxH, E: idxE, R: idxR, cat: idxCat },
+      birdIndices:  { H: birdH, E: birdE, R: birdR },
+      floraStats:   { total: floraTotal, famili: floraFamili, years: floraYears, values: floraVals, note: floraNote },
+      birdStats:    { species: birdSpecies, family: birdFamily, dom: birdDom, key: birdKey },
       birdDataGraph:{ years: birdYears, family: birdFam, species: birdSp },
       chartLabels:  histLabels,
       historyH:     histH,
       historyE:     histE,
       historyR:     histR,
-      flagshipSpecies: d.flagship_name ? {
-        name: d.flagship_name, desc: d.flagship_desc,
-        status: d.flagship_status, img: d.flagship_img
+      flagshipSpecies: flagshipName ? {
+        name:   flagshipName,
+        desc:   readStr(d.flagship_desc,   fs2.desc),
+        status: readStr(d.flagship_status, fs2.status),
+        img:    readStr(d.flagship_img,    fs2.img),
       } : null,
       protectedList:  protList,
       detailPolygon:  polygons,
