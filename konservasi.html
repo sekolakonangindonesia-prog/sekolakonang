@@ -611,7 +611,12 @@ footer {
     try {
       const snap = await getDocs(collection(db, "monitoring_reboisasi"));
       let dataArr = [];
-      snap.forEach(doc => dataArr.push({ id: doc.id, ...doc.data() }));
+      snap.forEach(doc => {
+        // Hanya baca dokumen dengan ID berawalan "tanam_" untuk hindari duplikat
+        if (doc.id.startsWith('tanam_')) {
+          dataArr.push({ id: doc.id, ...doc.data() });
+        }
+      });
       dataArr.sort((a, b) => a.year - b.year);
 
       // ── PASS 1: kumpulkan semua nama spesies unik → assign warna SEKALI ──
