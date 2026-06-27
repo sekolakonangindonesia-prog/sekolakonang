@@ -92,11 +92,13 @@ nav {
 ============================================================ */
 .page-hero {
   padding: 130px 0 80px;
+  position: relative; overflow: hidden;
   background:
     linear-gradient(to bottom, rgba(5,5,5,0.5) 0%, rgba(5,5,5,0.88) 65%, var(--deep-forest) 100%),
     url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=1350&auto=format&fit=crop')
     center/cover no-repeat;  
 }
+.page-hero .container-page { position: relative; z-index: 2; }
 .hero-tag {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--lime-dim); border: 1px solid var(--border);
@@ -191,13 +193,13 @@ nav {
   font-size: 0.8rem; font-weight: 800; letter-spacing: 1px;
   text-transform: uppercase; color: var(--deep-forest); margin: 0;
 }
-.sp-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+.sp-table { width: 100%; border-collapse: collapse; min-width: 480px; }
 .sp-table thead th {
-  background: #f4f4f4; color: #444; font-weight: 800; font-size: 0.62rem;
+  background: #f4f4f4; color: #444; font-weight: 800; font-size: 0.58rem;
   letter-spacing: 1px; text-transform: uppercase;
-  padding: 14px 16px; border-bottom: 2px solid #ddd; text-align: left;
+  padding: 10px 10px; border-bottom: 2px solid #ddd; text-align: left;
 }
-.sp-table tbody td { padding: 13px 16px; border-bottom: 1px solid #eee; color: #333; font-size: 0.82rem; vertical-align: middle; }
+.sp-table tbody td { padding: 9px 10px; border-bottom: 1px solid #eee; color: #333; font-size: 0.75rem; vertical-align: middle; }
 .sp-table tbody tr:hover td { background: #fafff0; }
 .sp-table tbody tr.loc-row td:first-child { background: #f8f9fa; font-weight: 700; color: #0a1a0a; }
 .sp-table td em { font-style: italic; color: #666; }
@@ -267,13 +269,13 @@ nav {
   font-size: 0.8rem; font-weight: 800; letter-spacing: 1px;
   text-transform: uppercase; color: var(--deep-forest); margin: 0;
 }
-.mon-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+.mon-table { width: 100%; border-collapse: collapse; min-width: 520px; }
 .mon-table thead th {
-  background: #f4f4f4; color: #444; font-weight: 800; font-size: 0.6rem;
+  background: #f4f4f4; color: #444; font-weight: 800; font-size: 0.55rem;
   letter-spacing: 1px; text-transform: uppercase;
-  padding: 14px 16px; border-bottom: 2px solid #ddd; text-align: left; white-space: nowrap;
+  padding: 9px 8px; border-bottom: 2px solid #ddd; text-align: left; white-space: nowrap;
 }
-.mon-table tbody td { padding: 14px 16px; border-bottom: 1px solid #eee; color: #333; font-size: 0.82rem; vertical-align: middle; }
+.mon-table tbody td { padding: 9px 8px; border-bottom: 1px solid #eee; color: #333; font-size: 0.72rem; vertical-align: middle; }
 .mon-table tbody tr:hover td { background: #fafff0; }
 .mon-h-val { font-weight: 800; font-size: 1.05rem; color: #0277bd; }
 .mon-badge {
@@ -429,6 +431,22 @@ footer {
 /* ============================================================
    MOBILE
 ============================================================ */
+/* ── FIREFLIES ── */
+.fireflies-hero {
+  position: absolute; inset: 0; z-index: 1;
+  pointer-events: none; overflow: hidden;
+}
+.firefly-dot {
+  position: absolute; border-radius: 50%;
+  background: var(--lime); opacity: 0;
+  animation: bfly var(--dur,6s) ease-in-out infinite var(--delay,0s);
+}
+@keyframes bfly {
+  0%,100% { opacity:0; transform:translateY(0) scale(0.5); }
+  40%,60%  { opacity:.75; transform:translateY(-28px) scale(1); }
+}
+
+/* ── TABLE MOBILE ── */
 @media (max-width: 768px) {
   nav { padding: 0 16px; height: 58px; }
   .nav-back span { display: none; }
@@ -442,7 +460,10 @@ footer {
   .impact-icon { font-size: 1rem; }
   .impact-label { font-size: 0.45rem; }
   .ibsap-grid { grid-template-columns: 1fr; }
-  .species-card-grid { grid-template-columns: 1fr; }
+  .species-card-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .sp-card-img { height: 160px; }
+  .sp-card-body { padding: 12px; }
+  .sp-name { font-size: 0.88rem; }
   .indicator-grid { grid-template-columns: 1fr; }
   #map-kehati { height: 280px; }
   .page-hero h1 { font-size: 2rem; }
@@ -473,6 +494,7 @@ footer {
      HERO
 ============================================================ -->
 <section class="page-hero">
+  <div class="fireflies-hero" id="bioFireflies" aria-hidden="true"></div>
   <div class="container-page">
     <div class="hero-tag">Strategi &amp; Aksi 2025</div>
     <h1>Strategi &amp; Rencana Aksi<br><em>Kehati Rejoso</em></h1>
@@ -1066,6 +1088,27 @@ footer {
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#f44336;">Gagal memuat data.</td></tr>`;
     }
   }
+  /* ── FIREFLIES ── */
+  (function(){
+    const ff = document.getElementById('bioFireflies');
+    if (!ff) return;
+    for (let i = 0; i < 22; i++) {
+      const el = document.createElement('div');
+      el.className = 'firefly-dot';
+      const size = 3 + Math.random() * 3.5;
+      el.style.cssText = [
+        `left:${Math.random()*100}%`,
+        `top:${Math.random()*90}%`,
+        `--dur:${5+Math.random()*6}s`,
+        `--delay:${Math.random()*9}s`,
+        `width:${size}px`,
+        `height:${size}px`,
+        `box-shadow:0 0 7px 2px rgba(198,255,0,0.5)`
+      ].join(';');
+      ff.appendChild(el);
+    }
+  })();
+
   loadMonitoring();
 
   /* ---- LOAD POLYGON PETA ---- */
