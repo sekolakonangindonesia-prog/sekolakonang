@@ -953,15 +953,34 @@ footer {
   const db   = getFirestore(app);
   const auth = getAuth(app);
 
-  /* ---- PETA ---- */
-  const map = L.map('map-kehati', { zoomControl: true, scrollWheelZoom: true })
-    .setView([-7.76, 112.92], 11);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    { attribution: '© Esri', maxZoom: 19 }).addTo(map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png').addTo(map);
-  setTimeout(() => map.invalidateSize(), 600);
+  /* ---- SCROLL REVEAL — diinisialisasi LEBIH DULU agar konten tetap tampil walau peta/Firebase error ---- */
+  const obs = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.06 }
+  );
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
+  /* ---- PETA ---- */
+  let map = null;
   let allMarkers = [];
+  try {
+    map = L.map('map-kehati', { zoomControl: true, scrollWheelZoom: true })
+      .setView([-7.76, 112.92], 11);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { attribution: '© Esri', maxZoom: 19 }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png').addTo(map);
+    setTimeout(() => map.invalidateSize(), 600);
+  } catch(e) {
+    console.warn('Leaflet map gagal init:', e);
+  }
+
+  /* ---- HELPER: safeVal — handle field Firebase yang bisa array atau string atau number ---- */
+  function safeVal(v, fallback = 0) {
+    if (v === undefined || v === null) return fallback;
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string') { const n = parseFloat(v); return isNaN(n) ? fallback : n; }
+    return fallback;
+  }
 
   /* ---- LOAD LOG MONITORING ---- */
   async function loadMonitoring() {
@@ -979,10 +998,10 @@ footer {
       snap.forEach(docSnap => {
         const d  = docSnap.data();
         const id = docSnap.id;
-        const hVal = d.index_h || 0;
+        const hVal = safeVal(d.index_h);
         if (hVal > maxH) maxH = hVal;
-        totalFlora  += (d.flora_total  || 0);
-        totalBurung += (d.bird_species || 0);
+        totalFlora  += safeVal(d.flora_total);
+        totalBurung += safeVal(d.bird_species);
         lokasiCount++;
 
         const sc = hVal >= 3 ? 'sb' : (hVal >= 2 ? 'b' : 's');
@@ -1006,18 +1025,20 @@ footer {
           </tr>`;
 
         /* Peta marker */
-        if (d.lat && d.lng) {
-          const dotColor = hVal >= 3 ? '#C6FF00' : (hVal >= 2 ? '#2196f3' : '#ffab00');
-          const marker = L.circleMarker([d.lat, d.lng], {
-            radius: 9, color: dotColor, fillColor: dotColor, fillOpacity: 0.9, weight: 2
-          }).addTo(map).bindPopup(`
-            <div style="font-family:'Inter',sans-serif;min-width:170px;padding:4px;">
-              <strong style="font-size:0.85rem;">${d.location || ''}</strong><br>
-              <span style="font-size:0.75rem;color:#555;">H' = ${hVal} · ${sl}</span><br>
-              <a href="biodiversity-detail.html?id=${id}"
-                 style="font-size:0.7rem;color:#2e7d32;font-weight:700;">Lihat Detail →</a>
-            </div>`);
-          allMarkers.push({ marker, status: filterClass });
+        if (map && d.lat && d.lng) {
+          try {
+            const dotColor = hVal >= 3 ? '#C6FF00' : (hVal >= 2 ? '#2196f3' : '#ffab00');
+            const marker = L.circleMarker([d.lat, d.lng], {
+              radius: 9, color: dotColor, fillColor: dotColor, fillOpacity: 0.9, weight: 2
+            }).addTo(map).bindPopup(`
+              <div style="font-family:'Inter',sans-serif;min-width:170px;padding:4px;">
+                <strong style="font-size:0.85rem;">${d.location || ''}</strong><br>
+                <span style="font-size:0.75rem;color:#555;">H' = ${hVal} · ${sl}</span><br>
+                <a href="biodiversity-detail.html?id=${id}"
+                   style="font-size:0.7rem;color:#2e7d32;font-weight:700;">Lihat Detail →</a>
+              </div>`);
+            allMarkers.push({ marker, status: filterClass });
+          } catch(e) { console.warn('Marker error:', e); }
         }
       });
 
@@ -1036,6 +1057,7 @@ footer {
 
   /* ---- LOAD POLYGON PETA ---- */
   async function loadMapPolygons() {
+    if (!map) return;
     try {
       const docSnap = await getDoc(doc(db, "kehati_map_config", "master_polygons"));
       if (docSnap.exists()) {
@@ -1052,6 +1074,7 @@ footer {
   /* ---- FILTER PETA ---- */
   document.querySelectorAll('.btn-mf').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (!map) return;
       document.querySelectorAll('.btn-mf').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const f = btn.dataset.filter;
@@ -1188,12 +1211,7 @@ footer {
     } catch (e) { logMigr(`✗ Gagal: ${e.message}`, 'err'); }
   });
 
-  /* ---- SCROLL REVEAL ---- */
-  const obs = new IntersectionObserver(
-    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
-    { threshold: 0.06 }
-  );
-  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  /* ---- SCROLL REVEAL sudah dipindah ke atas script ---- */
 </script>
 </body>
 </html>
