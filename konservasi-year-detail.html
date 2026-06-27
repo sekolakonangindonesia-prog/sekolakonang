@@ -418,8 +418,6 @@ footer {
             <thead>
               <tr>
                 <th>Item Konservasi</th>
-                <th>Dimensi</th>
-                <th>Volume</th>
                 <th>Formula Analisis</th>
                 <th class="text-end">Hasil (ML/Y)</th>
               </tr>
@@ -427,7 +425,7 @@ footer {
             <tbody id="formulaBody"></tbody>
             <tfoot>
               <tr id="totalRow" style="border-top:2px solid rgba(33,150,243,0.4);">
-                <td colspan="4" class="text-end" style="padding:13px 16px;font-size:0.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);">
+                <td colspan="2" class="text-end" style="padding:13px 16px;font-size:0.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);">
                   Total Infiltrasi Tahun <span id="totalYear">—</span>
                 </td>
                 <td class="text-end" style="padding:13px 16px;font-weight:900;font-size:1rem;color:var(--cyan);" id="totalRowVal">—</td>
@@ -500,13 +498,20 @@ footer {
   const docId = new URLSearchParams(window.location.search).get('id');
 
   /* Palet warna — sama persis konservasi.html */
-  const SP_COLORS = ['#1b5e20','#C6FF00','#2e7d32','#66bb6a','#a5d6a7','#ffab00','#0277bd','#ff9800','#fbc02d','#e91e63'];
+  const SP_COLORS = [
+    '#C6FF00','#ffab00','#2196f3','#e91e63','#00e5ff',
+    '#ff5722','#9c27b0','#4caf50','#fbc02d','#795548'
+  ];
 
   /* ── PETA ── */
   const map = L.map('map-detail', { zoomControl: true }).setView([-7.810, 112.908], 13);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; CartoDB'
   }).addTo(map);
+
+  // Pane khusus marker supaya selalu di atas polygon
+  map.createPane('markersPane');
+  map.getPane('markersPane').style.zIndex = 650;
 
   /* ── CHART DEFAULTS ── */
   Chart.defaults.color = 'rgba(245,245,240,0.5)';
@@ -546,15 +551,46 @@ footer {
       /* PETA: POLYGON */
       if (d.areaPolygon) {
         try {
-          const polyData = typeof d.areaPolygon === 'string' ? JSON.parse(d.areaPolygon) : d.areaPolygon;
-          const polys = Array.isArray(polyData[0][0]) ? polyData : [polyData];
-          polys.forEach(poly => {
-            L.polygon(poly, { color: '#C6FF00', fillOpacity: 0.08, weight: 1.5 }).addTo(map);
+          const polyArr = typeof d.areaPolygon === 'string' ? JSON.parse(d.areaPolygon) : d.areaPolygon;
+          const BG_NAMES = ['batas desa', 'batas petung', 'batas desa galih'];
+          const isBackground = name => !name || BG_NAMES.some(b => (name||'').toLowerCase().includes(b));
+          const bgList = polyArr.filter(item => isBackground(item.name));
+          const fgList = polyArr.filter(item => !isBackground(item.name));
+          let firstBounds = null;
+
+          [...bgList, ...fgList].forEach(item => {
+            const coordsRaw = item.coords || item;
+            const latlngs = coordsRaw.map(c => Array.isArray(c) ? [c[0], c[1]] : [c.lat, c.lng]);
+            const polyColor = item.color || '#C6FF00';
+            const polyName  = item.name  || null;
+            const isBg      = isBackground(polyName);
+
+            const poly = L.polygon(latlngs, {
+              color: polyColor, fillColor: polyColor,
+              fillOpacity: isBg ? 0.10 : 0.12,
+              weight: isBg ? 1.5 : 1.8,
+              interactive: !isBg,
+              bubblingMouseEvents: false
+            });
+
+            if (!isBg && polyName) {
+              poly.bindPopup(
+                `<div style="font-family:'Inter',sans-serif;padding:4px 2px;">
+                  <b style="color:#111;font-size:0.85rem;">${polyName}</b>
+                  <div style="color:#666;font-size:0.7rem;margin-top:4px;">📅 Tahun: <b>${d.year}</b></div>
+                </div>`,
+                { maxWidth: 220 }
+              );
+              poly.on('mouseover', function() { this.setStyle({ fillOpacity: 0.30 }); });
+              poly.on('mouseout',  function() { this.setStyle({ fillOpacity: 0.12 }); });
+            }
+
+            poly.addTo(map);
+            if (!firstBounds) try { firstBounds = poly.getBounds(); } catch(e) {}
           });
-          try {
-            map.fitBounds(L.polygon(polys[0]).getBounds(), { padding: [30, 30] });
-          } catch(e) {}
-        } catch(e) { console.warn('Polygon parse error:', e); }
+
+          if (firstBounds) map.fitBounds(firstBounds, { padding: [30, 30] });
+        } catch(e) { console.warn('Polygon error:', e); }
       }
 
       /* PETA: TITIK — warna dari colorMap, popup nama */
@@ -564,13 +600,17 @@ footer {
           const nama = p.nama_pohon || 'Pohon';
           const c = colorMap[nama] || '#C6FF00';
           L.circleMarker([p.koordinat.latitude, p.koordinat.longitude], {
-            radius: 6, color: c, fillColor: c, fillOpacity: 0.95, weight: 0
+            radius: 4, color: 'rgba(0,0,0,0.4)', fillColor: c,
+            fillOpacity: 1, weight: 1,
+            interactive: true, bubblingMouseEvents: false,
+            pane: 'markersPane'
           }).addTo(map).bindPopup(
-            `<div style="font-family:Inter,sans-serif;min-width:130px;">
-              <b style="color:#111;font-size:0.82rem;">${nama}</b><br>
-              <span style="color:#555;font-size:0.7rem;">Tahun: ${d.year}</span><br>
-              <span style="display:inline-block;margin-top:4px;width:10px;height:10px;border-radius:50%;background:${c};vertical-align:middle;"></span>
-              <span style="color:#555;font-size:0.7rem;"> Spesies terdeteksi</span>
+            `<div style="font-family:Inter,sans-serif;min-width:150px;padding:4px 2px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span style="width:12px;height:12px;border-radius:50%;background:${c};display:inline-block;flex-shrink:0;border:1px solid rgba(0,0,0,0.2);"></span>
+                <b style="color:#111;font-size:0.84rem;">${nama}</b>
+              </div>
+              <div style="color:#666;font-size:0.7rem;">📅 Tahun tanam: <b>${d.year}</b></div>
             </div>`
           );
         });
@@ -653,17 +693,16 @@ footer {
     document.getElementById('totalRowVal').textContent = total.toFixed(2);
 
     const rows = [
-      { item:'Pohon / Vegetasi', dim:`VWB: ${VWB} l/s/ha`, vol:'400 phn/ha', f:`(${s.trees}/400)×${VWB}×${TIME}×75%`, val:resP },
-      { item:'Rorak (Trench)',   dim:'1m × 0.7m × 0.7m',   vol:'490 L',      f:`(${s.rorak}×490×3×${RAIN})/1jt`,     val:resR },
-      { item:'Sumur Resapan',    dim:'Dia 0.8m × T 1.5m',  vol:'754 L',      f:`(${s.sumur}×754×3×${RAIN})/1jt`,     val:resS },
-      { item:'Biopori',          dim:'—',                   vol:'Standar',    f:`(${s.biopori}/300)×1.5`,              val:resB }
+      { item:'Pohon / Vegetasi', f: year===2024 ? `(${s.trees}/400)×1.5 ML/Ha` : `(${s.trees}/400)×${VWB}×${TIME}×75%`, val:resP },
+      { item:'Rorak (Trench)',   f: year===2024 ? `${s.rorak}×0.17 ML`         : `(${s.rorak}×490×3×${RAIN})/1jt`,     val:resR },
+      { item:'Sumur Resapan',    f:`(${s.sumur}×754×3×${RAIN})/1jt`,                                                     val:resS },
+      { item:'Biopori',          f:`(${s.biopori}/300)×1.5`,                                                              val:resB }
     ];
     const tbody = document.getElementById('formulaBody');
     rows.filter(r => r.val > 0).forEach(r => {
       tbody.innerHTML += `
         <tr>
-          <td><b style="color:var(--white);">${r.item}</b><br><small style="color:var(--text-muted);font-size:0.6rem;">${r.dim}</small></td>
-          <td>${r.vol}</td>
+          <td><b style="color:var(--white);">${r.item}</b></td>
           <td><span class="formula-code">${r.f}</span></td>
           <td class="text-end">${r.val.toFixed(2)}</td>
         </tr>`;
