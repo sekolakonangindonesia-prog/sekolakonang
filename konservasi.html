@@ -334,6 +334,16 @@ footer {
 
 .main-content { padding: 0 0 60px; }
 
+/* ── LEAFLET POPUP CUSTOM ── */
+.sk-popup .leaflet-popup-content-wrapper {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+  padding: 0;
+}
+.sk-popup .leaflet-popup-content { margin: 10px 14px; }
+.sk-popup .leaflet-popup-tip { background: #fff; }
+
 /* ── REVEAL ── */
 .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.55s ease, transform 0.55s ease; }
 .reveal.visible { opacity: 1; transform: none; }
@@ -574,31 +584,67 @@ footer {
   Chart.defaults.font.family = "'Inter', sans-serif";
   Chart.defaults.font.size = 11;
 
-  /* ---- LOAD DATA ---- */
+  // ── SATU PALET RESMI — dipakai oleh PETA dan DOUGHNUT, urutan sama ──
+  const SP_COLORS = [
+    '#C6FF00',  // 0 lime
+    '#ffab00',  // 1 orange
+    '#2196f3',  // 2 biru
+    '#e91e63',  // 3 pink
+    '#00e5ff',  // 4 cyan
+    '#ff5722',  // 5 deep orange
+    '#9c27b0',  // 6 ungu
+    '#4caf50',  // 7 hijau
+    '#fbc02d',  // 8 kuning
+    '#795548',  // 9 coklat
+  ];
+
+  // globalColorMap: nama_pohon → warna, diisi di PASS 1
+  const globalColorMap = {};
+
   /* ---- LOAD DATA ---- */
   async function loadAllData() {
     try {
       const snap = await getDocs(collection(db, "monitoring_reboisasi"));
+      let dataArr = [];
+      snap.forEach(doc => dataArr.push({ id: doc.id, ...doc.data() }));
+      dataArr.sort((a, b) => a.year - b.year);
+
+      // ── PASS 1: kumpulkan semua nama spesies unik → assign warna SEKALI ──
+      // Urutan kemunculan pertama menentukan indeks warna
+      dataArr.forEach(d => {
+        if (d.species) {
+          Object.keys(d.species).forEach(k => {
+            const key = k.trim();
+            if (key && !(key in globalColorMap)) {
+              const idx = Object.keys(globalColorMap).length;
+              globalColorMap[key] = SP_COLORS[idx % SP_COLORS.length];
+            }
+          });
+        }
+        // Juga scan dari field points supaya nama yang hanya ada di points juga dapat warna
+        if (d.points) {
+          d.points.forEach(pt => {
+            const key = (pt.nama_pohon || '').trim();
+            if (key && !(key in globalColorMap)) {
+              const idx = Object.keys(globalColorMap).length;
+              globalColorMap[key] = SP_COLORS[idx % SP_COLORS.length];
+            }
+          });
+        }
+      });
+
+      // ── PASS 2: proses data untuk chart, tabel, peta ──
       let years = [], treeCounts = [], rorakCounts = [], sipilCounts = [], waterCounts = [];
       let total = { p:0, r:0, s:0, b:0, a:0 };
       let speciesAgg = {};
       const tbody = document.getElementById('tableBody');
       const gallery = document.getElementById('mainGallery');
 
-      let dataArr = [];
-      snap.forEach(doc => dataArr.push({ id: doc.id, ...doc.data() }));
-      dataArr.sort((a, b) => a.year - b.year);
-
-      // ============================================================
-      // TAHAP 1: Menghitung Statistik, Mengisi Tabel, & Galeri
-      // ============================================================
       dataArr.forEach(d => {
         const s = d.stats;
         const year = d.year;
-        const trees = s.trees || 0;
-        const rorak = s.rorak || 0;
-        const sumur = s.sumur || 0;
-        const biopori = s.biopori || 0;
+        const trees = s.trees || 0, rorak = s.rorak || 0;
+        const sumur = s.sumur || 0, biopori = s.biopori || 0;
 
         let air = (year === 2024)
           ? ((trees/400)*1.5) + (rorak*0.17)
@@ -607,108 +653,105 @@ footer {
             + ((sumur*754*3*163)/1000000)
             + ((biopori/300)*1.5);
 
-        total.p += s.trees; total.r += s.rorak;
-        total.s += s.sumur; total.b += s.biopori; total.a += air;
+        total.p += trees; total.r += rorak;
+        total.s += sumur; total.b += biopori; total.a += air;
 
         years.push(year);
-        treeCounts.push(s.trees);
-        rorakCounts.push(s.rorak);
-        sipilCounts.push(s.sumur + s.biopori);
+        treeCounts.push(trees);
+        rorakCounts.push(rorak);
+        sipilCounts.push(sumur + biopori);
         waterCounts.push(parseFloat(air.toFixed(1)));
 
-        // Agregasi spesies secara global untuk chart doughnut
+        // Akumulasi species menggunakan key yang sudah dinormalisasi
         if (d.species) {
-          Object.keys(d.species).forEach((k) => {
-            speciesAgg[k] = (speciesAgg[k] || 0) + d.species[k];
+          Object.keys(d.species).forEach(k => {
+            const key = k.trim();
+            speciesAgg[key] = (speciesAgg[key] || 0) + d.species[k];
           });
         }
 
+        // ── PETA: polygon ──
+        if (d.areaPolygon) {
+          try {
+            let poly = d.areaPolygon;
+            if (typeof poly === 'string') poly = JSON.parse(poly);
+            L.polygon(poly, { color: '#C6FF00', fillOpacity: 0.08, weight: 1.5 }).addTo(map);
+          } catch(e) { console.error("Polygon error:", e); }
+        }
+
+        // ── PETA: titik — warna dari globalColorMap, selalu bisa diklik ──
+        if (d.points) {
+          d.points.forEach(pt => {
+            try {
+              const lat = pt.koordinat && pt.koordinat.latitude;
+              const lng = pt.koordinat && pt.koordinat.longitude;
+              if (!lat || !lng) return;
+
+              const nama = (pt.nama_pohon || '').trim() || 'Tidak diketahui';
+
+              // Cari warna: exact → case-insensitive → default lime
+              let warna = globalColorMap[nama];
+              if (!warna) {
+                const found = Object.keys(globalColorMap)
+                  .find(k => k.toLowerCase() === nama.toLowerCase());
+                warna = found ? globalColorMap[found] : '#C6FF00';
+              }
+
+              const marker = L.circleMarker([lat, lng], {
+                radius: 6,
+                fillColor: warna,
+                color: 'rgba(0,0,0,0.5)',
+                weight: 1,
+                fillOpacity: 1,
+                interactive: true,
+                bubblingMouseEvents: false
+              });
+
+              marker.bindPopup(
+                `<div style="font-family:'Inter',sans-serif;min-width:150px;padding:4px 2px;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <span style="width:12px;height:12px;border-radius:50%;background:${warna};display:inline-block;flex-shrink:0;border:1px solid rgba(0,0,0,0.2);"></span>
+                    <b style="color:#111;font-size:0.84rem;line-height:1.2;">${nama}</b>
+                  </div>
+                  <div style="color:#666;font-size:0.7rem;">📅 Tahun tanam: <b>${year}</b></div>
+                </div>`,
+                { maxWidth: 220, className: 'sk-popup' }
+              );
+
+              marker.addTo(map);
+
+            } catch(errPt) { console.warn("Titik error:", errPt); }
+          });
+        }
+
+        // Galeri
         if (d.photos) {
           d.photos.forEach(src => {
             gallery.innerHTML += `<img src="${src}" class="gallery-img" loading="lazy" onclick="window.open(this.src)" alt="Dokumentasi ${year}">`;
           });
         }
 
-        // Teks tabel diperbaiki agar terbaca jelas
+        // Tabel
         tbody.innerHTML += `
           <tr>
-            <td style="font-weight:700; color: var(--lime);">${year}</td>
-            <td style="font-size:0.72rem; color: rgba(245,245,240,0.75);">${d.location || '—'}</td>
-            <td class="text-center" style="font-weight:600; color: var(--white);">${s.trees.toLocaleString('id-ID')}</td>
-            <td class="text-center">${s.rorak.toLocaleString('id-ID')}</td>
-            <td class="text-center">${s.sumur.toLocaleString('id-ID')}</td>
-            <td class="text-center">${s.biopori.toLocaleString('id-ID')}</td>
-            <td class="text-end" style="font-weight:700; color: #00e5ff;">${air.toFixed(1)}</td>
+            <td>${year}</td>
+            <td>${d.location || '—'}</td>
+            <td class="text-center">${trees.toLocaleString('id-ID')}</td>
+            <td class="text-center">${rorak.toLocaleString('id-ID')}</td>
+            <td class="text-center">${sumur.toLocaleString('id-ID')}</td>
+            <td class="text-center">${biopori.toLocaleString('id-ID')}</td>
+            <td class="text-end">${air.toFixed(1)}</td>
             <td class="text-center">
               <a href="konservasi-year-detail.html?id=${year}" class="btn-detail">Detail</a>
             </td>
-          </tr>
-        `;
+          </tr>`;
       });
 
-      // Update kartu statistik di atas
       document.getElementById('t-pohon').textContent   = total.p.toLocaleString('id-ID');
       document.getElementById('t-rorak').textContent   = total.r.toLocaleString('id-ID');
       document.getElementById('t-sumur').textContent   = total.s.toLocaleString('id-ID');
       document.getElementById('t-biopori').textContent = total.b.toLocaleString('id-ID');
       document.getElementById('t-air').textContent     = total.a.toFixed(1);
-
-      // ============================================================
-      // TAHAP 2: Gambar Semua Poligon Wilayah Terlebih Dahulu (Lapisan Bawah)
-      // ============================================================
-      dataArr.forEach(d => {
-        if (d.areaPolygon) {
-          try {
-            let poly = d.areaPolygon;
-            if (typeof poly === 'string') poly = JSON.parse(poly);
-            L.polygon(poly, { color: '#C6FF00', fillOpacity: 0.06, weight: 1.2 }).addTo(map);
-          } catch(e) { console.error("Gagal menggambar poligon:", e); }
-        }
-      });
-
-      // ============================================================
-      // TAHAP 3: Gambar Semua Titik Pohon di Lapisan Paling Atas (Di atas Poligon)
-      // ============================================================
-      dataArr.forEach(d => {
-        const year = d.year;
-        const spColors = ['#1b5e20','#C6FF00','#2e7d32','#66bb6a','#a5d6a7','#ffab00','#0277bd','#ff9800','#fbc02d','#e91e63'];
-        const colorMap = {};
-        if (d.species) {
-          Object.keys(d.species).forEach((k, i) => {
-            colorMap[k] = spColors[i % spColors.length];
-          });
-        }
-
-        if (d.points) {
-          d.points.forEach(pt => {
-            try {
-              if (pt.koordinat && pt.koordinat.latitude && pt.koordinat.longitude) {
-                const nama = pt.nama_pohon || pt.nama || pt.pohon || pt.jenis || 'Pohon';
-                const c = colorMap[nama] || '#C6FF00';
-                
-                // Jitter acak tipis agar tidak bertumpuk sempurna
-                const lat = pt.koordinat.latitude + (Math.random() - 0.5) * 0.00012;
-                const lng = pt.koordinat.longitude + (Math.random() - 0.5) * 0.00012;
-
-                L.circleMarker([lat, lng], {
-                  radius: 5,                 // Kembali berukuran imut (5px)
-                  weight: 1,                 // Garis tepi putih tipis yang tajam dan rapi
-                  color: '#ffffff',          
-                  opacity: 0.8,
-                  fillColor: c,
-                  fillOpacity: 0.95
-                }).addTo(map).bindPopup(
-                  `<div style="font-family:'Inter',sans-serif; min-width:130px; background:#ffffff; color:#111111; padding:6px; border-radius:6px; box-shadow:0 2px 10px rgba(0,0,0,0.25);">
-                    <b style="color:#111111; font-size:0.8rem; display:block; margin-bottom:2px;">🌲 ${nama}</b>
-                    <span style="color:#555555; font-size:0.68rem; display:block;">Tahun Program: ${year}</span>
-                    <span style="color:#999999; font-size:0.55rem; display:block; margin-top:4px;">Lokasi Terdekat</span>
-                  </div>`
-                );
-              }
-            } catch (errPoint) { console.warn("Gagal merender titik:", errPoint); }
-          });
-        }
-      });
 
       renderCharts(years, treeCounts, speciesAgg, rorakCounts, sipilCounts, waterCounts);
 
@@ -717,25 +760,29 @@ footer {
 
   function renderCharts(years, trees, species, rorak, sipil, water) {
     const gridColor = 'rgba(255,255,255,0.06)';
+
     new Chart(document.getElementById('chartTrees'), {
       type: 'bar',
-      data: {
-        labels: years,
-        datasets: [{ label: 'Pohon Ditanam', data: trees, backgroundColor: 'rgba(46,125,50,0.8)', borderRadius: 6, borderSkipped: false }]
-      },
+      data: { labels: years, datasets: [{ label: 'Pohon Ditanam', data: trees, backgroundColor: 'rgba(46,125,50,0.8)', borderRadius: 6, borderSkipped: false }] },
       options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: gridColor } }, y: { grid: { color: gridColor } } } }
     });
-    const spColors = ['#1b5e20','#C6FF00','#2e7d32','#66bb6a','#a5d6a7','#ffab00','#0277bd','#ff9800'];
+
+    // Doughnut — pakai globalColorMap supaya warna = peta
+    const spKeys = Object.keys(species);
+    const spVals = spKeys.map(k => species[k]);
+    const spBg   = spKeys.map(k => globalColorMap[k] || '#C6FF00');
     new Chart(document.getElementById('chartSpecies'), {
       type: 'doughnut',
-      data: { labels: Object.keys(species), datasets: [{ data: Object.values(species), backgroundColor: Object.keys(species).map((_, i) => spColors[i % spColors.length]), borderWidth: 0 }] },
+      data: { labels: spKeys, datasets: [{ data: spVals, backgroundColor: spBg, borderWidth: 0 }] },
       options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, padding: 10, font: { size: 10 } } } } }
     });
+
     new Chart(document.getElementById('chartSipil'), {
       type: 'bar',
       data: { labels: years, datasets: [{ label: 'Rorak', data: rorak, backgroundColor: '#795548', borderRadius: 4 }, { label: 'Sumur/Bio', data: sipil, backgroundColor: '#0277bd', borderRadius: 4 }] },
       options: { maintainAspectRatio: false, plugins: { legend: { labels: { boxWidth: 10 } } }, scales: { x: { grid: { color: gridColor } }, y: { grid: { color: gridColor } } } }
     });
+
     new Chart(document.getElementById('chartWater'), {
       type: 'line',
       data: { labels: years, datasets: [{ label: 'Infiltrasi Air (ML)', data: water, borderColor: '#00e5ff', backgroundColor: 'rgba(0,229,255,0.08)', fill: true, tension: 0.4, pointBackgroundColor: '#00e5ff', pointRadius: 5 }] },
