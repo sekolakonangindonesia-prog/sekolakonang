@@ -981,6 +981,11 @@ footer {
     if (typeof v === 'string') { const n = parseFloat(v); return isNaN(n) ? fallback : n; }
     return fallback;
   }
+  function safeStr(v, fallback = '') {
+    if (!v) return fallback;
+    if (typeof v === 'string') return v;
+    return fallback;
+  }
 
   /* ---- LOAD LOG MONITORING ---- */
   async function loadMonitoring() {
@@ -998,10 +1003,16 @@ footer {
       snap.forEach(docSnap => {
         const d  = docSnap.data();
         const id = docSnap.id;
-        const hVal = safeVal(d.index_h);
+        // Support nested object (format Firebase baru) ATAU flat fields (format lama)
+        const idx   = d.indices || {};
+        const hVal  = safeVal(d.index_h, 0) || safeVal(idx.H, 0);
+        const locName = safeStr(d.location) || safeStr(d.name) || '—';
+        const locYear = safeStr(d.year) || '—';
         if (hVal > maxH) maxH = hVal;
-        totalFlora  += safeVal(d.flora_total);
-        totalBurung += safeVal(d.bird_species);
+        const fs = d.floraStats || {};
+        const bs = d.birdStats  || {};
+        totalFlora  += safeVal(d.flora_total,  0) || safeVal(fs.total,   0);
+        totalBurung += safeVal(d.bird_species, 0) || safeVal(bs.species, 0);
         lokasiCount++;
 
         const sc = hVal >= 3 ? 'sb' : (hVal >= 2 ? 'b' : 's');
@@ -1012,11 +1023,11 @@ footer {
           <tr>
             <td style="font-weight:600;color:#111;">
               <i class="fas fa-map-marker-alt" style="color:#e53935;margin-right:8px;font-size:0.72rem;"></i>
-              ${d.location || '—'}
+              ${locName}
             </td>
             <td><span class="mon-company">PT. Tirta Investama</span></td>
             <td><span class="mon-pelaksana">Yayasan Sekola Konang</span></td>
-            <td>${d.year || '—'}</td>
+            <td>${locYear}</td>
             <td><span class="mon-h-val">${hVal}</span></td>
             <td><span class="mon-badge ${sc}">${sl}</span></td>
             <td style="text-align:center;">
@@ -1025,14 +1036,16 @@ footer {
           </tr>`;
 
         /* Peta marker */
-        if (map && d.lat && d.lng) {
+        const markerLat = d.lat || 0;
+        const markerLng = d.lng || 0;
+        if (map && markerLat && markerLng) {
           try {
             const dotColor = hVal >= 3 ? '#C6FF00' : (hVal >= 2 ? '#2196f3' : '#ffab00');
-            const marker = L.circleMarker([d.lat, d.lng], {
+            const marker = L.circleMarker([markerLat, markerLng], {
               radius: 9, color: dotColor, fillColor: dotColor, fillOpacity: 0.9, weight: 2
             }).addTo(map).bindPopup(`
               <div style="font-family:'Inter',sans-serif;min-width:170px;padding:4px;">
-                <strong style="font-size:0.85rem;">${d.location || ''}</strong><br>
+                <strong style="font-size:0.85rem;">${locName}</strong><br>
                 <span style="font-size:0.75rem;color:#555;">H' = ${hVal} · ${sl}</span><br>
                 <a href="biodiversity-detail.html?id=${id}"
                    style="font-size:0.7rem;color:#2e7d32;font-weight:700;">Lihat Detail →</a>
