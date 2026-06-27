@@ -1187,10 +1187,9 @@ footer {
       try {
         const d = db_kehati.locations[id];
         const fixedLabels = d.chartLabels?.length ? d.chartLabels : (d.floraStats?.years || []);
-        const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-        await updateDoc(doc(db, "monitoring_kehati", id), {
+        await setDoc(doc(db, "monitoring_kehati", id), {
           history_labels: JSON.stringify(fixedLabels)
-        });
+        }, { merge: true });
         logMigr(`✓ ${id} — labels: [${fixedLabels.join(', ')}]`);
         ok++;
       } catch (e) { logMigr(`✗ GAGAL: ${id} — ${e.message}`, 'err'); fail++; }
@@ -1199,7 +1198,7 @@ footer {
     btn.disabled = false;
   });
 
-  
+  document.getElementById('btnMigrasiMap').addEventListener('click', async () => {
     if (typeof db_kehati === 'undefined') { logMigr('❌ database.js tidak ditemukan!', 'err'); return; }
     logMigr('🗺️ Migrasi polygon peta...');
     try {
@@ -1211,7 +1210,6 @@ footer {
     } catch (e) { logMigr(`✗ Gagal: ${e.message}`, 'err'); }
   });
 
-  /* ---- SCROLL REVEAL sudah dipindah ke atas script ---- */
 </script>
 </body>
 </html>
