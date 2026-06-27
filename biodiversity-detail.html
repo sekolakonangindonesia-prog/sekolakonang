@@ -421,7 +421,11 @@ footer {
   .nav-back span { display:none; }
   .page-hero { padding:90px 0 44px; }
   .page-hero h1 { font-size:1.9rem; }
-  .index-row { grid-template-columns:1fr; margin-top:-16px; }
+  .index-row { grid-template-columns:repeat(3,1fr); gap:8px; margin-top:16px; }
+  .index-card { padding:14px 8px; }
+  .index-num { font-size:1.5rem; }
+  .index-label { font-size:0.48rem; letter-spacing:1px; }
+  .index-cat { font-size:0.55rem; }
   .trend-grid { grid-template-columns:1fr; }
   .row-grid { grid-template-columns:1fr; }
   #miniMap { height:280px; }
@@ -1102,7 +1106,6 @@ footer {
 
   /* ---- RUN ---- */
   checkAndMigrate();
-   
 </script>
 </body>
 </html>
