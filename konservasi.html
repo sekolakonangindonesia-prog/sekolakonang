@@ -579,6 +579,11 @@ footer {
     attribution: '&copy; CartoDB'
   }).addTo(map);
 
+  // Pane khusus untuk marker — z-index lebih tinggi dari polygon
+  // supaya titik di dalam polygon tetap bisa diklik
+  map.createPane('markersPane');
+  map.getPane('markersPane').style.zIndex = 650;
+
   /* ---- CHART DEFAULTS ---- */
   Chart.defaults.color = 'rgba(245,245,240,0.5)';
   Chart.defaults.font.family = "'Inter', sans-serif";
@@ -673,9 +678,42 @@ footer {
         // ── PETA: polygon ──
         if (d.areaPolygon) {
           try {
-            let poly = d.areaPolygon;
-            if (typeof poly === 'string') poly = JSON.parse(poly);
-            L.polygon(poly, { color: '#C6FF00', fillOpacity: 0.08, weight: 1.5 }).addTo(map);
+            let polyArr = d.areaPolygon;
+            if (typeof polyArr === 'string') polyArr = JSON.parse(polyArr);
+            polyArr.forEach((item, idx) => {
+              try {
+                // Format dari Firestore: {name, color, coords:[{lat,lng},...]}
+                let coordsRaw = item.coords || item;
+                // Konversi [{lat,lng},...] → [[lat,lng],...] untuk Leaflet
+                const latlngs = coordsRaw.map(c =>
+                  Array.isArray(c) ? [c[0], c[1]] : [c.lat, c.lng]
+                );
+                const polyColor = item.color || '#C6FF00';
+                const polyName  = item.name  || null;
+
+                const poly = L.polygon(latlngs, {
+                  color: polyColor,
+                  fillColor: polyColor,
+                  fillOpacity: 0.10,
+                  weight: 1.5,
+                  interactive: !!polyName  // hanya interaktif kalau punya nama
+                });
+
+                if (polyName) {
+                  poly.bindPopup(
+                    `<div style="font-family:'Inter',sans-serif;padding:4px 2px;">
+                      <b style="color:#111;font-size:0.85rem;">${polyName}</b>
+                      <div style="color:#666;font-size:0.7rem;margin-top:4px;">📅 Tahun: <b>${year}</b></div>
+                    </div>`,
+                    { maxWidth: 220, className: 'sk-popup' }
+                  );
+                  poly.on('mouseover', function() { this.setStyle({ fillOpacity: 0.25 }); });
+                  poly.on('mouseout',  function() { this.setStyle({ fillOpacity: 0.10 }); });
+                }
+
+                poly.addTo(map);
+              } catch(ep) { console.warn("Polygon item error:", ep); }
+            });
           } catch(e) { console.error("Polygon error:", e); }
         }
 
@@ -698,13 +736,14 @@ footer {
               }
 
               const marker = L.circleMarker([lat, lng], {
-                radius: 6,
+                radius: 4,
                 fillColor: warna,
                 color: 'rgba(0,0,0,0.5)',
                 weight: 1,
                 fillOpacity: 1,
                 interactive: true,
-                bubblingMouseEvents: false
+                bubblingMouseEvents: false,
+                pane: 'markersPane'
               });
 
               marker.bindPopup(
