@@ -680,26 +680,35 @@ footer {
           try {
             let polyArr = d.areaPolygon;
             if (typeof polyArr === 'string') polyArr = JSON.parse(polyArr);
-            polyArr.forEach((item, idx) => {
+
+            // Nama yang dianggap "background" → tidak bisa diklik, dirender dulu
+            const BG_NAMES = ['batas desa', 'batas petung', 'batas desa galih'];
+            const isBackground = name => !name || BG_NAMES.some(b => name.toLowerCase().includes(b));
+
+            // Pisahkan: background dulu, lalu polygon bermakna di atas
+            const bgList   = polyArr.filter(item => isBackground(item.name));
+            const fgList   = polyArr.filter(item => !isBackground(item.name));
+
+            [...bgList, ...fgList].forEach(item => {
               try {
-                // Format dari Firestore: {name, color, coords:[{lat,lng},...]}
                 let coordsRaw = item.coords || item;
-                // Konversi [{lat,lng},...] → [[lat,lng],...] untuk Leaflet
                 const latlngs = coordsRaw.map(c =>
                   Array.isArray(c) ? [c[0], c[1]] : [c.lat, c.lng]
                 );
                 const polyColor = item.color || '#C6FF00';
                 const polyName  = item.name  || null;
+                const isBg      = isBackground(polyName);
 
                 const poly = L.polygon(latlngs, {
                   color: polyColor,
                   fillColor: polyColor,
-                  fillOpacity: 0.10,
-                  weight: 1.5,
-                  interactive: !!polyName  // hanya interaktif kalau punya nama
+                  fillOpacity: isBg ? 0.10 : 0.12,
+                  weight: isBg ? 1.5 : 1.8,
+                  interactive: !isBg,   // background TIDAK bisa diklik
+                  bubblingMouseEvents: false
                 });
 
-                if (polyName) {
+                if (!isBg && polyName) {
                   poly.bindPopup(
                     `<div style="font-family:'Inter',sans-serif;padding:4px 2px;">
                       <b style="color:#111;font-size:0.85rem;">${polyName}</b>
@@ -707,8 +716,8 @@ footer {
                     </div>`,
                     { maxWidth: 220, className: 'sk-popup' }
                   );
-                  poly.on('mouseover', function() { this.setStyle({ fillOpacity: 0.25 }); });
-                  poly.on('mouseout',  function() { this.setStyle({ fillOpacity: 0.10 }); });
+                  poly.on('mouseover', function() { this.setStyle({ fillOpacity: 0.30 }); });
+                  poly.on('mouseout',  function() { this.setStyle({ fillOpacity: 0.12 }); });
                 }
 
                 poly.addTo(map);
