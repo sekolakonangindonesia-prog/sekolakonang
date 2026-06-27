@@ -98,7 +98,7 @@ nav {
   padding:110px 0 56px;
   background-size: cover;
   background-position: center;
-  border-bottom:1px solid var(--border);
+  border-bottom: none;
   position: relative;
   overflow: hidden;
 }
@@ -140,29 +140,31 @@ nav {
   display:grid;
   grid-template-columns: repeat(3,1fr);
   gap:14px;
-  margin-top:-32px;
+  margin-top: 24px;
   margin-bottom:40px;
   position:relative; z-index:2;
 }
 .index-card {
-  background:var(--white);
-  border-radius:var(--r-md);
-  padding:22px 16px; text-align:center;
-  box-shadow:0 10px 30px rgba(0,0,0,0.45);
-  border-top:3px solid var(--green);
-  transition:transform 0.2s;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--green);
+  border-radius: var(--r-md);
+  padding: 22px 16px; text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  transition: transform 0.2s, border-color 0.2s;
+  backdrop-filter: blur(6px);
 }
-.index-card:hover { transform:translateY(-3px); }
+.index-card:hover { transform:translateY(-3px); border-color: rgba(198,255,0,0.4); }
 .index-card.bird { border-top-color: var(--blue); }
-.index-label { font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#888; }
+.index-label { font-size:0.58rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; color: var(--text-muted); }
 .index-num {
-  font-family:var(--display);
-  font-size:2.2rem; font-weight:900;
-  color:#111; line-height:1.1; margin:6px 0 4px;
+  font-family: var(--display);
+  font-size: 2.2rem; font-weight: 900;
+  color: var(--lime); line-height: 1.1; margin: 6px 0 4px;
 }
-.index-num.green { color: var(--green); }
-.index-num.blue  { color: var(--blue); }
-.index-cat { font-size:0.65rem; font-weight:600; color:#555; }
+.index-num.green { color: #69f0ae; }
+.index-num.blue  { color: #64b5f6; }
+.index-cat { font-size:0.65rem; font-weight:600; color: var(--parchment); }
 
 /* Versi mini — dipakai di dalam kartu "Indeks Kehati Burung" */
 .index-row-sm {
@@ -170,7 +172,7 @@ nav {
   grid-template-columns: repeat(3,1fr);
   gap:10px;
 }
-.index-row-sm .index-card { padding:14px 10px; }
+.index-row-sm .index-card { padding:14px 10px; background:rgba(33,150,243,0.06); border-top-color:var(--blue); }
 .index-row-sm .index-num { font-size:1.5rem; margin:4px 0 2px; }
 
 /* ============================================================
