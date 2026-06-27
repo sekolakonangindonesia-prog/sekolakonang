@@ -488,7 +488,7 @@ footer {
       <!-- Item 1 -->
       <div class="impact-card">
         <i class="fas fa-tree impact-icon"></i>
-        <span class="impact-num" id="stat-flora">201+"></span>
+        <span class="impact-num" id="stat-flora">201+</span>
         <span class="impact-label">Spesies Flora</span>
       </div>
       <!-- Item 2 -->
@@ -926,6 +926,7 @@ footer {
       <div class="migr-log" id="migrLog"><span>Siap untuk migrasi.</span></div>
       <button class="btn-migr" id="btnMigrasi"><i class="fas fa-database me-2"></i> Mulai Migrasi Data</button>
       <button class="btn-migr btn-migr-blue" id="btnMigrasiMap"><i class="fas fa-map me-2"></i> Migrasi Polygon Peta</button>
+      <button class="btn-migr" id="btnFixLabels" style="background:rgba(198,255,0,0.1);border-color:rgba(198,255,0,0.4);color:#C6FF00;margin-top:8px;"><i class="fas fa-sync me-2"></i> Fix Chart Labels (Update Firebase)</button>
     </div>
   </div>
 </div>
@@ -1130,7 +1131,7 @@ footer {
           bird_graph_years:   JSON.stringify(d.birdDataGraph?.years   || []),
           bird_graph_family:  JSON.stringify(d.birdDataGraph?.family  || []),
           bird_graph_species: JSON.stringify(d.birdDataGraph?.species || []),
-          history_labels:     JSON.stringify(d.chartLabels  || []),
+          history_labels:     JSON.stringify(d.chartLabels?.length ? d.chartLabels : (d.floraStats?.years || [])),
           history_h:          JSON.stringify(d.historyH     || []),
           history_e:          JSON.stringify(d.historyE     || []),
           history_r:          JSON.stringify(d.historyR     || []),
@@ -1152,7 +1153,30 @@ footer {
   });
 
    
-  document.getElementById('btnMigrasiMap').addEventListener('click', async () => {
+  document.getElementById('btnFixLabels').addEventListener('click', async () => {
+    if (typeof db_kehati === 'undefined') { logMigr('❌ database.js tidak ditemukan!', 'err'); return; }
+    if (!confirm('Update field history_labels di semua dokumen Firebase?')) return;
+    const btn = document.getElementById('btnFixLabels');
+    btn.disabled = true;
+    logMigr('🔧 Memperbaiki history_labels...');
+    let ok = 0, fail = 0;
+    for (let id in db_kehati.locations) {
+      try {
+        const d = db_kehati.locations[id];
+        const fixedLabels = d.chartLabels?.length ? d.chartLabels : (d.floraStats?.years || []);
+        const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+        await updateDoc(doc(db, "monitoring_kehati", id), {
+          history_labels: JSON.stringify(fixedLabels)
+        });
+        logMigr(`✓ ${id} — labels: [${fixedLabels.join(', ')}]`);
+        ok++;
+      } catch (e) { logMigr(`✗ GAGAL: ${id} — ${e.message}`, 'err'); fail++; }
+    }
+    logMigr(`━━━ Fix selesai: ${ok} berhasil, ${fail} gagal.`);
+    btn.disabled = false;
+  });
+
+  
     if (typeof db_kehati === 'undefined') { logMigr('❌ database.js tidak ditemukan!', 'err'); return; }
     logMigr('🗺️ Migrasi polygon peta...');
     try {
