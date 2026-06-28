@@ -8,20 +8,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --black:   #050505;
-    --canopy:  #111;
-    --lime:    #C6FF00;
-    --lime-dim: rgba(198,255,0,0.10);
-    --parchment: #F5F5F0;
-    --muted:   rgba(245,245,240,0.55);
-    --border:  rgba(198,255,0,0.15);
-    --display: 'Playfair Display', Georgia, serif;
-    --body:    'Inter', system-ui, sans-serif;
+    --black:        #050505;
+    --deep-forest:  #050505;
+    --canopy:       #353736;
+    --lime:         #C6FF00;
+    --lime-dim:     rgba(198,255,0,0.12);
+    --parchment:    #F5F5F0;
+    --white:        #FFFFFF;
+    --muted:        rgba(245,245,240,0.55);
+    --text-muted:   rgba(245,245,240,0.55);
+    --border:       rgba(198,255,0,0.15);
+    --display:      'Playfair Display', Georgia, serif;
+    --body:         'Inter', system-ui, sans-serif;
+    --r-sm: 12px; --r-md: 20px; --r-lg: 32px;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
-  body { font-family: var(--body); background: var(--black); color: var(--parchment); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  body { font-family: var(--body); background: var(--deep-forest); color: var(--parchment); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
   img { display: block; max-width: 100%; }
 
@@ -51,10 +55,12 @@
   .hero-bg {
     position: absolute; inset: 0;
     background:
-      linear-gradient(to bottom, rgba(5,5,5,0.35) 0%, rgba(5,5,5,0.7) 55%, rgba(5,5,5,1) 100%),
-      url('https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+      linear-gradient(to bottom, rgba(5,5,5,0.25) 0%, rgba(53,55,54,0.65) 50%, var(--deep-forest) 100%),
+      url('air_gunung.jpg') center/cover no-repeat;
     z-index: 0;
   }
+  .wf-dot { position:absolute; border-radius:50%; background:var(--lime); opacity:0; animation:wff var(--dur,6s) ease-in-out infinite var(--delay,0s); }
+  @keyframes wff { 0%,100%{opacity:0;transform:translateY(0) scale(0.5)} 40%,60%{opacity:.7;transform:translateY(-28px) scale(1)} }
   .hero-ripple {
     position: absolute; inset: 0; z-index: 1; pointer-events: none;
     background: radial-gradient(ellipse 80% 40% at 50% 60%, rgba(0,198,255,0.06) 0%, transparent 70%);
@@ -96,9 +102,10 @@
   @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .hero-ripple { animation: none; } }
 
   /* ── POLICY CARDS ── */
-  .policy-section { background: var(--black); border-bottom: 1px solid var(--border); }
+  .policy-section { background: var(--canopy); border-bottom: 1px solid var(--border); }
   .policy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
-  .policy-card { background: var(--canopy); border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; padding: 24px; display: flex; gap: 16px; align-items: flex-start; transition: 0.3s; }
+  .policy-card { background: var(--canopy); border: 1px solid var(--border); border-radius: 18px; padding: 24px; display: flex; gap: 16px; align-items: flex-start; transition: 0.3s; position: relative; overflow: hidden; }
+.policy-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: linear-gradient(90deg, transparent, var(--lime), transparent); }
   .policy-card:hover { border-color: var(--border); transform: translateY(-4px); }
   .policy-icon { font-size: 1.5rem; color: #00c6ff; margin-top: 2px; flex-shrink: 0; }
   .policy-card h4 { color: #fff; font-size: 0.92rem; margin-bottom: 6px; }
@@ -116,7 +123,8 @@
 
   /* ── INFRA STATUS ── */
   .infra-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 24px; margin-top: 44px; }
-  .infra-card { background: var(--canopy); border: 1px solid rgba(255,255,255,0.06); border-radius: 22px; padding: 32px; position: relative; transition: 0.3s; }
+  .infra-card { background: var(--canopy); border: 1px solid var(--border); border-radius: 22px; padding: 32px; position: relative; transition: 0.3s; overflow: hidden; }
+.infra-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: linear-gradient(90deg, transparent, var(--lime), transparent); }
   .infra-card:hover { border-color: var(--border); transform: translateY(-4px); }
   .infra-card.sumur { border-top: 3px solid var(--lime); }
   .infra-card.rorak { border-top: 3px solid #00ff88; }
@@ -152,7 +160,7 @@
   .table-block-head h3 { font-family: var(--display); font-size: 1.35rem; color: #fff; margin-bottom: 6px; }
   .table-block-head p { font-size: 0.85rem; color: var(--muted); }
 
-  .table-container { border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden; margin-bottom: 56px; background: var(--canopy); }
+  .table-container { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 56px; background: var(--canopy); }
   .table-header-box { padding: 16px 22px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 700; color: #fff; font-size: 0.85rem; display: flex; align-items: center; gap: 10px; }
   .table-header-box i { color: var(--lime); }
   .table-header-box.csr i { color: #00c6ff; }
@@ -187,8 +195,8 @@
   .table-state-row td { text-align: center; color: var(--muted); font-style: italic; padding: 36px 22px; font-size: 0.85rem; }
 
   /* ── CALCULATOR ── */
-  .calc-section { background: var(--black); border-top: 1px solid var(--border); }
-  .calc-wrapper { max-width: 940px; margin: 0 auto; background: var(--canopy); border: 1px solid rgba(255,255,255,0.08); border-radius: 22px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.45); }
+  .calc-section { background: var(--deep-forest); border-top: 1px solid var(--border); }
+  .calc-wrapper { max-width: 940px; margin: 0 auto; background: var(--canopy); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.45); }
 
   .calc-tabs { display: flex; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08); }
   .calc-tab { flex: 1; padding: 20px; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; transition: 0.3s; }
@@ -233,7 +241,7 @@
   .gallery-img:hover { border-color: var(--lime); transform: scale(1.02); }
 
   /* ── CTA ── */
-  .cta-section { background: var(--black); border-top: 1px solid var(--border); }
+  .cta-section { background: var(--canopy); border-top: 1px solid var(--border); }
   .cta-box { background: rgba(0,198,255,0.06); border: 1px solid var(--border); border-radius: 28px; padding: 56px; display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
   .cta-box h2 { font-family: var(--display); font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 900; color: #fff; max-width: 480px; line-height: 1.2; }
   .cta-box h2 em { font-style: normal; color: #00c6ff; }
@@ -284,6 +292,7 @@
 <!-- HERO -->
 <section class="hero">
   <div class="hero-bg"></div>
+  <div class="fireflies-wrap" id="wFireflies" aria-hidden="true" style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;"></div>
   <div class="hero-ripple"></div>
   <div class="hero-content">
     <div class="hero-eyebrow">Infrastruktur Sipil Teknis &amp; Neraca Air</div>
