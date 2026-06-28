@@ -647,19 +647,48 @@
     } catch(e) { console.error("Hero load error",e); }
   }
 
-  // ── loadImpactStats ──
+  // ── loadImpactStats — dihitung otomatis dari data program ──
   async function loadImpactStats() {
     try {
-      const snap = await getDoc(doc(db,"profil_yayasan","impact_stats"));
-      if (snap.exists()) {
-        const d = snap.data();
-        if (d.pohon != null) document.getElementById('impactPohon').dataset.target = d.pohon;
-        if (d.air != null)   document.getElementById('impactAir').dataset.target   = d.air;
-        if (d.spesies != null) document.getElementById('impactSpesies').dataset.target = d.spesies;
-        if (d.lokasi != null)  document.getElementById('impactLokasi').dataset.target  = d.lokasi;
-      }
-    } catch(e) { console.error("Impact stats error",e); }
-    finally { initCountUp(); } // SELALU dipanggil
+      // Ambil semua data reboisasi (pohon + infiltrasi)
+      const reboisasiSnap = await getDocs(collection(db, "monitoring_reboisasi"));
+      let totalPohon = 0, totalInfiltrasi = 0;
+      reboisasiSnap.forEach(docu => {
+        if (!docu.id.startsWith('tanam_')) return;
+        const d = docu.data();
+        if (d.stats) {
+          totalPohon      += Number(d.stats.trees        || 0);
+          totalInfiltrasi += Number(d.stats.infiltration || 0);
+        }
+      });
+
+      // Ambil data kehati (spesies flora + lokasi aktif)
+      const kehatiSnap = await getDocs(collection(db, "monitoring_kehati"));
+      let totalSpesies = 0, totalLokasi = 0;
+      kehatiSnap.forEach(docu => {
+        const d = docu.data();
+        totalLokasi++;
+        // floraStats.total atau floraStats.species_count
+        if (d.floraStats) {
+          totalSpesies += Number(
+            d.floraStats.total || d.floraStats.species_count ||
+            d.floraStats.jumlah || 0
+          );
+        }
+        if (d.indices && d.indices.total_species) {
+          // fallback dari indices jika floraStats kosong
+          if (totalSpesies === 0) totalSpesies += Number(d.indices.total_species || 0);
+        }
+      });
+
+      // Set ke elemen count-up
+      if (totalPohon > 0)      document.getElementById('impactPohon').dataset.target    = totalPohon;
+      if (totalInfiltrasi > 0) document.getElementById('impactAir').dataset.target      = totalInfiltrasi.toFixed(1);
+      if (totalSpesies > 0)    document.getElementById('impactSpesies').dataset.target  = totalSpesies;
+      if (totalLokasi > 0)     document.getElementById('impactLokasi').dataset.target   = totalLokasi;
+
+    } catch(e) { console.error("Impact stats error", e); }
+    finally { initCountUp(); }
   }
 
   // ── loadPrograms ──
