@@ -647,45 +647,53 @@
     } catch(e) { console.error("Hero load error",e); }
   }
 
-  // ── loadImpactStats — dihitung otomatis dari data program ──
+  // ── loadImpactStats — dihitung otomatis dari monitoring_reboisasi + monitoring_kehati ──
   async function loadImpactStats() {
     try {
-      // Ambil semua data reboisasi (pohon + infiltrasi)
-      const reboisasiSnap = await getDocs(collection(db, "monitoring_reboisasi"));
-      let totalPohon = 0, totalInfiltrasi = 0;
-      reboisasiSnap.forEach(docu => {
-        if (!docu.id.startsWith('tanam_')) return;
+      const VWB=0.02495, TIME=31.536, RAIN=163;
+
+      // Akumulasi dari monitoring_reboisasi
+      const rebSnap = await getDocs(collection(db, "monitoring_reboisasi"));
+      let totalPohon = 0, totalAir = 0;
+      rebSnap.forEach(docu => {
         const d = docu.data();
-        if (d.stats) {
-          totalPohon      += Number(d.stats.trees        || 0);
-          totalInfiltrasi += Number(d.stats.infiltration || 0);
-        }
+        const s = d.stats || {};
+        const y = d.year || 0;
+        const trees  = Number(s.trees  || 0);
+        const rorak  = Number(s.rorak  || 0);
+        const sumur  = Number(s.sumur  || 0);
+        const biopori= Number(s.biopori|| 0);
+        totalPohon += trees;
+        // Hitung infiltrasi sama dengan formula di konservasi.html
+        const air = (y === 2024)
+          ? ((trees/400)*1.5) + (rorak*0.17)
+          : ((trees/400)*VWB*TIME*0.75)
+            + ((rorak*490*3*RAIN)/1000000)
+            + ((sumur*754*3*RAIN)/1000000)
+            + ((biopori/300)*1.5);
+        totalAir += air;
       });
 
-      // Ambil data kehati (spesies flora + lokasi aktif)
+      // Akumulasi dari monitoring_kehati
       const kehatiSnap = await getDocs(collection(db, "monitoring_kehati"));
       let totalSpesies = 0, totalLokasi = 0;
       kehatiSnap.forEach(docu => {
         const d = docu.data();
         totalLokasi++;
-        // floraStats.total atau floraStats.species_count
-        if (d.floraStats) {
-          totalSpesies += Number(
-            d.floraStats.total || d.floraStats.species_count ||
-            d.floraStats.jumlah || 0
-          );
-        }
-        if (d.indices && d.indices.total_species) {
-          // fallback dari indices jika floraStats kosong
-          if (totalSpesies === 0) totalSpesies += Number(d.indices.total_species || 0);
-        }
+        // Support field: flora.spesies (format baru admin) atau floraStats.total (format lama)
+        const spesies = Number(
+          (d.flora && d.flora.spesies) ||
+          (d.floraStats && (d.floraStats.total || d.floraStats.species_count || d.floraStats.jumlah)) ||
+          (d.indices && d.indices.total_species) || 0
+        );
+        totalSpesies += spesies;
       });
 
-      // Set ke elemen count-up
-      if (totalPohon > 0)      document.getElementById('impactPohon').dataset.target    = totalPohon;
-      if (totalInfiltrasi > 0) document.getElementById('impactAir').dataset.target      = totalInfiltrasi.toFixed(1);
-      if (totalSpesies > 0)    document.getElementById('impactSpesies').dataset.target  = totalSpesies;
-      if (totalLokasi > 0)     document.getElementById('impactLokasi').dataset.target   = totalLokasi;
+      // Update elemen count-up hanya jika ada data
+      if (totalPohon > 0) document.getElementById('impactPohon').dataset.target = totalPohon;
+      if (totalAir   > 0) document.getElementById('impactAir').dataset.target   = totalAir.toFixed(1);
+      if (totalSpesies>0) document.getElementById('impactSpesies').dataset.target = totalSpesies;
+      if (totalLokasi > 0)document.getElementById('impactLokasi').dataset.target  = totalLokasi;
 
     } catch(e) { console.error("Impact stats error", e); }
     finally { initCountUp(); }
@@ -753,9 +761,11 @@
         const card=document.createElement('div');
         card.className='news-card'+(i===0?' featured':'');
         const ext=d.type==='external';
-        const imgSrc=d.image?esc(d.image):'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=600&auto=format&fit=crop';
+        const fallbackImg='https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=600&auto=format&fit=crop';
+        // Internal: tampilkan foto upload. External: pakai fallback (foto dari link tidak bisa diembed)
+        const imgSrc = ext ? fallbackImg : (d.image ? esc(d.image) : fallbackImg);
         card.innerHTML=`
-          <img src="${imgSrc}" alt="${esc(d.title||'Berita')}" onerror="this.src='https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=600&auto=format&fit=crop'">
+          <img src="${imgSrc}" alt="${esc(d.title||'Berita')}" onerror="this.src='${fallbackImg}'">
           <div class="news-body">
             <span class="news-type ${ext?'external':'internal'}">${ext?'Media Luar':'Warta Internal'}</span>
             <div class="news-date">${esc(d.date||'')}</div>
