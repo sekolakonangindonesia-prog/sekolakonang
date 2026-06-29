@@ -407,7 +407,7 @@ input,textarea,select{font-family:var(--body);}
           <div class="file-name" id="kons-photo-file-name">Belum ada file dipilih</div>
         </div>
         <input type="file" id="kons-photo-input" accept="image/*" multiple style="display:none">
-        <div class="form-hint">Foto akan diunggah ke Firebase Storage dan tampil di galeri halaman konservasi detail.</div>
+        <div class="form-hint">Foto otomatis dikompres lalu disimpan langsung di database dan tampil di galeri halaman konservasi detail. Disarankan maksimal 6-8 foto per program agar ukuran data tetap ringan.</div>
         <div id="kons-photo-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
 
         <div class="section-divider"><i class="fas fa-newspaper"></i> Berita Terkait</div>
@@ -733,9 +733,6 @@ import {
 import {
   getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import {
-  getStorage, ref, uploadBytes, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
@@ -748,7 +745,6 @@ const firebaseConfig = {
 const app  = initializeApp(firebaseConfig);
 const db   = getFirestore(app);
 const auth = getAuth(app);
-const storage = getStorage(app);
 
 // ── KML parse state ──
 let kmlParsedPolygons = null;
@@ -1338,71 +1334,66 @@ document.getElementById('kons-photo-input').addEventListener('change', (e) => {
 
 // Kompres & resize gambar di browser sebelum upload — supaya tidak mengunggah
 // foto mentah dari kamera HP (bisa 3-8MB) yang membuat proses lama/macet.
-// Target: lebar maksimal 1600px, kualitas JPEG diturunkan bertahap sampai
-// hasilnya mendekati 400KB (tanpa memaksa kalau gambar memang sederhana/kecil).
-function compressImage(file, maxWidth = 1600, targetKB = 400) {
+// Foto dikompres jadi gambar base64 dan disimpan LANGSUNG di dokumen Firestore —
+// TANPA Firebase Storage — supaya tidak butuh CORS/billing/aktivasi Storage.
+// Pola ini sama dengan yang sudah terbukti jalan di project survei lain milik SK.
+// Target: ukuran persegi 800x800px, dikompres bertahap sampai ±150KB per foto
+// (foto galeri publik perlu kualitas lebih baik daripada foto dokumen kecil).
+function kompresFotoKons(file, maxPx = 800, targetKB = 150) {
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxWidth) {
-        height = Math.round(height * (maxWidth / width));
-        width = maxWidth;
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width; canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-      URL.revokeObjectURL(objectUrl);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Crop persegi dari tengah supaya rapi di grid galeri
+        const size = Math.min(img.naturalWidth, img.naturalHeight);
+        const sx = (img.naturalWidth - size) / 2;
+        const sy = (img.naturalHeight - size) / 2;
+        const c = document.createElement('canvas');
+        c.width = maxPx; c.height = maxPx;
+        c.getContext('2d').drawImage(img, sx, sy, size, size, 0, 0, maxPx, maxPx);
 
-      const tryQuality = (q) => {
-        canvas.toBlob((blob) => {
-          if (!blob) { reject(new Error('Gagal kompres gambar')); return; }
-          const kb = blob.size / 1024;
-          if (kb > targetKB && q > 0.4) {
-            tryQuality(q - 0.1);
+        const tryQuality = (px, q) => {
+          const cc = document.createElement('canvas');
+          cc.width = px; cc.height = px;
+          cc.getContext('2d').drawImage(img, sx, sy, size, size, 0, 0, px, px);
+          const result = cc.toDataURL('image/jpeg', q);
+          const kb = Math.round(result.length * 0.75 / 1024);
+          if (kb > targetKB && q > 0.3) {
+            tryQuality(px, q - 0.1);
+          } else if (kb > targetKB && px > 400) {
+            tryQuality(Math.round(px * 0.75), 0.7);
           } else {
-            resolve(blob);
+            resolve(result);
           }
-        }, 'image/jpeg', q);
+        };
+        tryQuality(maxPx, 0.75);
       };
-      tryQuality(0.82);
+      img.onerror = () => reject(new Error('Gagal membuka file gambar: ' + file.name));
+      img.src = e.target.result;
     };
-    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Gagal membuka file gambar: ' + file.name)); };
-    img.src = objectUrl;
+    reader.onerror = () => reject(new Error('Gagal membaca file: ' + file.name));
+    reader.readAsDataURL(file);
   });
 }
 
-// Upload semua file baru ke Firebase Storage (setelah dikompres), kembalikan array URL hasil upload.
-// onProgress(current, total, label) dipanggil di setiap langkah supaya UI bisa kasih feedback jelas.
-function withTimeout(promise, ms, label) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} terlalu lama (lebih dari ${ms/1000}s) — kemungkinan koneksi internet lambat/putus.`)), ms))
-  ]);
-}
+// Kompres semua file baru jadi base64, kembalikan array data-URL.
+// onProgress(current, total) dipanggil di setiap langkah supaya UI bisa kasih feedback.
 async function uploadKonsPhotos(docId, onProgress) {
-  const urls = [];
+  const results = [];
   const total = konsNewPhotoFiles.length;
   for (let i = 0; i < total; i++) {
     const file = konsNewPhotoFiles[i];
     try {
       if (onProgress) onProgress(i+1, total, 'Mengompres');
-      const compressedBlob = await withTimeout(compressImage(file), 30000, 'Kompresi gambar');
-      const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-]/g,'_').replace(/\.[a-zA-Z0-9]+$/, '')}.jpg`;
-      const path = `monitoring_reboisasi/${docId}/${safeName}`;
-      const fileRef = ref(storage, path);
-      if (onProgress) onProgress(i+1, total, 'Mengunggah');
-      await withTimeout(uploadBytes(fileRef, compressedBlob), 90000, 'Upload foto');
-      const url = await getDownloadURL(fileRef);
-      urls.push(url);
+      const b64 = await kompresFotoKons(file);
+      results.push(b64);
     } catch (errOne) {
-      console.error('Gagal upload foto', file.name, errOne);
-      throw new Error(`Gagal mengunggah foto "${file.name}": ${errOne.message}`);
+      console.error('Gagal proses foto', file.name, errOne);
+      throw new Error(`Gagal memproses foto "${file.name}": ${errOne.message}`);
     }
   }
-  return urls;
+  return results;
 }
 
 // ============================================================
@@ -1553,14 +1544,36 @@ document.getElementById('saveKonsBtn').addEventListener('click', async () => {
       // dan tetap cocok dengan filter prefix "tanam_" yang dipakai konservasi.html.
       docId = `tanam_${year}_${Date.now().toString(36)}`;
     }
-    // Upload foto baru (jika ada) dulu — dikompres otomatis ke ±400KB supaya
-    // tidak macet di koneksi lambat, lalu gabungkan dengan foto lama yang dipertahankan.
-    // Ada batas waktu 90 detik per foto: kalau jaringan benar-benar macet,
-    // proses akan gagal dengan pesan jelas alih-alih loading selamanya.
-    const uploadedUrls = await uploadKonsPhotos(docId, (cur, total, label) => {
+    // Kompres foto baru jadi base64 (tanpa Firebase Storage — lihat catatan di
+    // fungsi kompresFotoKons), lalu gabungkan dengan foto lama yang dipertahankan.
+    const newPhotosB64 = await uploadKonsPhotos(docId, (cur, total, label) => {
       btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${label} foto ${cur}/${total}...`;
     });
-    data.photos = [...konsExistingPhotos, ...uploadedUrls];
+    let allPhotos = [...konsExistingPhotos, ...newPhotosB64];
+
+    // Pengaman: Firestore membatasi 1 dokumen maksimal ~1MB. Kalau total ukuran
+    // foto (base64) mendekati limit itu, kompres ulang semua foto lebih kecil
+    // supaya data tetap pasti tersimpan (lebih aman daripada gagal di tengah jalan).
+    let totalKB = Math.round(allPhotos.reduce((a,b)=>a + (b.length*0.75/1024), 0));
+    if (totalKB > 650) {
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memadatkan ukuran foto...';
+      allPhotos = await Promise.all(allPhotos.map(b64 => new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = 350; c.height = 350;
+          c.getContext('2d').drawImage(img, 0, 0, 350, 350);
+          resolve(c.toDataURL('image/jpeg', 0.5));
+        };
+        img.onerror = () => resolve(b64);
+        img.src = b64;
+      })));
+      totalKB = Math.round(allPhotos.reduce((a,b)=>a + (b.length*0.75/1024), 0));
+      if (totalKB > 900) {
+        throw new Error(`Total foto masih terlalu besar (±${totalKB}KB) walau sudah dipadatkan. Coba kurangi jumlah foto yang diunggah sekaligus (simpan dulu sebagian, lalu tambah lagi via Edit).`);
+      }
+    }
+    data.photos = allPhotos;
 
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan data...';
     const existingId = document.getElementById('kons-doc-id').value;
