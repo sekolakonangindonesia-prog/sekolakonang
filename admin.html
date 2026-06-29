@@ -362,8 +362,6 @@ input,textarea,select{font-family:var(--body);}
             <label>Tahun Program</label>
             <select id="kons-year">
               <option value="">-- Pilih Tahun --</option>
-              <option>2026</option><option>2025</option><option>2024</option><option>2023</option>
-              <option>2022</option><option>2021</option><option>2020</option><option>2019</option>
             </select>
             <div class="form-hint">Satu tahun boleh memiliki lebih dari satu program (lokasi/proyek berbeda).</div>
           </div>
@@ -460,7 +458,6 @@ input,textarea,select{font-family:var(--body);}
             <label>Tahun</label>
             <select id="bio-year">
               <option value="">-- Pilih --</option>
-              <option>2025</option><option>2024</option><option>2023</option><option>2022</option><option>2021</option>
             </select>
           </div>
           <div class="form-group">
@@ -850,6 +847,21 @@ let bioNewPhotoFiles   = [];   // File foto dokumentasi Biodiversitas baru yang 
 // ============================================================
 // NAVIGATION
 // ============================================================
+// ── Populate dropdown tahun otomatis (tahun sekarang hingga 2019) ──
+function populateYearDropdown(selectId, startYear) {
+  const el = document.getElementById(selectId);
+  if (!el) return;
+  const curYear = new Date().getFullYear();
+  const firstOpt = el.options[0]; // simpan placeholder
+  el.innerHTML = '';
+  el.appendChild(firstOpt);
+  for (let y = curYear; y >= (startYear || 2019); y--) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    el.appendChild(opt);
+  }
+}
+
 function switchPanel(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
@@ -866,6 +878,8 @@ function switchPanel(name) {
   };
   if (loaders[name]) loaders[name]();
   if (name === 'hero') loadHero();
+  if (name === 'konservasi') populateYearDropdown('kons-year');
+  if (name === 'biodiversitas') populateYearDropdown('bio-year');
   // Mobile: tutup sidebar
   document.getElementById('sidebar').classList.remove('open');
 }
@@ -946,6 +960,8 @@ async function loadOverview() {
     ]);
     let totalPohon = 0, totalAir = 0;
     rebSnap.forEach(d => {
+      // Hanya dokumen berskema baru (ID "tanam_...") — hindari double-count dari dokumen lama
+      if (!d.id.startsWith('tanam_')) return;
       const s = d.data().stats || {};
       totalPohon += s.trees || 0;
       const y = d.data().year;
@@ -955,7 +971,11 @@ async function loadOverview() {
         : ((trees/400)*0.02495*31.536*0.75)+((rorak*490*3*163)/1e6)+((sumur*754*3*163)/1e6)+((biopori/300)*1.5);
     });
     let totalSpesies = 0;
-    bioSnap.forEach(d => { const f = d.data().flora||{}; totalSpesies += f.spesies||0; });
+    bioSnap.forEach(d => {
+      const dat = d.data();
+      if (dat.floraStats) totalSpesies += Number(dat.floraStats.total || dat.floraStats.species_count || dat.floraStats.jumlah || 0);
+      else if (dat.flora) totalSpesies += Number(dat.flora.spesies || dat.flora.total || 0);
+    });
     document.getElementById('ov-pohon').textContent = totalPohon.toLocaleString('id-ID');
     document.getElementById('ov-air').textContent   = totalAir.toFixed(1);
     document.getElementById('ov-spesies').textContent = totalSpesies;
@@ -1613,7 +1633,7 @@ function ekstrakTahunBerita(dateStr) {
 function renderNewsChecklistGeneric(cfg) {
   const wrap = document.getElementById(cfg.wrapId);
   const filterYear = document.getElementById(cfg.filterId).value;
-  let list = konsAllNewsCache;
+  let list = konsAllNewsCache || [];
   if (filterYear) list = list.filter(n => ekstrakTahunBerita(n.date) === filterYear);
   if (list.length === 0) {
     wrap.innerHTML = `<div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Tidak ada berita di tahun ${filterYear}.</div>`;
