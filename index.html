@@ -767,6 +767,11 @@
           </div>`;
         grid.appendChild(card); i++;
       });
+      // Tombol lihat semua berita
+      const seeAll = document.createElement('div');
+      seeAll.style.cssText = 'grid-column:1/-1;text-align:center;margin-top:8px;';
+      seeAll.innerHTML = `<a href="news.html" style="display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border:1.5px solid var(--lime);border-radius:50px;color:var(--lime);font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">Lihat Semua Berita <i class="fas fa-arrow-right"></i></a>`;
+      grid.appendChild(seeAll);
     } catch(e) { renderFallbackNews(grid); }
   }
   function renderFallbackNews(grid) {
