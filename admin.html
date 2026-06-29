@@ -143,6 +143,11 @@ input,textarea,select{font-family:var(--body);}
 .news-check-row:last-child{border-bottom:none;}
 .news-check-row input{margin-top:2px;flex-shrink:0;width:14px;height:14px;accent-color:var(--lime);}
 .news-check-row .news-check-meta{color:var(--text-muted);font-size:0.65rem;}
+.dyn-row{display:grid;gap:8px;align-items:end;padding:10px;border:1px solid var(--border-subtle);border-radius:var(--r-sm);margin-bottom:8px;background:rgba(255,255,255,0.02);position:relative;}
+.dyn-row .dyn-remove{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.05);border:none;color:var(--danger);cursor:pointer;font-size:0.65rem;}
+.dyn-row .upload-zone{padding:10px;margin-bottom:0;}
+.dyn-row .upload-zone p{font-size:0.65rem;margin:0;}
+.dyn-row .file-name{margin-top:2px;}
 
 /* ── ANALISIS INFILTRASI MINI ── */
 .analisis-box{background:rgba(33,150,243,0.07);border:1px solid rgba(33,150,243,0.2);border-radius:var(--r-md);padding:16px 18px;margin-top:8px;}
@@ -412,6 +417,12 @@ input,textarea,select{font-family:var(--body);}
 
         <div class="section-divider"><i class="fas fa-newspaper"></i> Berita Terkait</div>
         <div class="form-hint" style="margin-bottom:8px;">Pilih berita yang sudah ada di menu Berita untuk dikaitkan ke program ini (boleh lebih dari satu, atau tidak sama sekali).</div>
+        <div class="form-group" style="max-width:220px;margin-bottom:8px;">
+          <label style="font-size:0.65rem;">Filter berdasarkan tahun</label>
+          <select id="kons-news-year-filter">
+            <option value="">Semua Tahun</option>
+          </select>
+        </div>
         <div class="species-table-wrap" id="kons-news-checklist" style="max-height:220px;overflow-y:auto;">
           <div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Memuat daftar berita...</div>
         </div>
@@ -479,35 +490,68 @@ input,textarea,select{font-family:var(--body);}
         <!-- FLORA -->
         <div class="section-divider"><i class="fas fa-seedling"></i> Data Flora</div>
         <div class="row-3">
-          <div class="form-group"><label>Jumlah Spesies</label><input type="number" id="bio-flora-spesies" placeholder="0" min="0"></div>
+          <div class="form-group"><label>Jumlah Spesies</label><input type="number" id="bio-flora-total" placeholder="0" min="0"></div>
           <div class="form-group"><label>Jumlah Famili</label><input type="number" id="bio-flora-famili" placeholder="0" min="0"></div>
-          <div class="form-group"><label>Spesies Dilindungi</label><input type="number" id="bio-flora-dilindungi" placeholder="0" min="0"></div>
+          <div class="form-group"><label>Kategori Status</label>
+            <select id="bio-index-cat"><option value="Sedang">Sedang</option><option value="Baik">Baik</option><option value="Sangat Baik">Sangat Baik</option></select>
+          </div>
         </div>
         <div class="section-divider" style="font-size:0.55rem;padding:10px 0 6px;border-color:rgba(255,255,255,0.05);">Indeks Diversitas Flora</div>
         <div class="index-grid">
-          <div class="index-card"><label>H' (Shannon)</label><input type="number" id="bio-flora-H" step="0.001" placeholder="0.000"><div class="index-badge">Indeks Keragaman</div></div>
-          <div class="index-card"><label>E (Evenness)</label><input type="number" id="bio-flora-E" step="0.001" placeholder="0.000"><div class="index-badge">Kemerataan</div></div>
-          <div class="index-card"><label>R (Richness)</label><input type="number" id="bio-flora-R" step="0.001" placeholder="0.000"><div class="index-badge">Kekayaan Jenis</div></div>
+          <div class="index-card"><label>H' (Shannon)</label><input type="number" id="bio-index-h" step="0.001" placeholder="0.000"><div class="index-badge">Indeks Keragaman</div></div>
+          <div class="index-card"><label>E (Evenness)</label><input type="number" id="bio-index-e" step="0.001" placeholder="0.000"><div class="index-badge">Kemerataan</div></div>
+          <div class="index-card"><label>R (Richness)</label><input type="number" id="bio-index-r" step="0.001" placeholder="0.000"><div class="index-badge">Kekayaan Jenis</div></div>
         </div>
-        <div class="form-group" style="margin-top:12px;"><label>Daftar Spesies Flora Dilindungi</label><textarea id="bio-flora-lindung-list" rows="2" placeholder="Satu nama per baris..."></textarea></div>
+        <div class="form-group" style="margin-top:12px;"><label>Catatan Flora</label><textarea id="bio-flora-note" rows="2" placeholder="Catatan/temuan terkait flora..."></textarea></div>
 
         <!-- BURUNG / FAUNA -->
         <div class="section-divider"><i class="fas fa-dove"></i> Data Burung / Avifauna</div>
         <div class="row-3">
-          <div class="form-group"><label>Jumlah Spesies</label><input type="number" id="bio-burung-spesies" placeholder="0" min="0"></div>
-          <div class="form-group"><label>Jumlah Famili</label><input type="number" id="bio-burung-famili" placeholder="0" min="0"></div>
-          <div class="form-group"><label>Spesies Dilindungi</label><input type="number" id="bio-burung-dilindungi" placeholder="0" min="0"></div>
+          <div class="form-group"><label>Jumlah Spesies</label><input type="number" id="bio-bird-species" placeholder="0" min="0"></div>
+          <div class="form-group"><label>Jumlah Famili</label><input type="number" id="bio-bird-family" placeholder="0" min="0"></div>
+          <div class="form-group"><label>Spesies Dominan</label><input type="text" id="bio-bird-dom" placeholder="Cth: Burung Madu Sriganti"></div>
         </div>
+        <div class="form-group"><label>Spesies Kunci (Key Species)</label><input type="text" id="bio-bird-key" placeholder="Cth: Elang Jawa"></div>
         <div class="section-divider" style="font-size:0.55rem;padding:10px 0 6px;border-color:rgba(255,255,255,0.05);">Indeks Diversitas Burung</div>
         <div class="index-grid">
-          <div class="index-card"><label>H' (Shannon)</label><input type="number" id="bio-burung-H" step="0.001" placeholder="0.000"><div class="index-badge">Indeks Keragaman</div></div>
-          <div class="index-card"><label>E (Evenness)</label><input type="number" id="bio-burung-E" step="0.001" placeholder="0.000"><div class="index-badge">Kemerataan</div></div>
-          <div class="index-card"><label>R (Richness)</label><input type="number" id="bio-burung-R" step="0.001" placeholder="0.000"><div class="index-badge">Kekayaan Jenis</div></div>
+          <div class="index-card"><label>H' (Shannon)</label><input type="number" id="bio-bird-h" step="0.001" placeholder="0.000"><div class="index-badge">Indeks Keragaman</div></div>
+          <div class="index-card"><label>E (Evenness)</label><input type="number" id="bio-bird-e" step="0.001" placeholder="0.000"><div class="index-badge">Kemerataan</div></div>
+          <div class="index-card"><label>R (Richness)</label><input type="number" id="bio-bird-r" step="0.001" placeholder="0.000"><div class="index-badge">Kekayaan Jenis</div></div>
         </div>
-        <div class="row-2" style="margin-top:12px;">
-          <div class="form-group"><label>Spesies Flagship</label><input type="text" id="bio-burung-flagship" placeholder="Cth: Elang Jawa (Nisaetus bartelsi)"></div>
-          <div class="form-group"><label>Spesies Dilindungi (nama)</label><textarea id="bio-burung-lindung-list" rows="2" placeholder="Satu nama per baris..."></textarea></div>
+
+        <!-- FLAGSHIP SPECIES -->
+        <div class="section-divider"><i class="fas fa-star"></i> Flagship Species</div>
+        <div class="form-hint" style="margin-bottom:8px;">Spesies ikonik/andalan yang ditonjolkan di halaman detail kawasan ini (opsional).</div>
+        <div class="row-2">
+          <div class="form-group"><label>Nama Spesies</label><input type="text" id="bio-flagship-name" placeholder="Cth: Elang Jawa (Nisaetus bartelsi)"></div>
+          <div class="form-group"><label>Status Konservasi</label><input type="text" id="bio-flagship-status" placeholder="Cth: Dilindungi / Endemik / Rentan (IUCN)"></div>
         </div>
+        <div class="form-group"><label>Deskripsi Singkat</label><textarea id="bio-flagship-desc" rows="2" placeholder="Cerita singkat tentang spesies ini..."></textarea></div>
+        <div class="form-group">
+          <label>Foto Flagship Species <span style="font-weight:400;color:var(--text-muted);font-size:0.65rem;">(upload dari HP/laptop, opsional)</span></label>
+          <div class="upload-zone" id="bio-flagship-img-zone" onclick="document.getElementById('bio-flagship-img-input').click()" style="padding:16px;">
+            <i class="fas fa-camera"></i><p>Klik untuk pilih foto</p>
+            <div class="file-name" id="bio-flagship-img-fname">Belum ada foto dipilih</div>
+          </div>
+          <input type="file" id="bio-flagship-img-input" accept="image/*" style="display:none">
+          <input type="hidden" id="bio-flagship-img">
+          <div id="bio-flagship-img-preview" style="margin-top:8px;display:none;">
+            <img id="bio-flagship-img-tag" style="max-height:140px;border-radius:8px;border:1px solid var(--border-subtle);">
+            <button type="button" onclick="clearBioFlagshipImg()" style="display:block;margin-top:6px;font-size:0.7rem;color:var(--danger);background:none;border:none;cursor:pointer;"><i class="fas fa-times"></i> Hapus foto</button>
+          </div>
+        </div>
+
+        <!-- SPESIES DILINDUNGI -->
+        <div class="section-divider"><i class="fas fa-shield-alt"></i> Flora &amp; Fauna Dilindungi</div>
+        <div class="form-hint" style="margin-bottom:8px;">Daftar spesies dilindungi/langka yang tercatat di kawasan ini, lengkap dengan foto.</div>
+        <div id="bio-protected-rows"></div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="addProtectedRow()" style="margin-top:6px;"><i class="fas fa-plus"></i> Tambah Spesies Dilindungi</button>
+
+        <!-- TREN TAHUNAN -->
+        <div class="section-divider"><i class="fas fa-chart-line"></i> Tren Indeks Tahunan (untuk grafik)</div>
+        <div class="form-hint" style="margin-bottom:8px;">Riwayat indeks H' dari tahun-tahun monitoring sebelumnya di lokasi ini, untuk ditampilkan sebagai grafik tren di halaman detail.</div>
+        <div id="bio-history-rows"></div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="addHistoryRow()" style="margin-top:6px;"><i class="fas fa-plus"></i> Tambah Titik Tren</button>
 
         <!-- CATATAN -->
         <div class="section-divider"><i class="fas fa-sticky-note"></i> Catatan Lapangan</div>
@@ -1486,9 +1530,44 @@ async function uploadKonsPhotos(docId, onProgress) {
 // ============================================================
 // KONSERVASI: CHECKLIST BERITA TERKAIT
 // ============================================================
+let konsNewsSelectedIds = []; // state centang terpilih — terpisah dari render, supaya tidak hilang saat filter tahun diganti
+
+// Ekstrak tahun dari field date, toleran format ISO ("2022-08-08") maupun teks Indonesia ("8 Agustus 2022")
+function ekstrakTahunBerita(dateStr) {
+  if (!dateStr) return null;
+  const s = String(dateStr);
+  const m = s.match(/\b(19|20)\d{2}\b/); // tahun 4 digit di mana saja dalam string
+  return m ? m[0] : null;
+}
+
+function renderKonsNewsChecklist() {
+  const wrap = document.getElementById('kons-news-checklist');
+  const filterYear = document.getElementById('kons-news-year-filter').value;
+  let list = konsAllNewsCache;
+  if (filterYear) list = list.filter(n => ekstrakTahunBerita(n.date) === filterYear);
+  if (list.length === 0) {
+    wrap.innerHTML = `<div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Tidak ada berita di tahun ${filterYear}.</div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(n => `
+    <label class="news-check-row">
+      <input type="checkbox" value="${n.id}" ${konsNewsSelectedIds.includes(n.id) ? 'checked' : ''} onchange="toggleKonsNewsSelected('${n.id}', this.checked)">
+      <span>
+        <div style="color:var(--parchment);">${n.title||'(tanpa judul)'}</div>
+        <div class="news-check-meta">${n.date||''} · ${n.type==='external' ? 'Media Luar' : 'Warta Internal'}</div>
+      </span>
+    </label>`).join('');
+}
+function toggleKonsNewsSelected(id, checked) {
+  if (checked && !konsNewsSelectedIds.includes(id)) konsNewsSelectedIds.push(id);
+  if (!checked) konsNewsSelectedIds = konsNewsSelectedIds.filter(x => x !== id);
+}
+window.toggleKonsNewsSelected = toggleKonsNewsSelected;
+
 async function loadKonsNewsChecklist(selectedIds = []) {
   const wrap = document.getElementById('kons-news-checklist');
   wrap.innerHTML = '<div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Memuat daftar berita...</div>';
+  konsNewsSelectedIds = [...selectedIds];
   try {
     if (!konsAllNewsCache) {
       const snap = await getDocs(collection(db,'news'));
@@ -1498,18 +1577,21 @@ async function loadKonsNewsChecklist(selectedIds = []) {
       konsAllNewsCache = arr;
     }
     if (konsAllNewsCache.length === 0) { wrap.innerHTML='<div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Belum ada berita. Tambahkan dulu di menu Berita.</div>'; return; }
-    wrap.innerHTML = konsAllNewsCache.map(n => `
-      <label class="news-check-row">
-        <input type="checkbox" value="${n.id}" ${selectedIds.includes(n.id) ? 'checked' : ''}>
-        <span>
-          <div style="color:var(--parchment);">${n.title||'(tanpa judul)'}</div>
-          <div class="news-check-meta">${n.date||''} · ${n.type==='external' ? 'Media Luar' : 'Warta Internal'}</div>
-        </span>
-      </label>`).join('');
+
+    // Isi dropdown filter tahun dari tahun-tahun yang benar-benar ada di data berita
+    const tahunSet = new Set();
+    konsAllNewsCache.forEach(n => { const y = ekstrakTahunBerita(n.date); if (y) tahunSet.add(y); });
+    const tahunList = Array.from(tahunSet).sort((a,b) => b - a);
+    const filterEl = document.getElementById('kons-news-year-filter');
+    filterEl.innerHTML = '<option value="">Semua Tahun</option>' + tahunList.map(y => `<option value="${y}">${y}</option>`).join('');
+
+    renderKonsNewsChecklist();
   } catch(e) { wrap.innerHTML='<div style="padding:10px;font-size:0.72rem;color:var(--danger);">Gagal memuat daftar berita: '+e.message+'</div>'; console.error(e); }
 }
+document.getElementById('kons-news-year-filter').addEventListener('change', renderKonsNewsChecklist);
+
 function getSelectedNewsIds() {
-  return Array.from(document.querySelectorAll('#kons-news-checklist input[type="checkbox"]:checked')).map(cb => cb.value);
+  return konsNewsSelectedIds;
 }
 
 async function loadKonservasiList() {
@@ -1692,45 +1774,181 @@ async function loadBioList() {
   const wrap = document.getElementById('bio-list-wrap');
   wrap.innerHTML='<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
   try {
-    const snap = await getDocs(query(collection(db,'monitoring_kehati'), orderBy('year','desc')));
+    // Ambil SEMUA dokumen tanpa orderBy di server — beberapa data lama menyimpan
+    // "year" sebagai string dan sebagian sebagai number, campuran tipe begini
+    // membuat orderBy("year") di server mengecualikan dokumen secara diam-diam.
+    // Sort dilakukan di JS, jadi aman untuk campuran tipe apa pun.
+    const snap = await getDocs(collection(db,'monitoring_kehati'));
     if (snap.empty) { wrap.innerHTML='<p style="color:var(--text-muted);">Belum ada data biodiversitas.</p>'; return; }
+    let docs = [];
+    snap.forEach(d => docs.push({ id:d.id, data:d.data() }));
+    docs.sort((a,b) => String(b.data.year||'').localeCompare(String(a.data.year||'')));
     wrap.innerHTML='';
-    snap.forEach(d => {
-      const dat = d.data();
-      const f = dat.flora||{}, b = dat.burung||{};
+    docs.forEach(({id, data:dat}) => {
+      const idx = dat.indices || {};
+      const bidx = dat.birdIndices || {};
+      const fs = dat.floraStats || {};
+      const bs = dat.birdStats || {};
+      const flag = dat.flagshipSpecies || {};
+      const locName = dat.location || dat.name || '—';
       wrap.innerHTML += `
         <div class="list-card">
           <div class="list-card-header">
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                <span style="font-family:var(--display);font-size:1.3rem;font-weight:900;color:var(--lime);">${dat.year}</span>
-                <span style="font-size:0.75rem;color:var(--text-muted);">${dat.location||'—'}</span>
+                <span style="font-family:var(--display);font-size:1.3rem;font-weight:900;color:var(--lime);">${dat.year||'—'}</span>
+                <span style="font-size:0.75rem;color:var(--text-muted);">${locName}</span>
               </div>
               <div class="stats-mini">
-                <span><i class="fas fa-seedling" style="color:var(--lime)"></i>Flora: <b>${f.spesies||0}</b> sp · H'=${f.H||0}</span>
-                <span><i class="fas fa-dove" style="color:var(--blue)"></i>Burung: <b>${b.spesies||0}</b> sp · H'=${b.H||0}</span>
+                <span><i class="fas fa-seedling" style="color:var(--lime)"></i>Flora: <b>${fs.total||0}</b> sp · H'=${idx.H||0}</span>
+                <span><i class="fas fa-dove" style="color:var(--blue)"></i>Burung: <b>${bs.species||0}</b> sp · H'=${bidx.H||0}</span>
               </div>
-              ${b.flagship ? `<div style="font-size:0.68rem;color:var(--orange);margin-top:4px;"><i class="fas fa-star"></i> Flagship: ${b.flagship}</div>` : ''}
+              ${flag.name ? `<div style="font-size:0.68rem;color:var(--orange);margin-top:4px;"><i class="fas fa-star"></i> Flagship: ${flag.name}</div>` : ''}
+              <div style="margin-top:6px;font-size:0.6rem;color:var(--text-muted);">ID: ${id}</div>
             </div>
             <div class="list-card-actions">
-              <button class="btn btn-outline btn-sm" onclick="editBio('${d.id}')"><i class="fas fa-edit"></i> Edit</button>
-              <button class="btn btn-danger btn-sm" onclick="delDoc('monitoring_kehati','${d.id}',loadBioList)"><i class="fas fa-trash"></i></button>
+              <button class="btn btn-outline btn-sm" onclick="editBio('${id}')"><i class="fas fa-edit"></i> Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="delDoc('monitoring_kehati','${id}',loadBioList)"><i class="fas fa-trash"></i></button>
             </div>
           </div>
         </div>`;
     });
-  } catch(e) { wrap.innerHTML='<p style="color:var(--danger);">Gagal.</p>'; console.error(e); }
+  } catch(e) { wrap.innerHTML='<p style="color:var(--danger);">Gagal memuat: '+e.message+'</p>'; console.error(e); }
 }
+
+// ── Baris dinamis: Flora & Fauna Dilindungi ──
+let protectedRowCounter = 0;
+function addProtectedRow(item = {}) {
+  protectedRowCounter++;
+  const rid = 'prot_' + protectedRowCounter;
+  const wrap = document.getElementById('bio-protected-rows');
+  const div = document.createElement('div');
+  div.className = 'dyn-row';
+  div.id = rid;
+  div.style.gridTemplateColumns = '1.3fr 0.7fr 1fr';
+  div.innerHTML = `
+    <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.62rem;">Nama Spesies</label><input type="text" class="prot-name" value="${item.name||''}" placeholder="Cth: Elang Jawa"></div>
+    <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.62rem;">Tipe</label>
+      <select class="prot-type"><option value="Flora" ${item.type==='Flora'?'selected':''}>Flora</option><option value="Fauna" ${item.type==='Fauna'?'selected':''}>Fauna</option></select>
+    </div>
+    <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.62rem;">Status</label><input type="text" class="prot-status" value="${item.status||''}" placeholder="Cth: Dilindungi PP No.7/1999"></div>
+    <div class="form-group" style="margin-bottom:0;grid-column:1/-1;">
+      <label style="font-size:0.62rem;">Foto <span style="color:var(--text-muted);">(opsional)</span></label>
+      <div class="upload-zone prot-img-zone" onclick="this.nextElementSibling.click()">
+        <i class="fas fa-camera"></i><p>Klik untuk pilih foto</p>
+        <div class="file-name prot-img-fname">${item.img ? 'Foto tersimpan' : 'Belum ada foto'}</div>
+      </div>
+      <input type="file" class="prot-img-input" accept="image/*" style="display:none">
+      <input type="hidden" class="prot-img-data" value="${item.img||''}">
+    </div>
+    <button type="button" class="dyn-remove" onclick="document.getElementById('${rid}').remove()"><i class="fas fa-times"></i></button>`;
+  wrap.appendChild(div);
+  div.querySelector('.prot-img-input').addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    const fname = div.querySelector('.prot-img-fname');
+    fname.textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 500;
+        let w=img.width, h=img.height;
+        if (w>MAX) { h=Math.round(h*MAX/w); w=MAX; }
+        const c = document.createElement('canvas'); c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        div.querySelector('.prot-img-data').value = c.toDataURL('image/jpeg', 0.7);
+        fname.textContent = '✓ ' + file.name;
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+window.addProtectedRow = addProtectedRow;
+function getProtectedListData() {
+  return Array.from(document.querySelectorAll('#bio-protected-rows .dyn-row')).map(row => ({
+    name: row.querySelector('.prot-name').value.trim(),
+    type: row.querySelector('.prot-type').value,
+    status: row.querySelector('.prot-status').value.trim(),
+    img: row.querySelector('.prot-img-data').value
+  })).filter(item => item.name);
+}
+
+// ── Baris dinamis: Tren Indeks Tahunan ──
+let historyRowCounter = 0;
+function addHistoryRow(item = {}) {
+  historyRowCounter++;
+  const rid = 'hist_' + historyRowCounter;
+  const wrap = document.getElementById('bio-history-rows');
+  const div = document.createElement('div');
+  div.className = 'dyn-row';
+  div.id = rid;
+  div.style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
+  div.innerHTML = `
+    <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.62rem;">Tahun</label><input type="text" class="hist-label" value="${item.label||''}" placeholder="2021"></div>
+    <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.62rem;">H'</label><input type="number" step="0.001" class="hist-h" value="${item.h??''}" placeholder="0.000"></div>
+    <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.62rem;">E</label><input type="number" step="0.001" class="hist-e" value="${item.e??''}" placeholder="0.000"></div>
+    <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.62rem;">R</label><input type="number" step="0.001" class="hist-r" value="${item.r??''}" placeholder="0.000"></div>
+    <button type="button" class="dyn-remove" onclick="document.getElementById('${rid}').remove()"><i class="fas fa-times"></i></button>`;
+  wrap.appendChild(div);
+}
+window.addHistoryRow = addHistoryRow;
+function getHistoryData() {
+  const rows = Array.from(document.querySelectorAll('#bio-history-rows .dyn-row'));
+  const labels=[], h=[], e=[], r=[];
+  rows.forEach(row => {
+    const lbl = row.querySelector('.hist-label').value.trim();
+    if (!lbl) return;
+    labels.push(lbl);
+    h.push(parseFloat(row.querySelector('.hist-h').value)||0);
+    e.push(parseFloat(row.querySelector('.hist-e').value)||0);
+    r.push(parseFloat(row.querySelector('.hist-r').value)||0);
+  });
+  return { labels, h, e, r };
+}
+
+// ── Upload foto flagship species ──
+document.getElementById('bio-flagship-img-input').addEventListener('change', function() {
+  const file = this.files[0]; if (!file) return;
+  document.getElementById('bio-flagship-img-fname').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 700;
+      let w=img.width, h=img.height;
+      if (w>MAX) { h=Math.round(h*MAX/w); w=MAX; }
+      const c = document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      const b64 = c.toDataURL('image/jpeg', 0.75);
+      document.getElementById('bio-flagship-img').value = b64;
+      document.getElementById('bio-flagship-img-tag').src = b64;
+      document.getElementById('bio-flagship-img-preview').style.display = 'block';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+window.clearBioFlagshipImg = function() {
+  document.getElementById('bio-flagship-img').value = '';
+  document.getElementById('bio-flagship-img-input').value = '';
+  document.getElementById('bio-flagship-img-fname').textContent = 'Belum ada foto dipilih';
+  document.getElementById('bio-flagship-img-preview').style.display = 'none';
+};
 
 function newBioForm() {
   document.getElementById('bio-doc-id').value='';
   document.getElementById('bio-year').value='';
   document.getElementById('bio-location-select').value='';
   document.getElementById('bio-location-custom').value='';
-  ['bio-flora-spesies','bio-flora-famili','bio-flora-dilindungi','bio-flora-H','bio-flora-E','bio-flora-R',
-   'bio-burung-spesies','bio-burung-famili','bio-burung-dilindungi','bio-burung-H','bio-burung-E','bio-burung-R',
-   'bio-burung-flagship','bio-flora-lindung-list','bio-burung-lindung-list','bio-catatan'
+  document.getElementById('bio-index-cat').value='Sedang';
+  ['bio-flora-total','bio-flora-famili','bio-index-h','bio-index-e','bio-index-r','bio-flora-note',
+   'bio-bird-species','bio-bird-family','bio-bird-dom','bio-bird-key','bio-bird-h','bio-bird-e','bio-bird-r',
+   'bio-flagship-name','bio-flagship-status','bio-flagship-desc','bio-catatan'
   ].forEach(id=>document.getElementById(id).value='');
+  clearBioFlagshipImg();
+  document.getElementById('bio-protected-rows').innerHTML='';
+  document.getElementById('bio-history-rows').innerHTML='';
   bioKmlParsedPolygons=null;
   document.getElementById('bio-kml-name').textContent='Belum ada file';
   toggleBioKML();
@@ -1741,66 +1959,118 @@ window.newBioForm = newBioForm;
 async function editBio(id) {
   const snap = await getDoc(doc(db,'monitoring_kehati',id));
   if (!snap.exists()) return;
-  const d = snap.data(); const f=d.flora||{}, b=d.burung||{};
+  const d = snap.data();
+  const idx = d.indices || {}, bidx = d.birdIndices || {};
+  const fs = d.floraStats || {}, bs = d.birdStats || {};
+  const flag = d.flagshipSpecies || {};
   document.getElementById('bio-doc-id').value = id;
   document.getElementById('bio-year').value = d.year||'';
-  // set location
+  // lokasi
+  const locName = d.location || d.name || '';
   const locSel = document.getElementById('bio-location-select');
   const opts = Array.from(locSel.options).map(o=>o.value);
-  if (opts.includes(d.location)) locSel.value = d.location;
-  else { locSel.value='lainnya'; document.getElementById('bio-location-custom').value=d.location||''; }
+  if (opts.includes(locName)) locSel.value = locName;
+  else { locSel.value='lainnya'; document.getElementById('bio-location-custom').value = locName; }
   // flora
-  document.getElementById('bio-flora-spesies').value = f.spesies||'';
-  document.getElementById('bio-flora-famili').value  = f.famili||'';
-  document.getElementById('bio-flora-dilindungi').value = f.dilindungi||'';
-  document.getElementById('bio-flora-H').value = f.H||'';
-  document.getElementById('bio-flora-E').value = f.E||'';
-  document.getElementById('bio-flora-R').value = f.R||'';
-  document.getElementById('bio-flora-lindung-list').value = (f.lindung_list||[]).join('\n');
+  document.getElementById('bio-flora-total').value  = fs.total||'';
+  document.getElementById('bio-flora-famili').value = fs.famili||'';
+  document.getElementById('bio-flora-note').value   = fs.note||'';
+  document.getElementById('bio-index-cat').value    = idx.cat||'Sedang';
+  document.getElementById('bio-index-h').value = idx.H||'';
+  document.getElementById('bio-index-e').value = idx.E||'';
+  document.getElementById('bio-index-r').value = idx.R||'';
   // burung
-  document.getElementById('bio-burung-spesies').value   = b.spesies||'';
-  document.getElementById('bio-burung-famili').value    = b.famili||'';
-  document.getElementById('bio-burung-dilindungi').value= b.dilindungi||'';
-  document.getElementById('bio-burung-H').value = b.H||'';
-  document.getElementById('bio-burung-E').value = b.E||'';
-  document.getElementById('bio-burung-R').value = b.R||'';
-  document.getElementById('bio-burung-flagship').value  = b.flagship||'';
-  document.getElementById('bio-burung-lindung-list').value = (b.lindung_list||[]).join('\n');
-  document.getElementById('bio-catatan').value = d.catatan||'';
+  document.getElementById('bio-bird-species').value = bs.species||'';
+  document.getElementById('bio-bird-family').value  = bs.family||'';
+  document.getElementById('bio-bird-dom').value     = bs.dom||'';
+  document.getElementById('bio-bird-key').value     = bs.key||'';
+  document.getElementById('bio-bird-h').value = bidx.H||'';
+  document.getElementById('bio-bird-e').value = bidx.E||'';
+  document.getElementById('bio-bird-r').value = bidx.R||'';
+  // flagship
+  document.getElementById('bio-flagship-name').value   = flag.name||'';
+  document.getElementById('bio-flagship-status').value = flag.status||'';
+  document.getElementById('bio-flagship-desc').value   = flag.desc||'';
+  if (flag.img) {
+    document.getElementById('bio-flagship-img').value = flag.img;
+    document.getElementById('bio-flagship-img-tag').src = flag.img;
+    document.getElementById('bio-flagship-img-preview').style.display='block';
+    document.getElementById('bio-flagship-img-fname').textContent='Foto tersimpan';
+  } else { clearBioFlagshipImg(); }
+  // protected list
+  document.getElementById('bio-protected-rows').innerHTML='';
+  (d.protectedList||[]).forEach(item => addProtectedRow(item));
+  // history tren
+  document.getElementById('bio-history-rows').innerHTML='';
+  const labels = d.chartLabels || [];
+  const hH = d.historyH || [], hE = d.historyE || [], hR = d.historyR || [];
+  labels.forEach((lbl,i) => addHistoryRow({ label: lbl, h: hH[i], e: hE[i], r: hR[i] }));
+
+  document.getElementById('bio-catatan').value = d.catatan||d.desc||'';
+  document.getElementById('bio-kml-name').textContent = d.detailPolygon && d.detailPolygon.length ? '✓ Polygon tersimpan di database' : 'Belum ada file';
+  bioKmlParsedPolygons = null;
   toggleBioKML();
   switchTab('biodiversitas','bio-form');
 }
 window.editBio = editBio;
 
 document.getElementById('saveBioBtn').addEventListener('click', async () => {
-  const year = parseInt(document.getElementById('bio-year').value);
+  const year = document.getElementById('bio-year').value; // simpan sebagai STRING — konsisten dengan skema asli, mencegah campuran tipe yang membuat data "hilang" dari query
   const locSel = document.getElementById('bio-location-select').value;
   const location = locSel === 'lainnya' ? document.getElementById('bio-location-custom').value.trim() : locSel;
   if (!year||!location) { alert('Tahun dan Lokasi wajib diisi.'); return; }
+
+  const flagshipName = document.getElementById('bio-flagship-name').value.trim();
+  const { labels: chartLabels, h: historyH, e: historyE, r: historyR } = getHistoryData();
+
   const data = {
     year, location,
-    flora: {
-      spesies:    parseInt(document.getElementById('bio-flora-spesies').value)||0,
-      famili:     parseInt(document.getElementById('bio-flora-famili').value)||0,
-      dilindungi: parseInt(document.getElementById('bio-flora-dilindungi').value)||0,
-      H: parseFloat(document.getElementById('bio-flora-H').value)||0,
-      E: parseFloat(document.getElementById('bio-flora-E').value)||0,
-      R: parseFloat(document.getElementById('bio-flora-R').value)||0,
-      lindung_list: document.getElementById('bio-flora-lindung-list').value.split('\n').map(s=>s.trim()).filter(Boolean)
+    catatan: document.getElementById('bio-catatan').value.trim(),
+    indices: {
+      H: parseFloat(document.getElementById('bio-index-h').value)||0,
+      E: parseFloat(document.getElementById('bio-index-e').value)||0,
+      R: parseFloat(document.getElementById('bio-index-r').value)||0,
+      cat: document.getElementById('bio-index-cat').value
     },
-    burung: {
-      spesies:    parseInt(document.getElementById('bio-burung-spesies').value)||0,
-      famili:     parseInt(document.getElementById('bio-burung-famili').value)||0,
-      dilindungi: parseInt(document.getElementById('bio-burung-dilindungi').value)||0,
-      H: parseFloat(document.getElementById('bio-burung-H').value)||0,
-      E: parseFloat(document.getElementById('bio-burung-E').value)||0,
-      R: parseFloat(document.getElementById('bio-burung-R').value)||0,
-      flagship: document.getElementById('bio-burung-flagship').value.trim(),
-      lindung_list: document.getElementById('bio-burung-lindung-list').value.split('\n').map(s=>s.trim()).filter(Boolean)
+    birdIndices: {
+      H: parseFloat(document.getElementById('bio-bird-h').value)||0,
+      E: parseFloat(document.getElementById('bio-bird-e').value)||0,
+      R: parseFloat(document.getElementById('bio-bird-r').value)||0
     },
-    catatan: document.getElementById('bio-catatan').value.trim()
+    floraStats: {
+      total:  parseInt(document.getElementById('bio-flora-total').value)||0,
+      famili: parseInt(document.getElementById('bio-flora-famili').value)||0,
+      note:   document.getElementById('bio-flora-note').value.trim()
+    },
+    birdStats: {
+      species: parseInt(document.getElementById('bio-bird-species').value)||0,
+      family:  parseInt(document.getElementById('bio-bird-family').value)||0,
+      dom:     document.getElementById('bio-bird-dom').value.trim(),
+      key:     document.getElementById('bio-bird-key').value.trim()
+    },
+    protectedList: getProtectedListData(),
+    chartLabels, historyH, historyE, historyR
   };
-  if (bioKmlParsedPolygons) data.areaPolygon = bioKmlParsedPolygons;
+  if (flagshipName) {
+    data.flagshipSpecies = {
+      name: flagshipName,
+      status: document.getElementById('bio-flagship-status').value.trim(),
+      desc: document.getElementById('bio-flagship-desc').value.trim(),
+      img: document.getElementById('bio-flagship-img').value || ''
+    };
+  }
+  if (bioKmlParsedPolygons) {
+    data.detailPolygon = bioKmlParsedPolygons;
+    // Derive lat/lng (titik tengah) dari polygon pertama, supaya marker tetap
+    // muncul di peta utama biodiversity.html tanpa perlu input koordinat manual.
+    const firstPoly = bioKmlParsedPolygons[0];
+    if (firstPoly && firstPoly.length > 0) {
+      const avgLat = firstPoly.reduce((s,p)=>s+p[0],0) / firstPoly.length;
+      const avgLng = firstPoly.reduce((s,p)=>s+p[1],0) / firstPoly.length;
+      data.lat = avgLat; data.lng = avgLng;
+    }
+  }
+
   const btn = document.getElementById('saveBioBtn');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
   try {
@@ -1808,7 +2078,7 @@ document.getElementById('saveBioBtn').addEventListener('click', async () => {
     if (id) await setDoc(doc(db,'monitoring_kehati',id), data, {merge:true});
     else await addDoc(collection(db,'monitoring_kehati'), data);
     switchTab('biodiversitas','bio-list'); loadBioList();
-  } catch(e) { alert('Gagal: '+e.message); }
+  } catch(e) { alert('Gagal menyimpan data biodiversitas: '+e.message); console.error(e); }
   finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan Data'; }
 });
 
