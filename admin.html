@@ -294,7 +294,13 @@ input,textarea,select{font-family:var(--body);}
 
     <!-- ===== BERITA ===== -->
     <section class="panel" id="panel-berita">
-      <div class="main-header"><h1>Berita</h1><p>Kelola warta internal dan liputan media eksternal.</p></div>
+      <div class="main-header">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
+          <div><h1>Berita</h1><p>Kelola warta internal dan liputan media eksternal.</p></div>
+          <button class="btn btn-outline btn-sm" id="fixNewsDatesBtn" title="Perbaiki tanggal lama yang masih berupa teks (contoh: '8 Agustus 2022') supaya urutan berita terbaru selalu di atas, tidak acak."><i class="fas fa-calendar-check"></i> Perbaiki Urutan Tanggal</button>
+        </div>
+        <div id="fixNewsDatesStatus" style="font-size:0.7rem;color:var(--text-muted);margin-top:8px;"></div>
+      </div>
       <div class="tab-bar">
         <button class="tab-btn active" data-tab="berita-internal">Warta Internal</button>
         <button class="tab-btn" data-tab="berita-external">Liputan Media Eksternal</button>
@@ -608,12 +614,23 @@ input,textarea,select{font-family:var(--body);}
   <div class="modal-box">
     <button class="modal-close" data-close="modal-berita-external"><i class="fas fa-times"></i></button>
     <h3 id="modal-be-title">Tambah Liputan Media</h3>
-    <div class="sub">Link berita dari media luar — foto otomatis tampil dari OG tag</div>
+    <div class="sub">Link berita dari media luar — upload foto liputan dari HP/laptop Anda</div>
     <input type="hidden" id="be-id">
     <div class="form-group"><label>Tanggal Terbit</label><input type="date" id="be-date"></div>
     <div class="form-group"><label>Judul Berita</label><input type="text" id="be-judul" placeholder="Judul berita di media tersebut..."></div>
     <div class="form-group"><label>Link / URL Berita</label><input type="text" id="be-url" placeholder="https://radarbromo.com/..."></div>
     <div class="form-group"><label>Nama Media / Sumber</label><input type="text" id="be-sumber" placeholder="Radar Bromo, Jawa Pos, dll."></div>
+    <div class="form-group">
+      <label>Foto Liputan</label>
+      <div class="upload-zone" id="be-foto-zone" onclick="document.getElementById('be-foto-input').click()">
+        <i class="fas fa-camera"></i>
+        <p>Klik untuk pilih foto dari <b>HP, laptop, atau perangkat lain</b></p>
+        <div class="file-name" id="be-foto-file-name">Belum ada file dipilih</div>
+      </div>
+      <input type="file" id="be-foto-input" accept="image/*" style="display:none">
+      <div class="form-hint">Foto otomatis dikompres lalu disimpan langsung di database. Kalau tidak diisi, kartu berita memakai foto default.</div>
+      <div id="be-foto-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-berita-external">Batal</button>
       <button class="btn btn-lime" id="saveBeritaExternalBtn"><i class="fas fa-save"></i> Simpan</button>
@@ -753,6 +770,10 @@ let bioKmlParsedPolygons = null;
 // ── Konservasi: state foto & berita terkait ──
 let konsExistingPhotos = [];   // URL foto yang sudah tersimpan di DB (saat edit)
 let konsNewPhotoFiles  = [];   // File baru yang dipilih user, belum diupload
+
+// ── Berita External: state foto liputan (1 foto) ──
+let beExistingPhoto = '';      // base64/url foto tersimpan (saat edit)
+let beNewPhotoFile  = null;    // File baru dipilih, belum diproses
 let konsAllNewsCache   = null; // cache daftar berita untuk checklist
 
 // ============================================================
@@ -1006,10 +1027,13 @@ async function loadBeritaExternal() {
       wrap.innerHTML += `
         <div class="list-card">
           <div class="list-card-header">
-            <div>
-              <div style="font-weight:700;font-size:0.85rem;color:var(--white);margin-bottom:4px;">${n.title||'—'}</div>
-              <div style="font-size:0.68rem;color:var(--text-muted);">${n.date||''} · ${n.source||'Media Luar'}</div>
-              ${n.url ? `<a href="${n.url}" target="_blank" style="font-size:0.65rem;color:var(--blue);">${n.url.substring(0,60)}...</a>` : ''}
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              ${n.image ? `<img src="${n.image}" loading="lazy" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">` : ''}
+              <div>
+                <div style="font-weight:700;font-size:0.85rem;color:var(--white);margin-bottom:4px;">${n.title||'—'}</div>
+                <div style="font-size:0.68rem;color:var(--text-muted);">${n.date||''} · ${n.source||'Media Luar'}</div>
+                ${n.url ? `<a href="${n.url}" target="_blank" style="font-size:0.65rem;color:var(--blue);">${n.url.substring(0,60)}...</a>` : ''}
+              </div>
             </div>
             <div class="list-card-actions">
               <button class="btn btn-outline btn-sm" onclick="editBeritaExternal('${id}')"><i class="fas fa-edit"></i></button>
@@ -1029,14 +1053,59 @@ async function editBeritaExternal(id) {
   document.getElementById('be-judul').value  = n.title||'';
   document.getElementById('be-url').value    = n.url||'';
   document.getElementById('be-sumber').value = n.source||'';
+  beExistingPhoto = n.image || '';
+  beNewPhotoFile  = null;
+  renderBeFotoPreview();
   document.getElementById('modal-be-title').textContent='Edit Liputan Media';
   openModal('modal-berita-external');
 }
 document.getElementById('addBeritaExternalBtn').addEventListener('click', () => {
   ['be-id','be-date','be-judul','be-url','be-sumber'].forEach(id => document.getElementById(id).value='');
+  beExistingPhoto = '';
+  beNewPhotoFile  = null;
+  renderBeFotoPreview();
   document.getElementById('modal-be-title').textContent='Tambah Liputan Media';
   openModal('modal-berita-external');
 });
+
+// Pratinjau foto liputan (1 foto saja)
+function renderBeFotoPreview() {
+  const wrap = document.getElementById('be-foto-preview');
+  const fname = document.getElementById('be-foto-file-name');
+  wrap.innerHTML = '';
+  if (beNewPhotoFile) {
+    const url = URL.createObjectURL(beNewPhotoFile);
+    wrap.innerHTML = `
+      <div class="photo-thumb">
+        <img src="${url}" loading="lazy">
+        <span class="photo-tag">Baru</span>
+        <button type="button" class="photo-remove" onclick="removeBeFoto()"><i class="fas fa-times"></i></button>
+      </div>`;
+    fname.textContent = 'Foto baru siap diunggah';
+  } else if (beExistingPhoto) {
+    wrap.innerHTML = `
+      <div class="photo-thumb">
+        <img src="${beExistingPhoto}" loading="lazy" onerror="this.src='https://placehold.co/84x84/1a1b1a/666?text=%E2%9C%96'">
+        <span class="photo-tag">Tersimpan</span>
+        <button type="button" class="photo-remove" onclick="removeBeFoto()"><i class="fas fa-times"></i></button>
+      </div>`;
+    fname.textContent = 'Foto tersimpan';
+  } else {
+    fname.textContent = 'Belum ada file dipilih';
+  }
+}
+function removeBeFoto() {
+  beNewPhotoFile = null;
+  beExistingPhoto = '';
+  document.getElementById('be-foto-input').value = '';
+  renderBeFotoPreview();
+}
+window.removeBeFoto = removeBeFoto;
+document.getElementById('be-foto-input').addEventListener('change', (e) => {
+  if (e.target.files[0]) { beNewPhotoFile = e.target.files[0]; renderBeFotoPreview(); }
+  e.target.value = '';
+});
+
 document.getElementById('saveBeritaExternalBtn').addEventListener('click', async () => {
   const id = document.getElementById('be-id').value;
   const data = {
@@ -1048,14 +1117,73 @@ document.getElementById('saveBeritaExternalBtn').addEventListener('click', async
   };
   if (!data.title||!data.url) { alert('Judul dan URL wajib diisi.'); return; }
   const btn = document.getElementById('saveBeritaExternalBtn');
+  const btnOriginalHTML = btn.innerHTML;
   btn.disabled=true;
   try {
+    if (beNewPhotoFile) {
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengompres foto...';
+      data.image = await kompresFotoKons(beNewPhotoFile);
+    } else {
+      data.image = beExistingPhoto || '';
+    }
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
     if (id) await setDoc(doc(db,'news',id), data, {merge:true});
     else await addDoc(collection(db,'news'), data);
     closeModal('modal-berita-external');
     loadBeritaExternal();
   } catch(e) { alert('Gagal: '+e.message); }
-  finally { btn.disabled=false; }
+  finally { btn.disabled=false; btn.innerHTML=btnOriginalHTML; }
+});
+
+// ============================================================
+// BERITA: PERBAIKI FORMAT TANGGAL LAMA (supaya urutan terbaru di atas)
+// ============================================================
+const BULAN_ID = { januari:1, februari:2, maret:3, april:4, mei:5, juni:6, juli:7, agustus:8, september:9, oktober:10, november:11, desember:12 };
+
+function tanggalKeISO(str) {
+  if (!str) return null;
+  const s = String(str).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s; // sudah format ISO/date-picker, biarkan
+  const m = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/); // "8 Agustus 2022" / "23 aGUSTUS 2021"
+  if (m) {
+    const day   = parseInt(m[1], 10);
+    const bulan = BULAN_ID[m[2].toLowerCase()];
+    const year  = parseInt(m[3], 10);
+    if (bulan) return `${year}-${String(bulan).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  }
+  return null; // tidak bisa dibaca otomatis, perlu dicek manual
+}
+
+document.getElementById('fixNewsDatesBtn').addEventListener('click', async () => {
+  if (!confirm('Periksa dan perbaiki semua tanggal berita yang masih format teks lama (contoh: "8 Agustus 2022") supaya berita terbaru selalu tampil di atas?')) return;
+  const btn = document.getElementById('fixNewsDatesBtn');
+  const status = document.getElementById('fixNewsDatesStatus');
+  const btnOriginalHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memeriksa...';
+  status.textContent = '';
+  let diperbaiki = 0, sudahBenar = 0;
+  const gagal = [];
+  try {
+    const snap = await getDocs(collection(db,'news'));
+    for (const d of snap.docs) {
+      const n = d.data();
+      const iso = tanggalKeISO(n.date);
+      if (iso === null) { gagal.push(n.title || '(tanpa judul)'); continue; }
+      if (iso === n.date) { sudahBenar++; continue; }
+      await updateDoc(doc(db,'news', d.id), { date: iso });
+      diperbaiki++;
+    }
+    let msg = `✅ ${diperbaiki} tanggal diperbaiki, ${sudahBenar} sudah benar.`;
+    if (gagal.length) msg += ` ⚠️ ${gagal.length} tidak bisa dibaca otomatis (edit manual lewat tombol pensil): ${gagal.join(', ')}`;
+    status.textContent = msg;
+    loadBeritaInternal(); loadBeritaExternal();
+  } catch(e) {
+    status.textContent = '❌ Gagal memeriksa: ' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = btnOriginalHTML;
+  }
 });
 
 // ============================================================
