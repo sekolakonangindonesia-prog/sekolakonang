@@ -85,83 +85,94 @@
             <button class="btn-filter" onclick="filterNews('external')">Liputan Media</button>
         </div>
 
-        <!-- NEWS GRID -->
+        <!-- NEWS GRID - akan diisi dari Firebase -->
         <div class="row g-4 mt-4" id="newsGrid">
-            <!-- CONTOH BERITA INTERNAL -->
-            <div class="col-md-6 col-lg-4 news-item internal">
-                <div class="news-card">
-                    <div class="news-img-wrapper">
-                        <span class="type-badge bg-internal">Internal</span>
-                        <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=500" class="news-img">
-                    </div>
-                    <div class="news-body">
-                        <span class="news-date">25 APRIL 2024</span>
-                        <h4 class="news-title">Menembus Lereng: Tim SK Pantau Bibit di Desa Galih</h4>
-                        <p class="news-excerpt">Cerita aksi tim lapangan dalam memastikan setiap bibit yang ditanam tumbuh dengan baik meski medan cukup sulit...</p>
-                        <a href="#" class="btn-read">Baca Cerita Lengkap →</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CONTOH BERITA EXTERNAL -->
-            <div class="col-md-6 col-lg-4 news-item external">
-                <div class="news-card">
-                    <div class="news-img-wrapper">
-                        <span class="type-badge bg-external">Media Luar</span>
-                        <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=500" class="news-img">
-                    </div>
-                    <div class="news-body">
-                        <span class="news-date">10 MARET 2024</span>
-                        <h4 class="news-title">RADAR BROMO: Yayasan Sekola Konang Raih Penghargaan</h4>
-                        <p class="news-excerpt">Apresiasi tinggi diberikan oleh media lokal atas dedikasi tanpa henti dalam menjaga ketersediaan air di Probolinggo...</p>
-                        <a href="#" class="btn-read">Lihat Sumber Berita →</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAMBAHKAN LAGI CONTOH LAIN UNTUK ESTIMASI TAMPILAN -->
-            <div class="col-md-6 col-lg-4 news-item internal">
-                <div class="news-card">
-                    <div class="news-img-wrapper">
-                        <span class="type-badge bg-internal">Internal</span>
-                        <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?q=80&w=500" class="news-img">
-                    </div>
-                    <div class="news-body">
-                        <span class="news-date">01 FEBRUARI 2024</span>
-                        <h4 class="news-title">Panen Inspirasi: Sinergi dengan Petani Lokal</h4>
-                        <p class="news-excerpt">Bagaimana program pemberdayaan masyarakat mulai membuahkan hasil ekonomi bagi warga sekitar hutan...</p>
-                        <a href="#" class="btn-read">Baca Cerita Lengkap →</a>
-                    </div>
-                </div>
-            </div>
-
+          <div class="col-12 text-center py-5" id="newsLoading">
+            <div style="color:#555;font-size:0.8rem;">Memuat berita...</div>
+          </div>
         </div>
 
         <div class="footer-sk">@ Yayasan Sekola Konang Indonesia</div>
     </div>
 
-    <script>
-        // Fungsi Filter Sederhana untuk Tampilan Saja
-        function filterNews(type) {
-            // Update tombol aktif
-            const buttons = document.querySelectorAll('.btn-filter');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-            // Filter item
-            const items = document.querySelectorAll('.news-item');
-            items.forEach(item => {
-                if (type === 'all') {
-                    item.style.display = 'block';
-                } else {
-                    if (item.classList.contains(type)) {
-                        item.style.display = 'block';
-                    } else {
-                        item.style.display = 'none';
-                    }
-                }
+        const firebaseConfig = {
+            apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+            authDomain: "sekola-konang.firebaseapp.com",
+            projectId: "sekola-konang",
+            storageBucket: "sekola-konang.firebasestorage.app",
+            messagingSenderId: "9338352073",
+            appId: "1:9338352073:web:b56481b836888b1a8bf818"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db  = getFirestore(app);
+
+        function esc(str) { return String(str??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+        let allNews = [];
+        let currentFilter = 'all';
+
+        async function loadNews() {
+            const grid = document.getElementById('newsGrid');
+            try {
+                const q = query(collection(db, "news"), orderBy("date", "desc"));
+                const snap = await getDocs(q);
+                allNews = [];
+                snap.forEach(docu => allNews.push({ id: docu.id, ...docu.data() }));
+                renderNews();
+            } catch(e) {
+                grid.innerHTML = '<div class="col-12 text-center py-5" style="color:#555;">Gagal memuat berita.</div>';
+            }
+        }
+
+        function renderNews() {
+            const grid = document.getElementById('newsGrid');
+            const filtered = currentFilter === 'all' ? allNews :
+                             currentFilter === 'internal' ? allNews.filter(d => d.type !== 'external') :
+                             allNews.filter(d => d.type === 'external');
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center py-5" style="color:#555;font-size:0.82rem;">Belum ada berita.</div>';
+                return;
+            }
+
+            grid.innerHTML = '';
+            filtered.forEach(d => {
+                const ext = d.type === 'external';
+                const fallbackImg = 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=500';
+                const imgSrc = d.image ? esc(d.image) : fallbackImg;
+                const col = document.createElement('div');
+                col.className = `col-md-6 col-lg-4 news-item ${ext ? 'external' : 'internal'}`;
+                col.innerHTML = `
+                    <div class="news-card">
+                        <div class="news-img-wrapper">
+                            <span class="type-badge ${ext ? 'bg-external' : 'bg-internal'}">${ext ? 'Media Luar' : 'Internal'}</span>
+                            <img src="${imgSrc}" class="news-img" onerror="this.src='${fallbackImg}'" alt="${esc(d.title||'')}">
+                        </div>
+                        <div class="news-body">
+                            <span class="news-date">${esc(d.date||'')}</span>
+                            <h4 class="news-title">${esc(d.title||'')}</h4>
+                            ${d.excerpt ? `<p class="news-excerpt">${esc(d.excerpt)}</p>` : ''}
+                            ${(d.url || d.link) ? `<a href="${esc(d.url||d.link)}" target="_blank" rel="noopener" class="btn-read">${ext ? 'Lihat Sumber Berita' : 'Baca Selengkapnya'} →</a>` : ''}
+                        </div>
+                    </div>`;
+                grid.appendChild(col);
             });
         }
+
+        // Filter buttons
+        function filterNews(type) {
+            currentFilter = type;
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderNews();
+        }
+        window.filterNews = filterNews;
+
+        loadNews();
     </script>
 </body>
 </html>
