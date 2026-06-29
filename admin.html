@@ -879,7 +879,7 @@
         const d = docu.data();
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${d.logoUrl ? `<img class="thumb" src="${d.logoUrl}">` : '<span style="color:var(--text-muted)">Tanpa logo</span>'}</td>
+          <td>${d.logoUrl ? `<img src="${d.logoUrl}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid var(--border);">` : '<span style="color:var(--text-muted)">—</span>'}</td>
           <td>${d.name || ''}</td>
           <td><div class="list-actions" style="justify-content:flex-end;">
             <button class="icon-btn edit-mitra" data-id="${docu.id}"><i class="fas fa-pen"></i></button>
