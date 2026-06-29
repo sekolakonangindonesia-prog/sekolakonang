@@ -159,11 +159,11 @@
   .mitra-header { text-align: center; margin-bottom: 48px; }
   .mitra-header h2 { font-family: var(--display); font-size: clamp(1.5rem,3.5vw,2.2rem); font-weight: 900; color: var(--white); }
   .mitra-header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; }
-  .mitra-logos { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; }
-  .mitra-logo-card { background: rgba(255,255,255,0.92); border-radius: var(--r-sm); padding: 14px 22px; display: flex; align-items: center; justify-content: center; min-width: 120px; height: 64px; transition: 0.2s; }
+  .mitra-logos { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: center; }
+  .mitra-logo-card { width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.92); display: flex; align-items: center; justify-content: center; transition: 0.2s; overflow: hidden; }
   .mitra-logo-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,0.3); }
-  .mitra-logo-card img { max-height: 36px; max-width: 110px; object-fit: contain; }
-  .mitra-logo-text { font-size: 0.75rem; font-weight: 700; color: var(--deep-forest); letter-spacing: 1px; text-transform: uppercase; }
+  .mitra-logo-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .mitra-logo-text { font-size: 0.6rem; font-weight: 700; color: var(--deep-forest); letter-spacing: 1px; text-transform: uppercase; text-align: center; padding: 4px; }
   .mitra-empty-msg { color: var(--text-muted); font-size: 0.85rem; padding: 20px 0; }
 
   /* ── BERITA ── */
@@ -727,7 +727,7 @@
         if (d.logoUrl) {
           const img = document.createElement('img');
           img.alt = esc(d.name||'Mitra');
-          img.style.cssText='max-height:36px;max-width:110px;object-fit:contain;';
+          img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%;';
           img.onerror = () => { card.innerHTML=''; const t=document.createElement('span'); t.className='mitra-logo-text'; t.textContent=d.name||'Mitra'; card.appendChild(t); };
           img.src = d.logoUrl;
           card.appendChild(img);
