@@ -1307,7 +1307,7 @@ function renderKonsPhotoPreview() {
   konsExistingPhotos.forEach((url, idx) => {
     wrap.innerHTML += `
       <div class="photo-thumb">
-        <img src="${url}" loading="lazy">
+        <img src="${url}" loading="lazy" onerror="this.src='https://placehold.co/84x84/1a1b1a/666?text=%E2%9C%96'">
         <span class="photo-tag">Tersimpan</span>
         <button type="button" class="photo-remove" onclick="removeKonsExistingPhoto(${idx})"><i class="fas fa-times"></i></button>
       </div>`;
@@ -1336,16 +1336,71 @@ document.getElementById('kons-photo-input').addEventListener('change', (e) => {
   renderKonsPhotoPreview();
 });
 
-// Upload semua file baru ke Firebase Storage, kembalikan array URL hasil upload
-async function uploadKonsPhotos(docId) {
+// Kompres & resize gambar di browser sebelum upload — supaya tidak mengunggah
+// foto mentah dari kamera HP (bisa 3-8MB) yang membuat proses lama/macet.
+// Target: lebar maksimal 1600px, kualitas JPEG diturunkan bertahap sampai
+// hasilnya mendekati 400KB (tanpa memaksa kalau gambar memang sederhana/kecil).
+function compressImage(file, maxWidth = 1600, targetKB = 400) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = Math.round(height * (maxWidth / width));
+        width = maxWidth;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(objectUrl);
+
+      const tryQuality = (q) => {
+        canvas.toBlob((blob) => {
+          if (!blob) { reject(new Error('Gagal kompres gambar')); return; }
+          const kb = blob.size / 1024;
+          if (kb > targetKB && q > 0.4) {
+            tryQuality(q - 0.1);
+          } else {
+            resolve(blob);
+          }
+        }, 'image/jpeg', q);
+      };
+      tryQuality(0.82);
+    };
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Gagal membuka file gambar: ' + file.name)); };
+    img.src = objectUrl;
+  });
+}
+
+// Upload semua file baru ke Firebase Storage (setelah dikompres), kembalikan array URL hasil upload.
+// onProgress(current, total, label) dipanggil di setiap langkah supaya UI bisa kasih feedback jelas.
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} terlalu lama (lebih dari ${ms/1000}s) — kemungkinan koneksi internet lambat/putus.`)), ms))
+  ]);
+}
+async function uploadKonsPhotos(docId, onProgress) {
   const urls = [];
-  for (const file of konsNewPhotoFiles) {
-    const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-]/g,'_')}`;
-    const path = `monitoring_reboisasi/${docId}/${safeName}`;
-    const fileRef = ref(storage, path);
-    await uploadBytes(fileRef, file);
-    const url = await getDownloadURL(fileRef);
-    urls.push(url);
+  const total = konsNewPhotoFiles.length;
+  for (let i = 0; i < total; i++) {
+    const file = konsNewPhotoFiles[i];
+    try {
+      if (onProgress) onProgress(i+1, total, 'Mengompres');
+      const compressedBlob = await withTimeout(compressImage(file), 30000, 'Kompresi gambar');
+      const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-]/g,'_').replace(/\.[a-zA-Z0-9]+$/, '')}.jpg`;
+      const path = `monitoring_reboisasi/${docId}/${safeName}`;
+      const fileRef = ref(storage, path);
+      if (onProgress) onProgress(i+1, total, 'Mengunggah');
+      await withTimeout(uploadBytes(fileRef, compressedBlob), 90000, 'Upload foto');
+      const url = await getDownloadURL(fileRef);
+      urls.push(url);
+    } catch (errOne) {
+      console.error('Gagal upload foto', file.name, errOne);
+      throw new Error(`Gagal mengunggah foto "${file.name}": ${errOne.message}`);
+    }
   }
   return urls;
 }
@@ -1498,11 +1553,13 @@ document.getElementById('saveKonsBtn').addEventListener('click', async () => {
       // dan tetap cocok dengan filter prefix "tanam_" yang dipakai konservasi.html.
       docId = `tanam_${year}_${Date.now().toString(36)}`;
     }
-    // Upload foto baru (jika ada) dulu, baru gabungkan dengan foto lama yang masih dipertahankan.
-    if (konsNewPhotoFiles.length > 0) {
-      btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mengunggah ${konsNewPhotoFiles.length} foto...`;
-    }
-    const uploadedUrls = await uploadKonsPhotos(docId);
+    // Upload foto baru (jika ada) dulu — dikompres otomatis ke ±400KB supaya
+    // tidak macet di koneksi lambat, lalu gabungkan dengan foto lama yang dipertahankan.
+    // Ada batas waktu 90 detik per foto: kalau jaringan benar-benar macet,
+    // proses akan gagal dengan pesan jelas alih-alih loading selamanya.
+    const uploadedUrls = await uploadKonsPhotos(docId, (cur, total, label) => {
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${label} foto ${cur}/${total}...`;
+    });
     data.photos = [...konsExistingPhotos, ...uploadedUrls];
 
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan data...';
