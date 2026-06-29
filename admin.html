@@ -349,11 +349,17 @@ input,textarea,select{font-family:var(--body);}
             <label>Tahun Program</label>
             <select id="kons-year">
               <option value="">-- Pilih Tahun --</option>
-              <option>2025</option><option>2024</option><option>2023</option>
+              <option>2026</option><option>2025</option><option>2024</option><option>2023</option>
               <option>2022</option><option>2021</option><option>2020</option><option>2019</option>
             </select>
+            <div class="form-hint">Satu tahun boleh memiliki lebih dari satu program (lokasi/proyek berbeda).</div>
           </div>
           <div class="form-group"><label>Lokasi / Desa</label><input type="text" id="kons-location" placeholder="Desa Galih, Probolinggo"></div>
+        </div>
+        <div class="form-group">
+          <label>Judul Program</label>
+          <input type="text" id="kons-title" placeholder="Cth: Program Konservasi Hutan Lindung - PT Tirta Investama Keboncandi">
+          <div class="form-hint">Judul ini yang akan tampil di kartu daftar, tabel riwayat, dan halaman detail.</div>
         </div>
 
         <div class="section-divider"><i class="fas fa-chart-bar"></i> Statistik Fisik</div>
@@ -1263,23 +1269,30 @@ async function loadKonservasiList() {
   const wrap = document.getElementById('kons-list-wrap');
   wrap.innerHTML='<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
   try {
-    const snap = await getDocs(query(collection(db,'monitoring_reboisasi'), orderBy('year','desc')));
-    if (snap.empty) { wrap.innerHTML='<p style="color:var(--text-muted);">Belum ada data konservasi.</p>'; return; }
+    const snap = await getDocs(collection(db,'monitoring_reboisasi'));
+    // Hanya tampilkan dokumen berskema baru (ID berawalan "tanam_").
+    // Dokumen lama berID polos tahun (cth "2021") TIDAK ditampilkan di sini
+    // karena juga tidak dibaca oleh konservasi.html — silakan hapus manual di Firebase Console.
+    let docs = [];
+    snap.forEach(d => { if (d.id.startsWith('tanam_')) docs.push({ id:d.id, data:d.data() }); });
+    if (docs.length === 0) { wrap.innerHTML='<p style="color:var(--text-muted);">Belum ada data konservasi.</p>'; return; }
+    docs.sort((a,b) => (b.data.year||0) - (a.data.year||0));
     wrap.innerHTML='';
-    snap.forEach(d => {
-      const dat = d.data(); const s = dat.stats||{};
+    docs.forEach(({id, data:dat}) => {
+      const s = dat.stats||{};
       const VWB=0.02495,TIME=31.536,RAIN=163;
       const y=dat.year, trees=s.trees||0, rorak=s.rorak||0, sumur=s.sumur||0, biopori=s.biopori||0;
       const air = y===2024 ? ((trees/400)*1.5)+(rorak*0.17)
         : ((trees/400)*VWB*TIME*0.75)+((rorak*490*3*RAIN)/1e6)+((sumur*754*3*RAIN)/1e6)+((biopori/300)*1.5);
       const spTags = dat.species ? Object.entries(dat.species).map(([k,v])=>`<span class="list-badge badge-lime">${k}: ${v}</span>`).join(' ') : '';
+      const judul = dat.title ? dat.title : (dat.location || '—');
       wrap.innerHTML += `
         <div class="list-card">
           <div class="list-card-header">
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
                 <span style="font-family:var(--display);font-size:1.3rem;font-weight:900;color:var(--lime);">${dat.year}</span>
-                <span style="font-size:0.75rem;color:var(--text-muted);">${dat.location||'—'}</span>
+                <span style="font-size:0.75rem;color:var(--text-muted);">${judul}</span>
               </div>
               <div class="stats-mini">
                 <span><i class="fas fa-tree" style="color:var(--lime)"></i><b>${(s.trees||0).toLocaleString('id-ID')}</b> pohon</span>
@@ -1287,20 +1300,22 @@ async function loadKonservasiList() {
                 <span><i class="fas fa-tint" style="color:var(--blue)"></i><b>${air.toFixed(1)}</b> ML/Y</span>
               </div>
               <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">${spTags}</div>
+              <div style="margin-top:6px;font-size:0.6rem;color:var(--text-muted);">ID: ${id}</div>
             </div>
             <div class="list-card-actions">
-              <button class="btn btn-outline btn-sm" onclick="editKons('${d.id}')"><i class="fas fa-edit"></i> Edit</button>
-              <button class="btn btn-danger btn-sm" onclick="delDoc('monitoring_reboisasi','${d.id}',loadKonservasiList)"><i class="fas fa-trash"></i></button>
+              <button class="btn btn-outline btn-sm" onclick="editKons('${id}')"><i class="fas fa-edit"></i> Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="delDoc('monitoring_reboisasi','${id}',loadKonservasiList)"><i class="fas fa-trash"></i></button>
             </div>
           </div>
         </div>`;
     });
-  } catch(e) { wrap.innerHTML='<p style="color:var(--danger);">Gagal memuat.</p>'; console.error(e); }
+  } catch(e) { wrap.innerHTML='<p style="color:var(--danger);">Gagal memuat: '+e.message+'</p>'; console.error(e); }
 }
 
 function newKonsForm() {
   document.getElementById('kons-doc-id').value='';
   document.getElementById('kons-year').value='';
+  document.getElementById('kons-title').value='';
   document.getElementById('kons-location').value='';
   ['kons-trees','kons-rorak','kons-sumur','kons-biopori'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('species-rows').innerHTML='';
@@ -1319,6 +1334,7 @@ async function editKons(id) {
   const d = snap.data(); const s = d.stats||{};
   document.getElementById('kons-doc-id').value   = id;
   document.getElementById('kons-year').value     = d.year||'';
+  document.getElementById('kons-title').value    = d.title||'';
   document.getElementById('kons-location').value = d.location||'';
   document.getElementById('kons-trees').value    = s.trees||0;
   document.getElementById('kons-rorak').value    = s.rorak||0;
@@ -1337,12 +1353,13 @@ window.editKons = editKons;
 
 document.getElementById('saveKonsBtn').addEventListener('click', async () => {
   const year = parseInt(document.getElementById('kons-year').value);
+  const title = document.getElementById('kons-title').value.trim();
   const location = document.getElementById('kons-location').value.trim();
   if (!year||!location) { alert('Tahun dan Lokasi wajib diisi.'); return; }
   const species = getSpeciesData();
   const photos = document.getElementById('kons-photos').value.split('\n').map(s=>s.trim()).filter(Boolean);
   const data = {
-    year, location, species, photos,
+    year, title, location, species, photos,
     stats: {
       trees:   parseInt(document.getElementById('kons-trees').value)||0,
       rorak:   parseInt(document.getElementById('kons-rorak').value)||0,
@@ -1355,11 +1372,19 @@ document.getElementById('saveKonsBtn').addEventListener('click', async () => {
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
   try {
     const existingId = document.getElementById('kons-doc-id').value;
-    if (existingId) await setDoc(doc(db,'monitoring_reboisasi',existingId), data, {merge:true});
-    else await setDoc(doc(db,'monitoring_reboisasi',String(year)), data);
+    if (existingId) {
+      // Edit data yang sudah ada — ID tetap, hanya update field.
+      await setDoc(doc(db,'monitoring_reboisasi',existingId), data, {merge:true});
+    } else {
+      // Data baru — ID unik berskema "tanam_<tahun>_<random>" supaya
+      // satu tahun bisa punya lebih dari satu program/lokasi tanpa saling menimpa,
+      // dan tetap cocok dengan filter prefix "tanam_" yang dipakai konservasi.html.
+      const uniqueId = `tanam_${year}_${Date.now().toString(36)}`;
+      await setDoc(doc(db,'monitoring_reboisasi',uniqueId), data);
+    }
     switchTab('konservasi','kons-list');
     loadKonservasiList();
-  } catch(e) { alert('Gagal: '+e.message); }
+  } catch(e) { alert('Gagal menyimpan data konservasi: '+e.message); console.error(e); }
   finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan Data'; }
 });
 
@@ -1700,9 +1725,14 @@ document.getElementById('refreshProgressBtn').addEventListener('click', loadProg
 // UTIL: DELETE DOC
 // ============================================================
 async function delDoc(col, id, reload) {
-  if (!confirm('Yakin hapus data ini?')) return;
-  try { await deleteDoc(doc(db, col, id)); if (reload) reload(); }
-  catch(e) { alert('Gagal hapus: '+e.message); }
+  if (!confirm('Yakin hapus data ini? Tindakan ini tidak bisa dibatalkan.')) return;
+  try {
+    await deleteDoc(doc(db, col, id));
+    if (reload) reload();
+  } catch(e) {
+    console.error('Gagal hapus dokumen', col, id, e);
+    alert('Gagal hapus data.\n\nPenyebab: ' + e.message + '\n\nKemungkinan: Firestore Security Rules menolak akses delete, atau koneksi internet bermasalah. Cek console browser (F12) untuk detail.');
+  }
 }
 window.delDoc = delDoc;
 window.editBeritaInternal = editBeritaInternal;
