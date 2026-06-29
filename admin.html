@@ -307,6 +307,7 @@
     <div class="menu-item" data-panel="mitra"><i class="fas fa-handshake"></i> Mitra</div>
     <div class="menu-item" data-panel="berita"><i class="fas fa-newspaper"></i> Berita</div>
     <div class="menu-item" data-panel="laporan"><i class="fas fa-file-contract"></i> Dok. Laporan</div>
+    <div class="menu-item" data-panel="konservasi"><i class="fas fa-tree"></i> Data Konservasi</div>
 
     <div class="menu-section-label">Manajemen Tim</div>
     <div class="menu-item" data-panel="tim"><i class="fas fa-users-cog"></i> Akun Tim</div>
@@ -506,7 +507,60 @@
       <div id="progress-list"><p style="color:var(--text-muted);font-size:0.82rem;">Memuat data...</p></div>
     </section>
 
+    <!-- ===== KONSERVASI PANEL ===== -->
+    <section class="panel" id="panel-konservasi">
+      <div class="main-header">
+        <h1>Data Konservasi</h1>
+        <p>Kelola data monitoring reboisasi per tahun — pohon, rorak, sumur, biopori, dan spesies.</p>
+      </div>
+      <div class="list-toolbar">
+        <button class="btn btn-lime" id="addKonservasiBtn"><i class="fas fa-plus"></i> Tambah Data Tahun Baru</button>
+      </div>
+      <div id="konservasi-list"><p style="color:var(--text-muted);font-size:0.82rem;">Memuat data...</p></div>
+    </section>
+
   </main>
+</div>
+
+<!-- ============== MODAL: KONSERVASI ITEM ============== -->
+<div class="modal-backdrop" id="modal-konservasi">
+  <div class="modal-box" style="max-width:620px;">
+    <button class="modal-close" data-close="modal-konservasi"><i class="fas fa-times"></i></button>
+    <h3 id="modal-konservasi-title">Tambah Data Konservasi</h3>
+    <input type="hidden" id="konservasi-doc-id">
+
+    <div class="row-2">
+      <div class="form-group"><label>Tahun Program</label><input type="number" id="k-year" placeholder="2025" min="2019" max="2030"></div>
+      <div class="form-group"><label>Lokasi</label><input type="text" id="k-location" placeholder="Desa Galih, Probolinggo"></div>
+    </div>
+
+    <div class="panel-section-title" style="margin-top:4px;">Statistik Fisik</div>
+    <div class="row-2">
+      <div class="form-group"><label><i class="fas fa-tree" style="color:var(--lime)"></i> Jumlah Pohon</label><input type="number" id="k-trees" placeholder="5000" min="0"></div>
+      <div class="form-group"><label><i class="fas fa-inbox" style="color:var(--orange)"></i> Rorak</label><input type="number" id="k-rorak" placeholder="250" min="0"></div>
+    </div>
+    <div class="row-2">
+      <div class="form-group"><label><i class="fas fa-faucet" style="color:#2196f3"></i> Sumur Resapan</label><input type="number" id="k-sumur" placeholder="10" min="0"></div>
+      <div class="form-group"><label><i class="fas fa-fill-drip" style="color:#00e5ff"></i> Biopori</label><input type="number" id="k-biopori" placeholder="300" min="0"></div>
+    </div>
+
+    <div class="panel-section-title" style="margin-top:4px;">Komposisi Spesies</div>
+    <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">Format: satu baris per spesies — <code style="color:var(--lime)">Nama Spesies: jumlah</code></p>
+    <div class="form-group">
+      <textarea id="k-species" rows="5" placeholder="Alpukat: 1500&#10;Nangka: 800&#10;Kopi Robusta: 2700" style="font-family:monospace;font-size:0.8rem;"></textarea>
+    </div>
+
+    <div class="panel-section-title" style="margin-top:4px;">URL Foto Dokumentasi</div>
+    <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">Satu URL per baris (Google Drive / Storage link langsung)</p>
+    <div class="form-group">
+      <textarea id="k-photos" rows="3" placeholder="https://..." style="font-family:monospace;font-size:0.78rem;"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" data-close="modal-konservasi">Batal</button>
+      <button class="btn btn-lime" id="saveKonservasiBtn"><i class="fas fa-save"></i> Simpan</button>
+    </div>
+  </div>
 </div>
 
 <!-- ============== MODAL: MITRA ITEM ============== -->
@@ -1344,6 +1398,138 @@
 
   document.getElementById('filter-progress-status').addEventListener('change', loadProgress);
   document.getElementById('refreshProgressBtn').addEventListener('click', loadProgress);
+
+  // ========== KONSERVASI ==========
+  async function loadKonservasi() {
+    const wrap = document.getElementById('konservasi-list');
+    wrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.82rem;">Memuat data...</p>';
+    try {
+      const snap = await getDocs(query(collection(db,'monitoring_reboisasi'), orderBy('year','desc')));
+      if (snap.empty) { wrap.innerHTML='<p style="color:var(--text-muted);">Belum ada data konservasi.</p>'; return; }
+      wrap.innerHTML = '';
+      snap.forEach(docu => {
+        const d = docu.data();
+        const s = d.stats || {};
+        const spList = d.species ? Object.entries(d.species).map(([k,v])=>`<span style="background:rgba(198,255,0,0.08);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:0.65rem;margin:2px;">${k}: ${v}</span>`).join('') : '—';
+        wrap.innerHTML += `
+          <div class="list-item" style="margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+              <div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="font-family:var(--display);font-size:1.2rem;font-weight:900;color:var(--lime);">${d.year}</span>
+                  <span style="font-size:0.75rem;color:var(--text-muted);">${d.location||'—'}</span>
+                </div>
+                <div style="display:flex;gap:16px;margin:8px 0 6px;flex-wrap:wrap;">
+                  <span style="font-size:0.72rem;"><i class="fas fa-tree" style="color:var(--lime);margin-right:4px;"></i><b>${(s.trees||0).toLocaleString('id-ID')}</b> pohon</span>
+                  <span style="font-size:0.72rem;"><i class="fas fa-inbox" style="color:var(--orange);margin-right:4px;"></i><b>${(s.rorak||0).toLocaleString('id-ID')}</b> rorak</span>
+                  <span style="font-size:0.72rem;"><i class="fas fa-faucet" style="color:#2196f3;margin-right:4px;"></i><b>${(s.sumur||0)}</b> sumur</span>
+                  <span style="font-size:0.72rem;"><i class="fas fa-fill-drip" style="color:#00e5ff;margin-right:4px;"></i><b>${(s.biopori||0)}</b> biopori</span>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:4px;">${spList}</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-shrink:0;">
+                <button class="btn btn-outline" style="font-size:0.65rem;padding:6px 12px;" onclick="editKonservasi('${docu.id}')"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn" style="font-size:0.65rem;padding:6px 12px;background:rgba(255,107,107,0.12);color:#ff6b6b;border:1px solid rgba(255,107,107,0.3);" data-del-konservasi="${docu.id}" data-year="${d.year}"><i class="fas fa-trash"></i></button>
+              </div>
+            </div>
+          </div>`;
+      });
+      // Delete handler
+      wrap.querySelectorAll('[data-del-konservasi]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm(`Hapus data konservasi tahun ${btn.dataset.year}?`)) return;
+          await deleteDoc(doc(db,'monitoring_reboisasi', btn.dataset.delKonservasi));
+          loadKonservasi();
+        });
+      });
+    } catch(e) { wrap.innerHTML='<p style="color:#ff6b6b;">Gagal memuat data.</p>'; console.error(e); }
+  }
+
+  async function editKonservasi(docId) {
+    try {
+      const snap = await getDoc(doc(db,'monitoring_reboisasi', docId));
+      if (!snap.exists()) return;
+      const d = snap.data(); const s = d.stats || {};
+      document.getElementById('konservasi-doc-id').value = docId;
+      document.getElementById('modal-konservasi-title').textContent = `Edit Data ${d.year}`;
+      document.getElementById('k-year').value = d.year || '';
+      document.getElementById('k-location').value = d.location || '';
+      document.getElementById('k-trees').value = s.trees || 0;
+      document.getElementById('k-rorak').value = s.rorak || 0;
+      document.getElementById('k-sumur').value = s.sumur || 0;
+      document.getElementById('k-biopori').value = s.biopori || 0;
+      // Species → textarea
+      if (d.species) {
+        document.getElementById('k-species').value = Object.entries(d.species).map(([k,v])=>`${k}: ${v}`).join('\n');
+      } else { document.getElementById('k-species').value = ''; }
+      // Photos
+      document.getElementById('k-photos').value = (d.photos||[]).join('\n');
+      openModal('modal-konservasi');
+    } catch(e) { alert('Gagal memuat data.'); }
+  }
+
+  document.getElementById('addKonservasiBtn').addEventListener('click', () => {
+    document.getElementById('konservasi-doc-id').value = '';
+    document.getElementById('modal-konservasi-title').textContent = 'Tambah Data Konservasi Baru';
+    ['k-year','k-location','k-trees','k-rorak','k-sumur','k-biopori','k-species','k-photos']
+      .forEach(id => document.getElementById(id).value = '');
+    openModal('modal-konservasi');
+  });
+
+  document.getElementById('saveKonservasiBtn').addEventListener('click', async () => {
+    const year = parseInt(document.getElementById('k-year').value);
+    const location = document.getElementById('k-location').value.trim();
+    if (!year || !location) { alert('Tahun dan Lokasi wajib diisi.'); return; }
+
+    // Parse species dari textarea
+    const speciesRaw = document.getElementById('k-species').value.trim();
+    const species = {};
+    if (speciesRaw) {
+      speciesRaw.split('\n').forEach(line => {
+        const [name, val] = line.split(':');
+        if (name && val) species[name.trim()] = parseInt(val.trim()) || 0;
+      });
+    }
+
+    // Parse photos
+    const photosRaw = document.getElementById('k-photos').value.trim();
+    const photos = photosRaw ? photosRaw.split('\n').map(s=>s.trim()).filter(Boolean) : [];
+
+    const data = {
+      year,
+      location,
+      stats: {
+        trees:   parseInt(document.getElementById('k-trees').value) || 0,
+        rorak:   parseInt(document.getElementById('k-rorak').value) || 0,
+        sumur:   parseInt(document.getElementById('k-sumur').value) || 0,
+        biopori: parseInt(document.getElementById('k-biopori').value) || 0
+      },
+      species,
+      photos
+    };
+
+    const btn = document.getElementById('saveKonservasiBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+    try {
+      const existingId = document.getElementById('konservasi-doc-id').value;
+      if (existingId) {
+        await setDoc(doc(db,'monitoring_reboisasi', existingId), data, { merge: true });
+      } else {
+        // ID pakai tahun supaya konsisten dengan URL ?id=2025
+        await setDoc(doc(db,'monitoring_reboisasi', String(year)), data);
+      }
+      closeModal('modal-konservasi');
+      loadKonservasi();
+    } catch(e) { alert('Gagal menyimpan: ' + e.message); }
+    finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan'; }
+  });
+
+  // Load konservasi saat panel aktif
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (item.dataset.panel === 'konservasi') loadKonservasi();
+    });
+  });
 
   /* =========================================================
      MODAL HELPERS
