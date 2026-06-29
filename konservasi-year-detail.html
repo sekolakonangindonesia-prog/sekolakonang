@@ -535,7 +535,9 @@ footer {
 
       /* HERO */
       document.getElementById('heroEyebrow').textContent = `Program Konservasi · ${d.year}`;
-      document.getElementById('heroTitle').innerHTML = `Program Tahun <em>${d.year}</em>`;
+      document.getElementById('heroTitle').innerHTML = d.title
+        ? d.title
+        : `Program Tahun <em>${d.year}</em>`;
       document.getElementById('heroLoc').textContent = d.location || '';
 
       /* STAT CARDS */
