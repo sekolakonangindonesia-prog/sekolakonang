@@ -732,11 +732,20 @@
       let totalFloraBio = 0, totalBurungBio = 0;
       kehatiSnap.forEach(docu => {
         const d = docu.data();
+        // Coba semua kemungkinan struktur field flora dari berbagai versi admin
         if (d.floraStats) totalFloraBio += Number(d.floraStats.total || d.floraStats.species_count || d.floraStats.jumlah || 0);
-        if (d.faunaStats) totalBurungBio += Number(d.faunaStats.burung || d.faunaStats.bird_species || 0);
+        else if (d.flora) totalFloraBio += Number(d.flora.total || d.flora.spesies || d.flora.jumlah || 0);
+        else if (d.indices && d.indices.total_species) totalFloraBio += Number(d.indices.total_species || 0);
+        // Coba semua kemungkinan struktur field fauna/burung
+        if (d.faunaStats) totalBurungBio += Number(d.faunaStats.burung || d.faunaStats.bird_species || d.faunaStats.total || 0);
+        else if (d.fauna) totalBurungBio += Number(d.fauna.burung || d.fauna.bird_species || d.fauna.total || 0);
+        else if (d.burung) totalBurungBio += Number(d.burung.total || d.burung.jumlah || d.burung || 0);
       });
-      if (totalFloraBio > 0)  { const el=document.getElementById('stat-biodiversity-flora');  if(el) el.textContent = totalFloraBio.toLocaleString('id-ID')+'+'; }
-      if (totalBurungBio > 0) { const el=document.getElementById('stat-biodiversity-burung'); if(el) el.textContent = totalBurungBio.toLocaleString('id-ID')+'+'; }
+      // Tampilkan angka bahkan jika 0 (supaya terlihat data sudah dimuat, bukan kosong karena error)
+      const elFlora = document.getElementById('stat-biodiversity-flora');
+      const elBurung = document.getElementById('stat-biodiversity-burung');
+      if (elFlora) elFlora.textContent = totalFloraBio > 0 ? totalFloraBio.toLocaleString('id-ID')+'+' : '—';
+      if (elBurung) elBurung.textContent = totalBurungBio > 0 ? totalBurungBio.toLocaleString('id-ID')+'+' : '—';
 
     } catch(e) { console.error("Programs error",e); }
   }
