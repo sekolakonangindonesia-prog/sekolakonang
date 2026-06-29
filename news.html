@@ -143,7 +143,10 @@
             filtered.forEach(d => {
                 const ext = d.type === 'external';
                 const fallbackImg = 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=500';
-                const imgSrc = d.image ? esc(d.image) : fallbackImg;
+                // Internal: pakai foto upload (base64 atau URL). External: fallback netral saja
+                const imgSrc = ext
+                  ? fallbackImg
+                  : (d.image ? esc(d.image) : fallbackImg);
                 const col = document.createElement('div');
                 col.className = `col-md-6 col-lg-4 news-item ${ext ? 'external' : 'internal'}`;
                 col.innerHTML = `
@@ -156,7 +159,10 @@
                             <span class="news-date">${esc(d.date||'')}</span>
                             <h4 class="news-title">${esc(d.title||'')}</h4>
                             ${d.excerpt ? `<p class="news-excerpt">${esc(d.excerpt)}</p>` : ''}
-                            ${(d.url || d.link) ? `<a href="${esc(d.url||d.link)}" target="_blank" rel="noopener" class="btn-read">${ext ? 'Lihat Sumber Berita' : 'Baca Selengkapnya'} →</a>` : ''}
+                            ${ext
+                              ? `<a href="${esc(d.url||d.link||'#')}" target="_blank" rel="noopener" class="btn-read">Lihat Sumber Berita <i class="fas fa-external-link-alt" style="font-size:0.65rem;margin-left:3px;"></i></a>`
+                              : `<a href="news-detail.html?id=${d.id||''}" class="btn-read">Baca Selengkapnya →</a>`
+                            }
                         </div>
                     </div>`;
                 grid.appendChild(col);
