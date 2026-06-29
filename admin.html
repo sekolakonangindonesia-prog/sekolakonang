@@ -135,6 +135,14 @@ input,textarea,select{font-family:var(--body);}
 .upload-zone i{font-size:1.8rem;color:var(--text-muted);margin-bottom:8px;display:block;}
 .upload-zone p{font-size:0.75rem;color:var(--text-muted);}
 .upload-zone .file-name{font-size:0.72rem;color:var(--lime);margin-top:6px;font-weight:600;}
+.photo-thumb{position:relative;width:84px;height:84px;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--border-subtle);flex-shrink:0;}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.photo-thumb .photo-remove{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.65);border:none;color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:0.62rem;cursor:pointer;}
+.photo-thumb .photo-tag{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.65);font-size:0.5rem;color:var(--lime);text-align:center;padding:1px 0;}
+.news-check-row{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.75rem;}
+.news-check-row:last-child{border-bottom:none;}
+.news-check-row input{margin-top:2px;flex-shrink:0;width:14px;height:14px;accent-color:var(--lime);}
+.news-check-row .news-check-meta{color:var(--text-muted);font-size:0.65rem;}
 
 /* ── ANALISIS INFILTRASI MINI ── */
 .analisis-box{background:rgba(33,150,243,0.07);border:1px solid rgba(33,150,243,0.2);border-radius:var(--r-md);padding:16px 18px;margin-top:8px;}
@@ -393,10 +401,19 @@ input,textarea,select{font-family:var(--body);}
         </div>
 
         <div class="section-divider"><i class="fas fa-camera"></i> Dokumentasi Foto</div>
-        <div class="form-group">
-          <label>URL Foto (satu per baris — Storage/Drive/CDN)</label>
-          <textarea id="kons-photos" rows="4" placeholder="https://storage.googleapis.com/...&#10;https://drive.google.com/..."></textarea>
-          <div class="form-hint">Foto akan tampil di galeri halaman konservasi detail.</div>
+        <div class="upload-zone" id="kons-photo-drop-zone" onclick="document.getElementById('kons-photo-input').click()">
+          <i class="fas fa-camera"></i>
+          <p>Klik untuk pilih foto dari <b>HP, laptop, atau perangkat lain</b> (bisa pilih banyak sekaligus)</p>
+          <div class="file-name" id="kons-photo-file-name">Belum ada file dipilih</div>
+        </div>
+        <input type="file" id="kons-photo-input" accept="image/*" multiple style="display:none">
+        <div class="form-hint">Foto akan diunggah ke Firebase Storage dan tampil di galeri halaman konservasi detail.</div>
+        <div id="kons-photo-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+
+        <div class="section-divider"><i class="fas fa-newspaper"></i> Berita Terkait</div>
+        <div class="form-hint" style="margin-bottom:8px;">Pilih berita yang sudah ada di menu Berita untuk dikaitkan ke program ini (boleh lebih dari satu, atau tidak sama sekali).</div>
+        <div class="species-table-wrap" id="kons-news-checklist" style="max-height:220px;overflow-y:auto;">
+          <div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Memuat daftar berita...</div>
         </div>
 
         <div style="display:flex;gap:10px;margin-top:8px;">
@@ -716,6 +733,9 @@ import {
 import {
   getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
@@ -728,10 +748,16 @@ const firebaseConfig = {
 const app  = initializeApp(firebaseConfig);
 const db   = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 // ── KML parse state ──
 let kmlParsedPolygons = null;
 let bioKmlParsedPolygons = null;
+
+// ── Konservasi: state foto & berita terkait ──
+let konsExistingPhotos = [];   // URL foto yang sudah tersimpan di DB (saat edit)
+let konsNewPhotoFiles  = [];   // File baru yang dipilih user, belum diupload
+let konsAllNewsCache   = null; // cache daftar berita untuk checklist
 
 // ============================================================
 // NAVIGATION
@@ -898,11 +924,16 @@ async function loadBeritaInternal() {
   const wrap = document.getElementById('list-berita-internal');
   wrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
   try {
-    const snap = await getDocs(query(collection(db,'news'), where('type','!=','external'), orderBy('type'), orderBy('date','desc')));
-    if (snap.empty) { wrap.innerHTML='<p style="color:var(--text-muted);">Belum ada warta internal.</p>'; return; }
+    const snap = await getDocs(collection(db,'news'));
+    // Filter & sort di JavaScript (bukan query Firestore) supaya tidak butuh
+    // composite index, dan tetap menangkap data lama yang field "type"-nya
+    // kosong/tidak ada (dianggap internal secara default — bukan 'external').
+    let docs = [];
+    snap.forEach(d => { const n=d.data(); if (n.type !== 'external') docs.push({id:d.id, data:n}); });
+    if (docs.length === 0) { wrap.innerHTML='<p style="color:var(--text-muted);">Belum ada warta internal.</p>'; return; }
+    docs.sort((a,b) => (b.data.date||'').localeCompare(a.data.date||''));
     wrap.innerHTML='';
-    snap.forEach(d => {
-      const n = d.data();
+    docs.forEach(({id, data:n}) => {
       wrap.innerHTML += `
         <div class="list-card">
           <div class="list-card-header">
@@ -912,13 +943,13 @@ async function loadBeritaInternal() {
               ${n.excerpt ? `<div style="font-size:0.72rem;color:var(--text-sub);margin-top:6px;">${n.excerpt}</div>` : ''}
             </div>
             <div class="list-card-actions">
-              <button class="btn btn-outline btn-sm" onclick="editBeritaInternal('${d.id}')"><i class="fas fa-edit"></i></button>
-              <button class="btn btn-danger btn-sm" onclick="delDoc('news','${d.id}',loadBeritaInternal)"><i class="fas fa-trash"></i></button>
+              <button class="btn btn-outline btn-sm" onclick="editBeritaInternal('${id}')"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm" onclick="delDoc('news','${id}',loadBeritaInternal)"><i class="fas fa-trash"></i></button>
             </div>
           </div>
         </div>`;
     });
-  } catch(e) { wrap.innerHTML='<p style="color:var(--danger);">Gagal memuat.</p>'; }
+  } catch(e) { wrap.innerHTML='<p style="color:var(--danger);">Gagal memuat: '+e.message+'</p>'; console.error(e); }
 }
 async function editBeritaInternal(id) {
   const snap = await getDoc(doc(db,'news',id));
@@ -969,11 +1000,13 @@ async function loadBeritaExternal() {
   const wrap = document.getElementById('list-berita-external');
   wrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
   try {
-    const snap = await getDocs(query(collection(db,'news'), where('type','==','external'), orderBy('date','desc')));
-    if (snap.empty) { wrap.innerHTML='<p style="color:var(--text-muted);">Belum ada liputan eksternal.</p>'; return; }
+    const snap = await getDocs(collection(db,'news'));
+    let docs = [];
+    snap.forEach(d => { const n=d.data(); if (n.type === 'external') docs.push({id:d.id, data:n}); });
+    if (docs.length === 0) { wrap.innerHTML='<p style="color:var(--text-muted);">Belum ada liputan eksternal.</p>'; return; }
+    docs.sort((a,b) => (b.data.date||'').localeCompare(a.data.date||''));
     wrap.innerHTML='';
-    snap.forEach(d => {
-      const n = d.data();
+    docs.forEach(({id, data:n}) => {
       wrap.innerHTML += `
         <div class="list-card">
           <div class="list-card-header">
@@ -983,13 +1016,13 @@ async function loadBeritaExternal() {
               ${n.url ? `<a href="${n.url}" target="_blank" style="font-size:0.65rem;color:var(--blue);">${n.url.substring(0,60)}...</a>` : ''}
             </div>
             <div class="list-card-actions">
-              <button class="btn btn-outline btn-sm" onclick="editBeritaExternal('${d.id}')"><i class="fas fa-edit"></i></button>
-              <button class="btn btn-danger btn-sm" onclick="delDoc('news','${d.id}',loadBeritaExternal)"><i class="fas fa-trash"></i></button>
+              <button class="btn btn-outline btn-sm" onclick="editBeritaExternal('${id}')"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm" onclick="delDoc('news','${id}',loadBeritaExternal)"><i class="fas fa-trash"></i></button>
             </div>
           </div>
         </div>`;
     });
-  } catch(e) { wrap.innerHTML='<p style="color:var(--danger);">Gagal memuat.</p>'; }
+  } catch(e) { wrap.innerHTML='<p style="color:var(--danger);">Gagal memuat: '+e.message+'</p>'; console.error(e); }
 }
 async function editBeritaExternal(id) {
   const snap = await getDoc(doc(db,'news',id));
@@ -1265,6 +1298,87 @@ setupKMLDrop(
   polys => { bioKmlParsedPolygons = polys; }
 );
 
+// ============================================================
+// KONSERVASI: UPLOAD FOTO DARI DEVICE (HP / LAPTOP)
+// ============================================================
+function renderKonsPhotoPreview() {
+  const wrap = document.getElementById('kons-photo-preview');
+  wrap.innerHTML = '';
+  konsExistingPhotos.forEach((url, idx) => {
+    wrap.innerHTML += `
+      <div class="photo-thumb">
+        <img src="${url}" loading="lazy">
+        <span class="photo-tag">Tersimpan</span>
+        <button type="button" class="photo-remove" onclick="removeKonsExistingPhoto(${idx})"><i class="fas fa-times"></i></button>
+      </div>`;
+  });
+  konsNewPhotoFiles.forEach((file, idx) => {
+    const url = URL.createObjectURL(file);
+    wrap.innerHTML += `
+      <div class="photo-thumb">
+        <img src="${url}" loading="lazy">
+        <span class="photo-tag">Baru</span>
+        <button type="button" class="photo-remove" onclick="removeKonsNewPhoto(${idx})"><i class="fas fa-times"></i></button>
+      </div>`;
+  });
+  const fname = document.getElementById('kons-photo-file-name');
+  const total = konsExistingPhotos.length + konsNewPhotoFiles.length;
+  fname.textContent = total > 0 ? `${total} foto siap (${konsNewPhotoFiles.length} baru)` : 'Belum ada file dipilih';
+}
+function removeKonsExistingPhoto(idx) { konsExistingPhotos.splice(idx,1); renderKonsPhotoPreview(); }
+function removeKonsNewPhoto(idx) { konsNewPhotoFiles.splice(idx,1); renderKonsPhotoPreview(); }
+window.removeKonsExistingPhoto = removeKonsExistingPhoto;
+window.removeKonsNewPhoto = removeKonsNewPhoto;
+
+document.getElementById('kons-photo-input').addEventListener('change', (e) => {
+  konsNewPhotoFiles.push(...Array.from(e.target.files));
+  e.target.value = '';
+  renderKonsPhotoPreview();
+});
+
+// Upload semua file baru ke Firebase Storage, kembalikan array URL hasil upload
+async function uploadKonsPhotos(docId) {
+  const urls = [];
+  for (const file of konsNewPhotoFiles) {
+    const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-]/g,'_')}`;
+    const path = `monitoring_reboisasi/${docId}/${safeName}`;
+    const fileRef = ref(storage, path);
+    await uploadBytes(fileRef, file);
+    const url = await getDownloadURL(fileRef);
+    urls.push(url);
+  }
+  return urls;
+}
+
+// ============================================================
+// KONSERVASI: CHECKLIST BERITA TERKAIT
+// ============================================================
+async function loadKonsNewsChecklist(selectedIds = []) {
+  const wrap = document.getElementById('kons-news-checklist');
+  wrap.innerHTML = '<div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Memuat daftar berita...</div>';
+  try {
+    if (!konsAllNewsCache) {
+      const snap = await getDocs(collection(db,'news'));
+      let arr = [];
+      snap.forEach(d => arr.push({ id:d.id, ...d.data() }));
+      arr.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+      konsAllNewsCache = arr;
+    }
+    if (konsAllNewsCache.length === 0) { wrap.innerHTML='<div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Belum ada berita. Tambahkan dulu di menu Berita.</div>'; return; }
+    wrap.innerHTML = konsAllNewsCache.map(n => `
+      <label class="news-check-row">
+        <input type="checkbox" value="${n.id}" ${selectedIds.includes(n.id) ? 'checked' : ''}>
+        <span>
+          <div style="color:var(--parchment);">${n.title||'(tanpa judul)'}</div>
+          <div class="news-check-meta">${n.date||''} · ${n.type==='external' ? 'Media Luar' : 'Warta Internal'}</div>
+        </span>
+      </label>`).join('');
+  } catch(e) { wrap.innerHTML='<div style="padding:10px;font-size:0.72rem;color:var(--danger);">Gagal memuat daftar berita: '+e.message+'</div>'; console.error(e); }
+}
+function getSelectedNewsIds() {
+  return Array.from(document.querySelectorAll('#kons-news-checklist input[type="checkbox"]:checked')).map(cb => cb.value);
+}
+
 async function loadKonservasiList() {
   const wrap = document.getElementById('kons-list-wrap');
   wrap.innerHTML='<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
@@ -1319,10 +1433,13 @@ function newKonsForm() {
   document.getElementById('kons-location').value='';
   ['kons-trees','kons-rorak','kons-sumur','kons-biopori'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('species-rows').innerHTML='';
-  document.getElementById('kons-photos').value='';
   document.getElementById('kml-file-name').textContent='Belum ada file dipilih';
   document.getElementById('analisis-result').innerHTML='<div style="font-size:0.72rem;color:var(--text-muted);text-align:center;padding:8px;">Isi data statistik untuk melihat estimasi.</div>';
   kmlParsedPolygons = null;
+  konsExistingPhotos = [];
+  konsNewPhotoFiles = [];
+  renderKonsPhotoPreview();
+  loadKonsNewsChecklist([]);
   switchTab('konservasi','kons-form');
   addSpeciesRow();
 }
@@ -1343,7 +1460,10 @@ async function editKons(id) {
   document.getElementById('species-rows').innerHTML='';
   if (d.species) Object.entries(d.species).forEach(([k,v]) => addSpeciesRow(k,v));
   else addSpeciesRow();
-  document.getElementById('kons-photos').value = (d.photos||[]).join('\n');
+  konsExistingPhotos = Array.isArray(d.photos) ? [...d.photos] : [];
+  konsNewPhotoFiles = [];
+  renderKonsPhotoPreview();
+  loadKonsNewsChecklist(d.relatedNewsIds || []);
   document.getElementById('kml-file-name').textContent = d.areaPolygon ? '✓ Polygon tersimpan di database' : 'Belum ada file';
   kmlParsedPolygons = null;
   hitungInfiltrasi();
@@ -1357,9 +1477,9 @@ document.getElementById('saveKonsBtn').addEventListener('click', async () => {
   const location = document.getElementById('kons-location').value.trim();
   if (!year||!location) { alert('Tahun dan Lokasi wajib diisi.'); return; }
   const species = getSpeciesData();
-  const photos = document.getElementById('kons-photos').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const relatedNewsIds = getSelectedNewsIds();
   const data = {
-    year, title, location, species, photos,
+    year, title, location, species, relatedNewsIds,
     stats: {
       trees:   parseInt(document.getElementById('kons-trees').value)||0,
       rorak:   parseInt(document.getElementById('kons-rorak').value)||0,
@@ -1371,17 +1491,28 @@ document.getElementById('saveKonsBtn').addEventListener('click', async () => {
   const btn = document.getElementById('saveKonsBtn');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
   try {
-    const existingId = document.getElementById('kons-doc-id').value;
-    if (existingId) {
-      // Edit data yang sudah ada — ID tetap, hanya update field.
-      await setDoc(doc(db,'monitoring_reboisasi',existingId), data, {merge:true});
-    } else {
+    let docId = document.getElementById('kons-doc-id').value;
+    if (!docId) {
       // Data baru — ID unik berskema "tanam_<tahun>_<random>" supaya
       // satu tahun bisa punya lebih dari satu program/lokasi tanpa saling menimpa,
       // dan tetap cocok dengan filter prefix "tanam_" yang dipakai konservasi.html.
-      const uniqueId = `tanam_${year}_${Date.now().toString(36)}`;
-      await setDoc(doc(db,'monitoring_reboisasi',uniqueId), data);
+      docId = `tanam_${year}_${Date.now().toString(36)}`;
     }
+    // Upload foto baru (jika ada) dulu, baru gabungkan dengan foto lama yang masih dipertahankan.
+    if (konsNewPhotoFiles.length > 0) {
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mengunggah ${konsNewPhotoFiles.length} foto...`;
+    }
+    const uploadedUrls = await uploadKonsPhotos(docId);
+    data.photos = [...konsExistingPhotos, ...uploadedUrls];
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan data...';
+    const existingId = document.getElementById('kons-doc-id').value;
+    if (existingId) {
+      await setDoc(doc(db,'monitoring_reboisasi',docId), data, {merge:true});
+    } else {
+      await setDoc(doc(db,'monitoring_reboisasi',docId), data);
+    }
+    konsNewPhotoFiles = [];
     switchTab('konservasi','kons-list');
     loadKonservasiList();
   } catch(e) { alert('Gagal menyimpan data konservasi: '+e.message); console.error(e); }
