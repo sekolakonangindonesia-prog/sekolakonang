@@ -443,20 +443,20 @@ footer {
       </div>
     </div>
 
-    <!-- LIPUTAN MEDIA -->
-    <div class="ui-card reveal" id="newsSection" style="display:none;">
-      <div class="ui-card-header"><i class="fas fa-newspaper"></i> Liputan Media &amp; Warta SK</div>
-      <div class="ui-card-body">
-        <div class="row g-3" id="newsContainer"></div>
-      </div>
-    </div>
-
     <!-- GALERI -->
-    <div class="ui-card reveal">
+    <div class="ui-card reveal" id="galleryCard">
       <div class="ui-card-header c-subtle">
         <i class="fas fa-camera"></i> Dokumentasi Lapangan
       </div>
       <div class="gallery-grid" id="gallery"></div>
+    </div>
+
+    <!-- BERITA TERKAIT -->
+    <div class="ui-card reveal" id="newsSection" style="display:none;">
+      <div class="ui-card-header"><i class="fas fa-newspaper"></i> Berita Terkait</div>
+      <div class="ui-card-body">
+        <div class="row g-3" id="newsContainer"></div>
+      </div>
     </div>
 
   </div>
@@ -467,7 +467,7 @@ footer {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, getDocs, query, where, documentId } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
@@ -641,22 +641,34 @@ footer {
       /* ANALISIS INFILTRASI */
       renderAnalisis(d.year, s);
 
-      /* BERITA */
-      if (d.external_news && d.external_news.length > 0) {
-        document.getElementById('newsSection').style.display = 'block';
-        const nc = document.getElementById('newsContainer');
-        d.external_news.forEach(news => {
-          nc.innerHTML += `
-            <div class="col-md-6">
-              <a href="${news.url || '#'}" target="_blank" class="news-link-card">
-                <i class="fas fa-external-link-alt"></i>
-                <div>
-                  <div class="news-title">${news.title || ''}</div>
-                  <div class="news-src">Sumber: ${news.source || '—'}</div>
-                </div>
-              </a>
-            </div>`;
-        });
+      /* BERITA TERKAIT — fetch dari collection "news" berdasarkan relatedNewsIds */
+      if (Array.isArray(d.relatedNewsIds) && d.relatedNewsIds.length > 0) {
+        try {
+          const ids = d.relatedNewsIds.slice(0, 30); // batas aman query "in"
+          const newsSnap = await getDocs(query(collection(db,'news'), where(documentId(), 'in', ids)));
+          if (!newsSnap.empty) {
+            document.getElementById('newsSection').style.display = 'block';
+            const nc = document.getElementById('newsContainer');
+            const newsList = [];
+            newsSnap.forEach(ns => newsList.push(ns.data()));
+            newsList.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+            newsList.forEach(news => {
+              const isExternal = news.type === 'external';
+              const link = isExternal ? (news.url || '#') : 'news.html';
+              const target = isExternal ? 'target="_blank" rel="noopener noreferrer"' : '';
+              nc.innerHTML += `
+                <div class="col-md-6">
+                  <a href="${link}" ${target} class="news-link-card">
+                    <i class="fas ${isExternal ? 'fa-external-link-alt' : 'fa-newspaper'}"></i>
+                    <div>
+                      <div class="news-title">${news.title || ''}</div>
+                      <div class="news-src">${news.date || ''} · ${isExternal ? ('Sumber: ' + (news.source || 'Media Luar')) : 'Warta Internal'}</div>
+                    </div>
+                  </a>
+                </div>`;
+            });
+          }
+        } catch(errNews) { console.warn('Gagal memuat berita terkait:', errNews); }
       }
 
       /* GALERI */
@@ -666,7 +678,7 @@ footer {
           gal.innerHTML += `<img src="${src}" class="gallery-img" loading="lazy" onclick="window.open(this.src)" alt="Dokumentasi ${d.year}">`;
         });
       } else {
-        document.getElementById('gallery').closest('.ui-card').style.display = 'none';
+        document.getElementById('galleryCard').style.display = 'none';
       }
 
     } catch(e) {
