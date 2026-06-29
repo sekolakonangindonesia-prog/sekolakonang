@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Seller — Sekola Konang PJLH</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --forest:    #050505;
+  --canopy:    #1a1c1b;
+  --canopy2:   #252726;
+  --lime:      #C6FF00;
+  --lime-dim:  rgba(198,255,0,0.10);
+  --lime-glow: rgba(198,255,0,0.18);
+  --parch:     #F5F5F0;
+  --muted:     rgba(245,245,240,0.50);
+  --border:    rgba(198,255,0,0.13);
+  --border-s:  rgba(255,255,255,0.07);
+  --danger:    #ff6b6b;
+  --warn:      #ffb347;
+  --info:      #00c6ff;
+  --success:   #00ff88;
+  --display:   'Playfair Display', Georgia, serif;
+  --body:      'Inter', system-ui, sans-serif;
+  --nav-h:     60px;
+  --tab-h:     58px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+body { font-family: var(--body); background: var(--forest); color: var(--parch); min-height: 100vh; padding-bottom: calc(var(--tab-h) + 16px); }
+
+/* ── AUTH GATE ── */
+#authGate {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.gate-card {
+  width: 100%; max-width: 380px;
+  background: var(--canopy); border: 1px solid var(--border);
+  border-radius: 20px; padding: 36px 28px;
+  text-align: center;
+}
+.gate-logo { height: 52px; margin: 0 auto 20px; }
+.gate-title { font-family: var(--display); font-size: 1.5rem; color: #fff; margin-bottom: 6px; }
+.gate-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+.gate-spinner { font-size: 1.6rem; color: var(--lime); animation: spin 1s linear infinite; margin-bottom: 14px; display: block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── TOP NAV ── */
+#topNav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--nav-h);
+  background: rgba(5,5,5,0.94);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px;
+}
+.nav-left { display: flex; align-items: center; gap: 10px; }
+.nav-logo { height: 32px; }
+.nav-brand { font-family: var(--display); font-size: 0.9rem; color: #fff; }
+.nav-brand span { color: var(--lime); }
+.nav-notif-btn {
+  position: relative; width: 38px; height: 38px;
+  border-radius: 50%; border: 1px solid var(--border-s);
+  background: rgba(255,255,255,0.04);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--parch); font-size: 1rem; cursor: pointer;
+}
+.notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--lime); border: 2px solid var(--forest);
+  display: none;
+}
+.notif-dot.show { display: block; }
+
+/* ── MAIN CONTENT ── */
+#appShell { display: none; padding-top: var(--nav-h); }
+
+/* ── PANELS ── */
+.panel { display: none; padding: 20px 16px; min-height: 70vh; }
+.panel.active { display: block; }
+
+/* ── BERANDA ── */
+.greeting-card {
+  background: linear-gradient(135deg, var(--canopy2) 0%, rgba(198,255,0,0.06) 100%);
+  border: 1px solid var(--border);
+  border-radius: 18px; padding: 20px;
+  margin-bottom: 16px; position: relative; overflow: hidden;
+}
+.greeting-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lime), transparent);
+}
+.greeting-eyebrow { font-size: 0.6rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--lime); margin-bottom: 6px; }
+.greeting-name { font-family: var(--display); font-size: 1.45rem; color: #fff; margin-bottom: 4px; }
+.greeting-sub { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 12px; padding: 5px 12px; border-radius: 50px;
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  background: var(--lime-dim); border: 1px solid var(--border); color: var(--lime);
+}
+.status-badge i { font-size: 0.55rem; }
+
+.stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--canopy); border: 1px solid var(--border-s);
+  border-radius: 14px; padding: 16px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.stat-card .s-icon { font-size: 1.1rem; margin-bottom: 4px; }
+.stat-card .s-val { font-family: var(--display); font-size: 1.6rem; font-weight: 900; color: #fff; line-height: 1; }
+.stat-card .s-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-card.c-lime .s-icon { color: var(--lime); }
+.stat-card.c-info .s-icon { color: var(--info); }
+.stat-card.c-green .s-icon { color: var(--success); }
+.stat-card.c-warn .s-icon { color: var(--warn); }
+
+.section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.section-head h3 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--parch); }
+.section-head a { font-size: 0.72rem; color: var(--lime); font-weight: 600; cursor: pointer; }
+
+/* ── PENGAJUAN LIST ── */
+.pengajuan-card {
+  background: var(--canopy); border: 1px solid var(--border-s);
+  border-radius: 14px; padding: 16px; margin-bottom: 10px;
+  position: relative; overflow: hidden; cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.pengajuan-card:active { transform: scale(0.98); }
+.pengajuan-card.status-menunggu { border-left: 3px solid var(--warn); }
+.pengajuan-card.status-verifikasi { border-left: 3px solid var(--info); }
+.pengajuan-card.status-disetujui { border-left: 3px solid var(--success); }
+.pengajuan-card.status-ditolak { border-left: 3px solid var(--danger); }
+.pengajuan-card.status-live { border-left: 3px solid var(--lime); }
+
+.pj-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.pj-id { font-size: 0.65rem; color: var(--muted); font-weight: 600; }
+.pj-badge {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 20px;
+}
+.pj-badge.menunggu  { background: rgba(255,179,71,0.15);  color: var(--warn);    border: 1px solid rgba(255,179,71,0.3); }
+.pj-badge.verifikasi{ background: rgba(0,198,255,0.15);   color: var(--info);    border: 1px solid rgba(0,198,255,0.3); }
+.pj-badge.disetujui { background: rgba(0,255,136,0.15);   color: var(--success); border: 1px solid rgba(0,255,136,0.3); }
+.pj-badge.ditolak   { background: rgba(255,107,107,0.15); color: var(--danger);  border: 1px solid rgba(255,107,107,0.3); }
+.pj-badge.live      { background: var(--lime-dim);         color: var(--lime);    border: 1px solid var(--border); }
+
+.pj-title { font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.pj-meta  { font-size: 0.72rem; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+.pj-meta i { color: var(--lime); margin-right: 3px; }
+
+.pj-serapan {
+  margin-top: 10px; padding: 8px 10px;
+  background: var(--lime-dim); border: 1px solid var(--border);
+  border-radius: 8px; display: flex; align-items: center; gap: 8px;
+  font-size: 0.75rem; color: var(--lime); font-weight: 600;
+}
+.pj-serapan i { font-size: 0.8rem; }
+
+/* ── STATUS STEPPER ── */
+.stepper { display: flex; align-items: center; margin: 12px 0 4px; }
+.step-dot {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem; font-weight: 700;
+}
+.step-dot.done    { background: var(--success); color: var(--forest); }
+.step-dot.current { background: var(--lime); color: var(--forest); animation: pulse-dot 1.5s ease-in-out infinite; }
+.step-dot.pending { background: rgba(255,255,255,0.08); color: var(--muted); border: 1px solid var(--border-s); }
+@keyframes pulse-dot { 0%,100%{ box-shadow: 0 0 0 0 rgba(198,255,0,0.4); } 50%{ box-shadow: 0 0 0 6px rgba(198,255,0,0); } }
+.step-line { flex: 1; height: 2px; background: rgba(255,255,255,0.08); margin: 0 4px; }
+.step-line.done { background: var(--success); }
+.step-labels { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.step-labels span { font-size: 0.55rem; color: var(--muted); text-align: center; flex: 1; }
+
+/* ── FORM PENGAJUAN ── */
+.form-header {
+  background: var(--canopy); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px; margin-bottom: 16px;
+}
+.form-header h2 { font-family: var(--display); font-size: 1.3rem; color: #fff; margin-bottom: 4px; }
+.form-header p { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+
+.form-section {
+  background: var(--canopy); border: 1px solid var(--border-s);
+  border-radius: 14px; padding: 16px; margin-bottom: 12px;
+}
+.form-section-title {
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 2px; color: var(--lime); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.form-section-title i { font-size: 0.8rem; }
+
+.form-group { margin-bottom: 14px; }
+.form-group:last-child { margin-bottom: 0; }
+.form-group label {
+  display: block; font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px;
+}
+.form-group label .req { color: var(--danger); margin-left: 2px; }
+.form-control {
+  width: 100%; padding: 12px 14px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border-s);
+  border-radius: 10px; color: #fff; font-family: var(--body); font-size: 0.88rem;
+  transition: border-color 0.2s; -webkit-appearance: none;
+}
+.form-control:focus { outline: none; border-color: var(--lime); }
+.form-control::placeholder { color: rgba(245,245,240,0.22); }
+select.form-control { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23c6ff00' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+textarea.form-control { resize: vertical; min-height: 80px; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+.gps-btn {
+  width: 100%; padding: 11px 14px; margin-top: 6px;
+  background: rgba(0,198,255,0.08); border: 1px solid rgba(0,198,255,0.25);
+  border-radius: 10px; color: var(--info); font-size: 0.8rem; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; transition: 0.2s;
+}
+.gps-btn:active { background: rgba(0,198,255,0.18); }
+
+.foto-upload-box {
+  border: 2px dashed var(--border-s); border-radius: 10px;
+  padding: 20px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s; position: relative;
+}
+.foto-upload-box:active { border-color: var(--lime); }
+.foto-upload-box i { font-size: 1.6rem; color: var(--muted); margin-bottom: 8px; display: block; }
+.foto-upload-box p { font-size: 0.75rem; color: var(--muted); }
+.foto-upload-box input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.foto-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.foto-preview img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-s); }
+
+/* ── KALKULATOR SERAPAN ── */
+.calc-box {
+  background: linear-gradient(135deg, rgba(198,255,0,0.05) 0%, var(--canopy) 100%);
+  border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px;
+}
+.calc-box-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--lime); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.calc-result {
+  background: var(--forest); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; text-align: center; margin-top: 12px;
+}
+.calc-result .cr-val { font-family: var(--display); font-size: 2rem; font-weight: 900; color: var(--lime); line-height: 1; }
+.calc-result .cr-unit { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+.calc-result .cr-sub  { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+/* ── BTN UTAMA ── */
+.btn-primary {
+  width: 100%; padding: 15px;
+  background: var(--lime); color: var(--forest);
+  border: none; border-radius: 12px;
+  font-family: var(--body); font-size: 0.88rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 1px;
+  cursor: pointer; transition: 0.2s; margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary:active { background: #fff; }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-outline {
+  width: 100%; padding: 13px;
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border-s); border-radius: 12px;
+  font-family: var(--body); font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; transition: 0.2s; margin-top: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-outline:active { border-color: var(--lime); color: var(--lime); }
+
+/* ── ALERT ── */
+.alert {
+  padding: 12px 14px; border-radius: 10px; font-size: 0.8rem;
+  margin-bottom: 14px; display: none; line-height: 1.5;
+}
+.alert.show { display: flex; align-items: flex-start; gap: 8px; }
+.alert i { margin-top: 1px; flex-shrink: 0; }
+.alert.success { background: rgba(0,255,136,0.1); color: var(--success); border: 1px solid rgba(0,255,136,0.25); }
+.alert.error   { background: rgba(255,107,107,0.1); color: var(--danger); border: 1px solid rgba(255,107,107,0.25); }
+.alert.info    { background: rgba(0,198,255,0.1); color: var(--info); border: 1px solid rgba(0,198,255,0.25); }
+
+/* ── NOTIFIKASI ── */
+.notif-item {
+  background: var(--canopy); border: 1px solid var(--border-s);
+  border-radius: 14px; padding: 14px; margin-bottom: 10px;
+  display: flex; gap: 12px; align-items: flex-start;
+  transition: border-color 0.2s;
+}
+.notif-item.unread { border-left: 3px solid var(--lime); background: rgba(198,255,0,0.04); }
+.notif-icon {
+  width: 38px; height: 38px; flex-shrink: 0;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+}
+.notif-icon.lime { background: var(--lime-dim); color: var(--lime); }
+.notif-icon.info { background: rgba(0,198,255,0.12); color: var(--info); }
+.notif-icon.warn { background: rgba(255,179,71,0.12); color: var(--warn); }
+.notif-icon.green { background: rgba(0,255,136,0.12); color: var(--success); }
+.notif-body { flex: 1; }
+.notif-title { font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 3px; }
+.notif-desc  { font-size: 0.76rem; color: var(--muted); line-height: 1.5; }
+.notif-time  { font-size: 0.65rem; color: var(--muted); margin-top: 5px; }
+
+/* ── UPDATE PERAWATAN ── */
+.update-card {
+  background: var(--canopy); border: 1px solid var(--border-s);
+  border-radius: 14px; padding: 16px; margin-bottom: 10px;
+}
+.update-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.update-card-head h4 { font-size: 0.88rem; font-weight: 700; color: #fff; }
+.update-card-head .u-date { font-size: 0.68rem; color: var(--muted); }
+
+.update-log { list-style: none; }
+.update-log li {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border-s);
+  font-size: 0.8rem; color: var(--muted);
+}
+.update-log li:last-child { border-bottom: none; }
+.update-log li i { color: var(--success); margin-top: 2px; flex-shrink: 0; }
+.update-log li strong { color: var(--parch); }
+
+/* ── PROFIL ── */
+.profile-hero {
+  background: var(--canopy); border: 1px solid var(--border);
+  border-radius: 18px; padding: 24px; margin-bottom: 14px; text-align: center;
+  position: relative; overflow: hidden;
+}
+.profile-hero::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lime), transparent);
+}
+.profile-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--lime-dim); border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-size: 1.8rem; color: var(--lime);
+  margin: 0 auto 14px;
+}
+.profile-name  { font-family: var(--display); font-size: 1.3rem; color: #fff; margin-bottom: 4px; }
+.profile-role  { font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--lime); }
+.profile-email { font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+
+.info-row {
+  background: var(--canopy); border: 1px solid var(--border-s);
+  border-radius: 12px; overflow: hidden; margin-bottom: 12px;
+}
+.info-row-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px; border-bottom: 1px solid var(--border-s);
+  font-size: 0.82rem;
+}
+.info-row-item:last-child { border-bottom: none; }
+.info-row-item i { width: 20px; text-align: center; color: var(--lime); }
+.info-row-item .iri-label { color: var(--muted); width: 90px; flex-shrink: 0; font-size: 0.75rem; }
+.info-row-item .iri-val { color: #fff; flex: 1; }
+
+/* ── BOTTOM TAB ── */
+#bottomTab {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  height: var(--tab-h);
+  background: rgba(10,11,10,0.97);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: stretch;
+}
+.tab-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; cursor: pointer; border: none; background: none;
+  color: var(--muted); font-family: var(--body); transition: color 0.2s;
+  padding: 6px 4px;
+}
+.tab-btn i { font-size: 1.15rem; }
+.tab-btn span { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.tab-btn.active { color: var(--lime); }
+.tab-btn.active i { filter: drop-shadow(0 0 6px rgba(198,255,0,0.6)); }
+
+/* ── MODAL DETAIL PENGAJUAN ── */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  display: none; align-items: flex-end;
+}
+.modal-backdrop.open { display: flex; }
+.modal-sheet {
+  width: 100%; max-height: 85vh;
+  background: var(--canopy2); border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--border);
+  overflow-y: auto; padding: 20px 16px 32px;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 40px; height: 4px; background: var(--border-s); border-radius: 2px; margin: 0 auto 20px; }
+.modal-title { font-family: var(--display); font-size: 1.2rem; color: #fff; margin-bottom: 4px; }
+.modal-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 20px; }
+
+/* ── PANEL PERAWATAN ── */
+.perawatan-header {
+  background: var(--canopy); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px; margin-bottom: 14px;
+}
+.perawatan-header h3 { font-family: var(--display); font-size: 1.2rem; color: #fff; margin-bottom: 4px; }
+.perawatan-header p { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+
+.active-mou-card {
+  background: linear-gradient(135deg, rgba(0,255,136,0.06) 0%, var(--canopy) 100%);
+  border: 1px solid rgba(0,255,136,0.2);
+  border-radius: 14px; padding: 16px; margin-bottom: 14px;
+}
+.mou-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--success); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.mou-name { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.mou-meta { font-size: 0.75rem; color: var(--muted); line-height: 1.6; }
+.mou-progress { margin-top: 12px; }
+.mou-progress-top { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); margin-bottom: 6px; }
+.mou-progress-bar { height: 5px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+.mou-progress-fill { height: 100%; background: var(--success); border-radius: 4px; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 48px 20px;
+}
+.empty-state i { font-size: 2.5rem; color: var(--muted); margin-bottom: 14px; display: block; opacity: 0.5; }
+.empty-state h4 { font-size: 0.95rem; color: var(--parch); margin-bottom: 6px; }
+.empty-state p { font-size: 0.8rem; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+
+/* ── LOADING SKELETON ── */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite; border-radius: 8px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: calc(var(--tab-h) + 16px); left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--canopy2); border: 1px solid var(--border);
+  color: var(--parch); padding: 10px 18px; border-radius: 50px;
+  font-size: 0.8rem; font-weight: 600; z-index: 500;
+  opacity: 0; transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap; max-width: 90vw;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── RESPONSIVE ── */
+@media (min-width: 480px) {
+  .panel { padding: 24px 20px; }
+  #topNav { padding: 0 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="authGate">
+  <div class="gate-card">
+    <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" class="gate-logo" alt="YSKI">
+    <div class="gate-title">PJLH Seller</div>
+    <p class="gate-sub">Memeriksa sesi Anda...</p>
+    <i class="fas fa-spinner gate-spinner"></i>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="appShell">
+
+  <!-- TOP NAV -->
+  <nav id="topNav">
+    <div class="nav-left">
+      <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" class="nav-logo" alt="YSKI">
+      <div class="nav-brand">Sekola <span>Konang</span></div>
+    </div>
+    <button class="nav-notif-btn" onclick="switchPanel('notifikasi')">
+      <i class="fas fa-bell"></i>
+      <span class="notif-dot" id="notifDot"></span>
+    </button>
+  </nav>
+
+  <!-- ═══════════════ PANEL: BERANDA ═══════════════ -->
+  <div class="panel active" id="panel-beranda">
+
+    <div class="greeting-card">
+      <div class="greeting-eyebrow"><i class="fas fa-leaf"></i> &nbsp;ES Seller</div>
+      <div class="greeting-name" id="greetName">Selamat datang</div>
+      <div class="greeting-sub">Dashboard PJLH — Pantau pengajuan & kelola konservasi Anda</div>
+      <span class="status-badge"><i class="fas fa-circle"></i> Akun Aktif</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card c-lime">
+        <i class="fas fa-file-alt s-icon"></i>
+        <div class="s-val" id="st-total">—</div>
+        <div class="s-label">Total Pengajuan</div>
+      </div>
+      <div class="stat-card c-green">
+        <i class="fas fa-check-circle s-icon"></i>
+        <div class="s-val" id="st-aktif">—</div>
+        <div class="s-label">Disetujui / Live</div>
+      </div>
+      <div class="stat-card c-info">
+        <i class="fas fa-tint s-icon"></i>
+        <div class="s-val" id="st-serapan">—</div>
+        <div class="s-label">m³ Air Terserap</div>
+      </div>
+      <div class="stat-card c-warn">
+        <i class="fas fa-clock s-icon"></i>
+        <div class="s-val" id="st-proses">—</div>
+        <div class="s-label">Dalam Proses</div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h3>Pengajuan Terbaru</h3>
+      <a onclick="switchPanel('pengajuan')">Lihat Semua →</a>
+    </div>
+    <div id="beranda-pengajuan-list">
+      <div class="skeleton" style="height:90px;border-radius:14px;margin-bottom:10px;"></div>
+      <div class="skeleton" style="height:90px;border-radius:14px;margin-bottom:10px;"></div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <button class="btn-primary" onclick="switchPanel('ajukan')">
+        <i class="fas fa-plus-circle"></i> Buat Pengajuan Baru
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════ PANEL: AJUKAN ═══════════════ -->
+  <div class="panel" id="panel-ajukan">
+
+    <div class="form-header">
+      <h2>Pengajuan PJLH</h2>
+      <p>Lengkapi data infrastruktur konservasi Anda. Potensi serapan air dihitung otomatis.</p>
+    </div>
+
+    <div class="alert info" id="ajukanAlert"><i class="fas fa-info-circle"></i><span></span></div>
+
+    <!-- LOKASI -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> Informasi Lokasi</div>
+      <div class="form-group">
+        <label>Nama Lokasi / Desa <span class="req">*</span></label>
+        <input type="text" class="form-control" id="f-lokasi" placeholder="Contoh: Desa Sumber, Kec. Sukapura">
+      </div>
+      <div class="form-group">
+        <label>Kecamatan</label>
+        <input type="text" class="form-control" id="f-kecamatan" placeholder="Kecamatan">
+      </div>
+      <div class="form-group">
+        <label>Titik GPS <span class="req">*</span></label>
+        <div class="form-row">
+          <input type="number" step="any" class="form-control" id="f-lat" placeholder="Latitude" readonly>
+          <input type="number" step="any" class="form-control" id="f-lng" placeholder="Longitude" readonly>
+        </div>
+        <button class="gps-btn" onclick="getGPS()">
+          <i class="fas fa-crosshairs"></i> Ambil Lokasi GPS
+        </button>
+        <div style="font-size:0.68rem;color:var(--muted);margin-top:5px;" id="gpsStatus"></div>
+      </div>
+      <div class="form-group">
+        <label>Luas Lahan (Ha)</label>
+        <input type="number" step="0.1" class="form-control" id="f-luas" placeholder="0.5">
+      </div>
+    </div>
+
+    <!-- INFRASTRUKTUR RORAK -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-water"></i> Data Rorak</div>
+      <div class="form-group">
+        <label>Jumlah Rorak <span class="req">*</span></label>
+        <input type="number" class="form-control" id="f-jml-rorak" placeholder="0" oninput="hitungOtomatis()">
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Panjang (m)</label>
+          <input type="number" step="0.1" class="form-control" id="f-p-rorak" value="2" oninput="hitungOtomatis()">
+        </div>
+        <div class="form-group">
+          <label>Lebar (cm)</label>
+          <input type="number" class="form-control" id="f-l-rorak" value="70" oninput="hitungOtomatis()">
+        </div>
+        <div class="form-group">
+          <label>Dalam (cm)</label>
+          <input type="number" class="form-control" id="f-d-rorak" value="70" oninput="hitungOtomatis()">
+        </div>
+      </div>
+    </div>
+
+    <!-- INFRASTRUKTUR SUMUR -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-circle-notch"></i> Data Sumur Resapan</div>
+      <div class="form-group">
+        <label>Jumlah Sumur Resapan <span class="req">*</span></label>
+        <input type="number" class="form-control" id="f-jml-sumur" placeholder="0" oninput="hitungOtomatis()">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Diameter (cm)</label>
+          <input type="number" class="form-control" id="f-d-sumur" value="80" oninput="hitungOtomatis()">
+        </div>
+        <div class="form-group">
+          <label>Kedalaman (m)</label>
+          <input type="number" step="0.1" class="form-control" id="f-h-sumur" value="1.5" oninput="hitungOtomatis()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Jenis Dinding</label>
+        <select class="form-control" id="f-wall-sumur" onchange="hitungOtomatis()">
+          <option value="solid">Dinding Solid (Bata/Beton)</option>
+          <option value="porous">Dinding Porus (Batu Bata Berlubang)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- JENIS TANAH -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-layer-group"></i> Kondisi Tanah</div>
+      <div class="form-group">
+        <label>Jenis Tanah</label>
+        <select class="form-control" id="f-tanah" onchange="hitungOtomatis()">
+          <option value="sedang">Latosol / Sedang (K=1.0)</option>
+          <option value="lambat">Serapan Lambat (K=0.5)</option>
+          <option value="cepat">Serapan Cepat (K=1.5)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- KALKULATOR OTOMATIS -->
+    <div class="calc-box">
+      <div class="calc-box-title"><i class="fas fa-calculator"></i> Estimasi Potensi Serapan Air</div>
+      <div class="calc-result">
+        <div class="cr-val" id="calc-m3">0</div>
+        <div class="cr-unit">m³ / Tahun</div>
+        <div class="cr-sub" id="calc-liter">0 Liter per tahun</div>
+      </div>
+      <div style="font-size:0.7rem;color:var(--muted);margin-top:8px;line-height:1.5;">
+        Dihitung berdasarkan dimensi infrastruktur × 120 hari hujan/tahun × koefisien tanah (DAS Rejoso).
+      </div>
+    </div>
+
+    <!-- FOTO -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-camera"></i> Dokumentasi Foto</div>
+      <div class="form-group">
+        <label>Foto Lahan / Area</label>
+        <div class="foto-upload-box" id="box-lahan">
+          <i class="fas fa-image"></i>
+          <p>Ketuk untuk pilih foto lahan</p>
+          <input type="file" accept="image/*" multiple onchange="previewFoto(this,'prev-lahan')">
+        </div>
+        <div class="foto-preview" id="prev-lahan"></div>
+      </div>
+      <div class="form-group">
+        <label>Foto Rorak</label>
+        <div class="foto-upload-box">
+          <i class="fas fa-image"></i>
+          <p>Ketuk untuk pilih foto rorak</p>
+          <input type="file" accept="image/*" multiple onchange="previewFoto(this,'prev-rorak')">
+        </div>
+        <div class="foto-preview" id="prev-rorak"></div>
+      </div>
+      <div class="form-group">
+        <label>Foto Sumur Resapan</label>
+        <div class="foto-upload-box">
+          <i class="fas fa-image"></i>
+          <p>Ketuk untuk pilih foto sumur</p>
+          <input type="file" accept="image/*" multiple onchange="previewFoto(this,'prev-sumur')">
+        </div>
+        <div class="foto-preview" id="prev-sumur"></div>
+      </div>
+    </div>
+
+    <!-- CATATAN -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-sticky-note"></i> Catatan Tambahan</div>
+      <div class="form-group">
+        <label>Deskripsi Kondisi Lahan (opsional)</label>
+        <textarea class="form-control" id="f-catatan" placeholder="Ceritakan kondisi lahan, riwayat perawatan, atau hal penting lainnya..."></textarea>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btnSubmitAjukan" onclick="submitPengajuan()">
+      <i class="fas fa-paper-plane"></i> Kirim Pengajuan
+    </button>
+    <button class="btn-outline" onclick="switchPanel('beranda')">
+      <i class="fas fa-arrow-left"></i> Kembali
+    </button>
+
+  </div>
+
+  <!-- ═══════════════ PANEL: PENGAJUAN ═══════════════ -->
+  <div class="panel" id="panel-pengajuan">
+    <div class="section-head" style="margin-bottom:16px;">
+      <h3 style="font-family:var(--display);font-size:1.2rem;color:#fff;text-transform:none;letter-spacing:0;">Pengajuan Saya</h3>
+    </div>
+    <div id="pengajuan-list">
+      <div class="skeleton" style="height:110px;border-radius:14px;margin-bottom:10px;"></div>
+      <div class="skeleton" style="height:110px;border-radius:14px;margin-bottom:10px;"></div>
+      <div class="skeleton" style="height:110px;border-radius:14px;"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PANEL: PERAWATAN ═══════════════ -->
+  <div class="panel" id="panel-perawatan">
+    <div class="perawatan-header">
+      <h3>Update Perawatan</h3>
+      <p>Laporkan kondisi rorak dan sumur resapan dari MOU aktif Anda secara berkala.</p>
+    </div>
+
+    <div id="mou-aktif-list">
+      <div class="skeleton" style="height:120px;border-radius:14px;margin-bottom:10px;"></div>
+    </div>
+
+    <div class="form-section" id="form-update-wrap" style="display:none;">
+      <div class="form-section-title"><i class="fas fa-clipboard-check"></i> Laporan Kondisi Bulan Ini</div>
+
+      <div class="form-group">
+        <label>MOU / Pengajuan</label>
+        <select class="form-control" id="f-update-mou">
+          <option value="">Pilih pengajuan...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Kondisi Rorak</label>
+        <select class="form-control" id="f-kondisi-rorak">
+          <option value="baik">Baik — tidak ada kerusakan</option>
+          <option value="perlu_perbaikan">Perlu perbaikan minor</option>
+          <option value="rusak">Rusak — perlu tindakan</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Kondisi Sumur Resapan</label>
+        <select class="form-control" id="f-kondisi-sumur">
+          <option value="baik">Baik — berfungsi normal</option>
+          <option value="perlu_perbaikan">Perlu pembersihan</option>
+          <option value="rusak">Tidak berfungsi</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Foto Kondisi Terkini</label>
+        <div class="foto-upload-box">
+          <i class="fas fa-camera"></i>
+          <p>Foto kondisi rorak / sumur sekarang</p>
+          <input type="file" accept="image/*" multiple onchange="previewFoto(this,'prev-update')">
+        </div>
+        <div class="foto-preview" id="prev-update"></div>
+      </div>
+      <div class="form-group">
+        <label>Catatan Update</label>
+        <textarea class="form-control" id="f-update-catatan" rows="3" placeholder="Jelaskan kondisi terkini, pekerjaan yang dilakukan, dll..."></textarea>
+      </div>
+      <button class="btn-primary" onclick="submitUpdate()">
+        <i class="fas fa-upload"></i> Kirim Laporan
+      </button>
+    </div>
+
+    <div class="section-head" style="margin-top:20px;margin-bottom:12px;">
+      <h3>Riwayat Laporan</h3>
+    </div>
+    <div id="update-history-list">
+      <div class="empty-state">
+        <i class="fas fa-clipboard-list"></i>
+        <h4>Belum ada laporan</h4>
+        <p>Laporan perawatan akan muncul di sini setelah MOU aktif.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PANEL: NOTIFIKASI ═══════════════ -->
+  <div class="panel" id="panel-notifikasi">
+    <div class="section-head" style="margin-bottom:16px;">
+      <h3 style="font-family:var(--display);font-size:1.2rem;color:#fff;text-transform:none;letter-spacing:0;">Notifikasi</h3>
+      <a onclick="tandaiBacaSemua()" style="color:var(--muted);font-size:0.72rem;">Tandai semua dibaca</a>
+    </div>
+    <div id="notif-list">
+      <div class="skeleton" style="height:70px;border-radius:14px;margin-bottom:10px;"></div>
+      <div class="skeleton" style="height:70px;border-radius:14px;margin-bottom:10px;"></div>
+      <div class="skeleton" style="height:70px;border-radius:14px;"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PANEL: PROFIL ═══════════════ -->
+  <div class="panel" id="panel-profil">
+    <div class="profile-hero">
+      <div class="profile-avatar" id="profileAvatar">?</div>
+      <div class="profile-name" id="profileName">—</div>
+      <div class="profile-role">ES Seller · PJLH Sekola Konang</div>
+      <div class="profile-email" id="profileEmail">—</div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-row-item">
+        <i class="fas fa-id-card"></i>
+        <span class="iri-label">NIK</span>
+        <span class="iri-val" id="profNIK">—</span>
+      </div>
+      <div class="info-row-item">
+        <i class="fas fa-phone"></i>
+        <span class="iri-label">WhatsApp</span>
+        <span class="iri-val" id="profPhone">—</span>
+      </div>
+      <div class="info-row-item">
+        <i class="fas fa-calendar-alt"></i>
+        <span class="iri-label">Bergabung</span>
+        <span class="iri-val" id="profJoin">—</span>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-edit"></i> Edit Profil</div>
+      <div class="form-group">
+        <label>Nama Lengkap / Kelompok</label>
+        <input type="text" class="form-control" id="edit-name" placeholder="Nama Anda">
+      </div>
+      <div class="form-group">
+        <label>Nomor WhatsApp</label>
+        <input type="text" class="form-control" id="edit-phone" placeholder="0812xxxxxxxx">
+      </div>
+      <button class="btn-primary" onclick="simpanProfil()">
+        <i class="fas fa-save"></i> Simpan Perubahan
+      </button>
+    </div>
+
+    <button class="btn-outline" onclick="logout()" style="margin-top:8px;color:var(--danger);border-color:rgba(255,107,107,0.3);">
+      <i class="fas fa-sign-out-alt"></i> Keluar
+    </button>
+  </div>
+
+</div><!-- /appShell -->
+
+<!-- MODAL DETAIL PENGAJUAN -->
+<div class="modal-backdrop" id="modalDetail">
+  <div class="modal-sheet" onclick.stop>
+    <div class="modal-handle" onclick="closeModal('modalDetail')"></div>
+    <div class="modal-title" id="md-title">Detail Pengajuan</div>
+    <div class="modal-sub" id="md-sub"></div>
+
+    <div class="stepper" id="md-stepper">
+      <div class="step-dot" id="sd-1">1</div>
+      <div class="step-line" id="sl-1"></div>
+      <div class="step-dot" id="sd-2">2</div>
+      <div class="step-line" id="sl-2"></div>
+      <div class="step-dot" id="sd-3">3</div>
+      <div class="step-line" id="sl-3"></div>
+      <div class="step-dot" id="sd-4">4</div>
+      <div class="step-line" id="sl-4"></div>
+      <div class="step-dot" id="sd-5">5</div>
+    </div>
+    <div class="step-labels">
+      <span>Dikirim</span><span>Cek Admin</span><span>Cek Lapangan</span><span>Disetujui</span><span>Live</span>
+    </div>
+
+    <div id="md-body" style="margin-top:14px;"></div>
+
+    <button class="btn-outline" style="margin-top:16px;" onclick="closeModal('modalDetail')">
+      <i class="fas fa-times"></i> Tutup
+    </button>
+  </div>
+</div>
+
+<!-- BOTTOM TAB -->
+<nav id="bottomTab">
+  <button class="tab-btn active" onclick="switchPanel('beranda')" data-panel="beranda">
+    <i class="fas fa-home"></i><span>Beranda</span>
+  </button>
+  <button class="tab-btn" onclick="switchPanel('ajukan')" data-panel="ajukan">
+    <i class="fas fa-plus-circle"></i><span>Ajukan</span>
+  </button>
+  <button class="tab-btn" onclick="switchPanel('pengajuan')" data-panel="pengajuan">
+    <i class="fas fa-list-alt"></i><span>Status</span>
+  </button>
+  <button class="tab-btn" onclick="switchPanel('perawatan')" data-panel="perawatan">
+    <i class="fas fa-tools"></i><span>Perawatan</span>
+  </button>
+  <button class="tab-btn" onclick="switchPanel('profil')" data-panel="profil">
+    <i class="fas fa-user-circle"></i><span>Profil</span>
+  </button>
+</nav>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp }                                        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc,
+         collection, query, where, orderBy, onSnapshot,
+         serverTimestamp, getDocs }                            from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL }        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+// ── Firebase init ──
+const app  = initializeApp({
+  apiKey:            "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+  authDomain:        "sekola-konang.firebaseapp.com",
+  projectId:         "sekola-konang",
+  storageBucket:     "sekola-konang.firebasestorage.app",
+  messagingSenderId: "9338352073",
+  appId:             "1:9338352073:web:b56481b836888b1a8bf818"
+});
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+
+let currentUser = null;
+let userData    = {};
+let pengajuanCache = [];
+
+// ── Auth Gate ──
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    window.location.href = 'auth.html?role=seller';
+    return;
+  }
+  currentUser = user;
+  const snap = await getDoc(doc(db, 'users', user.uid));
+  if (snap.exists()) {
+    userData = snap.data();
+    if (userData.role !== 'seller') {
+      window.location.href = 'auth.html?role=seller';
+      return;
+    }
+  }
+  bootApp();
+});
+
+function bootApp() {
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('appShell').style.display = 'block';
+
+  // Populate profile
+  const nm = userData.fullName || currentUser.email;
+  document.getElementById('greetName').textContent = 'Halo, ' + nm.split(' ')[0] + '!';
+  document.getElementById('profileName').textContent  = nm;
+  document.getElementById('profileEmail').textContent = currentUser.email;
+  document.getElementById('profileAvatar').textContent = nm.charAt(0).toUpperCase();
+  document.getElementById('profNIK').textContent   = userData.ktp   || '—';
+  document.getElementById('profPhone').textContent = userData.phone || '—';
+  document.getElementById('edit-name').value  = userData.fullName || '';
+  document.getElementById('edit-phone').value = userData.phone    || '';
+
+  if (userData.createdAt) {
+    const d = userData.createdAt.toDate ? userData.createdAt.toDate() : new Date(userData.createdAt);
+    document.getElementById('profJoin').textContent = d.toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'});
+  }
+
+  loadPengajuan();
+  listenNotifikasi();
+}
+
+// ── Load Pengajuan ──
+function loadPengajuan() {
+  const q = query(
+    collection(db, 'pengajuan'),
+    where('uid', '==', currentUser.uid),
+    orderBy('createdAt', 'desc')
+  );
+  onSnapshot(q, snap => {
+    pengajuanCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStats();
+    renderBerandaList();
+    renderPengajuanList();
+    populateMouSelect();
+  });
+}
+
+function renderStats() {
+  const total   = pengajuanCache.length;
+  const aktif   = pengajuanCache.filter(p => ['disetujui','live'].includes(p.status)).length;
+  const proses  = pengajuanCache.filter(p => ['menunggu','verifikasi','lapangan'].includes(p.status)).length;
+  const serapan = pengajuanCache
+    .filter(p => ['disetujui','live'].includes(p.status))
+    .reduce((s, p) => s + (p.serapanM3 || 0), 0);
+
+  document.getElementById('st-total').textContent   = total;
+  document.getElementById('st-aktif').textContent   = aktif;
+  document.getElementById('st-proses').textContent  = proses;
+  document.getElementById('st-serapan').textContent = serapan > 999 ? (serapan/1000).toFixed(1)+'k' : Math.round(serapan);
+}
+
+function renderBerandaList() {
+  const el = document.getElementById('beranda-pengajuan-list');
+  const list = pengajuanCache.slice(0, 3);
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><i class="fas fa-seedling"></i><h4>Belum ada pengajuan</h4><p>Mulai ajukan infrastruktur konservasi Anda.</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(p => pengajuanCardHTML(p)).join('');
+}
+
+function renderPengajuanList() {
+  const el = document.getElementById('pengajuan-list');
+  if (!pengajuanCache.length) {
+    el.innerHTML = `<div class="empty-state"><i class="fas fa-seedling"></i><h4>Belum ada pengajuan</h4><p>Tap tombol <strong>Ajukan</strong> untuk memulai.</p><button class="btn-primary" onclick="switchPanel('ajukan')"><i class="fas fa-plus-circle"></i> Buat Pengajuan Baru</button></div>`;
+    return;
+  }
+  el.innerHTML = pengajuanCache.map(p => pengajuanCardHTML(p)).join('');
+}
+
+function pengajuanCardHTML(p) {
+  const statusLabel = { menunggu:'Menunggu', verifikasi:'Verifikasi Admin', lapangan:'Cek Lapangan', disetujui:'Disetujui', live:'Live / Publik', ditolak:'Ditolak' };
+  const tgl = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : '—';
+  return `
+  <div class="pengajuan-card status-${p.status}" onclick="openDetail('${p.id}')">
+    <div class="pj-top">
+      <div class="pj-id">#${p.id.slice(-6).toUpperCase()}</div>
+      <div class="pj-badge ${p.status}">${statusLabel[p.status]||p.status}</div>
+    </div>
+    <div class="pj-title">${p.lokasi || 'Lokasi tidak diisi'}</div>
+    <div class="pj-meta">
+      <span><i class="fas fa-water"></i>${p.jmlRorak||0} Rorak</span>
+      <span><i class="fas fa-circle-notch"></i>${p.jmlSumur||0} Sumur</span>
+      <span><i class="fas fa-calendar-alt"></i>${tgl}</span>
+    </div>
+    ${p.serapanM3 ? `<div class="pj-serapan"><i class="fas fa-tint"></i> Estimasi Serapan: <strong>${Math.round(p.serapanM3).toLocaleString('id-ID')} m³/tahun</strong></div>` : ''}
+  </div>`;
+}
+
+// ── Detail Modal ──
+window.openDetail = function(id) {
+  const p = pengajuanCache.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById('md-title').textContent = p.lokasi || 'Detail Pengajuan';
+  document.getElementById('md-sub').textContent   = '#' + p.id.slice(-6).toUpperCase() + ' · ' + (p.kecamatan||'');
+
+  // Stepper
+  const steps = ['menunggu','verifikasi','lapangan','disetujui','live'];
+  const curr  = steps.indexOf(p.status);
+  for (let i = 1; i <= 5; i++) {
+    const dot  = document.getElementById('sd-'+i);
+    const line = document.getElementById('sl-'+i);
+    const idx  = i - 1;
+    dot.className = 'step-dot ' + (idx < curr ? 'done' : idx === curr ? 'current' : 'pending');
+    dot.innerHTML  = idx < curr ? '<i class="fas fa-check" style="font-size:0.55rem;"></i>' : i;
+    if (line && idx < curr) line.className = 'step-line done';
+    else if (line) line.className = 'step-line';
+  }
+
+  const body = document.getElementById('md-body');
+  body.innerHTML = `
+    <div class="info-row" style="margin-bottom:12px;">
+      <div class="info-row-item"><i class="fas fa-map-marker-alt"></i><span class="iri-label">Lokasi</span><span class="iri-val">${p.lokasi||'—'}</span></div>
+      <div class="info-row-item"><i class="fas fa-water"></i><span class="iri-label">Rorak</span><span class="iri-val">${p.jmlRorak||0} unit · ${p.pRorak||2}m × ${p.lRorak||70}cm × ${p.dRorak||70}cm</span></div>
+      <div class="info-row-item"><i class="fas fa-circle-notch"></i><span class="iri-label">Sumur</span><span class="iri-val">${p.jmlSumur||0} unit · ⌀${p.dSumur||80}cm × ${p.hSumur||1.5}m</span></div>
+      <div class="info-row-item"><i class="fas fa-tint"></i><span class="iri-label">Serapan</span><span class="iri-val" style="color:var(--lime);font-weight:700;">${p.serapanM3 ? Math.round(p.serapanM3).toLocaleString('id-ID')+' m³/thn' : '—'}</span></div>
+      ${p.lat ? `<div class="info-row-item"><i class="fas fa-crosshairs"></i><span class="iri-label">GPS</span><span class="iri-val">${parseFloat(p.lat).toFixed(5)}, ${parseFloat(p.lng).toFixed(5)}</span></div>` : ''}
+    </div>
+    ${p.catatanAdmin ? `<div class="alert info show" style="margin-bottom:0;"><i class="fas fa-comment-alt"></i><span><strong>Catatan Admin:</strong> ${p.catatanAdmin}</span></div>` : ''}
+  `;
+
+  document.getElementById('modalDetail').classList.add('open');
+};
+
+window.closeModal = function(id) {
+  document.getElementById(id).classList.remove('open');
+};
+
+// Tutup modal saat klik luar
+document.getElementById('modalDetail').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('modalDetail');
+});
+
+// ── Notifikasi ──
+function listenNotifikasi() {
+  const q = query(
+    collection(db, 'notifikasi'),
+    where('uid', '==', currentUser.uid),
+    orderBy('createdAt', 'desc')
+  );
+  onSnapshot(q, snap => {
+    const notifs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const unread = notifs.filter(n => !n.read).length;
+    document.getElementById('notifDot').className = 'notif-dot' + (unread ? ' show' : '');
+    renderNotifList(notifs);
+  });
+}
+
+function renderNotifList(notifs) {
+  const el = document.getElementById('notif-list');
+  if (!notifs.length) {
+    el.innerHTML = `<div class="empty-state"><i class="fas fa-bell-slash"></i><h4>Tidak ada notifikasi</h4><p>Notifikasi dari Admin akan muncul di sini.</p></div>`;
+    return;
+  }
+  const iconMap = { approved:'lime', rejected:'warn', update:'info', mou:'green' };
+  el.innerHTML = notifs.map(n => {
+    const tgl = n.createdAt?.toDate ? n.createdAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'short'}) : '';
+    return `
+    <div class="notif-item ${!n.read ? 'unread' : ''}" onclick="bacaNotif('${n.id}')">
+      <div class="notif-icon ${iconMap[n.type]||'lime'}"><i class="fas fa-${n.type==='approved'?'check-circle':n.type==='rejected'?'times-circle':n.type==='mou'?'handshake':'info-circle'}"></i></div>
+      <div class="notif-body">
+        <div class="notif-title">${n.title||'Notifikasi'}</div>
+        <div class="notif-desc">${n.message||''}</div>
+        <div class="notif-time">${tgl}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.bacaNotif = async function(id) {
+  await updateDoc(doc(db, 'notifikasi', id), { read: true });
+};
+
+window.tandaiBacaSemua = async function() {
+  // mark all unread
+  const q = query(collection(db,'notifikasi'), where('uid','==',currentUser.uid), where('read','==',false));
+  const snap = await getDocs(q);
+  snap.forEach(d => updateDoc(d.ref, { read: true }));
+  showToast('Semua notifikasi ditandai dibaca');
+};
+
+// ── Submit Pengajuan ──
+window.submitPengajuan = async function() {
+  const btn = document.getElementById('btnSubmitAjukan');
+  const al  = document.getElementById('ajukanAlert');
+
+  const lokasi  = document.getElementById('f-lokasi').value.trim();
+  const lat     = document.getElementById('f-lat').value;
+  const lng     = document.getElementById('f-lng').value;
+  const jmlRorak= parseInt(document.getElementById('f-jml-rorak').value) || 0;
+  const jmlSumur= parseInt(document.getElementById('f-jml-sumur').value) || 0;
+
+  if (!lokasi)         { showAlert(al, 'Isi nama lokasi terlebih dahulu.', 'error'); return; }
+  if (!lat || !lng)    { showAlert(al, 'Ambil titik GPS terlebih dahulu.', 'error'); return; }
+  if (!jmlRorak && !jmlSumur) { showAlert(al, 'Isi jumlah rorak atau sumur resapan.', 'error'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+
+  try {
+    const serapanM3 = hitungSerapan();
+    const data = {
+      uid:       currentUser.uid,
+      namaUser:  userData.fullName || currentUser.email,
+      lokasi,
+      kecamatan: document.getElementById('f-kecamatan').value.trim(),
+      lat, lng,
+      luas:      parseFloat(document.getElementById('f-luas').value) || 0,
+      jmlRorak,
+      pRorak:    parseFloat(document.getElementById('f-p-rorak').value),
+      lRorak:    parseFloat(document.getElementById('f-l-rorak').value),
+      dRorak:    parseFloat(document.getElementById('f-d-rorak').value),
+      jmlSumur,
+      dSumur:    parseFloat(document.getElementById('f-d-sumur').value),
+      hSumur:    parseFloat(document.getElementById('f-h-sumur').value),
+      wallSumur: document.getElementById('f-wall-sumur').value,
+      jenisTanah:document.getElementById('f-tanah').value,
+      catatan:   document.getElementById('f-catatan').value.trim(),
+      serapanM3,
+      status:    'menunggu',
+      createdAt: serverTimestamp()
+    };
+    await addDoc(collection(db, 'pengajuan'), data);
+
+    // Notifikasi ke admin (simpan ke collection notif_admin)
+    await addDoc(collection(db, 'notif_admin'), {
+      type: 'pengajuan_baru',
+      title: 'Pengajuan Baru dari ' + (userData.fullName||currentUser.email),
+      message: `Lokasi: ${lokasi} · ${jmlRorak} Rorak, ${jmlSumur} Sumur`,
+      uid: currentUser.uid,
+      read: false,
+      createdAt: serverTimestamp()
+    });
+
+    showAlert(al, 'Pengajuan berhasil dikirim! Admin akan segera mereview.', 'success');
+    resetFormAjukan();
+    setTimeout(() => switchPanel('pengajuan'), 1800);
+
+  } catch(e) {
+    showAlert(al, 'Gagal mengirim: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Pengajuan';
+  }
+};
+
+function resetFormAjukan() {
+  ['f-lokasi','f-kecamatan','f-lat','f-lng','f-luas','f-jml-rorak','f-jml-sumur','f-catatan'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-p-rorak').value = '2';
+  document.getElementById('f-l-rorak').value = '70';
+  document.getElementById('f-d-rorak').value = '70';
+  document.getElementById('f-d-sumur').value = '80';
+  document.getElementById('f-h-sumur').value = '1.5';
+  document.getElementById('calc-m3').textContent    = '0';
+  document.getElementById('calc-liter').textContent = '0 Liter per tahun';
+  document.getElementById('gpsStatus').textContent  = '';
+  ['prev-lahan','prev-rorak','prev-sumur'].forEach(id => document.getElementById(id).innerHTML = '');
+}
+
+// ── GPS ──
+window.getGPS = function() {
+  const st = document.getElementById('gpsStatus');
+  if (!navigator.geolocation) { st.textContent = 'GPS tidak didukung browser ini.'; return; }
+  st.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengambil lokasi...';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      document.getElementById('f-lat').value = pos.coords.latitude.toFixed(6);
+      document.getElementById('f-lng').value = pos.coords.longitude.toFixed(6);
+      st.innerHTML = `<i class="fas fa-check" style="color:var(--success)"></i> Lokasi berhasil diambil (akurasi ±${Math.round(pos.coords.accuracy)}m)`;
+    },
+    err => { st.textContent = 'Gagal ambil GPS: ' + err.message; },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+};
+
+// ── Foto Preview ──
+window.previewFoto = function(input, targetId) {
+  const el = document.getElementById(targetId);
+  el.innerHTML = '';
+  Array.from(input.files).forEach(file => {
+    const r = new FileReader();
+    r.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      el.appendChild(img);
+    };
+    r.readAsDataURL(file);
+  });
+};
+
+// ── Hitung Otomatis ──
+function hitungSerapan() {
+  const hariHujan = 120;
+  const jmlRorak  = parseInt(document.getElementById('f-jml-rorak').value) || 0;
+  const jmlSumur  = parseInt(document.getElementById('f-jml-sumur').value) || 0;
+  const tanah     = document.getElementById('f-tanah').value;
+  let kFactor = tanah === 'lambat' ? 0.5 : tanah === 'cepat' ? 1.5 : 1.0;
+
+  // Rorak
+  const p = parseFloat(document.getElementById('f-p-rorak').value) || 2;
+  const l = (parseFloat(document.getElementById('f-l-rorak').value) || 70) / 100;
+  const d = (parseFloat(document.getElementById('f-d-rorak').value) || 70) / 100;
+  const volRorakL = p * l * d * 1000;
+  const totalRorakL = volRorakL * hariHujan * jmlRorak * kFactor;
+
+  // Sumur
+  const dia   = (parseFloat(document.getElementById('f-d-sumur').value) || 80) / 100;
+  const depth = parseFloat(document.getElementById('f-h-sumur').value) || 1.5;
+  const r     = dia / 2;
+  let volSumurM3 = Math.PI * r * r * depth;
+  if (document.getElementById('f-wall-sumur').value === 'porous') volSumurM3 *= 1.5;
+  const totalSumurL = volSumurM3 * 1000 * hariHujan * jmlSumur * kFactor;
+
+  const totalLiter = totalRorakL + totalSumurL;
+  const totalM3    = totalLiter / 1000;
+  return totalM3;
+}
+
+window.hitungOtomatis = function() {
+  const m3 = hitungSerapan();
+  document.getElementById('calc-m3').textContent    = m3.toLocaleString('id-ID', { maximumFractionDigits: 1 });
+  document.getElementById('calc-liter').textContent = Math.round(m3 * 1000).toLocaleString('id-ID') + ' Liter per tahun';
+};
+
+// ── Update Perawatan ──
+function populateMouSelect() {
+  const aktif = pengajuanCache.filter(p => ['disetujui','live'].includes(p.status));
+  const sel   = document.getElementById('f-update-mou');
+  sel.innerHTML = '<option value="">Pilih pengajuan...</option>' +
+    aktif.map(p => `<option value="${p.id}">#${p.id.slice(-6).toUpperCase()} — ${p.lokasi}</option>`).join('');
+
+  const mouList = document.getElementById('mou-aktif-list');
+  const wrap    = document.getElementById('form-update-wrap');
+
+  if (aktif.length) {
+    mouList.innerHTML = aktif.map(p => `
+      <div class="active-mou-card">
+        <div class="mou-title"><i class="fas fa-handshake"></i> MOU Aktif</div>
+        <div class="mou-name">${p.lokasi}</div>
+        <div class="mou-meta">${p.jmlRorak||0} Rorak · ${p.jmlSumur||0} Sumur Resapan<br>Serapan: ${Math.round(p.serapanM3||0).toLocaleString('id-ID')} m³/thn</div>
+      </div>`).join('');
+    wrap.style.display = 'block';
+  } else {
+    mouList.innerHTML = `<div class="empty-state"><i class="fas fa-handshake"></i><h4>Belum ada MOU aktif</h4><p>Setelah pengajuan disetujui dan ada kesepakatan dengan Buyer, form perawatan akan aktif.</p></div>`;
+    wrap.style.display = 'none';
+  }
+}
+
+window.submitUpdate = async function() {
+  const mouId    = document.getElementById('f-update-mou').value;
+  const catatan  = document.getElementById('f-update-catatan').value.trim();
+  const kondisiRorak = document.getElementById('f-kondisi-rorak').value;
+  const kondisiSumur = document.getElementById('f-kondisi-sumur').value;
+
+  if (!mouId)   { showToast('Pilih pengajuan terlebih dahulu.'); return; }
+  if (!catatan) { showToast('Isi catatan update.'); return; }
+
+  try {
+    await addDoc(collection(db, 'update_perawatan'), {
+      uid:       currentUser.uid,
+      pengajuanId: mouId,
+      kondisiRorak, kondisiSumur, catatan,
+      bulan: new Date().toLocaleDateString('id-ID',{month:'long',year:'numeric'}),
+      createdAt: serverTimestamp()
+    });
+    showToast('Laporan perawatan berhasil dikirim!');
+    document.getElementById('f-update-catatan').value = '';
+    document.getElementById('prev-update').innerHTML  = '';
+  } catch(e) { showToast('Gagal: ' + e.message); }
+};
+
+// ── Simpan Profil ──
+window.simpanProfil = async function() {
+  const name  = document.getElementById('edit-name').value.trim();
+  const phone = document.getElementById('edit-phone').value.trim();
+  if (!name) { showToast('Nama tidak boleh kosong.'); return; }
+  await updateDoc(doc(db, 'users', currentUser.uid), { fullName: name, phone });
+  document.getElementById('profileName').textContent = name;
+  document.getElementById('greetName').textContent   = 'Halo, ' + name.split(' ')[0] + '!';
+  document.getElementById('profileAvatar').textContent = name.charAt(0).toUpperCase();
+  showToast('Profil berhasil disimpan!');
+};
+
+// ── Logout ──
+window.logout = async function() {
+  await signOut(auth);
+  localStorage.removeItem('aqru_role');
+  window.location.href = 'auth.html?role=seller';
+};
+
+// ── Helpers ──
+function showAlert(el, msg, type) {
+  el.className = `alert ${type} show`;
+  el.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i><span>${msg}</span>`;
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+window.showToast = function(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+};
+
+// ── Panel Switcher ──
+window.switchPanel = function(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.panel === name));
+  const target = document.getElementById('panel-' + name);
+  if (target) { target.classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  if (name === 'pengajuan') renderPengajuanList();
+};
+
+</script>
+</body>
+</html>
