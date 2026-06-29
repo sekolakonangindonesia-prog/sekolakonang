@@ -553,6 +553,30 @@ input,textarea,select{font-family:var(--body);}
         <div id="bio-history-rows"></div>
         <button type="button" class="btn btn-outline btn-sm" onclick="addHistoryRow()" style="margin-top:6px;"><i class="fas fa-plus"></i> Tambah Titik Tren</button>
 
+        <!-- DOKUMENTASI FOTO -->
+        <div class="section-divider"><i class="fas fa-camera"></i> Dokumentasi Foto</div>
+        <div class="upload-zone" id="bio-photo-drop-zone" onclick="document.getElementById('bio-photo-input').click()">
+          <i class="fas fa-camera"></i>
+          <p>Klik untuk pilih foto dari <b>HP, laptop, atau perangkat lain</b> (bisa pilih banyak sekaligus)</p>
+          <div class="file-name" id="bio-photo-file-name">Belum ada file dipilih</div>
+        </div>
+        <input type="file" id="bio-photo-input" accept="image/*" multiple style="display:none">
+        <div class="form-hint">Foto otomatis dikompres lalu disimpan langsung di database dan tampil di galeri halaman detail kawasan. Disarankan maksimal 6-8 foto per data agar ukuran tetap ringan.</div>
+        <div id="bio-photo-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+
+        <!-- BERITA TERKAIT -->
+        <div class="section-divider"><i class="fas fa-newspaper"></i> Berita Terkait</div>
+        <div class="form-hint" style="margin-bottom:8px;">Pilih berita yang sudah ada di menu Berita untuk dikaitkan ke data kawasan ini (boleh lebih dari satu, atau tidak sama sekali).</div>
+        <div class="form-group" style="max-width:220px;margin-bottom:8px;">
+          <label style="font-size:0.65rem;">Filter berdasarkan tahun</label>
+          <select id="bio-news-year-filter">
+            <option value="">Semua Tahun</option>
+          </select>
+        </div>
+        <div class="species-table-wrap" id="bio-news-checklist" style="max-height:220px;overflow-y:auto;">
+          <div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Memuat daftar berita...</div>
+        </div>
+
         <!-- CATATAN -->
         <div class="section-divider"><i class="fas fa-sticky-note"></i> Catatan Lapangan</div>
         <div class="form-group"><textarea id="bio-catatan" rows="3" placeholder="Kondisi habitat, temuan menarik, rekomendasi..."></textarea></div>
@@ -819,7 +843,9 @@ let bioKmlParsedPolygons = null;
 // ── Konservasi: state foto & berita terkait ──
 let konsExistingPhotos = [];   // URL foto yang sudah tersimpan di DB (saat edit)
 let konsNewPhotoFiles  = [];   // File baru yang dipilih user, belum diupload
-let konsAllNewsCache   = null; // cache daftar berita untuk checklist
+let konsAllNewsCache   = null; // cache daftar berita untuk checklist (dipakai bersama Konservasi & Biodiversitas)
+let bioExistingPhotos  = [];   // URL foto dokumentasi Biodiversitas yang sudah tersimpan (saat edit)
+let bioNewPhotoFiles   = [];   // File foto dokumentasi Biodiversitas baru yang dipilih user
 
 // ============================================================
 // NAVIGATION
@@ -1463,6 +1489,44 @@ document.getElementById('kons-photo-input').addEventListener('change', (e) => {
   renderKonsPhotoPreview();
 });
 
+// ============================================================
+// BIODIVERSITAS: UPLOAD FOTO DOKUMENTASI DARI DEVICE (HP / LAPTOP)
+// ============================================================
+function renderBioPhotoPreview() {
+  const wrap = document.getElementById('bio-photo-preview');
+  wrap.innerHTML = '';
+  bioExistingPhotos.forEach((url, idx) => {
+    wrap.innerHTML += `
+      <div class="photo-thumb">
+        <img src="${url}" loading="lazy" onerror="this.src='https://placehold.co/84x84/1a1b1a/666?text=%E2%9C%96'">
+        <span class="photo-tag">Tersimpan</span>
+        <button type="button" class="photo-remove" onclick="removeBioExistingPhoto(${idx})"><i class="fas fa-times"></i></button>
+      </div>`;
+  });
+  bioNewPhotoFiles.forEach((file, idx) => {
+    const url = URL.createObjectURL(file);
+    wrap.innerHTML += `
+      <div class="photo-thumb">
+        <img src="${url}" loading="lazy">
+        <span class="photo-tag">Baru</span>
+        <button type="button" class="photo-remove" onclick="removeBioNewPhoto(${idx})"><i class="fas fa-times"></i></button>
+      </div>`;
+  });
+  const fname = document.getElementById('bio-photo-file-name');
+  const total = bioExistingPhotos.length + bioNewPhotoFiles.length;
+  fname.textContent = total > 0 ? `${total} foto siap (${bioNewPhotoFiles.length} baru)` : 'Belum ada file dipilih';
+}
+function removeBioExistingPhoto(idx) { bioExistingPhotos.splice(idx,1); renderBioPhotoPreview(); }
+function removeBioNewPhoto(idx) { bioNewPhotoFiles.splice(idx,1); renderBioPhotoPreview(); }
+window.removeBioExistingPhoto = removeBioExistingPhoto;
+window.removeBioNewPhoto = removeBioNewPhoto;
+
+document.getElementById('bio-photo-input').addEventListener('change', (e) => {
+  bioNewPhotoFiles.push(...Array.from(e.target.files));
+  e.target.value = '';
+  renderBioPhotoPreview();
+});
+
 // Kompres & resize gambar di browser sebelum upload — supaya tidak mengunggah
 // foto mentah dari kamera HP (bisa 3-8MB) yang membuat proses lama/macet.
 // Foto dikompres jadi gambar base64 dan disimpan LANGSUNG di dokumen Firestore —
@@ -1508,13 +1572,14 @@ function kompresFotoKons(file, maxPx = 800, targetKB = 150) {
   });
 }
 
-// Kompres semua file baru jadi base64, kembalikan array data-URL.
-// onProgress(current, total) dipanggil di setiap langkah supaya UI bisa kasih feedback.
-async function uploadKonsPhotos(docId, onProgress) {
+// Kompres array file foto jadi base64, kembalikan array data-URL.
+// onProgress(current, total, label) dipanggil di setiap langkah supaya UI bisa kasih feedback.
+// Reusable untuk Konservasi maupun Biodiversitas — keduanya kirim array file-nya sendiri.
+async function kompresFotoList(fileList, onProgress) {
   const results = [];
-  const total = konsNewPhotoFiles.length;
+  const total = fileList.length;
   for (let i = 0; i < total; i++) {
-    const file = konsNewPhotoFiles[i];
+    const file = fileList[i];
     try {
       if (onProgress) onProgress(i+1, total, 'Mengompres');
       const b64 = await kompresFotoKons(file);
@@ -1526,11 +1591,15 @@ async function uploadKonsPhotos(docId, onProgress) {
   }
   return results;
 }
+async function uploadKonsPhotos(docId, onProgress) {
+  return kompresFotoList(konsNewPhotoFiles, onProgress);
+}
 
 // ============================================================
-// KONSERVASI: CHECKLIST BERITA TERKAIT
+// CHECKLIST BERITA TERKAIT — generik, dipakai oleh Konservasi & Biodiversitas
 // ============================================================
-let konsNewsSelectedIds = []; // state centang terpilih — terpisah dari render, supaya tidak hilang saat filter tahun diganti
+let konsNewsSelectedIds = []; // state centang terpilih untuk form Konservasi
+let bioNewsSelectedIds  = []; // state centang terpilih untuk form Biodiversitas
 
 // Ekstrak tahun dari field date, toleran format ISO ("2022-08-08") maupun teks Indonesia ("8 Agustus 2022")
 function ekstrakTahunBerita(dateStr) {
@@ -1540,34 +1609,31 @@ function ekstrakTahunBerita(dateStr) {
   return m ? m[0] : null;
 }
 
-function renderKonsNewsChecklist() {
-  const wrap = document.getElementById('kons-news-checklist');
-  const filterYear = document.getElementById('kons-news-year-filter').value;
+// cfg = { wrapId, filterId, getSelected(), setSelected(arr) }
+function renderNewsChecklistGeneric(cfg) {
+  const wrap = document.getElementById(cfg.wrapId);
+  const filterYear = document.getElementById(cfg.filterId).value;
   let list = konsAllNewsCache;
   if (filterYear) list = list.filter(n => ekstrakTahunBerita(n.date) === filterYear);
   if (list.length === 0) {
     wrap.innerHTML = `<div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Tidak ada berita di tahun ${filterYear}.</div>`;
     return;
   }
+  const selected = cfg.getSelected();
   wrap.innerHTML = list.map(n => `
     <label class="news-check-row">
-      <input type="checkbox" value="${n.id}" ${konsNewsSelectedIds.includes(n.id) ? 'checked' : ''} onchange="toggleKonsNewsSelected('${n.id}', this.checked)">
+      <input type="checkbox" value="${n.id}" ${selected.includes(n.id) ? 'checked' : ''} onchange="window.__newsToggle_${cfg.key}('${n.id}', this.checked)">
       <span>
         <div style="color:var(--parchment);">${n.title||'(tanpa judul)'}</div>
         <div class="news-check-meta">${n.date||''} · ${n.type==='external' ? 'Media Luar' : 'Warta Internal'}</div>
       </span>
     </label>`).join('');
 }
-function toggleKonsNewsSelected(id, checked) {
-  if (checked && !konsNewsSelectedIds.includes(id)) konsNewsSelectedIds.push(id);
-  if (!checked) konsNewsSelectedIds = konsNewsSelectedIds.filter(x => x !== id);
-}
-window.toggleKonsNewsSelected = toggleKonsNewsSelected;
 
-async function loadKonsNewsChecklist(selectedIds = []) {
-  const wrap = document.getElementById('kons-news-checklist');
+async function loadNewsChecklistGeneric(cfg, selectedIds = []) {
+  const wrap = document.getElementById(cfg.wrapId);
   wrap.innerHTML = '<div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Memuat daftar berita...</div>';
-  konsNewsSelectedIds = [...selectedIds];
+  cfg.setSelected([...selectedIds]);
   try {
     if (!konsAllNewsCache) {
       const snap = await getDocs(collection(db,'news'));
@@ -1578,21 +1644,43 @@ async function loadKonsNewsChecklist(selectedIds = []) {
     }
     if (konsAllNewsCache.length === 0) { wrap.innerHTML='<div style="padding:10px;font-size:0.72rem;color:var(--text-muted);">Belum ada berita. Tambahkan dulu di menu Berita.</div>'; return; }
 
-    // Isi dropdown filter tahun dari tahun-tahun yang benar-benar ada di data berita
     const tahunSet = new Set();
     konsAllNewsCache.forEach(n => { const y = ekstrakTahunBerita(n.date); if (y) tahunSet.add(y); });
     const tahunList = Array.from(tahunSet).sort((a,b) => b - a);
-    const filterEl = document.getElementById('kons-news-year-filter');
+    const filterEl = document.getElementById(cfg.filterId);
     filterEl.innerHTML = '<option value="">Semua Tahun</option>' + tahunList.map(y => `<option value="${y}">${y}</option>`).join('');
 
-    renderKonsNewsChecklist();
+    renderNewsChecklistGeneric(cfg);
   } catch(e) { wrap.innerHTML='<div style="padding:10px;font-size:0.72rem;color:var(--danger);">Gagal memuat daftar berita: '+e.message+'</div>'; console.error(e); }
 }
-document.getElementById('kons-news-year-filter').addEventListener('change', renderKonsNewsChecklist);
 
-function getSelectedNewsIds() {
-  return konsNewsSelectedIds;
-}
+// ── Konfigurasi untuk form Konservasi ──
+const konsNewsCfg = {
+  key: 'kons', wrapId: 'kons-news-checklist', filterId: 'kons-news-year-filter',
+  getSelected: () => konsNewsSelectedIds, setSelected: (arr) => { konsNewsSelectedIds = arr; }
+};
+window.__newsToggle_kons = function(id, checked) {
+  if (checked && !konsNewsSelectedIds.includes(id)) konsNewsSelectedIds.push(id);
+  if (!checked) konsNewsSelectedIds = konsNewsSelectedIds.filter(x => x !== id);
+};
+function renderKonsNewsChecklist() { renderNewsChecklistGeneric(konsNewsCfg); }
+async function loadKonsNewsChecklist(selectedIds = []) { await loadNewsChecklistGeneric(konsNewsCfg, selectedIds); }
+document.getElementById('kons-news-year-filter').addEventListener('change', renderKonsNewsChecklist);
+function getSelectedNewsIds() { return konsNewsSelectedIds; }
+
+// ── Konfigurasi untuk form Biodiversitas ──
+const bioNewsCfg = {
+  key: 'bio', wrapId: 'bio-news-checklist', filterId: 'bio-news-year-filter',
+  getSelected: () => bioNewsSelectedIds, setSelected: (arr) => { bioNewsSelectedIds = arr; }
+};
+window.__newsToggle_bio = function(id, checked) {
+  if (checked && !bioNewsSelectedIds.includes(id)) bioNewsSelectedIds.push(id);
+  if (!checked) bioNewsSelectedIds = bioNewsSelectedIds.filter(x => x !== id);
+};
+function renderBioNewsChecklist() { renderNewsChecklistGeneric(bioNewsCfg); }
+async function loadBioNewsChecklist(selectedIds = []) { await loadNewsChecklistGeneric(bioNewsCfg, selectedIds); }
+document.getElementById('bio-news-year-filter').addEventListener('change', renderBioNewsChecklist);
+function getSelectedBioNewsIds() { return bioNewsSelectedIds; }
 
 async function loadKonservasiList() {
   const wrap = document.getElementById('kons-list-wrap');
@@ -1949,6 +2037,10 @@ function newBioForm() {
   clearBioFlagshipImg();
   document.getElementById('bio-protected-rows').innerHTML='';
   document.getElementById('bio-history-rows').innerHTML='';
+  bioExistingPhotos = [];
+  bioNewPhotoFiles = [];
+  renderBioPhotoPreview();
+  loadBioNewsChecklist([]);
   bioKmlParsedPolygons=null;
   document.getElementById('bio-kml-name').textContent='Belum ada file';
   toggleBioKML();
@@ -2009,6 +2101,10 @@ async function editBio(id) {
   document.getElementById('bio-catatan').value = d.catatan||d.desc||'';
   document.getElementById('bio-kml-name').textContent = d.detailPolygon && d.detailPolygon.length ? '✓ Polygon tersimpan di database' : 'Belum ada file';
   bioKmlParsedPolygons = null;
+  bioExistingPhotos = Array.isArray(d.photos) ? [...d.photos] : [];
+  bioNewPhotoFiles = [];
+  renderBioPhotoPreview();
+  loadBioNewsChecklist(d.relatedNewsIds || []);
   toggleBioKML();
   switchTab('biodiversitas','bio-form');
 }
@@ -2026,6 +2122,7 @@ document.getElementById('saveBioBtn').addEventListener('click', async () => {
   const data = {
     year, location,
     catatan: document.getElementById('bio-catatan').value.trim(),
+    relatedNewsIds: getSelectedBioNewsIds(),
     indices: {
       H: parseFloat(document.getElementById('bio-index-h').value)||0,
       E: parseFloat(document.getElementById('bio-index-e').value)||0,
@@ -2074,9 +2171,42 @@ document.getElementById('saveBioBtn').addEventListener('click', async () => {
   const btn = document.getElementById('saveBioBtn');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
   try {
+    // Kompres foto dokumentasi baru jadi base64 (tanpa Firebase Storage — sama
+    // seperti pola Konservasi), gabungkan dengan foto lama yang dipertahankan.
+    const newPhotosB64 = await kompresFotoList(bioNewPhotoFiles, (cur, total, label) => {
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${label} foto ${cur}/${total}...`;
+    });
+    let allPhotos = [...bioExistingPhotos, ...newPhotosB64];
+
+    // Pengaman: Firestore membatasi 1 dokumen maksimal ~1MB. Data Biodiversitas
+    // sudah cukup besar (protected list + foto flagship + foto tiap spesies),
+    // jadi foto dokumentasi dipadatkan lebih agresif kalau totalnya mendekati limit.
+    let totalKB = Math.round(allPhotos.reduce((a,b)=>a + (b.length*0.75/1024), 0));
+    if (totalKB > 500) {
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memadatkan ukuran foto...';
+      allPhotos = await Promise.all(allPhotos.map(b64 => new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = 320; c.height = 320;
+          c.getContext('2d').drawImage(img, 0, 0, 320, 320);
+          resolve(c.toDataURL('image/jpeg', 0.5));
+        };
+        img.onerror = () => resolve(b64);
+        img.src = b64;
+      })));
+      totalKB = Math.round(allPhotos.reduce((a,b)=>a + (b.length*0.75/1024), 0));
+      if (totalKB > 800) {
+        throw new Error(`Total ukuran data (foto + spesies dilindungi + flagship) masih terlalu besar (±${totalKB}KB). Coba kurangi jumlah foto dokumentasi yang diunggah sekaligus.`);
+      }
+    }
+    data.photos = allPhotos;
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan data...';
     const id = document.getElementById('bio-doc-id').value;
     if (id) await setDoc(doc(db,'monitoring_kehati',id), data, {merge:true});
     else await addDoc(collection(db,'monitoring_kehati'), data);
+    bioNewPhotoFiles = [];
     switchTab('biodiversitas','bio-list'); loadBioList();
   } catch(e) { alert('Gagal menyimpan data biodiversitas: '+e.message); console.error(e); }
   finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan Data'; }
