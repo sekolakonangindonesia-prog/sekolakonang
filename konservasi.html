@@ -785,17 +785,18 @@ footer {
         }
 
         // Tabel
+        const judulTampil = d.title ? d.title : (d.location || '—');
         tbody.innerHTML += `
           <tr>
             <td>${year}</td>
-            <td>${d.location || '—'}</td>
+            <td>${judulTampil}<br><span style="font-size:0.7rem;color:var(--text-muted);">${d.location || ''}</span></td>
             <td class="text-center">${trees.toLocaleString('id-ID')}</td>
             <td class="text-center">${rorak.toLocaleString('id-ID')}</td>
             <td class="text-center">${sumur.toLocaleString('id-ID')}</td>
             <td class="text-center">${biopori.toLocaleString('id-ID')}</td>
             <td class="text-end">${air.toFixed(1)}</td>
             <td class="text-center">
-              <a href="konservasi-year-detail.html?id=${year}" class="btn-detail">Detail</a>
+              <a href="konservasi-year-detail.html?id=${d.id}" class="btn-detail">Detail</a>
             </td>
           </tr>`;
       });
