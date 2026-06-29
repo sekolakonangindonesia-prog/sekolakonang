@@ -596,17 +596,18 @@ input,textarea,select{font-family:var(--body);}
     <div class="form-group"><label>Ringkasan (excerpt)</label><textarea id="bi-excerpt" rows="2" placeholder="Ringkasan singkat untuk tampil di kartu berita..."></textarea></div>
     <div class="form-group"><label>Isi Berita</label><textarea id="bi-isi" rows="6" placeholder="Tuliskan isi lengkap berita di sini..."></textarea></div>
     <div class="form-group">
-      <label>Foto Utama (Upload dari HP / Laptop)</label>
-      <div class="upload-zone" id="bi-foto-zone" onclick="document.getElementById('bi-foto-input').click()">
-        <i class="fas fa-image"></i>
-        <p>Klik untuk pilih foto dari perangkat Anda</p>
-        <div class="file-name" id="bi-foto-name">Belum ada foto dipilih</div>
+      <label>Foto Utama <span style="font-weight:400;color:var(--text-muted);font-size:0.65rem;">(upload dari HP/laptop)</span></label>
+      <div class="upload-zone" id="bi-foto-zone" onclick="document.getElementById('bi-foto-input').click()" style="padding:16px;">
+        <i class="fas fa-camera"></i>
+        <p>Klik untuk pilih foto dari HP atau laptop</p>
+        <div class="file-name" id="bi-foto-fname">Belum ada foto dipilih</div>
       </div>
       <input type="file" id="bi-foto-input" accept="image/*" style="display:none">
+      <input type="hidden" id="bi-foto">
       <div id="bi-foto-preview" style="margin-top:8px;display:none;">
-        <img id="bi-foto-img" style="max-height:120px;border-radius:var(--r-sm);border:1px solid var(--border-subtle);">
+        <img id="bi-foto-img" style="max-height:160px;border-radius:8px;border:1px solid var(--border-subtle);">
+        <button type="button" onclick="clearBiFoto()" style="display:block;margin-top:6px;font-size:0.7rem;color:var(--danger);background:none;border:none;cursor:pointer;"><i class="fas fa-times"></i> Hapus foto</button>
       </div>
-      <input type="hidden" id="bi-foto-b64">
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-berita-internal">Batal</button>
@@ -620,12 +621,21 @@ input,textarea,select{font-family:var(--body);}
   <div class="modal-box">
     <button class="modal-close" data-close="modal-berita-external"><i class="fas fa-times"></i></button>
     <h3 id="modal-be-title">Tambah Liputan Media</h3>
-    <div class="sub">Cukup isi judul dan link — tidak perlu foto, gambar otomatis diambil dari halaman berita tersebut.</div>
+    <div class="sub">Link berita dari media luar — foto otomatis tampil dari OG tag</div>
     <input type="hidden" id="be-id">
     <div class="form-group"><label>Tanggal Terbit</label><input type="date" id="be-date"></div>
     <div class="form-group"><label>Judul Berita</label><input type="text" id="be-judul" placeholder="Judul berita di media tersebut..."></div>
     <div class="form-group"><label>Link / URL Berita</label><input type="text" id="be-url" placeholder="https://radarbromo.com/..."></div>
     <div class="form-group"><label>Nama Media / Sumber</label><input type="text" id="be-sumber" placeholder="Radar Bromo, Jawa Pos, dll."></div>
+    <div class="form-group">
+      <label>URL Gambar / Thumbnail <span style="font-weight:400;color:var(--text-muted);font-size:0.65rem;">(opsional, dari link gambar berita)</span></label>
+      <input type="text" id="be-image" placeholder="https://radarbromo.com/wp-content/uploads/foto.jpg">
+      <div class="form-hint">Salin URL gambar dari halaman berita (klik kanan foto → "Salin alamat gambar"). Jika kosong, tampil foto default.</div>
+      <div id="be-image-preview" style="margin-top:8px;display:none;">
+        <img id="be-image-img" style="max-height:120px;border-radius:8px;border:1px solid var(--border-subtle);object-fit:cover;">
+        <div style="font-size:0.65rem;color:var(--lime);margin-top:4px;"><i class="fas fa-check-circle"></i> Preview gambar</div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-berita-external">Batal</button>
       <button class="btn btn-lime" id="saveBeritaExternalBtn"><i class="fas fa-save"></i> Simpan</button>
@@ -969,56 +979,27 @@ async function editBeritaInternal(id) {
   document.getElementById('bi-judul').value   = n.title||'';
   document.getElementById('bi-excerpt').value = n.excerpt||'';
   document.getElementById('bi-isi').value     = n.content||'';
-  // Reset foto upload state
-  document.getElementById('bi-foto-b64').value = '';
-  document.getElementById('bi-foto-name').textContent = n.image ? '✓ Foto tersimpan' : 'Belum ada foto';
-  const prevImg = document.getElementById('bi-foto-img');
-  const prevDiv = document.getElementById('bi-foto-preview');
-  if (n.image) { prevImg.src = n.image; prevDiv.style.display = 'block'; }
-  else { prevDiv.style.display = 'none'; }
+  document.getElementById('bi-foto').value = n.image||'';
+  if (n.image) {
+    document.getElementById('bi-foto-img').src = n.image;
+    document.getElementById('bi-foto-preview').style.display='block';
+    document.getElementById('bi-foto-fname').textContent='Foto tersimpan';
+  } else {
+    document.getElementById('bi-foto-preview').style.display='none';
+    document.getElementById('bi-foto-fname').textContent='Belum ada foto dipilih';
+  }
   document.getElementById('modal-bi-title').textContent = 'Edit Warta Internal';
   openModal('modal-berita-internal');
 }
 document.getElementById('addBeritaInternalBtn').addEventListener('click', () => {
-  ['bi-id','bi-date','bi-judul','bi-excerpt','bi-isi','bi-foto-b64'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('bi-foto-name').textContent = 'Belum ada foto dipilih';
-  document.getElementById('bi-foto-preview').style.display = 'none';
+  ['bi-id','bi-date','bi-judul','bi-excerpt','bi-isi','bi-foto'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('bi-foto-fname').textContent='Belum ada foto dipilih';
+  document.getElementById('bi-foto-preview').style.display='none';
   document.getElementById('modal-bi-title').textContent='Tambah Warta Internal';
   openModal('modal-berita-internal');
 });
-
-// Handler upload foto internal
-document.getElementById('bi-foto-input').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-  document.getElementById('bi-foto-name').textContent = file.name + ' (memproses...)';
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    // Kompres via canvas
-    const img = new Image();
-    img.onload = function() {
-      const canvas = document.createElement('canvas');
-      const MAX = 900;
-      let w = img.width, h = img.height;
-      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const b64 = canvas.toDataURL('image/jpeg', 0.75);
-      document.getElementById('bi-foto-b64').value = b64;
-      document.getElementById('bi-foto-img').src = b64;
-      document.getElementById('bi-foto-preview').style.display = 'block';
-      document.getElementById('bi-foto-name').textContent = '✓ ' + file.name;
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-});
 document.getElementById('saveBeritaInternalBtn').addEventListener('click', async () => {
   const id = document.getElementById('bi-id').value;
-  const newB64 = document.getElementById('bi-foto-b64').value;
-  // Kalau ada foto baru (b64), pakai itu. Kalau edit tanpa ganti foto, ambil dari preview src
-  const existingImg = document.getElementById('bi-foto-img').src;
-  const imageVal = newB64 || (document.getElementById('bi-foto-preview').style.display !== 'none' ? existingImg : '');
   const data = {
     type: 'internal',
     date: document.getElementById('bi-date').value,
@@ -1026,18 +1007,64 @@ document.getElementById('saveBeritaInternalBtn').addEventListener('click', async
     title: document.getElementById('bi-judul').value.trim(),
     excerpt: document.getElementById('bi-excerpt').value.trim(),
     content: document.getElementById('bi-isi').value.trim(),
-    image: imageVal
+    image: document.getElementById('bi-foto').value.trim()
   };
   if (!data.title) { alert('Judul wajib diisi.'); return; }
   const btn = document.getElementById('saveBeritaInternalBtn');
-  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+  btn.disabled=true;
   try {
     if (id) await setDoc(doc(db,'news',id), data, {merge:true});
     else await addDoc(collection(db,'news'), data);
     closeModal('modal-berita-internal');
     loadBeritaInternal();
   } catch(e) { alert('Gagal: '+e.message); }
-  finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan'; }
+  finally { btn.disabled=false; }
+});
+
+// ── Upload foto internal ──
+document.getElementById('bi-foto-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  document.getElementById('bi-foto-fname').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // Kompres via canvas agar ukuran kecil (max 900px, kualitas 0.75)
+    const img = new Image();
+    img.onload = function() {
+      const MAX = 900;
+      let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL('image/jpeg', 0.75);
+      document.getElementById('bi-foto').value = b64;
+      document.getElementById('bi-foto-img').src = b64;
+      document.getElementById('bi-foto-preview').style.display = 'block';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+window.clearBiFoto = function() {
+  document.getElementById('bi-foto').value = '';
+  document.getElementById('bi-foto-input').value = '';
+  document.getElementById('bi-foto-fname').textContent = 'Belum ada foto dipilih';
+  document.getElementById('bi-foto-preview').style.display = 'none';
+};
+
+// ── Preview URL gambar external ──
+document.getElementById('be-image').addEventListener('input', function() {
+  const url = this.value.trim();
+  const prev = document.getElementById('be-image-preview');
+  const img  = document.getElementById('be-image-img');
+  if (url) {
+    img.src = url;
+    img.onerror = () => { prev.style.display='none'; };
+    img.onload  = () => { prev.style.display='block'; };
+  } else {
+    prev.style.display = 'none';
+  }
 });
 
 // ============================================================
@@ -1080,11 +1107,19 @@ async function editBeritaExternal(id) {
   document.getElementById('be-judul').value  = n.title||'';
   document.getElementById('be-url').value    = n.url||'';
   document.getElementById('be-sumber').value = n.source||'';
+  document.getElementById('be-image').value  = n.image||'';
+  if (n.image) {
+    document.getElementById('be-image-img').src = n.image;
+    document.getElementById('be-image-preview').style.display='block';
+  } else {
+    document.getElementById('be-image-preview').style.display='none';
+  }
   document.getElementById('modal-be-title').textContent='Edit Liputan Media';
   openModal('modal-berita-external');
 }
 document.getElementById('addBeritaExternalBtn').addEventListener('click', () => {
-  ['be-id','be-date','be-judul','be-url','be-sumber'].forEach(id => document.getElementById(id).value='');
+  ['be-id','be-date','be-judul','be-url','be-sumber','be-image'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('be-image-preview').style.display='none';
   document.getElementById('modal-be-title').textContent='Tambah Liputan Media';
   openModal('modal-berita-external');
 });
@@ -1095,7 +1130,8 @@ document.getElementById('saveBeritaExternalBtn').addEventListener('click', async
     date: document.getElementById('be-date').value,
     title: document.getElementById('be-judul').value.trim(),
     url: document.getElementById('be-url').value.trim(),
-    source: document.getElementById('be-sumber').value.trim()
+    source: document.getElementById('be-sumber').value.trim(),
+    image: document.getElementById('be-image').value.trim()
   };
   if (!data.title||!data.url) { alert('Judul dan URL wajib diisi.'); return; }
   const btn = document.getElementById('saveBeritaExternalBtn');
