@@ -143,10 +143,8 @@
             filtered.forEach(d => {
                 const ext = d.type === 'external';
                 const fallbackImg = 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=500';
-                // Internal: pakai foto upload (base64 atau URL). External: fallback netral saja
-                const imgSrc = ext
-                  ? fallbackImg
-                  : (d.image ? esc(d.image) : fallbackImg);
+                // Pakai gambar upload (d.image) jika ada, untuk internal maupun eksternal
+                const imgSrc = d.image ? esc(d.image) : fallbackImg;
                 const col = document.createElement('div');
                 col.className = `col-md-6 col-lg-4 news-item ${ext ? 'external' : 'internal'}`;
                 col.innerHTML = `
