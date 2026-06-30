@@ -759,6 +759,20 @@
   }, { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
+  /* ── Modal Pilih Peran ── */
+  function openModal() {
+    document.getElementById('modalBackdrop').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('modalBackdrop').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+  // Tutup modal jika klik area gelap di luar kotak modal
+  document.getElementById('modalBackdrop')?.addEventListener('click', (e) => {
+    if (e.target.id === 'modalBackdrop') closeModal();
+  });
+
   /* ── Fireflies ── */
   (function(){
     const ff = document.getElementById('wfWrap');
