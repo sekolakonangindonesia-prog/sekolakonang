@@ -183,6 +183,11 @@ input,textarea,select{font-family:var(--body);}
 .modal-backdrop{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);display:none;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto;}
 .modal-backdrop.show{display:flex;}
 .modal-box{background:var(--canopy2);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px;width:100%;max-width:560px;position:relative;margin:auto;}
+.logo-upload-box{border:1px dashed var(--border-subtle);border-radius:var(--r-sm);padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;background:rgba(255,255,255,0.02);transition:0.2s;min-height:110px;position:relative;overflow:hidden;}
+.logo-upload-box:hover{border-color:var(--lime);}
+.logo-upload-box #mitra-logo-placeholder{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text-muted);font-size:0.72rem;}
+.logo-upload-box #mitra-logo-placeholder i{font-size:1.6rem;color:var(--text-muted);}
+.logo-upload-box img{max-height:90px;max-width:100%;object-fit:contain;}
 .modal-box.wide{max-width:720px;}
 .modal-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text-muted);font-size:1rem;cursor:pointer;}
 .modal-box h3{font-family:var(--display);font-size:1.1rem;color:var(--white);margin-bottom:4px;}
@@ -714,9 +719,16 @@ input,textarea,select{font-family:var(--body);}
     <button class="modal-close" data-close="modal-mitra"><i class="fas fa-times"></i></button>
     <h3 id="modal-mitra-title">Tambah Mitra</h3>
     <input type="hidden" id="mitra-id">
+    <input type="hidden" id="mitra-logo-existing-url">
     <div class="form-group"><label>Nama Mitra</label><input type="text" id="mitra-name" placeholder="PT Contoh Tbk"></div>
-    <div class="form-group"><label>URL Logo</label><input type="text" id="mitra-logo" placeholder="https://...logo.png"></div>
-    <div class="form-group"><label>Website (opsional)</label><input type="text" id="mitra-web" placeholder="https://..."></div>
+    <div class="form-group">
+      <label>Logo Mitra</label>
+      <div class="logo-upload-box" id="mitra-logo-box" onclick="document.getElementById('mitra-logo-input').click()">
+        <input type="file" id="mitra-logo-input" accept="image/*" style="display:none" onchange="previewMitraLogo(this)">
+        <div id="mitra-logo-placeholder"><i class="fas fa-image"></i><span>Klik untuk pilih logo</span></div>
+        <img id="mitra-logo-preview" style="display:none;">
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-mitra">Batal</button>
       <button class="btn btn-lime" id="saveMitraBtn"><i class="fas fa-save"></i> Simpan</button>
@@ -820,6 +832,9 @@ import {
 import {
   getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
@@ -829,9 +844,11 @@ const firebaseConfig = {
   messagingSenderId: "9338352073",
   appId: "1:9338352073:web:b56481b836888b1a8bf818"
 };
-const app  = initializeApp(firebaseConfig);
-const db   = getFirestore(app);
-const auth = getAuth(app);
+const app     = initializeApp(firebaseConfig);
+const db      = getFirestore(app);
+const auth    = getAuth(app);
+const storage = getStorage(app);
+
 
 // ── KML parse state ──
 let kmlParsedPolygons = null;
@@ -1254,7 +1271,6 @@ async function loadMitra() {
               ${m.logoUrl ? `<img src="${m.logoUrl}" style="height:32px;object-fit:contain;background:#fff;border-radius:4px;padding:2px 6px;">` : ''}
               <div>
                 <div style="font-weight:700;font-size:0.85rem;color:var(--white);">${m.name||'—'}</div>
-                ${m.website ? `<a href="${m.website}" target="_blank" style="font-size:0.65rem;color:var(--blue);">${m.website}</a>` : ''}
               </div>
             </div>
             <div class="list-card-actions">
@@ -1272,26 +1288,57 @@ async function editMitra(id) {
   const m = snap.data();
   document.getElementById('mitra-id').value   = id;
   document.getElementById('mitra-name').value = m.name||'';
-  document.getElementById('mitra-logo').value = m.logoUrl||'';
-  document.getElementById('mitra-web').value  = m.website||'';
+  document.getElementById('mitra-logo-existing-url').value = m.logoUrl||'';
+  resetMitraLogoBox(m.logoUrl||'');
   document.getElementById('modal-mitra-title').textContent='Edit Mitra';
   openModal('modal-mitra');
 }
+function resetMitraLogoBox(existingUrl) {
+  const placeholder = document.getElementById('mitra-logo-placeholder');
+  const preview      = document.getElementById('mitra-logo-preview');
+  document.getElementById('mitra-logo-input').value = '';
+  if (existingUrl) {
+    preview.src = existingUrl;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+  } else {
+    preview.style.display = 'none';
+    placeholder.style.display = 'flex';
+  }
+}
+window.previewMitraLogo = (input) => {
+  if (!input.files[0]) return;
+  const preview      = document.getElementById('mitra-logo-preview');
+  const placeholder  = document.getElementById('mitra-logo-placeholder');
+  preview.src = URL.createObjectURL(input.files[0]);
+  preview.style.display = 'block';
+  placeholder.style.display = 'none';
+};
 document.getElementById('addMitraBtn').addEventListener('click', () => {
-  ['mitra-id','mitra-name','mitra-logo','mitra-web'].forEach(id=>document.getElementById(id).value='');
+  ['mitra-id','mitra-name','mitra-logo-existing-url'].forEach(id=>document.getElementById(id).value='');
+  resetMitraLogoBox('');
   document.getElementById('modal-mitra-title').textContent='Tambah Mitra';
   openModal('modal-mitra');
 });
 document.getElementById('saveMitraBtn').addEventListener('click', async () => {
-  const id = document.getElementById('mitra-id').value;
-  const data = { name: document.getElementById('mitra-name').value.trim(), logoUrl: document.getElementById('mitra-logo').value.trim(), website: document.getElementById('mitra-web').value.trim() };
-  if (!data.name) { alert('Nama wajib diisi.'); return; }
-  const btn = document.getElementById('saveMitraBtn'); btn.disabled=true;
+  const id   = document.getElementById('mitra-id').value;
+  const name = document.getElementById('mitra-name').value.trim();
+  if (!name) { alert('Nama wajib diisi.'); return; }
+  const btn = document.getElementById('saveMitraBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
   try {
+    let logoUrl = document.getElementById('mitra-logo-existing-url').value || '';
+    const fileInput = document.getElementById('mitra-logo-input');
+    if (fileInput.files[0]) {
+      const fRef = ref(storage, `mitra-logo/${Date.now()}_${fileInput.files[0].name}`);
+      const snap = await uploadBytes(fRef, fileInput.files[0]);
+      logoUrl = await getDownloadURL(snap.ref);
+    }
+    const data = { name, logoUrl };
     if (id) await setDoc(doc(db,'mitra',id), data, {merge:true});
     else await addDoc(collection(db,'mitra'), data);
     closeModal('modal-mitra'); loadMitra();
-  } catch(e) { alert('Gagal: '+e.message); } finally { btn.disabled=false; }
+  } catch(e) { alert('Gagal: '+e.message); }
+  finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan'; }
 });
 
 // ============================================================
