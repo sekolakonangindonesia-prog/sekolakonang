@@ -478,122 +478,57 @@ input, textarea, select { font-family: var(--body); }
     <div class="page-header">
       <div class="page-label">Form Baru</div>
       <div class="page-title">Pengajuan PJLH</div>
-      <div class="page-sub">Isi semua data dengan lengkap dan benar.</div>
+      <div class="page-sub">Tambahkan setiap titik rorak/sumur satu per satu.</div>
     </div>
 
+    <!-- INFO PROYEK -->
     <div class="form-section">
-      <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> Lokasi Lahan</div>
+      <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> Info Lokasi Umum</div>
       <div class="form-group">
         <label>Nama Lokasi / Desa</label>
-        <input type="text" id="f-lokasi" placeholder="contoh: Desa Galih, Kec. Sukapura">
+        <input type="text" id="proj-nama" placeholder="contoh: Desa Galih, Kec. Sukapura" oninput="autoSaveProjek()">
       </div>
       <div class="form-group">
-        <label>Titik GPS</label>
-        <button class="btn-gps" id="btnGPS" onclick="getGPS()">
-          <i class="fas fa-crosshairs"></i> <span id="gpsLabel">Ambil Titik GPS Sekarang</span>
-        </button>
-        <div class="row-2" style="margin-top:8px;">
-          <div class="form-group" style="margin:0;"><label>Latitude</label><input type="text" id="f-lat" placeholder="-7.8xxxx" readonly></div>
-          <div class="form-group" style="margin:0;"><label>Longitude</label><input type="text" id="f-lon" placeholder="113.2xxxx" readonly></div>
-        </div>
-        <div class="form-hint">Pastikan GPS HP aktif saat mengambil titik.</div>
-      </div>
-      <div class="form-group">
-        <label>Luas Lahan (Ha)</label>
-        <input type="number" id="f-luas" placeholder="contoh: 0.5" step="0.1" min="0">
+        <label>Deskripsi Area (opsional)</label>
+        <textarea id="proj-deskripsi" placeholder="contoh: Area perbukitan sisi utara, dekat sungai..." oninput="autoSaveProjek()"></textarea>
       </div>
     </div>
 
-    <div class="form-section">
-      <div class="form-section-title"><i class="fas fa-water"></i> Data Rorak</div>
-      <div class="form-group">
-        <label>Jumlah Rorak</label>
-        <input type="number" id="f-jml-rorak" placeholder="contoh: 50" min="0" oninput="hitungOtomatis()">
-      </div>
-      <div class="row-3">
-        <div class="form-group"><label>Panjang (m)</label><input type="number" id="f-p-rorak" value="2" step="0.1" min="0" oninput="hitungOtomatis()"></div>
-        <div class="form-group"><label>Lebar (cm)</label><input type="number" id="f-l-rorak" value="70" step="1" min="0" oninput="hitungOtomatis()"></div>
-        <div class="form-group"><label>Dalam (cm)</label><input type="number" id="f-d-rorak" value="70" step="1" min="0" oninput="hitungOtomatis()"></div>
-      </div>
-      <div class="form-group">
-        <label>Kondisi Rorak</label>
-        <select id="f-kondisi-rorak"><option value="baik">Baik</option><option value="sedang">Sedang</option><option value="kurang">Perlu Perbaikan</option></select>
+    <!-- TOTAL OTOMATIS -->
+    <div class="calc-result" style="margin-bottom:14px;">
+      <div class="calc-result-label"><i class="fas fa-tint"></i> Total Estimasi Serapan Air</div>
+      <div><span class="calc-result-val" id="totalSerapan">0</span><span class="calc-result-unit">m³ / tahun</span></div>
+      <div style="font-size:0.62rem;color:var(--muted);margin-top:6px;">
+        Dari <span id="totalTitik">0</span> titik · <span id="totalRorakCount">0</span> Rorak, <span id="totalSumurCount">0</span> Sumur
       </div>
     </div>
 
-    <div class="form-section">
-      <div class="form-section-title"><i class="fas fa-circle-notch"></i> Data Sumur Resapan</div>
-      <div class="form-group">
-        <label>Jumlah Sumur</label>
-        <input type="number" id="f-jml-sumur" placeholder="contoh: 2" min="0" oninput="hitungOtomatis()">
-      </div>
-      <div class="row-2">
-        <div class="form-group"><label>Diameter (cm)</label><input type="number" id="f-d-sumur" value="80" step="1" min="0" oninput="hitungOtomatis()"></div>
-        <div class="form-group"><label>Kedalaman (m)</label><input type="number" id="f-h-sumur" value="1.5" step="0.1" min="0" oninput="hitungOtomatis()"></div>
-      </div>
-      <div class="form-group">
-        <label>Jenis Dinding</label>
-        <select id="f-wall-sumur" onchange="hitungOtomatis()">
-          <option value="solid">Solid (Beton)</option>
-          <option value="porous">Berpori (Bata Berlubang)</option>
-        </select>
+    <!-- DAFTAR TITIK -->
+    <div class="section-head">
+      <h3>Titik Lapangan</h3>
+    </div>
+    <div id="titikList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+      <div class="empty-state" style="padding:32px 16px;">
+        <i class="fas fa-map-pin"></i>
+        <p>Belum ada titik ditambahkan.<br>Tekan tombol di bawah untuk mulai survei.</p>
       </div>
     </div>
 
-    <div class="form-section">
-      <div class="form-section-title"><i class="fas fa-calculator"></i> Estimasi Serapan Air Otomatis</div>
-      <div class="form-group">
-        <label>Jenis Tanah</label>
-        <select id="f-tanah" onchange="hitungOtomatis()">
-          <option value="normal">Latosol / Normal (K=1.0)</option>
-          <option value="lambat">Serapan Lambat (K=0.5)</option>
-          <option value="cepat">Serapan Cepat (K=1.5)</option>
-        </select>
-      </div>
-      <div class="calc-result">
-        <div class="calc-result-label"><i class="fas fa-tint"></i> Potensi Serapan / Tahun</div>
-        <div><span class="calc-result-val" id="calc-m3">0</span><span class="calc-result-unit">m³ / tahun</span></div>
-        <div style="font-size:0.62rem;color:var(--muted);margin-top:6px;">
-          ≈ <span id="calc-liter">0</span> liter · setara kebutuhan air <span id="calc-org">0</span> orang/tahun
-        </div>
-      </div>
+    <!-- TOMBOL TAMBAH -->
+    <div class="row-2" style="margin-bottom:14px;">
+      <button class="btn-submit-full" style="background:var(--lime);margin-top:0;" onclick="bukaModalTitik('rorak')">
+        <i class="fas fa-plus"></i> Titik Rorak
+      </button>
+      <button class="btn-submit-full" style="background:var(--cyan);color:var(--bg);margin-top:0;" onclick="bukaModalTitik('sumur')">
+        <i class="fas fa-plus"></i> Titik Sumur
+      </button>
     </div>
 
-    <div class="form-section">
-      <div class="form-section-title"><i class="fas fa-camera"></i> Dokumentasi Foto</div>
-      <div class="foto-grid">
-        <div class="foto-box" id="fotoBox1">
-          <input type="file" id="fotoInput1" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox1')">
-          <i class="fas fa-camera"></i><span>Foto Lahan</span>
-        </div>
-        <div class="foto-box" id="fotoBox2">
-          <input type="file" id="fotoInput2" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox2')">
-          <i class="fas fa-camera"></i><span>Foto Rorak</span>
-        </div>
-        <div class="foto-box" id="fotoBox3">
-          <input type="file" id="fotoInput3" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox3')">
-          <i class="fas fa-camera"></i><span>Foto Sumur</span>
-        </div>
-        <div class="foto-box" id="fotoBox4">
-          <input type="file" id="fotoInput4" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox4')">
-          <i class="fas fa-camera"></i><span>Foto Lainnya</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <div class="form-section-title"><i class="fas fa-sticky-note"></i> Catatan Tambahan</div>
-      <div class="form-group">
-        <label>Catatan (opsional)</label>
-        <textarea id="f-catatan" placeholder="Kondisi lahan, informasi tambahan, dll..."></textarea>
-      </div>
-    </div>
-
-    <button class="btn-submit-full" id="btnSubmit" onclick="submitPengajuan()">
-      <i class="fas fa-paper-plane"></i> Kirim Pengajuan ke Admin
+    <button class="btn-submit-full" id="btnSubmitProyek" onclick="submitPengajuanFinal()">
+      <i class="fas fa-paper-plane"></i> Selesai &amp; Kirim ke Admin
     </button>
     <p style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;">
-      Pengajuan akan ditinjau Admin sebelum diverifikasi lapangan.
+      Setiap titik otomatis tersimpan saat ditambahkan. Tekan tombol ini setelah semua titik selesai disurvei.
     </p>
   </div>
 
@@ -686,6 +621,108 @@ input, textarea, select { font-family: var(--body); }
   </div>
 </div>
 
+<!-- MODAL: Tambah Titik Rorak/Sumur -->
+<div class="modal-backdrop" id="modalTitik">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitikTitle">Tambah Titik</div>
+    <div class="modal-sub" id="modalTitikSub">Isi data titik di lokasi ini</div>
+
+    <input type="hidden" id="titikJenis">
+    <input type="hidden" id="titikEditId">
+
+    <!-- GPS -->
+    <div class="form-group">
+      <label>Titik GPS</label>
+      <button class="btn-gps" id="btnGPSTitik" onclick="getGPSTitik()">
+        <i class="fas fa-crosshairs"></i> <span id="gpsLabelTitik">Ambil Titik GPS Sekarang</span>
+      </button>
+      <div class="row-2" style="margin-top:8px;">
+        <div class="form-group" style="margin:0;"><label>Latitude</label><input type="text" id="t-lat" placeholder="-7.8xxxx" readonly></div>
+        <div class="form-group" style="margin:0;"><label>Longitude</label><input type="text" id="t-lon" placeholder="113.2xxxx" readonly></div>
+      </div>
+      <div class="form-hint">Berdiri tepat di titik rorak/sumur saat ambil GPS.</div>
+    </div>
+
+    <!-- LABEL -->
+    <div class="form-group">
+      <label>Nama / Label Titik</label>
+      <input type="text" id="t-label" placeholder="contoh: Rorak ujung utara, dekat pohon mangga">
+    </div>
+
+    <!-- DIMENSI RORAK -->
+    <div id="dimensiRorakBox">
+      <div class="row-3">
+        <div class="form-group"><label>Panjang (m)</label><input type="number" id="t-p-rorak" value="2" step="0.1" min="0" oninput="hitungTitikOtomatis()"></div>
+        <div class="form-group"><label>Lebar (cm)</label><input type="number" id="t-l-rorak" value="70" step="1" min="0" oninput="hitungTitikOtomatis()"></div>
+        <div class="form-group"><label>Dalam (cm)</label><input type="number" id="t-d-rorak" value="70" step="1" min="0" oninput="hitungTitikOtomatis()"></div>
+      </div>
+      <div class="form-group">
+        <label>Kondisi Rorak</label>
+        <select id="t-kondisi-rorak"><option value="baik">Baik</option><option value="sedang">Sedang</option><option value="kurang">Perlu Perbaikan</option></select>
+      </div>
+    </div>
+
+    <!-- DIMENSI SUMUR -->
+    <div id="dimensiSumurBox" style="display:none;">
+      <div class="row-2">
+        <div class="form-group"><label>Diameter (cm)</label><input type="number" id="t-d-sumur" value="80" step="1" min="0" oninput="hitungTitikOtomatis()"></div>
+        <div class="form-group"><label>Kedalaman (m)</label><input type="number" id="t-h-sumur" value="1.5" step="0.1" min="0" oninput="hitungTitikOtomatis()"></div>
+      </div>
+      <div class="form-group">
+        <label>Jenis Dinding</label>
+        <select id="t-wall-sumur" onchange="hitungTitikOtomatis()">
+          <option value="solid">Solid (Beton)</option>
+          <option value="porous">Berpori (Bata Berlubang)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- JENIS TANAH -->
+    <div class="form-group">
+      <label>Jenis Tanah di Titik Ini</label>
+      <select id="t-tanah" onchange="hitungTitikOtomatis()">
+        <option value="normal">Latosol / Normal (K=1.0)</option>
+        <option value="lambat">Serapan Lambat (K=0.5)</option>
+        <option value="cepat">Serapan Cepat (K=1.5)</option>
+      </select>
+    </div>
+
+    <!-- KALKULASI PER TITIK -->
+    <div class="calc-result">
+      <div class="calc-result-label"><i class="fas fa-tint"></i> Estimasi Serapan Titik Ini</div>
+      <div><span class="calc-result-val" id="t-calc-m3">0</span><span class="calc-result-unit">m³ / tahun</span></div>
+    </div>
+
+    <!-- FOTO -->
+    <div class="form-group" style="margin-top:12px;">
+      <label>Foto Titik</label>
+      <div class="foto-grid">
+        <div class="foto-box" id="titikFotoBox1">
+          <input type="file" id="titikFotoInput1" accept="image/*" capture="environment" onchange="previewFoto(this,'titikFotoBox1')">
+          <i class="fas fa-camera"></i><span>Foto Lahan</span>
+        </div>
+        <div class="foto-box" id="titikFotoBox2">
+          <input type="file" id="titikFotoInput2" accept="image/*" capture="environment" onchange="previewFoto(this,'titikFotoBox2')">
+          <i class="fas fa-camera"></i><span>Foto Close-up</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Catatan Titik (opsional)</label>
+      <textarea id="t-catatan" placeholder="Kondisi sekitar titik, kendala, dll..."></textarea>
+    </div>
+
+    <button class="btn-submit-full" onclick="simpanTitik()">
+      <i class="fas fa-check"></i> Simpan Titik Ini
+    </button>
+    <button class="btn-submit-full" onclick="closeModal('modalTitik')" style="margin-top:8px;background:transparent;color:var(--muted);border:1px solid var(--border-s);">
+      Batal
+    </button>
+  </div>
+</div>
+
 <!-- MODAL: Detail Pengajuan -->
 <div class="modal-backdrop" id="modalDetail">
   <div class="modal-sheet">
@@ -740,7 +777,7 @@ input, textarea, select { font-family: var(--body); }
 import { initializeApp }                                    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, updatePassword,
          onAuthStateChanged, signOut }                      from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc,
+import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
          collection, query, where, orderBy,
          onSnapshot, serverTimestamp, getDocs }             from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL }     from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
@@ -790,6 +827,7 @@ function showApp() {
   populateProfil();
   loadBeranda();
   loadNotif();
+  renderTitikList();
 }
 
 // ── LOGIN ──
@@ -1036,104 +1074,300 @@ window.kirimProgres = async () => {
   } catch(e) { showToast('Gagal kirim: '+e.message,'error'); }
 };
 
-// ── PENGAJUAN BARU ──
-window.hitungOtomatis = () => {
-  const jmlRorak = parseInt(document.getElementById('f-jml-rorak').value)||0;
-  const p        = parseFloat(document.getElementById('f-p-rorak').value)||0;
-  const l        = parseFloat(document.getElementById('f-l-rorak').value)/100||0;
-  const d        = parseFloat(document.getElementById('f-d-rorak').value)/100||0;
-  const jmlSumur = parseInt(document.getElementById('f-jml-sumur').value)||0;
-  const dia      = parseFloat(document.getElementById('f-d-sumur').value)/100||0;
-  const depth    = parseFloat(document.getElementById('f-h-sumur').value)||0;
-  const porous   = document.getElementById('f-wall-sumur').value==='porous';
-  const soil     = document.getElementById('f-tanah').value;
-  const hariHujan= 120;
-  let k = soil==='lambat'?0.5:soil==='cepat'?1.5:1.0;
-  const volRorakLt = p*l*d*1000;
-  const r = dia/2;
-  let volSumurM3 = Math.PI*r*r*depth;
-  if (porous) volSumurM3 *= 1.5;
-  const totalLt = (volRorakLt*jmlRorak + volSumurM3*1000*jmlSumur)*hariHujan*k;
-  const m3 = totalLt/1000;
-  document.getElementById('calc-m3').textContent    = m3.toLocaleString('id-ID',{maximumFractionDigits:1});
-  document.getElementById('calc-liter').textContent  = Math.round(totalLt).toLocaleString('id-ID');
-  document.getElementById('calc-org').textContent    = Math.round(totalLt/21900).toLocaleString('id-ID');
+// ── PENGAJUAN BARU (SISTEM TITIK) ──
+let pengajuanAktifId = null;   // id dokumen "pengajuan_pjlh" yang sedang diisi (draft)
+let titikList         = [];    // array titik yang sudah tersimpan untuk draft ini
+let titikEditTarget    = null; // id titik yang sedang diedit (null = mode tambah baru)
+
+// Pastikan ada draft pengajuan aktif (dibuat sekali, dipakai untuk semua titik)
+async function pastikanDraftPengajuan() {
+  if (pengajuanAktifId) return pengajuanAktifId;
+  const docRef = await addDoc(collection(db,'pengajuan_pjlh'), {
+    sellerId: currentUser.uid, sellerName: userData.fullName,
+    sellerEmail: currentUser.email, sellerPhone: userData.phone||'',
+    lokasi: document.getElementById('proj-nama').value.trim() || 'Tanpa nama',
+    deskripsi: document.getElementById('proj-deskripsi').value.trim() || '',
+    jumlahRorak: 0, jumlahSumur: 0, serapanM3: 0,
+    status: 'draft',
+    createdAt: serverTimestamp()
+  });
+  pengajuanAktifId = docRef.id;
+  return pengajuanAktifId;
+}
+
+window.autoSaveProjek = async () => {
+  if (!pengajuanAktifId) return; // belum ada titik, belum perlu draft
+  await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), {
+    lokasi: document.getElementById('proj-nama').value.trim() || 'Tanpa nama',
+    deskripsi: document.getElementById('proj-deskripsi').value.trim() || ''
+  });
+};
+
+// Hitung serapan SATU titik berdasarkan jenis & dimensi di modal
+function hitungSerapanTitik(jenis, data) {
+  const hariHujan = 120;
+  let k = data.tanah==='lambat'?0.5:data.tanah==='cepat'?1.5:1.0;
+  if (jenis === 'rorak') {
+    const p = data.p||0, l=(data.l||0)/100, d=(data.d||0)/100;
+    const volLt = p*l*d*1000;
+    return (volLt*hariHujan*k)/1000;
+  } else {
+    const dia = (data.dia||0)/100, depth = data.depth||0;
+    const r = dia/2;
+    let volM3 = Math.PI*r*r*depth;
+    if (data.porous) volM3 *= 1.5;
+    return (volM3*1000*hariHujan*k)/1000;
+  }
+}
+
+window.hitungTitikOtomatis = () => {
+  const jenis = document.getElementById('titikJenis').value;
+  const tanah = document.getElementById('t-tanah').value;
+  let m3 = 0;
+  if (jenis === 'rorak') {
+    m3 = hitungSerapanTitik('rorak', {
+      p: parseFloat(document.getElementById('t-p-rorak').value)||0,
+      l: parseFloat(document.getElementById('t-l-rorak').value)||0,
+      d: parseFloat(document.getElementById('t-d-rorak').value)||0,
+      tanah
+    });
+  } else {
+    m3 = hitungSerapanTitik('sumur', {
+      dia: parseFloat(document.getElementById('t-d-sumur').value)||0,
+      depth: parseFloat(document.getElementById('t-h-sumur').value)||0,
+      porous: document.getElementById('t-wall-sumur').value==='porous',
+      tanah
+    });
+  }
+  document.getElementById('t-calc-m3').textContent = m3.toLocaleString('id-ID',{maximumFractionDigits:1});
   return m3;
 };
 
-window.getGPS = () => {
+window.getGPSTitik = () => {
   if (!navigator.geolocation) { showToast('GPS tidak didukung.','error'); return; }
-  document.getElementById('gpsLabel').textContent = 'Mengambil titik GPS...';
+  document.getElementById('gpsLabelTitik').textContent = 'Mengambil titik GPS...';
   navigator.geolocation.getCurrentPosition(
     pos => {
-      document.getElementById('f-lat').value = pos.coords.latitude.toFixed(6);
-      document.getElementById('f-lon').value = pos.coords.longitude.toFixed(6);
-      document.getElementById('gpsLabel').textContent = '✓ GPS berhasil direkam';
+      document.getElementById('t-lat').value = pos.coords.latitude.toFixed(6);
+      document.getElementById('t-lon').value = pos.coords.longitude.toFixed(6);
+      document.getElementById('gpsLabelTitik').textContent = '✓ GPS berhasil direkam';
       showToast('Titik GPS berhasil diambil!','success');
     },
     () => {
-      document.getElementById('gpsLabel').textContent = 'Ambil Titik GPS Sekarang';
+      document.getElementById('gpsLabelTitik').textContent = 'Ambil Titik GPS Sekarang';
       showToast('Gagal ambil GPS. Aktifkan izin lokasi.','error');
     }
   );
 };
 
-window.submitPengajuan = async () => {
-  const lokasi  = document.getElementById('f-lokasi').value.trim();
-  const lat     = document.getElementById('f-lat').value;
-  const lon     = document.getElementById('f-lon').value;
-  const jmlRorak= document.getElementById('f-jml-rorak').value;
-  const jmlSumur= document.getElementById('f-jml-sumur').value;
-  if (!lokasi)        { showToast('Isi nama lokasi / desa.','error'); return; }
-  if (!lat || !lon)   { showToast('Ambil titik GPS terlebih dahulu.','error'); return; }
-  if (!jmlRorak && !jmlSumur) { showToast('Isi minimal jumlah rorak atau sumur.','error'); return; }
+window.bukaModalTitik = (jenis, editId=null) => {
+  document.getElementById('titikJenis').value = jenis;
+  document.getElementById('titikEditId').value = editId || '';
+  titikEditTarget = editId;
 
-  const btn = document.getElementById('btnSubmit');
-  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+  document.getElementById('dimensiRorakBox').style.display = jenis==='rorak' ? 'block' : 'none';
+  document.getElementById('dimensiSumurBox').style.display = jenis==='sumur' ? 'block' : 'none';
+  document.getElementById('modalTitikTitle').textContent = (editId ? 'Edit ' : 'Tambah ') + (jenis==='rorak'?'Titik Rorak':'Titik Sumur');
+  document.getElementById('modalTitikSub').textContent = jenis==='rorak' ? 'Catat data rorak di titik ini' : 'Catat data sumur resapan di titik ini';
+
+  // Reset / isi ulang form
+  if (editId) {
+    const t = titikList.find(x=>x.id===editId);
+    if (t) {
+      document.getElementById('t-lat').value = t.lat||'';
+      document.getElementById('t-lon').value = t.lon||'';
+      document.getElementById('t-label').value = t.label||'';
+      document.getElementById('t-tanah').value = t.tanah||'normal';
+      document.getElementById('t-catatan').value = t.catatan||'';
+      if (jenis==='rorak') {
+        document.getElementById('t-p-rorak').value = t.p||2;
+        document.getElementById('t-l-rorak').value = t.l||70;
+        document.getElementById('t-d-rorak').value = t.d||70;
+        document.getElementById('t-kondisi-rorak').value = t.kondisi||'baik';
+      } else {
+        document.getElementById('t-d-sumur').value = t.dia||80;
+        document.getElementById('t-h-sumur').value = t.depth||1.5;
+        document.getElementById('t-wall-sumur').value = t.porous?'porous':'solid';
+      }
+      document.getElementById('gpsLabelTitik').textContent = t.lat ? '✓ GPS berhasil direkam' : 'Ambil Titik GPS Sekarang';
+    }
+  } else {
+    document.getElementById('t-lat').value = '';
+    document.getElementById('t-lon').value = '';
+    document.getElementById('t-label').value = '';
+    document.getElementById('t-tanah').value = 'normal';
+    document.getElementById('t-catatan').value = '';
+    document.getElementById('t-p-rorak').value = 2;
+    document.getElementById('t-l-rorak').value = 70;
+    document.getElementById('t-d-rorak').value = 70;
+    document.getElementById('t-kondisi-rorak').value = 'baik';
+    document.getElementById('t-d-sumur').value = 80;
+    document.getElementById('t-h-sumur').value = 1.5;
+    document.getElementById('t-wall-sumur').value = 'solid';
+    document.getElementById('gpsLabelTitik').textContent = 'Ambil Titik GPS Sekarang';
+    ['titikFotoBox1','titikFotoBox2'].forEach(id=>{
+      const b=document.getElementById(id); const img=b.querySelector('img'); if(img) img.remove();
+      document.getElementById(id.replace('Box','Input')).value = '';
+    });
+  }
+  hitungTitikOtomatis();
+  openModal('modalTitik');
+};
+
+window.simpanTitik = async () => {
+  const jenis = document.getElementById('titikJenis').value;
+  const editId = document.getElementById('titikEditId').value || null;
+  const lat = document.getElementById('t-lat').value;
+  const lon = document.getElementById('t-lon').value;
+  if (!lat || !lon) { showToast('Ambil titik GPS terlebih dahulu.','error'); return; }
+
+  const m3 = window.hitungTitikOtomatis();
+  const data = {
+    jenis, lat, lon,
+    label: document.getElementById('t-label').value.trim(),
+    tanah: document.getElementById('t-tanah').value,
+    catatan: document.getElementById('t-catatan').value.trim(),
+    serapanM3: Math.round(m3*10)/10,
+  };
+  if (jenis === 'rorak') {
+    data.p = parseFloat(document.getElementById('t-p-rorak').value)||0;
+    data.l = parseFloat(document.getElementById('t-l-rorak').value)||0;
+    data.d = parseFloat(document.getElementById('t-d-rorak').value)||0;
+    data.kondisi = document.getElementById('t-kondisi-rorak').value;
+  } else {
+    data.dia = parseFloat(document.getElementById('t-d-sumur').value)||0;
+    data.depth = parseFloat(document.getElementById('t-h-sumur').value)||0;
+    data.porous = document.getElementById('t-wall-sumur').value==='porous';
+  }
+
+  const btn = event?.target;
   try {
-    const serapanM3 = window.hitungOtomatis();
-    const fotoUrls  = [];
-    for (let i=1;i<=4;i++) {
-      const input = document.getElementById('fotoInput'+i);
+    await pastikanDraftPengajuan();
+
+    // Upload foto baru jika ada
+    const fotoUrls = [];
+    for (let i=1;i<=2;i++) {
+      const input = document.getElementById('titikFotoInput'+i);
       if (input.files[0]) {
-        const fRef = ref(storage,`pjlh/${currentUser.uid}/${Date.now()}_foto${i}`);
+        const fRef = ref(storage, `pjlh/${currentUser.uid}/${pengajuanAktifId}/titik_${Date.now()}_${i}`);
         const snap = await uploadBytes(fRef, input.files[0]);
         fotoUrls.push(await getDownloadURL(snap.ref));
       }
     }
-    await addDoc(collection(db,'pengajuan_pjlh'), {
-      sellerId:currentUser.uid, sellerName:userData.fullName,
-      sellerEmail:currentUser.email, sellerPhone:userData.phone||'',
-      lokasi, lat, lon,
-      luasHa:       parseFloat(document.getElementById('f-luas').value)||0,
-      jumlahRorak:  parseInt(jmlRorak)||0,
-      panjangRorak: parseFloat(document.getElementById('f-p-rorak').value)||0,
-      lebarRorak:   parseFloat(document.getElementById('f-l-rorak').value)||0,
-      dalamRorak:   parseFloat(document.getElementById('f-d-rorak').value)||0,
-      kondisiRorak: document.getElementById('f-kondisi-rorak').value,
-      jumlahSumur:  parseInt(jmlSumur)||0,
-      diameterSumur:parseFloat(document.getElementById('f-d-sumur').value)||0,
-      kedalamanSumur:parseFloat(document.getElementById('f-h-sumur').value)||0,
-      jenisDinding: document.getElementById('f-wall-sumur').value,
-      jenisTanah:   document.getElementById('f-tanah').value,
-      serapanM3:    Math.round(serapanM3),
-      catatan:      document.getElementById('f-catatan').value,
-      foto:         fotoUrls,
-      status:       'pending',
-      createdAt:    serverTimestamp()
-    });
+    if (fotoUrls.length) data.foto = fotoUrls;
+
+    if (editId) {
+      // Update titik yang sudah ada
+      await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId,'titik',editId), data);
+      const idx = titikList.findIndex(x=>x.id===editId);
+      if (idx>-1) titikList[idx] = {...titikList[idx], ...data};
+    } else {
+      // Tambah titik baru
+      data.createdAt = serverTimestamp();
+      const tRef = await addDoc(collection(db,'pengajuan_pjlh',pengajuanAktifId,'titik'), data);
+      titikList.push({id:tRef.id, ...data});
+    }
+
+    // Update total di dokumen induk
+    await updateTotalPengajuan();
+
+    closeModal('modalTitik');
+    renderTitikList();
+    showToast(editId ? 'Titik berhasil diperbarui!' : 'Titik berhasil ditambahkan!','success');
+  } catch(e) { showToast('Gagal simpan titik: '+e.message,'error'); }
+};
+
+async function updateTotalPengajuan() {
+  if (!pengajuanAktifId) return;
+  const jumlahRorak = titikList.filter(t=>t.jenis==='rorak').length;
+  const jumlahSumur = titikList.filter(t=>t.jenis==='sumur').length;
+  const serapanM3   = titikList.reduce((s,t)=>s+(t.serapanM3||0),0);
+  await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), {
+    jumlahRorak, jumlahSumur, serapanM3: Math.round(serapanM3)
+  });
+  renderTotalOtomatis();
+}
+
+function renderTotalOtomatis() {
+  const jumlahRorak = titikList.filter(t=>t.jenis==='rorak').length;
+  const jumlahSumur = titikList.filter(t=>t.jenis==='sumur').length;
+  const serapanM3   = titikList.reduce((s,t)=>s+(t.serapanM3||0),0);
+  document.getElementById('totalSerapan').textContent    = serapanM3.toLocaleString('id-ID',{maximumFractionDigits:1});
+  document.getElementById('totalTitik').textContent      = titikList.length;
+  document.getElementById('totalRorakCount').textContent = jumlahRorak;
+  document.getElementById('totalSumurCount').textContent = jumlahSumur;
+}
+
+function renderTitikList() {
+  const container = document.getElementById('titikList');
+  if (!titikList.length) {
+    container.innerHTML = `<div class="empty-state" style="padding:32px 16px;"><i class="fas fa-map-pin"></i><p>Belum ada titik ditambahkan.<br>Tekan tombol di bawah untuk mulai survei.</p></div>`;
+    renderTotalOtomatis();
+    return;
+  }
+  container.innerHTML = titikList.map((t,idx) => {
+    const isRorak = t.jenis==='rorak';
+    const dim = isRorak ? `${t.p||0}m × ${t.l||0}cm × ${t.d||0}cm` : `Ø${t.dia||0}cm × ${t.depth||0}m`;
+    return `<div class="pengajuan-card">
+      <div class="pj-head">
+        <div>
+          <div class="pj-title"><i class="fas fa-${isRorak?'water':'circle-notch'}" style="color:${isRorak?'var(--lime)':'var(--cyan)'};margin-right:6px;"></i>${t.label || (isRorak?'Rorak':'Sumur')+' #'+(idx+1)}</div>
+          <div class="pj-loc">${dim} · GPS ${t.lat}, ${t.lon}</div>
+        </div>
+        <span class="badge" style="background:${isRorak?'rgba(198,255,0,0.12)':'rgba(0,229,255,0.12)'};color:${isRorak?'var(--lime)':'var(--cyan)'};border:1px solid ${isRorak?'rgba(198,255,0,0.25)':'rgba(0,229,255,0.25)'};">${(t.serapanM3||0).toLocaleString('id-ID',{maximumFractionDigits:1})} m³</span>
+      </div>
+      <div class="pj-footer">
+        <span class="pj-date">${t.catatan ? t.catatan.slice(0,40)+(t.catatan.length>40?'...':'') : 'Tanpa catatan'}</span>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-sm btn-outline-sm" onclick="bukaModalTitik('${t.jenis}','${t.id}')"><i class="fas fa-edit"></i></button>
+          <button class="btn-sm btn-outline-sm" style="color:var(--danger);" onclick="hapusTitik('${t.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  renderTotalOtomatis();
+}
+
+window.hapusTitik = async (id) => {
+  if (!pengajuanAktifId) return;
+  try {
+    await deleteDocTitik(id);
+    titikList = titikList.filter(t=>t.id!==id);
+    await updateTotalPengajuan();
+    renderTitikList();
+    showToast('Titik dihapus.','info');
+  } catch(e) { showToast('Gagal hapus: '+e.message,'error'); }
+};
+
+async function deleteDocTitik(id) {
+  await deleteDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId,'titik',id));
+}
+
+window.submitPengajuanFinal = async () => {
+  const lokasi = document.getElementById('proj-nama').value.trim();
+  if (!lokasi)            { showToast('Isi nama lokasi / desa terlebih dahulu.','error'); return; }
+  if (!titikList.length)  { showToast('Tambahkan minimal 1 titik rorak/sumur.','error'); return; }
+  if (!pengajuanAktifId)  { showToast('Belum ada draft tersimpan.','error'); return; }
+
+  const btn = document.getElementById('btnSubmitProyek');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+  try {
+    await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), { status: 'pending', submittedAt: serverTimestamp() });
     await addDoc(collection(db,'notifikasi_admin'), {
       type:'new_pengajuan', sellerId:currentUser.uid, sellerName:userData.fullName, lokasi,
-      message:`Pengajuan baru dari ${userData.fullName} — ${lokasi}`, read:false, createdAt:serverTimestamp()
+      message:`Pengajuan baru dari ${userData.fullName} — ${lokasi} (${titikList.length} titik)`,
+      read:false, createdAt:serverTimestamp()
     });
-    showToast('Pengajuan berhasil dikirim!','success');
+    showToast('Pengajuan berhasil dikirim ke Admin!','success');
     switchTab('pengajuan');
-    ['f-lokasi','f-lat','f-lon','f-luas','f-jml-rorak','f-jml-sumur','f-catatan'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('gpsLabel').textContent='Ambil Titik GPS Sekarang';
-    for(let i=1;i<=4;i++){const b=document.getElementById('fotoBox'+i);const img=b.querySelector('img');if(img)img.remove();}
-    hitungOtomatis();
+    // Reset state untuk pengajuan baru berikutnya
+    pengajuanAktifId = null;
+    titikList = [];
+    document.getElementById('proj-nama').value = '';
+    document.getElementById('proj-deskripsi').value = '';
+    renderTitikList();
   } catch(e) { showToast('Gagal kirim: '+e.message,'error'); }
-  finally    { btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane"></i> Kirim Pengajuan ke Admin'; }
+  finally    { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Selesai &amp; Kirim ke Admin'; }
 };
 
 // ── HELPERS ──
