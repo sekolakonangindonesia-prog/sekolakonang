@@ -435,6 +435,9 @@ input, textarea, select { font-family: var(--body); }
       </div>
     </div>
     <div class="nav-right">
+      <a href="index.html" class="notif-btn" title="Kembali ke Beranda Web">
+        <i class="fas fa-home"></i>
+      </a>
       <div class="notif-btn" onclick="switchTab('notif')">
         <i class="fas fa-bell"></i>
         <div class="notif-dot" id="navNotifDot"></div>
@@ -599,6 +602,11 @@ input, textarea, select { font-family: var(--body); }
       <div class="form-group"><label>WhatsApp</label><input type="text" id="editWA" placeholder="0812xxxxxxxx"></div>
       <div class="form-group"><label>Password Baru (kosongkan jika tidak ubah)</label><input type="password" id="editPass" placeholder="Min. 6 karakter"></div>
       <button class="btn-submit-full" onclick="simpanProfil()"><i class="fas fa-save"></i> Simpan Perubahan</button>
+    </div>
+    <div class="form-section">
+      <a href="index.html" class="btn-submit-full" style="background:var(--surface2);color:var(--parchment);text-decoration:none;">
+        <i class="fas fa-home"></i> Kembali ke Beranda Web
+      </a>
     </div>
     <div class="form-section">
       <button class="btn-submit-full" onclick="logout()" style="background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);color:var(--danger);">
