@@ -339,9 +339,13 @@
       <small>Indonesia</small>
     </div>
   </div>
-  <a href="#kontak" class="nav-cta">
+  <a href="#kontak" class="nav-cta" id="navCtaMitra">
     <i class="fas fa-handshake"></i>
     <span>Jadi Mitra</span>
+  </a>
+  <a href="#" class="nav-cta" id="navCtaUser" style="display:none;background:rgba(198,255,0,0.12);color:var(--lime);border:1px solid rgba(198,255,0,0.3);">
+    <i class="fas fa-user-circle"></i>
+    <span id="navUserName">Akun</span>
   </a>
 </nav>
 
@@ -583,7 +587,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, getDocs, addDoc, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
@@ -596,6 +600,35 @@
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
   const auth = getAuth(app);
+
+  // ── Nav CTA: tampilkan nama akun jika sudah login sebagai seller/buyer ──
+  function dashboardUrlForRole(role) {
+    if (role === 'seller') return 'dashboard-seller.html';
+    if (role === 'buyer')  return 'dashboard-buyer.html';
+    if (role === 'tim')    return 'dashboard-tim.html';
+    return 'Pjlh_index.html';
+  }
+  onAuthStateChanged(auth, async (user) => {
+    const ctaMitra = document.getElementById('navCtaMitra');
+    const ctaUser  = document.getElementById('navCtaUser');
+    if (!ctaMitra || !ctaUser) return;
+    if (user) {
+      try {
+        const snap = await getDoc(doc(db,'users',user.uid));
+        if (snap.exists()) {
+          const d = snap.data();
+          const initials = (d.fullName||'U').trim().split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+          document.getElementById('navUserName').textContent = (d.fullName||'Akun').split(' ')[0];
+          ctaUser.href = dashboardUrlForRole(d.role);
+          ctaMitra.style.display = 'none';
+          ctaUser.style.display  = 'flex';
+        }
+      } catch(e) { console.error('Gagal cek profil akun:', e); }
+    } else {
+      ctaMitra.style.display = 'flex';
+      ctaUser.style.display  = 'none';
+    }
+  });
 
   // ── Helper XSS escape ──
   function esc(str) {
