@@ -318,7 +318,10 @@ body {
       localStorage.setItem('aqru_name', snap.exists() ? (snap.data().fullName || email) : email);
 
       showAlert('Login berhasil! Mengalihkan...', 'success');
-      setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+      const targetPage = role === 'seller' ? 'dashboard-seller.html' :
+                          role === 'buyer'  ? 'dashboard-buyer.html'  :
+                          role === 'tim'    ? 'dashboard-tim.html'    : 'dashboard-seller.html';
+      setTimeout(() => { window.location.href = targetPage; }, 1000);
 
     } catch (err) {
       const msg = err.code === 'auth/user-not-found' ? 'Email tidak terdaftar.' :
@@ -372,7 +375,10 @@ body {
       localStorage.setItem('aqru_name', name);
 
       showAlert('Pendaftaran berhasil! Mengalihkan ke dashboard...', 'success');
-      setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
+      const targetPage = selectedRole === 'seller' ? 'dashboard-seller.html' :
+                          selectedRole === 'buyer'  ? 'dashboard-buyer.html'  :
+                          selectedRole === 'tim'    ? 'dashboard-tim.html'    : 'dashboard-seller.html';
+      setTimeout(() => { window.location.href = targetPage; }, 1200);
 
     } catch (err) {
       const msg = err.code === 'auth/email-already-in-use' ? 'Email sudah terdaftar. Silakan login.' :
