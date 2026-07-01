@@ -310,6 +310,22 @@ body {
   // Role yang dipilih di form login
   let loginRole = 'seller';
 
+  // Deteksi mode Tim dari URL — sembunyikan pilihan role & tombol daftar
+  const urlParams   = new URLSearchParams(window.location.search);
+  const urlRole     = urlParams.get('role');
+  const isTimMode   = urlRole === 'tim';
+
+  if (isTimMode) {
+    // Ubah subtitle
+    document.querySelector('#loginBox .form-header p').textContent = 'Masuk sebagai Tim Lapangan';
+    // Sembunyikan kartu role seller/buyer
+    document.getElementById('loginRoleSeller').closest('div').style.display = 'none';
+    // Sembunyikan tombol "Daftar Sekarang"
+    document.querySelector('.form-footer').style.display = 'none';
+    // Set loginRole ke tim
+    loginRole = 'tim';
+  }
+
   window.pilihRoleLogin = (role) => {
     loginRole = role;
     const cardSeller = document.getElementById('loginRoleSeller');
