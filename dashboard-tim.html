@@ -364,7 +364,7 @@ input,textarea,select{font-family:var(--body);}
     <!-- FOTO DOKUMENTASI -->
     <div class="form-section">
       <div class="form-section-title"><i class="fas fa-camera"></i> Foto Dokumentasi</div>
-      <div class="upload-box" id="fotoUploadBox" onclick="document.getElementById('fotoInputMulti').click()">
+      <div class="upload-box" id="fotoUploadBox">
         <input type="file" id="fotoInputMulti" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;">
         <i class="fas fa-camera"></i>
         <span id="fotoUploadLabel">Klik untuk pilih foto (bisa pilih banyak sekaligus)</span>
@@ -376,7 +376,7 @@ input,textarea,select{font-family:var(--body);}
     <!-- LAMPIRAN -->
     <div class="form-section">
       <div class="form-section-title"><i class="fas fa-paperclip"></i> Lampiran (opsional)</div>
-      <div class="upload-box" id="lampiranBox" onclick="document.getElementById('lampiranInput').click()">
+      <div class="upload-box" id="lampiranBox">
         <input type="file" id="lampiranInput" accept=".pdf,.doc,.docx,image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="previewLampiran(this)">
         <i class="fas fa-file-upload"></i>
         <span id="lampiranLabel">Klik untuk pilih file (PDF, Word, gambar)</span>
@@ -444,6 +444,70 @@ input,textarea,select{font-family:var(--body);}
     <div class="tab-notif" id="tabNotifDot"></div>
   </div>
   <div class="tab-item" id="tab-profil" onclick="switchTab('profil')"><i class="fas fa-user"></i><span>Profil</span></div>
+</div>
+
+<!-- MODAL EDIT LAPORAN -->
+<div class="modal-backdrop" id="modalEditLaporan" onclick="if(event.target===this) closeEditLaporan()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Laporan</div>
+    <div class="modal-sub">Ubah data jika ada kesalahan. Perubahan langsung tersimpan &amp; terlihat oleh Admin.</div>
+    <div id="editMeta" style="font-size:0.68rem;color:var(--muted);margin-bottom:16px;"></div>
+
+    <input type="hidden" id="edit-laporan-id">
+
+    <div class="form-group" id="editJudulWrap" style="display:none;">
+      <label>Judul Kegiatan</label>
+      <input type="text" id="edit-judul" placeholder="Judul kegiatan">
+    </div>
+
+    <div class="form-group">
+      <label>Tanggal Kegiatan</label>
+      <input type="date" id="edit-tanggal">
+    </div>
+
+    <div class="form-group">
+      <label>Deskripsi Kegiatan</label>
+      <textarea id="edit-deskripsi" placeholder="Jelaskan apa yang dilakukan, hasil yang dicapai, kendala jika ada..."></textarea>
+    </div>
+
+    <div id="editPjlhWrap" style="display:none;">
+      <div class="form-group">
+        <label>Hasil Verifikasi Lapangan</label>
+        <select id="edit-rekomendasi">
+          <option value="sesuai">✅ Sesuai — data seller terbukti benar</option>
+          <option value="sebagian">⚠️ Sebagian — ada ketidaksesuaian minor</option>
+          <option value="tidak_sesuai">❌ Tidak Sesuai — data tidak terbukti</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Catatan untuk Admin</label>
+        <textarea id="edit-catatan-admin" placeholder="Tuliskan detail ketidaksesuaian atau catatan penting untuk admin..."></textarea>
+      </div>
+    </div>
+
+    <div class="form-group" id="editLampiranWrap" style="display:none;">
+      <label>Lampiran Tersimpan</label>
+      <a id="editLampiranLink" href="#" target="_blank" class="btn-sm btn-outline-sm" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;"><i class="fas fa-paperclip"></i> <span id="editLampiranNama"></span></a>
+    </div>
+
+    <div class="form-group">
+      <label>Foto Dokumentasi Tersimpan</label>
+      <div class="foto-preview-grid" id="editFotoExistingGrid"></div>
+      <p style="font-size:0.6rem;color:var(--muted);margin-top:8px;line-height:1.5;">Klik tanda × untuk menghapus foto lama. Foto baru bisa ditambahkan di bawah ini (opsional).</p>
+      <div class="upload-box" id="editFotoUploadBox" style="margin-top:10px;">
+        <input type="file" id="editFotoInputMulti" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+        <i class="fas fa-camera"></i>
+        <span id="editFotoUploadLabel">Klik untuk tambah foto baru</span>
+      </div>
+      <div class="foto-preview-grid" id="editFotoNewGrid"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn-submit-full" style="background:var(--surface2);color:var(--parchment);flex:1;" onclick="closeEditLaporan()">Batal</button>
+      <button class="btn-submit-full" id="btnSimpanEditLaporan" style="flex:1;" onclick="simpanEditLaporan()"><i class="fas fa-save"></i> Simpan</button>
+    </div>
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -620,7 +684,10 @@ function laporanCardHTML(l) {
     </div>
     <div class="rc-foot">
       <span class="rc-date"><i class="fas fa-calendar-alt" style="margin-right:4px;"></i>${tgl}</span>
-      ${l.foto?.length ? `<span style="font-size:0.62rem;color:var(--muted);"><i class="fas fa-images" style="margin-right:3px;"></i>${l.foto.length} foto</span>` : ''}
+      <div style="display:flex;align-items:center;gap:10px;">
+        ${l.foto?.length ? `<span style="font-size:0.62rem;color:var(--muted);"><i class="fas fa-images" style="margin-right:3px;"></i>${l.foto.length} foto</span>` : ''}
+        <button class="btn-sm btn-outline-sm" onclick="openEditLaporan('${l.id}')"><i class="fas fa-edit"></i> Edit</button>
+      </div>
     </div>
   </div>`;
 }
@@ -636,6 +703,140 @@ window.renderLaporanList = (filter) => {
 };
 
 window.filterLaporan = (f) => renderLaporanList(f);
+
+// ── EDIT LAPORAN (supaya Tim bisa perbaiki/lihat kembali laporan yang sudah dikirim) ──
+let editFotoExisting  = []; // foto lama (base64/url) yang masih dipertahankan
+let editFotoNewFiles  = []; // file foto baru yang ditambahkan saat edit (belum dikompres)
+
+window.openEditLaporan = (id) => {
+  const l = allLaporan.find(x => x.id === id);
+  if (!l) { showToast('Laporan tidak ditemukan.','error'); return; }
+
+  document.getElementById('edit-laporan-id').value = id;
+  document.getElementById('edit-tanggal').value     = l.tanggal || '';
+  document.getElementById('edit-deskripsi').value   = l.deskripsi || '';
+
+  const labelJenis = l.jenis==='program' ? 'Program' : l.jenis==='pjlh' ? 'Verifikasi PJLH' : 'Lain-lain';
+  document.getElementById('editMeta').innerHTML =
+    `<i class="fas fa-tag" style="margin-right:5px;"></i>${labelJenis}` +
+    (l.programNama||l.targetNama ? ` · ${l.targetNama||l.programNama}` : '') +
+    (l.pjlhLokasi ? ` · ${l.pjlhLokasi}` : '') +
+    ` · Status: ${l.status||'berjalan'}`;
+
+  const judulWrap = document.getElementById('editJudulWrap');
+  if (l.jenis === 'lain') {
+    judulWrap.style.display = 'block';
+    document.getElementById('edit-judul').value = l.judul || '';
+  } else {
+    judulWrap.style.display = 'none';
+  }
+
+  const pjlhWrap = document.getElementById('editPjlhWrap');
+  if (l.jenis === 'pjlh') {
+    pjlhWrap.style.display = 'block';
+    document.getElementById('edit-rekomendasi').value   = l.rekomendasi || 'sesuai';
+    document.getElementById('edit-catatan-admin').value = l.catatanAdmin || '';
+  } else {
+    pjlhWrap.style.display = 'none';
+  }
+
+  const lampWrap = document.getElementById('editLampiranWrap');
+  if (l.lampiran) {
+    lampWrap.style.display = 'block';
+    document.getElementById('editLampiranLink').href = l.lampiran;
+    document.getElementById('editLampiranNama').textContent = l.lampiranNama || 'Buka lampiran';
+  } else {
+    lampWrap.style.display = 'none';
+  }
+
+  editFotoExisting = Array.isArray(l.foto) ? [...l.foto] : [];
+  editFotoNewFiles = [];
+  renderEditFotoExisting();
+  renderEditFotoNew();
+
+  document.getElementById('modalEditLaporan').classList.add('open');
+};
+
+function renderEditFotoExisting() {
+  const wrap = document.getElementById('editFotoExistingGrid');
+  if (!editFotoExisting.length) {
+    wrap.innerHTML = '<p style="font-size:0.65rem;color:var(--muted);">Belum ada foto tersimpan.</p>';
+    return;
+  }
+  wrap.innerHTML = editFotoExisting.map((url, idx) =>
+    `<div class="foto-thumb"><img src="${url}" loading="lazy"><button type="button" class="foto-remove" onclick="removeEditFotoExisting(${idx})"><i class="fas fa-times"></i></button></div>`
+  ).join('');
+}
+window.removeEditFotoExisting = (idx) => { editFotoExisting.splice(idx,1); renderEditFotoExisting(); };
+
+function renderEditFotoNew() {
+  const wrap = document.getElementById('editFotoNewGrid');
+  wrap.innerHTML = editFotoNewFiles.map((file, idx) => {
+    const url = URL.createObjectURL(file);
+    return `<div class="foto-thumb"><img src="${url}" loading="lazy"><button type="button" class="foto-remove" onclick="removeEditFotoNew(${idx})"><i class="fas fa-times"></i></button></div>`;
+  }).join('');
+}
+window.removeEditFotoNew = (idx) => { editFotoNewFiles.splice(idx,1); renderEditFotoNew(); };
+
+document.getElementById('editFotoInputMulti').addEventListener('change', (e) => {
+  editFotoNewFiles.push(...Array.from(e.target.files));
+  e.target.value = '';
+  renderEditFotoNew();
+});
+
+window.closeEditLaporan = () => {
+  document.getElementById('modalEditLaporan').classList.remove('open');
+};
+
+window.simpanEditLaporan = async () => {
+  const id = document.getElementById('edit-laporan-id').value;
+  if (!id) return;
+  const l = allLaporan.find(x => x.id === id);
+  if (!l) return;
+
+  const tgl  = document.getElementById('edit-tanggal').value;
+  const desk = document.getElementById('edit-deskripsi').value.trim();
+  if (!tgl)  { showToast('Pilih tanggal kegiatan.','error'); return; }
+  if (!desk) { showToast('Isi deskripsi kegiatan.','error'); return; }
+
+  let judulBaru = '';
+  if (l.jenis === 'lain') {
+    judulBaru = document.getElementById('edit-judul').value.trim();
+    if (!judulBaru) { showToast('Judul kegiatan tidak boleh kosong.','error'); return; }
+  }
+
+  const btn = document.getElementById('btnSimpanEditLaporan');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+  try {
+    let fotoBaru = [];
+    if (editFotoNewFiles.length) {
+      fotoBaru = await kompresFotoList(editFotoNewFiles, (cur,total)=>{
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mengompres foto ${cur}/${total}...`;
+      });
+    }
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+    const updateData = {
+      tanggal:   tgl,
+      deskripsi: desk,
+      foto:      [...editFotoExisting, ...fotoBaru]
+    };
+    if (l.jenis === 'lain') updateData.judul = judulBaru;
+    if (l.jenis === 'pjlh') {
+      updateData.rekomendasi  = document.getElementById('edit-rekomendasi').value;
+      updateData.catatanAdmin = document.getElementById('edit-catatan-admin').value.trim();
+    }
+
+    await updateDoc(doc(db,'progress_reports', id), updateData);
+    showToast('Perubahan laporan berhasil disimpan!','success');
+    closeEditLaporan();
+  } catch(e) {
+    showToast('Gagal menyimpan: '+e.message,'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+  }
+};
 
 // ── FORM LAPORAN ──
 window.pilihJenis = (jenis) => {
