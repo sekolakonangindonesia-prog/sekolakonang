@@ -472,14 +472,29 @@ let allLaporan  = [];
 // ── AUTH STATE ──
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const snap = await getDoc(doc(db,'users',user.uid));
-    if (snap.exists() && snap.data().role === 'tim') {
-      currentUser = user; userData = snap.data();
-      showApp();
-    } else {
+    try {
+      // Cek dulu di collection users
+      let snap = await getDoc(doc(db,'users',user.uid));
+      if (snap.exists() && snap.data().role === 'tim') {
+        currentUser = user; userData = snap.data();
+        showApp(); return;
+      }
+      // Cek di collection tim_accounts
+      snap = await getDoc(doc(db,'tim_accounts',user.uid));
+      if (snap.exists()) {
+        currentUser = user;
+        userData = {
+          fullName: snap.data().nama || snap.data().fullName || '',
+          jabatan:  snap.data().jabatan || '',
+          email:    snap.data().email || user.email,
+          role:     'tim'
+        };
+        showApp(); return;
+      }
+      // Bukan tim
       showAuthErr('Akun ini bukan Tim Sekola Konang.');
       await signOut(auth);
-    }
+    } catch(e) { console.error(e); }
   } else {
     document.getElementById('authScreen').style.display = 'flex';
     document.getElementById('appShell').style.display   = 'none';
