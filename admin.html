@@ -880,7 +880,6 @@ input,textarea,select{font-family:var(--body);}
 <div class="modal-backdrop" id="modal-progress-detail">
   <div class="modal-box wide">
     <button class="modal-close" data-close="modal-progress-detail"><i class="fas fa-times"></i></button>
-    <h3 id="pd-judul">—</h3>
     <div class="sub" id="pd-meta">—</div>
 
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
@@ -890,9 +889,20 @@ input,textarea,select{font-family:var(--body);}
 
     <div id="pd-context" style="font-size:0.78rem;color:var(--text-sub);margin-bottom:14px;line-height:1.6;"></div>
 
+    <div class="row-2">
+      <div class="form-group">
+        <label>Judul</label>
+        <input type="text" id="pd-judul-input" placeholder="Judul laporan">
+      </div>
+      <div class="form-group">
+        <label>Tanggal Kegiatan</label>
+        <input type="date" id="pd-tanggal-input">
+      </div>
+    </div>
+
     <div class="form-group">
       <label>Deskripsi Kegiatan</label>
-      <div id="pd-deskripsi" style="font-size:0.8rem;color:var(--parchment);line-height:1.6;white-space:pre-wrap;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:var(--r-sm);padding:12px;">—</div>
+      <textarea id="pd-deskripsi" rows="4" placeholder="Deskripsi kegiatan..." style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:10px 12px;font-size:0.8rem;resize:vertical;line-height:1.6;"></textarea>
     </div>
 
     <div class="form-group">
@@ -922,7 +932,7 @@ input,textarea,select{font-family:var(--body);}
 
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-progress-detail">Tutup</button>
-      <button class="btn btn-lime" id="pd-save-btn"><i class="fas fa-save"></i> Simpan Status</button>
+      <button class="btn btn-lime" id="pd-save-btn"><i class="fas fa-save"></i> Simpan Perubahan</button>
     </div>
   </div>
 </div>
@@ -1430,12 +1440,14 @@ document.getElementById('saveMitraBtn').addEventListener('click', async () => {
   if (!name) { alert('Nama wajib diisi.'); return; }
   const btn = document.getElementById('saveMitraBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
   try {
+    // Logo disimpan sebagai base64 langsung di Firestore (bukan Firebase Storage),
+    // sama seperti pola foto di Konservasi/Biodiversitas — supaya tidak butuh
+    // CORS/billing/aktivasi Storage yang menyebabkan upload macet/loading terus.
     let logoUrl = document.getElementById('mitra-logo-existing-url').value || '';
     const fileInput = document.getElementById('mitra-logo-input');
     if (fileInput.files[0]) {
-      const fRef = ref(storage, `mitra-logo/${Date.now()}_${fileInput.files[0].name}`);
-      const snap = await uploadBytes(fRef, fileInput.files[0]);
-      logoUrl = await getDownloadURL(snap.ref);
+      btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Memproses logo...';
+      logoUrl = await kompresLogo(fileInput.files[0]);
     }
     const data = { name, logoUrl };
     if (id) await setDoc(doc(db,'mitra',id), data, {merge:true});
@@ -1705,6 +1717,33 @@ document.getElementById('bio-photo-input').addEventListener('change', (e) => {
 // Pola ini sama dengan yang sudah terbukti jalan di project survei lain milik SK.
 // Target: ukuran persegi 800x800px, dikompres bertahap sampai ±150KB per foto
 // (foto galeri publik perlu kualitas lebih baik daripada foto dokumen kecil).
+// Kompresi khusus LOGO (mitra dll): tidak di-crop persegi (logo sering non-persegi)
+// dan diekspor sebagai PNG supaya transparansi tetap terjaga. Disimpan base64
+// langsung di Firestore — bukan Firebase Storage — sama alasannya seperti foto.
+function kompresLogo(file, maxPx = 300) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if (w > maxPx || h > maxPx) {
+          const scale = maxPx / Math.max(w, h);
+          w = Math.round(w * scale); h = Math.round(h * scale);
+        }
+        const cc = document.createElement('canvas');
+        cc.width = w; cc.height = h;
+        cc.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(cc.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('Gagal membuka file gambar: ' + file.name));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Gagal membaca file: ' + file.name));
+    reader.readAsDataURL(file);
+  });
+}
+
 function kompresFotoKons(file, maxPx = 800, targetKB = 150) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
