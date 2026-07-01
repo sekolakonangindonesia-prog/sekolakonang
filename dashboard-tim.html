@@ -105,12 +105,15 @@ input,textarea,select{font-family:var(--body);}
 .form-group select option{background:var(--surface2);}
 
 /* FOTO UPLOAD */
-.foto-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.foto-box{border:1px dashed var(--border-s);border-radius:10px;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:0.65rem;cursor:pointer;background:rgba(255,255,255,0.02);transition:0.2s;overflow:hidden;position:relative;}
-.foto-box:hover{border-color:var(--lime);color:var(--lime);}
-.foto-box i{font-size:1.2rem;}
-.foto-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-.foto-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-zone{border:2px dashed var(--border-s);border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:0.2s;}
+.upload-zone:hover{border-color:var(--lime);}
+.upload-zone i{font-size:1.4rem;color:var(--muted);margin-bottom:6px;display:block;}
+.upload-zone p{font-size:0.68rem;color:var(--muted);}
+.upload-zone .file-name{font-size:0.68rem;color:var(--lime);margin-top:6px;font-weight:600;}
+.foto-preview-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.foto-thumb{position:relative;width:76px;height:76px;border-radius:8px;overflow:hidden;border:1px solid var(--border-s);flex-shrink:0;}
+.foto-thumb img{width:100%;height:100%;object-fit:cover;}
+.foto-thumb .foto-remove{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.65);border:none;color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:0.6rem;cursor:pointer;}
 
 /* UPLOAD LAMPIRAN */
 .upload-box{border:1px dashed var(--border-s);border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:0.2s;position:relative;}
@@ -154,6 +157,7 @@ input,textarea,select{font-family:var(--body);}
 .toast.success{background:rgba(198,255,0,0.12);border:1px solid rgba(198,255,0,0.3);color:var(--lime);}
 .toast.error{background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.3);color:var(--danger);}
 .toast.info{background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.3);color:var(--cyan);}
+.toast.warning{background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.3);color:#ffc107;}
 
 /* EMPTY / SPINNER */
 .empty-state{text-align:center;padding:48px 20px;color:var(--muted);font-size:0.82rem;}
@@ -358,12 +362,14 @@ input,textarea,select{font-family:var(--body);}
     <!-- FOTO DOKUMENTASI -->
     <div class="form-section">
       <div class="form-section-title"><i class="fas fa-camera"></i> Foto Dokumentasi</div>
-      <div class="foto-grid">
-        <div class="foto-box" id="fotoBox1"><input type="file" id="fotoInput1" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox1')"><i class="fas fa-camera"></i><span>Foto 1</span></div>
-        <div class="foto-box" id="fotoBox2"><input type="file" id="fotoInput2" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox2')"><i class="fas fa-camera"></i><span>Foto 2</span></div>
-        <div class="foto-box" id="fotoBox3"><input type="file" id="fotoInput3" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox3')"><i class="fas fa-camera"></i><span>Foto 3</span></div>
-        <div class="foto-box" id="fotoBox4"><input type="file" id="fotoInput4" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox4')"><i class="fas fa-camera"></i><span>Foto 4</span></div>
+      <div class="upload-zone" id="fotoDropZone" onclick="document.getElementById('fotoInput').click()">
+        <i class="fas fa-camera"></i>
+        <p>Klik untuk pilih foto dari HP/kamera (bisa pilih banyak sekaligus)</p>
+        <div class="file-name" id="fotoFileName">Belum ada foto dipilih</div>
       </div>
+      <input type="file" id="fotoInput" accept="image/*" capture="environment" multiple style="display:none">
+      <div class="form-hint">Foto otomatis dikompres, jadi tidak perlu khawatir ukuran file besar. Disarankan maksimal 6-8 foto per laporan.</div>
+      <div id="fotoPreview" class="foto-preview-wrap"></div>
     </div>
 
     <!-- LAMPIRAN -->
@@ -720,24 +726,36 @@ window.kirimLaporan = async () => {
   const btn = document.getElementById('btnKirimLaporan');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Mengirim...';
 
+  let uploadGagal = 0;
+
   try {
-    // Upload foto
+    // Upload foto (kegagalan upload foto TIDAK menggagalkan pengiriman laporan)
     const fotoUrls = [];
     for (let i=1;i<=4;i++) {
       const input = document.getElementById('fotoInput'+i);
       if (input.files[0]) {
-        const fRef = ref(storage,`progress_reports/${currentUser.uid}/${Date.now()}_${i}`);
-        const snap = await uploadBytes(fRef, input.files[0]);
-        fotoUrls.push(await getDownloadURL(snap.ref));
+        try {
+          const fRef = ref(storage,`progress_reports/${currentUser.uid}/${Date.now()}_${i}`);
+          const snap = await uploadBytes(fRef, input.files[0]);
+          fotoUrls.push(await getDownloadURL(snap.ref));
+        } catch (fotoErr) {
+          console.error('Upload foto '+i+' gagal:', fotoErr);
+          uploadGagal++;
+        }
       }
     }
-    // Upload lampiran
+    // Upload lampiran (kegagalan upload lampiran TIDAK menggagalkan pengiriman laporan)
     let lampiranUrl = '';
     const lampiranInput = document.getElementById('lampiranInput');
     if (lampiranInput.files[0]) {
-      const fRef = ref(storage,`progress_lampiran/${currentUser.uid}/${Date.now()}_${lampiranInput.files[0].name}`);
-      const snap = await uploadBytes(fRef, lampiranInput.files[0]);
-      lampiranUrl = await getDownloadURL(snap.ref);
+      try {
+        const fRef = ref(storage,`progress_lampiran/${currentUser.uid}/${Date.now()}_${lampiranInput.files[0].name}`);
+        const snap = await uploadBytes(fRef, lampiranInput.files[0]);
+        lampiranUrl = await getDownloadURL(snap.ref);
+      } catch (lampiranErr) {
+        console.error('Upload lampiran gagal:', lampiranErr);
+        uploadGagal++;
+      }
     }
 
     const data = {
@@ -787,7 +805,11 @@ window.kirimLaporan = async () => {
       read:false, createdAt:serverTimestamp()
     });
 
-    showToast('Laporan berhasil dikirim!','success');
+    if (uploadGagal > 0) {
+      showToast('Laporan terkirim, tapi '+uploadGagal+' file gagal diupload (cek koneksi/CORS Storage).','warning');
+    } else {
+      showToast('Laporan berhasil dikirim!','success');
+    }
     switchTab('laporan');
     resetFormLaporan();
   } catch(e) { showToast('Gagal: '+e.message,'error'); }
@@ -871,7 +893,7 @@ window.showToast = (msg, type='success') => {
   const t = document.getElementById('toast');
   document.getElementById('toastMsg').textContent = msg;
   t.className = `toast show ${type}`;
-  t.querySelector('i').className = `fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle'}`;
+  t.querySelector('i').className = `fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':type==='warning'?'exclamation-triangle':'info-circle'}`;
   setTimeout(()=>t.classList.remove('show'), 3500);
 };
 </script>
