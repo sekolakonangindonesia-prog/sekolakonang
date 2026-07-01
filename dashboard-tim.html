@@ -567,9 +567,10 @@ window.logout = async () => { await signOut(auth); window.location.href = 'index
 
 // ── BERANDA ──
 function loadBeranda() {
-  const q = query(collection(db,'progress_reports'), where('timId','==',currentUser.uid), orderBy('createdAt','desc'));
+  const q = query(collection(db,'progress_reports'), where('timId','==',currentUser.uid));
   onSnapshot(q, snap => {
-    allLaporan = snap.docs.map(d=>({id:d.id,...d.data()}));
+    allLaporan = snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
     const now   = new Date();
     const bulan = allLaporan.filter(l=>{
       const d = l.createdAt?.toDate?.();
@@ -644,7 +645,7 @@ window.pilihJenis = (jenis) => {
 async function loadProgramDropdown() {
   const sel = document.getElementById('f-program');
   try {
-    const snap = await getDocs(query(collection(db,'programs'), orderBy('createdAt','desc')));
+    const snap = await getDocs(collection(db,'programs'));
     sel.innerHTML = '<option value="">— Pilih Program —</option>';
     snap.forEach(d => {
       const p = d.data();
@@ -807,7 +808,7 @@ function resetFormLaporan() {
 
 // ── NOTIF ──
 function loadNotif() {
-  const q = query(collection(db,'notifikasi'), where('userId','==',currentUser.uid), orderBy('createdAt','desc'));
+  const q = query(collection(db,'notifikasi'), where('userId','==',currentUser.uid));
   onSnapshot(q, snap => {
     const notifs = snap.docs.map(d=>({id:d.id,...d.data()}));
     const unread  = notifs.filter(n=>!n.read).length;
