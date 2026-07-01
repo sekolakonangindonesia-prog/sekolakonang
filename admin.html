@@ -733,10 +733,10 @@ input,textarea,select{font-family:var(--body);}
       <label>Pilih Program</label>
       <select id="prog-nama">
         <option value="">— Pilih Program —</option>
-        <option value="biodiversity">Biodiversitas</option>
-        <option value="comdev">ComDev</option>
-        <option value="konservasi">Konservasi</option>
-        <option value="pjlh">PJLH (ES-Sellers &amp; Buyers)</option>
+        <option value="biodiversity">biodiversity</option>
+        <option value="comdev">comdev</option>
+        <option value="konservasi">konservasi</option>
+        <option value="pjlh">pjlh</option>
       </select>
       <div class="form-hint">Kategori ini yang akan muncul di dropdown "Pilih Program" pada Dashboard Tim. Setelah disimpan, klik "+ Tambah Target" di kartu program untuk mengisi Target Capaian — target inilah yang muncul di "Pilih Target Capaian" setelah Tim memilih program ini.</div>
     </div>
@@ -2502,7 +2502,7 @@ let currentProgramId = null;
 // Cache daftar program yang sedang dimuat, dipakai untuk cek duplikat kategori
 let daftarProgramLoaded = [];
 // Label tampilan untuk tiap kategori program baku
-const LABEL_PROGRAM = { biodiversity:'Biodiversitas', comdev:'ComDev', konservasi:'Konservasi', pjlh:'PJLH (ES-Sellers & Buyers)' };
+const LABEL_PROGRAM = { biodiversity:'biodiversity', comdev:'comdev', konservasi:'konservasi', pjlh:'pjlh' };
 
 async function loadProgram() {
   const wrap = document.getElementById('program-list');
