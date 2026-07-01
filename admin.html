@@ -946,7 +946,7 @@ import {
   deleteDoc, addDoc, query, orderBy, limit, where, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
-  getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword
+  getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   getStorage, ref, uploadBytes, getDownloadURL
@@ -1069,6 +1069,25 @@ document.getElementById('loginPassword').addEventListener('keydown', e => {
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await signOut(auth);
   location.reload();
+});
+
+// Pantau status login secara real-time. Kalau sesi tiba-tiba hilang/berakhir
+// (mis. token kedaluwarsa, storage diblokir browser, dsb) — sebelumnya panel
+// admin tetap tampil seolah masih login lalu baru gagal saat Simpan dengan
+// pesan error mentah dari Firestore ("Missing or insufficient permissions").
+// Sekarang begitu sesi hilang, otomatis kembali ke layar login supaya admin
+// langsung sadar harus login ulang.
+let sudahPernahLogin = false;
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    sudahPernahLogin = true;
+  } else if (sudahPernahLogin) {
+    alert('Sesi login Anda berakhir. Silakan login kembali.');
+    document.getElementById('appShell').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginBtn').disabled = false;
+    document.getElementById('loginBtn').innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+  }
 });
 
 // Modal helpers
@@ -1478,6 +1497,10 @@ document.getElementById('saveMitraBtn').addEventListener('click', async () => {
   const id   = document.getElementById('mitra-id').value;
   const name = document.getElementById('mitra-name').value.trim();
   if (!name) { alert('Nama wajib diisi.'); return; }
+  if (!auth.currentUser) {
+    alert('Sesi login Anda sudah berakhir/terputus. Silakan klik "Keluar", login ulang, lalu coba simpan lagi.');
+    return;
+  }
   const btn = document.getElementById('saveMitraBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
   try {
     let logoUrl = document.getElementById('mitra-logo-existing-url').value || '';
@@ -2862,6 +2885,10 @@ window.bukaDetailProgress = bukaDetailProgress;
 document.getElementById('pd-save-btn').addEventListener('click', async () => {
   const id = document.getElementById('pd-save-btn').dataset.id;
   if (!id) return;
+  if (!auth.currentUser) {
+    alert('Sesi login Anda sudah berakhir/terputus. Silakan klik "Keluar", login ulang, lalu coba simpan lagi.');
+    return;
+  }
   const r = daftarProgressLoaded.find(x => x.id === id);
   const tanggal   = document.getElementById('pd-tanggal-input').value;
   const deskripsi = document.getElementById('pd-deskripsi-input').value.trim();
