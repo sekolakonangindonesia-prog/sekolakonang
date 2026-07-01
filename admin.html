@@ -729,17 +729,7 @@ input,textarea,select{font-family:var(--body);}
     <button class="modal-close" data-close="modal-program"><i class="fas fa-times"></i></button>
     <h3 id="modal-program-title">Tambah Program</h3>
     <input type="hidden" id="program-id">
-    <div class="form-group">
-      <label>Pilih Program</label>
-      <select id="prog-nama">
-        <option value="">— Pilih Program —</option>
-        <option value="biodiversity">Biodiversitas</option>
-        <option value="comdev">ComDev</option>
-        <option value="konservasi">Konservasi</option>
-        <option value="pjlh">PJLH (ES-Sellers &amp; Buyers)</option>
-      </select>
-      <div class="form-hint">Kategori ini yang akan muncul di dropdown "Pilih Program" pada Dashboard Tim. Setelah disimpan, klik "+ Tambah Target" di kartu program untuk mengisi Target Capaian — target inilah yang muncul di "Pilih Target Capaian" setelah Tim memilih program ini.</div>
-    </div>
+    <div class="form-group"><label>Nama Program / Mitra</label><input type="text" id="prog-nama" placeholder="contoh: Aqua Keboncandi 2026"></div>
     <div class="form-group"><label>Deskripsi Program (opsional)</label><textarea id="prog-deskripsi" rows="2" placeholder="Ringkasan singkat program..."></textarea></div>
     <div class="form-group"><label>Periode</label><input type="text" id="prog-periode" placeholder="contoh: April – November 2026"></div>
     <div class="modal-actions">
@@ -2499,17 +2489,12 @@ document.getElementById('saveTimBtn').addEventListener('click', async () => {
 // TARGET CAPAIAN PROGRAM
 // ============================================================
 let currentProgramId = null;
-// Cache daftar program yang sedang dimuat, dipakai untuk cek duplikat kategori
-let daftarProgramLoaded = [];
-// Label tampilan untuk tiap kategori program baku
-const LABEL_PROGRAM = { biodiversity:'Biodiversitas', comdev:'ComDev', konservasi:'Konservasi', pjlh:'PJLH (ES-Sellers & Buyers)' };
 
 async function loadProgram() {
   const wrap = document.getElementById('program-list');
   wrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
   try {
     const snap = await getDocs(query(collection(db,'programs'), orderBy('createdAt','desc')));
-    daftarProgramLoaded = snap.docs.map(d => ({ id:d.id, ...d.data() }));
     if (snap.empty) {
       wrap.innerHTML = '<p style="color:var(--text-muted);">Belum ada program. Klik "Tambah Program" untuk mulai.</p>';
       return;
@@ -2538,7 +2523,7 @@ async function loadProgram() {
         <div class="list-card" style="margin-bottom:16px;overflow:hidden;">
           <div class="list-card-header" style="background:rgba(198,255,0,0.04);border-bottom:1px solid var(--border-subtle);">
             <div>
-              <div style="font-weight:700;font-size:0.9rem;color:var(--white);">${LABEL_PROGRAM[p.nama]||p.nama||'—'}</div>
+              <div style="font-weight:700;font-size:0.9rem;color:var(--white);">${p.nama||'—'}</div>
               <div style="font-size:0.65rem;color:var(--text-muted);">${p.periode||''} ${p.deskripsi?'· '+p.deskripsi:''}</div>
             </div>
             <div class="list-card-actions">
@@ -2559,7 +2544,6 @@ async function editProgram(id) {
   const p = snap.data();
   document.getElementById('program-id').value       = id;
   document.getElementById('prog-nama').value        = p.nama||'';
-  document.getElementById('prog-nama').disabled     = true; // kategori program tidak bisa diubah setelah dibuat
   document.getElementById('prog-deskripsi').value   = p.deskripsi||'';
   document.getElementById('prog-periode').value     = p.periode||'';
   document.getElementById('modal-program-title').textContent = 'Edit Program';
@@ -2598,7 +2582,6 @@ async function delTarget(programId, targetId) {
 
 document.getElementById('addProgramBtn').addEventListener('click', () => {
   ['program-id','prog-nama','prog-deskripsi','prog-periode'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('prog-nama').disabled = false; // pastikan dropdown bisa dipilih saat tambah baru
   document.getElementById('modal-program-title').textContent = 'Tambah Program';
   openModal('modal-program');
 });
@@ -2606,13 +2589,7 @@ document.getElementById('addProgramBtn').addEventListener('click', () => {
 document.getElementById('saveProgramBtn').addEventListener('click', async () => {
   const id   = document.getElementById('program-id').value;
   const nama = document.getElementById('prog-nama').value.trim();
-  if (!nama) { alert('Pilih program terlebih dahulu.'); return; }
-  // Cek duplikat: kategori program yang sama tidak boleh dibuat dua kali (kecuali sedang edit program itu sendiri)
-  const sudahAda = daftarProgramLoaded.find(p => p.nama === nama && p.id !== id);
-  if (!id && sudahAda) {
-    alert(`Program "${LABEL_PROGRAM[nama]||nama}" sudah ada. Silakan klik tombol edit (✎) pada kartu program tersebut, atau langsung klik "+ Tambah Target" di dalamnya.`);
-    return;
-  }
+  if (!nama) { alert('Nama program wajib diisi.'); return; }
   const btn = document.getElementById('saveProgramBtn'); btn.disabled=true;
   try {
     const data = { nama, deskripsi: document.getElementById('prog-deskripsi').value.trim(), periode: document.getElementById('prog-periode').value.trim() };
