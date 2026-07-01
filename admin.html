@@ -2672,17 +2672,57 @@ async function loadProgress() {
     const snap = await getDocs(q);
     if (snap.empty) { wrap.innerHTML='<p style="color:var(--text-muted);">Tidak ada laporan.</p>'; return; }
     wrap.innerHTML='';
+    const jenisLabel = { program:'Program', pjlh:'Verifikasi PJLH', lain:'Kegiatan Lain' };
+    const jenisClr   = { program:'badge-blue', pjlh:'badge-lime', lain:'badge-orange' };
     snap.forEach(d => {
       const r=d.data();
       const clr = r.status==='selesai'?'badge-lime':r.status==='berjalan'?'badge-blue':'badge-orange';
+
+      // Info tambahan sesuai jenis laporan
+      let extra = '';
+      if (r.jenis==='program') {
+        extra = `<div style="font-size:0.72rem;color:var(--text-sub);margin-top:4px;"><i class="fas fa-bullseye" style="color:var(--lime);margin-right:5px;"></i>${r.programNama||''} — ${r.targetNama||''}</div>`;
+      } else if (r.jenis==='pjlh') {
+        extra = `<div style="font-size:0.72rem;color:var(--text-sub);margin-top:4px;"><i class="fas fa-map-marker-alt" style="color:var(--lime);margin-right:5px;"></i>${r.pjlhLokasi||''}${r.rekomendasi?` · Rekomendasi: ${r.rekomendasi}`:''}</div>`;
+      }
+
+      // Galeri foto dokumentasi
+      const fotoHtml = (r.foto && r.foto.length) ? `
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          ${r.foto.map(url => `
+            <a href="${url}" target="_blank" class="photo-thumb">
+              <img src="${url}" loading="lazy" onerror="this.src='https://placehold.co/84x84/1a1b1a/666?text=%E2%9C%96'">
+            </a>`).join('')}
+        </div>` : '';
+
+      // Link lampiran
+      const lampiranHtml = r.lampiran ? `
+        <a href="${r.lampiran}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;font-size:0.72rem;color:var(--lime);margin-top:8px;text-decoration:none;">
+          <i class="fas fa-paperclip"></i> Lihat Lampiran
+        </a>` : '';
+
       wrap.innerHTML += `
         <div class="list-card">
           <div class="list-card-header">
-            <div>
-              <div style="font-weight:700;font-size:0.85rem;color:var(--white);margin-bottom:4px;">${r.judul||'—'}</div>
-              <div style="font-size:0.68rem;color:var(--text-muted);">${r.tim||''} · ${r.tanggal||''}</div>
-              <span class="list-badge ${clr}" style="margin-top:6px;">${r.status||'—'}</span>
-              ${r.catatan ? `<div style="font-size:0.72rem;color:var(--text-sub);margin-top:6px;">${r.catatan}</div>` : ''}
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+                <div style="font-weight:700;font-size:0.85rem;color:var(--white);">${r.judul||'—'}</div>
+                <span class="list-badge ${jenisClr[r.jenis]||'badge-orange'}">${jenisLabel[r.jenis]||r.jenis||'—'}</span>
+              </div>
+              <div style="font-size:0.68rem;color:var(--text-muted);"><i class="fas fa-user" style="margin-right:4px;"></i>${r.timNama||'—'} · ${r.tanggal||''}</div>
+              ${extra}
+              ${r.deskripsi ? `<div style="font-size:0.72rem;color:var(--text-sub);margin-top:6px;">${r.deskripsi}</div>` : ''}
+              ${fotoHtml}
+              ${lampiranHtml}
+              <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+                <span class="list-badge ${clr}">${r.status||'—'}</span>
+                <select onchange="updateProgressStatus('${d.id}',this.value)" style="background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:4px 8px;font-size:0.68rem;cursor:pointer;">
+                  <option value="">Ubah status...</option>
+                  <option value="persiapan" ${r.status==='persiapan'?'selected':''}>Persiapan</option>
+                  <option value="berjalan" ${r.status==='berjalan'?'selected':''}>Sedang Berjalan</option>
+                  <option value="selesai" ${r.status==='selesai'?'selected':''}>Selesai</option>
+                </select>
+              </div>
             </div>
             <button class="btn btn-danger btn-sm" onclick="delDoc('progress_reports','${d.id}',loadProgress)"><i class="fas fa-trash"></i></button>
           </div>
@@ -2692,6 +2732,17 @@ async function loadProgress() {
 }
 document.getElementById('filter-progress').addEventListener('change', loadProgress);
 document.getElementById('refreshProgressBtn').addEventListener('click', loadProgress);
+
+async function updateProgressStatus(id, status) {
+  if (!status) return;
+  try {
+    await updateDoc(doc(db,'progress_reports',id), { status });
+    loadProgress();
+  } catch(e) {
+    alert('Gagal ubah status.\n\nPenyebab: ' + e.message);
+  }
+}
+window.updateProgressStatus = updateProgressStatus;
 
 // ============================================================
 // UTIL: DELETE DOC
