@@ -892,7 +892,7 @@ window.simpanProfil = async () => {
   } catch(e) { showToast('Gagal: '+e.message,'error'); }
 };
 
-window.logout = async () => { await signOut(auth); };
+window.logout = async () => { await signOut(auth); window.location.href = 'index.html'; };
 
 // ── BERANDA ──
 function loadBeranda() {
