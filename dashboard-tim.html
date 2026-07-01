@@ -105,15 +105,12 @@ input,textarea,select{font-family:var(--body);}
 .form-group select option{background:var(--surface2);}
 
 /* FOTO UPLOAD */
-.upload-zone{border:2px dashed var(--border-s);border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:0.2s;}
-.upload-zone:hover{border-color:var(--lime);}
-.upload-zone i{font-size:1.4rem;color:var(--muted);margin-bottom:6px;display:block;}
-.upload-zone p{font-size:0.68rem;color:var(--muted);}
-.upload-zone .file-name{font-size:0.68rem;color:var(--lime);margin-top:6px;font-weight:600;}
-.foto-preview-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
-.foto-thumb{position:relative;width:76px;height:76px;border-radius:8px;overflow:hidden;border:1px solid var(--border-s);flex-shrink:0;}
-.foto-thumb img{width:100%;height:100%;object-fit:cover;}
-.foto-thumb .foto-remove{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.65);border:none;color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:0.6rem;cursor:pointer;}
+.foto-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.foto-box{border:1px dashed var(--border-s);border-radius:10px;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:0.65rem;cursor:pointer;background:rgba(255,255,255,0.02);transition:0.2s;overflow:hidden;position:relative;}
+.foto-box:hover{border-color:var(--lime);color:var(--lime);}
+.foto-box i{font-size:1.2rem;}
+.foto-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.foto-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
 
 /* UPLOAD LAMPIRAN */
 .upload-box{border:1px dashed var(--border-s);border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:0.2s;position:relative;}
@@ -122,6 +119,12 @@ input,textarea,select{font-family:var(--body);}
 .upload-box span{font-size:0.68rem;color:var(--muted);}
 .upload-box.has-file{border-color:var(--lime);background:var(--lime-dim);}
 .upload-box.has-file span{color:var(--lime);}
+
+/* FOTO PREVIEW GRID (multi-foto, bisa dihapus per item) */
+.foto-preview-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.foto-thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:1px solid var(--border-s);flex-shrink:0;}
+.foto-thumb img{width:100%;height:100%;object-fit:cover;}
+.foto-thumb .foto-remove{position:absolute;top:2px;right:2px;width:19px;height:19px;border-radius:50%;background:rgba(0,0,0,0.7);border:none;color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:0.6rem;cursor:pointer;}
 
 /* SUBMIT BTN */
 .btn-submit-full{width:100%;padding:15px;background:var(--lime);color:var(--bg);border:none;border-radius:12px;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:0.2s;font-family:var(--body);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
@@ -157,7 +160,6 @@ input,textarea,select{font-family:var(--body);}
 .toast.success{background:rgba(198,255,0,0.12);border:1px solid rgba(198,255,0,0.3);color:var(--lime);}
 .toast.error{background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.3);color:var(--danger);}
 .toast.info{background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.3);color:var(--cyan);}
-.toast.warning{background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.3);color:#ffc107;}
 
 /* EMPTY / SPINNER */
 .empty-state{text-align:center;padding:48px 20px;color:var(--muted);font-size:0.82rem;}
@@ -362,14 +364,13 @@ input,textarea,select{font-family:var(--body);}
     <!-- FOTO DOKUMENTASI -->
     <div class="form-section">
       <div class="form-section-title"><i class="fas fa-camera"></i> Foto Dokumentasi</div>
-      <div class="upload-zone" id="fotoDropZone" onclick="document.getElementById('fotoInput').click()">
+      <div class="upload-box" id="fotoUploadBox" onclick="document.getElementById('fotoInputMulti').click()">
+        <input type="file" id="fotoInputMulti" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;">
         <i class="fas fa-camera"></i>
-        <p>Klik untuk pilih foto dari HP/kamera (bisa pilih banyak sekaligus)</p>
-        <div class="file-name" id="fotoFileName">Belum ada foto dipilih</div>
+        <span id="fotoUploadLabel">Klik untuk pilih foto (bisa pilih banyak sekaligus)</span>
       </div>
-      <input type="file" id="fotoInput" accept="image/*" capture="environment" multiple style="display:none">
-      <div class="form-hint">Foto otomatis dikompres, jadi tidak perlu khawatir ukuran file besar. Disarankan maksimal 6-8 foto per laporan.</div>
-      <div id="fotoPreview" class="foto-preview-wrap"></div>
+      <p style="font-size:0.6rem;color:var(--muted);margin-top:8px;line-height:1.5;">Foto otomatis dikompres sebelum dikirim, jadi tidak dibatasi jumlahnya. Disarankan maksimal 8-10 foto per laporan agar tetap ringan.</p>
+      <div class="foto-preview-grid" id="fotoPreviewGrid"></div>
     </div>
 
     <!-- LAMPIRAN -->
@@ -455,7 +456,6 @@ import { getAuth, signInWithEmailAndPassword, updatePassword,
 import { getFirestore, doc, getDoc, updateDoc, addDoc,
          collection, query, where, orderBy,
          onSnapshot, serverTimestamp, getDocs }               from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL }       from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
@@ -468,12 +468,17 @@ const firebaseConfig = {
 const app     = initializeApp(firebaseConfig);
 const auth    = getAuth(app);
 const db      = getFirestore(app);
-const storage = getStorage(app);
 
 let currentUser = null;
 let userData    = {};
 let jenisAktif  = 'program';
 let allLaporan  = [];
+// Foto laporan: file dipilih user, belum dikompres/dikirim (bisa dihapus sebelum submit)
+let laporanFotoFiles = [];
+// Lampiran (PDF/Word/gambar) disimpan sebagai base64 langsung, sama seperti foto —
+// TANPA Firebase Storage, supaya tidak butuh CORS/billing/aktivasi Storage.
+let lampiranBase64   = '';
+let lampiranNamaFile = '';
 
 // ── AUTH STATE ──
 onAuthStateChanged(auth, async (user) => {
@@ -726,37 +731,16 @@ window.kirimLaporan = async () => {
   const btn = document.getElementById('btnKirimLaporan');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Mengirim...';
 
-  let uploadGagal = 0;
-
   try {
-    // Upload foto (kegagalan upload foto TIDAK menggagalkan pengiriman laporan)
-    const fotoUrls = [];
-    for (let i=1;i<=4;i++) {
-      const input = document.getElementById('fotoInput'+i);
-      if (input.files[0]) {
-        try {
-          const fRef = ref(storage,`progress_reports/${currentUser.uid}/${Date.now()}_${i}`);
-          const snap = await uploadBytes(fRef, input.files[0]);
-          fotoUrls.push(await getDownloadURL(snap.ref));
-        } catch (fotoErr) {
-          console.error('Upload foto '+i+' gagal:', fotoErr);
-          uploadGagal++;
-        }
-      }
+    // Kompres foto jadi base64 lalu simpan langsung di Firestore — TANPA Firebase
+    // Storage — sama seperti pola yang sudah jalan di Konservasi & Biodiversitas.
+    let fotoBase64 = [];
+    if (laporanFotoFiles.length) {
+      fotoBase64 = await kompresFotoList(laporanFotoFiles, (cur,total)=>{
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mengompres foto ${cur}/${total}...`;
+      });
     }
-    // Upload lampiran (kegagalan upload lampiran TIDAK menggagalkan pengiriman laporan)
-    let lampiranUrl = '';
-    const lampiranInput = document.getElementById('lampiranInput');
-    if (lampiranInput.files[0]) {
-      try {
-        const fRef = ref(storage,`progress_lampiran/${currentUser.uid}/${Date.now()}_${lampiranInput.files[0].name}`);
-        const snap = await uploadBytes(fRef, lampiranInput.files[0]);
-        lampiranUrl = await getDownloadURL(snap.ref);
-      } catch (lampiranErr) {
-        console.error('Upload lampiran gagal:', lampiranErr);
-        uploadGagal++;
-      }
-    }
+    btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Mengirim...';
 
     const data = {
       timId:       currentUser.uid,
@@ -765,8 +749,9 @@ window.kirimLaporan = async () => {
       jenis:       jenisAktif,
       tanggal:     tgl,
       deskripsi:   desk,
-      foto:        fotoUrls,
-      lampiran:    lampiranUrl,
+      foto:        fotoBase64,
+      lampiran:    lampiranBase64,
+      lampiranNama:lampiranNamaFile,
       status:      'berjalan',
       createdAt:   serverTimestamp()
     };
@@ -805,11 +790,7 @@ window.kirimLaporan = async () => {
       read:false, createdAt:serverTimestamp()
     });
 
-    if (uploadGagal > 0) {
-      showToast('Laporan terkirim, tapi '+uploadGagal+' file gagal diupload (cek koneksi/CORS Storage).','warning');
-    } else {
-      showToast('Laporan berhasil dikirim!','success');
-    }
+    showToast('Laporan berhasil dikirim!','success');
     switchTab('laporan');
     resetFormLaporan();
   } catch(e) { showToast('Gagal: '+e.message,'error'); }
@@ -825,13 +806,12 @@ function resetFormLaporan() {
   document.getElementById('f-target').innerHTML = '<option value="">— Pilih dulu program di atas —</option>';
   document.getElementById('pjlh-detail-box').style.display = 'none';
   document.getElementById('f-tanggal').value = new Date().toISOString().split('T')[0];
+  document.getElementById('lampiranInput').value = '';
   document.getElementById('lampiranLabel').textContent = 'Klik untuk pilih file (PDF, Word, gambar)';
   document.getElementById('lampiranBox').classList.remove('has-file');
-  for (let i=1;i<=4;i++) {
-    document.getElementById('fotoInput'+i).value='';
-    const box = document.getElementById('fotoBox'+i);
-    const img = box.querySelector('img'); if(img) img.remove();
-  }
+  lampiranBase64 = ''; lampiranNamaFile = '';
+  laporanFotoFiles = [];
+  renderLaporanFotoPreview();
 }
 
 // ── NOTIF ──
@@ -863,22 +843,106 @@ window.bacaNotif = async (id,el) => {
   await updateDoc(doc(db,'notifikasi',id),{read:true});
 };
 
-// ── HELPERS ──
-window.previewFoto = (input, boxId) => {
-  if (!input.files[0]) return;
-  const box = document.getElementById(boxId);
-  let img = box.querySelector('img');
-  if (!img) { img = document.createElement('img'); box.appendChild(img); }
-  img.src = URL.createObjectURL(input.files[0]);
+// ── FOTO: kompres gambar di browser sebelum disimpan, LANGSUNG sebagai base64 di
+// Firestore (tanpa Firebase Storage) — pola sama persis dengan Konservasi &
+// Biodiversitas di admin.html, supaya tidak butuh CORS/billing/aktivasi Storage.
+function kompresFotoKons(file, maxPx = 800, targetKB = 150) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const size = Math.min(img.naturalWidth, img.naturalHeight);
+        const sx = (img.naturalWidth - size) / 2;
+        const sy = (img.naturalHeight - size) / 2;
+        const tryQuality = (px, q) => {
+          const cc = document.createElement('canvas');
+          cc.width = px; cc.height = px;
+          cc.getContext('2d').drawImage(img, sx, sy, size, size, 0, 0, px, px);
+          const result = cc.toDataURL('image/jpeg', q);
+          const kb = Math.round(result.length * 0.75 / 1024);
+          if (kb > targetKB && q > 0.3) {
+            tryQuality(px, q - 0.1);
+          } else if (kb > targetKB && px > 400) {
+            tryQuality(Math.round(px * 0.75), 0.7);
+          } else {
+            resolve(result);
+          }
+        };
+        tryQuality(maxPx, 0.75);
+      };
+      img.onerror = () => reject(new Error('Gagal membuka file gambar: ' + file.name));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Gagal membaca file: ' + file.name));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function kompresFotoList(fileList, onProgress) {
+  const results = [];
+  const total = fileList.length;
+  for (let i = 0; i < total; i++) {
+    const file = fileList[i];
+    try {
+      if (onProgress) onProgress(i+1, total);
+      const b64 = await kompresFotoKons(file);
+      results.push(b64);
+    } catch (errOne) {
+      console.error('Gagal proses foto', file.name, errOne);
+      throw new Error(`Gagal memproses foto "${file.name}": ${errOne.message}`);
+    }
+  }
+  return results;
+}
+
+function renderLaporanFotoPreview() {
+  const wrap = document.getElementById('fotoPreviewGrid');
+  wrap.innerHTML = laporanFotoFiles.map((file, idx) => {
+    const url = URL.createObjectURL(file);
+    return `<div class="foto-thumb"><img src="${url}" loading="lazy"><button type="button" class="foto-remove" onclick="removeLaporanFoto(${idx})"><i class="fas fa-times"></i></button></div>`;
+  }).join('');
+  const lbl = document.getElementById('fotoUploadLabel');
+  lbl.textContent = laporanFotoFiles.length
+    ? `${laporanFotoFiles.length} foto dipilih — klik untuk tambah lagi`
+    : 'Klik untuk pilih foto (bisa pilih banyak sekaligus)';
+  document.getElementById('fotoUploadBox').classList.toggle('has-file', laporanFotoFiles.length>0);
+}
+
+window.removeLaporanFoto = (idx) => {
+  laporanFotoFiles.splice(idx,1);
+  renderLaporanFotoPreview();
 };
 
+document.getElementById('fotoInputMulti').addEventListener('change', (e) => {
+  laporanFotoFiles.push(...Array.from(e.target.files));
+  e.target.value = '';
+  renderLaporanFotoPreview();
+});
+
+// ── LAMPIRAN: disimpan sebagai base64 juga (bukan Firebase Storage). Dibatasi
+// ukurannya karena satu dokumen Firestore maksimal ±1MB total.
 window.previewLampiran = (input) => {
   const box = document.getElementById('lampiranBox');
   const lbl = document.getElementById('lampiranLabel');
-  if (input.files[0]) {
-    lbl.textContent = '✓ '+input.files[0].name;
-    box.classList.add('has-file');
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 700*1024) {
+    showToast('Ukuran lampiran maksimal 700KB. Gunakan file yang lebih kecil.','error');
+    input.value = ''; lampiranBase64=''; lampiranNamaFile='';
+    lbl.textContent = 'Klik untuk pilih file (PDF, Word, gambar)';
+    box.classList.remove('has-file');
+    return;
   }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    lampiranBase64   = e.target.result;
+    lampiranNamaFile = file.name;
+    lbl.textContent  = '✓ '+file.name;
+    box.classList.add('has-file');
+  };
+  reader.onerror = () => showToast('Gagal membaca file lampiran.','error');
+  reader.readAsDataURL(file);
 };
 
 window.switchTab = (name) => {
@@ -893,7 +957,7 @@ window.showToast = (msg, type='success') => {
   const t = document.getElementById('toast');
   document.getElementById('toastMsg').textContent = msg;
   t.className = `toast show ${type}`;
-  t.querySelector('i').className = `fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':type==='warning'?'exclamation-triangle':'info-circle'}`;
+  t.querySelector('i').className = `fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle'}`;
   setTimeout(()=>t.classList.remove('show'), 3500);
 };
 </script>
