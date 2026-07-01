@@ -2508,15 +2508,24 @@ async function loadProgram() {
   const wrap = document.getElementById('program-list');
   wrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
   try {
-    const snap = await getDocs(query(collection(db,'programs'), orderBy('createdAt','desc')));
+    // PENTING: tidak pakai orderBy('createdAt') di sini, karena dokumen program lama
+    // (dibuat sebelum fitur ini ada) mungkin tidak punya field createdAt — kalau pakai
+    // orderBy, Firestore akan MENYEMBUNYIKAN dokumen yang tidak punya field tsb dari hasil query,
+    // sehingga program lama jadi "hilang" dari panel ini padahal datanya masih ada.
+    const snap = await getDocs(collection(db,'programs'));
     daftarProgramLoaded = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-    if (snap.empty) {
+    // Urutkan di sisi client saja, aman untuk dokumen yang tidak punya createdAt
+    daftarProgramLoaded.sort((a,b) => (b.createdAt?.toMillis?.()||b.createdAt?.getTime?.()||0) - (a.createdAt?.toMillis?.()||a.createdAt?.getTime?.()||0));
+    if (!daftarProgramLoaded.length) {
       wrap.innerHTML = '<p style="color:var(--text-muted);">Belum ada program. Klik "Tambah Program" untuk mulai.</p>';
       return;
     }
+    // Hitung kategori yang duplikat (nama sama muncul lebih dari 1x) untuk ditandai peringatan
+    const hitungNama = {};
+    daftarProgramLoaded.forEach(p => { hitungNama[p.nama] = (hitungNama[p.nama]||0)+1; });
     wrap.innerHTML = '';
-    for (const d of snap.docs) {
-      const p = d.data();
+    for (const p of daftarProgramLoaded) {
+      const d = { id: p.id };
       // Ambil sub-koleksi targets
       const tSnap = await getDocs(collection(db,'programs',d.id,'targets'));
       const targets = tSnap.docs.map(t=>({id:t.id,...t.data()}));
@@ -2534,12 +2543,16 @@ async function loadProgram() {
               </div>
             </div>`).join('')
         : `<div style="padding:10px 12px;font-size:0.72rem;color:var(--text-muted);">Belum ada target. Klik "+ Tambah Target" di bawah.</div>`;
+      const dupWarning = hitungNama[p.nama] > 1
+        ? `<div style="margin-top:6px;padding:6px 10px;background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.3);border-radius:8px;font-size:0.65rem;color:var(--danger);"><i class="fas fa-triangle-exclamation"></i> Ditemukan ${hitungNama[p.nama]} dokumen dengan kategori yang sama ("${LABEL_PROGRAM[p.nama]||p.nama}"). Ini bisa bikin dropdown Tim salah pilih target. Cek isi tiap dokumen, gabungkan/hapus yang duplikat.</div>`
+        : '';
       wrap.innerHTML += `
         <div class="list-card" style="margin-bottom:16px;overflow:hidden;">
           <div class="list-card-header" style="background:rgba(198,255,0,0.04);border-bottom:1px solid var(--border-subtle);">
             <div>
-              <div style="font-weight:700;font-size:0.9rem;color:var(--white);">${LABEL_PROGRAM[p.nama]||p.nama||'—'}</div>
+              <div style="font-weight:700;font-size:0.9rem;color:var(--white);">${LABEL_PROGRAM[p.nama]||p.nama||'—'} <span style="font-weight:400;font-size:0.6rem;color:var(--text-muted);font-family:monospace;">(id: ${d.id})</span></div>
               <div style="font-size:0.65rem;color:var(--text-muted);">${p.periode||''} ${p.deskripsi?'· '+p.deskripsi:''}</div>
+              ${dupWarning}
             </div>
             <div class="list-card-actions">
               <button class="btn btn-lime btn-sm" onclick="bukaModalTarget('${d.id}')"><i class="fas fa-plus"></i> Tambah Target</button>
