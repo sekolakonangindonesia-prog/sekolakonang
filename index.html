@@ -339,9 +339,13 @@
       <small>Indonesia</small>
     </div>
   </div>
-  <a href="#kontak" class="nav-cta">
+  <a href="auth.html" class="nav-cta" id="navCtaMitra">
     <i class="fas fa-handshake"></i>
     <span>Jadi Mitra</span>
+  </a>
+  <a href="#" class="nav-cta" id="navCtaUser" style="display:none;background:rgba(198,255,0,0.12);color:var(--lime);border:1px solid rgba(198,255,0,0.3);">
+    <i class="fas fa-user-circle"></i>
+    <span id="navUserName">Akun</span>
   </a>
 </nav>
 
@@ -597,7 +601,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, getDocs, addDoc, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
