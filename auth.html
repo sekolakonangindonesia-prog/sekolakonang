@@ -190,7 +190,7 @@ body {
 
 <!-- PANEL KANAN -->
 <div class="right-panel">
-  <a href="Pjlh_index.html" class="btn-close"><i class="fas fa-times"></i> Kembali</a>
+  <a href="index.html" class="btn-close"><i class="fas fa-times"></i> Kembali</a>
 
   <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" class="logo-mobile" alt="Logo">
 
@@ -201,8 +201,21 @@ body {
   <div id="loginBox">
     <div class="form-header">
       <h3>Selamat Datang</h3>
-      <p>Masuk ke platform konservasi air</p>
-      <span class="role-badge" id="roleBadgeLogin">ES SELLER (Penyedia)</span>
+      <p>Masuk ke platform Sekola Konang</p>
+    </div>
+
+    <!-- PILIH ROLE LOGIN -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+      <div id="loginRoleSeller" onclick="pilihRoleLogin('seller')" style="border:2px solid var(--lime);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;background:rgba(198,255,0,0.10);transition:0.2s;">
+        <i class="fas fa-seedling" style="font-size:1.2rem;color:var(--lime);display:block;margin-bottom:5px;"></i>
+        <div style="font-size:0.68rem;font-weight:700;color:var(--lime);">ES SELLER</div>
+        <div style="font-size:0.55rem;color:rgba(245,245,240,0.5);margin-top:2px;">Penyedia</div>
+      </div>
+      <div id="loginRoleBuyer" onclick="pilihRoleLogin('buyer')" style="border:2px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:0.2s;">
+        <i class="fas fa-handshake" style="font-size:1.2rem;color:rgba(245,245,240,0.4);display:block;margin-bottom:5px;"></i>
+        <div style="font-size:0.68rem;font-weight:700;color:rgba(245,245,240,0.5);">ES BUYER</div>
+        <div style="font-size:0.55rem;color:rgba(245,245,240,0.35);margin-top:2px;">Mitra</div>
+      </div>
     </div>
     <div class="form-group">
       <label>Email</label>
@@ -294,6 +307,34 @@ body {
   const auth = getAuth(app);
   const db   = getFirestore(app);
 
+  // Role yang dipilih di form login
+  let loginRole = 'seller';
+
+  window.pilihRoleLogin = (role) => {
+    loginRole = role;
+    const cardSeller = document.getElementById('loginRoleSeller');
+    const cardBuyer  = document.getElementById('loginRoleBuyer');
+    if (role === 'seller') {
+      cardSeller.style.border      = '2px solid var(--lime)';
+      cardSeller.style.background  = 'rgba(198,255,0,0.10)';
+      cardSeller.querySelector('i').style.color   = 'var(--lime)';
+      cardSeller.querySelector('div').style.color = 'var(--lime)';
+      cardBuyer.style.border      = '2px solid rgba(255,255,255,0.08)';
+      cardBuyer.style.background  = 'rgba(255,255,255,0.02)';
+      cardBuyer.querySelector('i').style.color    = 'rgba(245,245,240,0.4)';
+      cardBuyer.querySelector('div').style.color  = 'rgba(245,245,240,0.5)';
+    } else {
+      cardBuyer.style.border      = '2px solid var(--lime)';
+      cardBuyer.style.background  = 'rgba(198,255,0,0.10)';
+      cardBuyer.querySelector('i').style.color    = 'var(--lime)';
+      cardBuyer.querySelector('div').style.color  = 'var(--lime)';
+      cardSeller.style.border     = '2px solid rgba(255,255,255,0.08)';
+      cardSeller.style.background = 'rgba(255,255,255,0.02)';
+      cardSeller.querySelector('i').style.color   = 'rgba(245,245,240,0.4)';
+      cardSeller.querySelector('div').style.color = 'rgba(245,245,240,0.5)';
+    }
+  };
+
   // Role yang dipilih di form register (default seller)
   let selectedRole = 'seller';
 
@@ -361,7 +402,7 @@ body {
     try {
       const cred = await signInWithEmailAndPassword(auth, email, pass);
       const snap = await getDoc(doc(db, 'users', cred.user.uid));
-      const role = snap.exists() ? snap.data().role : 'seller';
+      const role = snap.exists() ? snap.data().role : loginRole;
       showAlert('Login berhasil! Mengalihkan...', 'success');
       setTimeout(() => { window.location.href = dashboardUrl(role); }, 800);
     } catch (err) {
