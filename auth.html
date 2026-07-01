@@ -316,13 +316,11 @@ body {
   const isTimMode   = urlRole === 'tim';
 
   if (isTimMode) {
-    // Ubah subtitle
     document.querySelector('#loginBox .form-header p').textContent = 'Masuk sebagai Tim Lapangan';
-    // Sembunyikan kartu role seller/buyer
-    document.getElementById('loginRoleSeller').closest('div').style.display = 'none';
+    // Sembunyikan seluruh grid kartu role (seller + buyer sekaligus)
+    document.getElementById('loginRoleSeller').parentElement.style.display = 'none';
     // Sembunyikan tombol "Daftar Sekarang"
     document.querySelector('.form-footer').style.display = 'none';
-    // Set loginRole ke tim
     loginRole = 'tim';
   }
 
