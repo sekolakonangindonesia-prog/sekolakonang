@@ -642,6 +642,10 @@ window.pilihJenis = (jenis) => {
   document.getElementById('rekomendasiBox').style.display = jenis==='pjlh'?'block':'none';
 };
 
+// Label tampilan program — HARUS sama persis dengan yang dipakai di admin.html (LABEL_PROGRAM)
+// supaya Tim & Admin melihat nama program yang identik, walau field "nama" di database tetap slug (biodiversity/comdev/konservasi/pjlh)
+const LABEL_PROGRAM = { biodiversity:'biodiversity', comdev:'comdev', konservasi:'konservasi', pjlh:'pjlh' };
+
 async function loadProgramDropdown() {
   const sel = document.getElementById('f-program');
   try {
@@ -649,7 +653,8 @@ async function loadProgramDropdown() {
     sel.innerHTML = '<option value="">— Pilih Program —</option>';
     snap.forEach(d => {
       const p = d.data();
-      sel.innerHTML += `<option value="${d.id}">${p.nama||d.id}</option>`;
+      const label = LABEL_PROGRAM[p.nama] || p.nama || d.id;
+      sel.innerHTML += `<option value="${d.id}">${label}</option>`;
     });
   } catch(e) { console.error(e); }
 }
