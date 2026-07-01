@@ -582,7 +582,7 @@
   <a href="#berita" data-section="berita"><i class="fas fa-newspaper"></i><span>Berita</span></a>
   <a href="#kontak" data-section="kontak"><i class="fas fa-envelope"></i><span>Kontak</span></a>
    <a href="#mitra" data-section="mitra"><i class="fas fa-handshake"></i><span>Mitra</span></a>
-  <a href="tim.html"><i class="fas fa-lock"></i><span>Tim</span></a>
+  <a href="auth.html?role=tim"><i class="fas fa-lock"></i><span>Tim</span></a>
 </nav>
 
 <!-- ADMIN MODAL -->
@@ -612,8 +612,37 @@
     appId: "1:9338352073:web:b56481b836888b1a8bf818"
   };
   const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+  const db   = getFirestore(app);
   const auth = getAuth(app);
+
+  // ── Nav CTA: ubah "Jadi Mitra" jadi nama akun kalau sudah login ──
+  function dashboardUrl(role) {
+    if (role==='seller') return 'dashboard-seller.html';
+    if (role==='buyer')  return 'dashboard-buyer.html';
+    if (role==='tim')    return 'dashboard-tim.html';
+    if (role==='admin')  return 'admin.html';
+    return 'auth.html';
+  }
+  onAuthStateChanged(auth, async (user) => {
+    const ctaMitra = document.getElementById('navCtaMitra');
+    const ctaUser  = document.getElementById('navCtaUser');
+    if (!ctaMitra || !ctaUser) return;
+    if (user) {
+      try {
+        const snap = await getDoc(doc(db,'users',user.uid));
+        if (snap.exists()) {
+          const d = snap.data();
+          document.getElementById('navUserName').textContent = (d.fullName||'Akun').split(' ')[0];
+          ctaUser.href = dashboardUrl(d.role);
+          ctaMitra.style.display = 'none';
+          ctaUser.style.display  = 'flex';
+        }
+      } catch(e) { console.error(e); }
+    } else {
+      ctaMitra.style.display = 'flex';
+      ctaUser.style.display  = 'none';
+    }
+  });
 
   // ── Helper XSS escape ──
   function esc(str) {
