@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Tim — Sekola Konang</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root {
+  --bg:#050505; --surface:#1a1b1a; --surface2:#252625;
+  --lime:#C6FF00; --lime-dim:rgba(198,255,0,0.10); --border:rgba(198,255,0,0.15);
+  --border-s:rgba(255,255,255,0.07); --parchment:#F5F5F0;
+  --muted:rgba(245,245,240,0.50); --sub:rgba(245,245,240,0.70);
+  --green:#00ff88; --cyan:#00e5ff; --orange:#ffab00; --danger:#ff6b6b;
+  --display:'Playfair Display',Georgia,serif; --body:'Inter',system-ui,sans-serif;
+  --r:14px; --nav-h:60px; --tab-h:60px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--body);background:var(--bg);color:var(--parchment);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+a{text-decoration:none;color:inherit;}
+input,textarea,select{font-family:var(--body);}
+
+/* AUTH */
+#authScreen{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px 24px;width:100%;max-width:360px;text-align:center;}
+.auth-card img{height:48px;margin:0 auto 16px;}
+.auth-card h2{font-family:var(--display);font-size:1.3rem;margin-bottom:4px;}
+.auth-card p{font-size:0.75rem;color:var(--muted);margin-bottom:24px;}
+.auth-err{font-size:0.72rem;color:var(--danger);margin-top:8px;display:none;}
+
+/* APP */
+#appShell{display:none;padding-bottom:var(--tab-h);min-height:100vh;}
+
+/* TOP NAV */
+.top-nav{position:sticky;top:0;z-index:80;height:var(--nav-h);padding:0 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,5,5,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-s);}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-brand img{height:30px;}
+.nav-brand-text strong{display:block;font-family:var(--display);font-size:0.8rem;color:#fff;line-height:1.1;}
+.nav-brand-text small{font-size:0.48rem;letter-spacing:2px;color:var(--lime);text-transform:uppercase;font-weight:700;}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.nav-icon-btn{position:relative;width:36px;height:36px;border-radius:50%;background:var(--surface2);border:1px solid var(--border-s);display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:0.85rem;cursor:pointer;text-decoration:none;}
+.notif-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--lime);border:2px solid var(--bg);display:none;}
+.avatar-btn{width:36px;height:36px;border-radius:50%;background:var(--lime-dim);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:var(--lime);cursor:pointer;font-family:var(--display);}
+
+/* TAB BAR */
+.tab-bar{position:fixed;bottom:0;left:0;right:0;z-index:80;height:var(--tab-h);display:flex;background:rgba(10,10,10,0.96);backdrop-filter:blur(16px);border-top:1px solid var(--border-s);}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--muted);transition:0.2s;font-size:0.48rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;position:relative;}
+.tab-item i{font-size:1.1rem;transition:0.2s;}
+.tab-item.active{color:var(--lime);}
+.tab-item.active i{color:var(--lime);text-shadow:0 0 12px rgba(198,255,0,0.5);}
+.tab-notif{position:absolute;top:6px;right:calc(50% - 16px);width:7px;height:7px;border-radius:50%;background:var(--lime);border:2px solid var(--bg);display:none;}
+
+/* PANELS */
+.panel{display:none;padding:16px;}
+.panel.active{display:block;}
+.page-header{padding:8px 0 20px;}
+.page-label{font-size:0.58rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--lime);margin-bottom:6px;}
+.page-title{font-family:var(--display);font-size:1.4rem;font-weight:900;color:#fff;}
+.page-sub{font-size:0.75rem;color:var(--muted);margin-top:4px;}
+
+/* STAT ROW */
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border-s);border-radius:var(--r);padding:16px 14px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--lime),transparent);}
+.stat-card.cyan::before{background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.stat-card.green::before{background:linear-gradient(90deg,transparent,var(--green),transparent);}
+.stat-card.orange::before{background:linear-gradient(90deg,transparent,var(--orange),transparent);}
+.stat-icon{font-size:1rem;color:var(--lime);margin-bottom:8px;}
+.stat-card.cyan .stat-icon{color:var(--cyan);}
+.stat-card.green .stat-icon{color:var(--green);}
+.stat-card.orange .stat-icon{color:var(--orange);}
+.stat-val{font-family:var(--display);font-size:1.6rem;font-weight:900;color:#fff;line-height:1;}
+.stat-lbl{font-size:0.58rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+
+/* SECTION HEAD */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-head h3{font-family:var(--display);font-size:1rem;font-weight:900;color:#fff;}
+
+/* CARDS */
+.card-list{display:flex;flex-direction:column;gap:10px;}
+.report-card{background:var(--surface);border:1px solid var(--border-s);border-radius:var(--r);overflow:hidden;}
+.rc-head{padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.rc-title{font-size:0.82rem;font-weight:700;color:#fff;}
+.rc-sub{font-size:0.65rem;color:var(--muted);margin-top:3px;}
+.rc-foot{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border-s);}
+.rc-date{font-size:0.62rem;color:var(--muted);}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:0.58rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;}
+.badge-program{background:rgba(198,255,0,0.12);color:var(--lime);border:1px solid rgba(198,255,0,0.25);}
+.badge-pjlh{background:rgba(0,229,255,0.12);color:var(--cyan);border:1px solid rgba(0,229,255,0.25);}
+.badge-lain{background:rgba(255,171,0,0.12);color:var(--orange);border:1px solid rgba(255,171,0,0.25);}
+.badge-done{background:rgba(0,255,136,0.12);color:var(--green);border:1px solid rgba(0,255,136,0.25);}
+
+/* FORM */
+.form-section{background:var(--surface);border:1px solid var(--border-s);border-radius:var(--r);padding:18px;margin-bottom:14px;}
+.form-section-title{font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--lime);margin-bottom:14px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border-s);}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:0.58rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--lime);margin-bottom:5px;}
+.form-group input,.form-group textarea,.form-group select{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-s);border-radius:10px;color:var(--parchment);font-size:0.82rem;padding:10px 13px;outline:none;transition:border-color 0.2s;}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--lime);}
+.form-group input::placeholder,.form-group textarea::placeholder{color:rgba(245,245,240,0.25);}
+.form-group textarea{resize:vertical;min-height:80px;}
+.form-group select option{background:var(--surface2);}
+
+/* FOTO UPLOAD */
+.foto-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.foto-box{border:1px dashed var(--border-s);border-radius:10px;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:0.65rem;cursor:pointer;background:rgba(255,255,255,0.02);transition:0.2s;overflow:hidden;position:relative;}
+.foto-box:hover{border-color:var(--lime);color:var(--lime);}
+.foto-box i{font-size:1.2rem;}
+.foto-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.foto-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+
+/* UPLOAD LAMPIRAN */
+.upload-box{border:1px dashed var(--border-s);border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:0.2s;position:relative;}
+.upload-box:hover{border-color:var(--lime);}
+.upload-box i{font-size:1.4rem;color:var(--muted);margin-bottom:6px;display:block;}
+.upload-box span{font-size:0.68rem;color:var(--muted);}
+.upload-box.has-file{border-color:var(--lime);background:var(--lime-dim);}
+.upload-box.has-file span{color:var(--lime);}
+
+/* SUBMIT BTN */
+.btn-submit-full{width:100%;padding:15px;background:var(--lime);color:var(--bg);border:none;border-radius:12px;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:0.2s;font-family:var(--body);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
+.btn-submit-full:hover{background:#d4ff33;}
+.btn-submit-full:disabled{opacity:0.5;cursor:not-allowed;}
+.btn-sm{padding:6px 14px;border-radius:50px;font-size:0.62rem;font-weight:700;border:none;cursor:pointer;transition:0.2s;font-family:var(--body);}
+.btn-outline-sm{background:transparent;color:var(--parchment);border:1px solid var(--border-s);}
+.btn-outline-sm:hover{border-color:var(--lime);color:var(--lime);}
+
+/* PROFIL */
+.profil-header{background:var(--surface);border:1px solid var(--border-s);border-radius:var(--r);padding:20px 16px;margin-bottom:14px;text-align:center;}
+.profil-avatar{width:64px;height:64px;border-radius:50%;background:var(--lime-dim);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:1.4rem;font-weight:900;color:var(--lime);margin:0 auto 12px;}
+.profil-name{font-family:var(--display);font-size:1.1rem;font-weight:900;color:#fff;}
+.profil-email{font-size:0.72rem;color:var(--muted);margin-top:4px;}
+.profil-badge{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:5px 14px;border-radius:20px;background:var(--lime-dim);border:1px solid var(--border);color:var(--lime);font-size:0.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-s);font-size:0.78rem;}
+.info-row:last-child{border-bottom:none;}
+.info-row-lbl{color:var(--muted);}
+.info-row-val{color:var(--parchment);font-weight:600;}
+.profil-section-label{font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--lime);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border-s);}
+
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;}
+.modal-backdrop.open{display:flex;}
+.modal-sheet{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:20px 16px 40px;}
+.modal-handle{width:36px;height:4px;background:var(--border-s);border-radius:2px;margin:0 auto 20px;}
+.modal-title{font-family:var(--display);font-size:1.1rem;font-weight:900;color:#fff;margin-bottom:4px;}
+.modal-sub{font-size:0.72rem;color:var(--muted);margin-bottom:20px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(var(--tab-h) + 12px);left:12px;right:12px;z-index:300;padding:13px 16px;border-radius:12px;font-size:0.8rem;font-weight:600;display:none;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+.toast.show{display:flex;}
+.toast.success{background:rgba(198,255,0,0.12);border:1px solid rgba(198,255,0,0.3);color:var(--lime);}
+.toast.error{background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.3);color:var(--danger);}
+.toast.info{background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.3);color:var(--cyan);}
+
+/* EMPTY / SPINNER */
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);font-size:0.82rem;}
+.empty-state i{font-size:2.4rem;color:var(--border-s);margin-bottom:14px;display:block;}
+.empty-state p{line-height:1.6;}
+.loading-spinner{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;color:var(--muted);gap:12px;font-size:0.78rem;}
+.spinner{width:28px;height:28px;border:2px solid var(--border-s);border-top-color:var(--lime);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* PJLH CARD */
+.pjlh-card{background:var(--surface);border:1px solid var(--border-s);border-radius:var(--r);overflow:hidden;margin-bottom:10px;}
+.pjlh-head{padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.pjlh-title{font-size:0.82rem;font-weight:700;color:#fff;}
+.pjlh-loc{font-size:0.65rem;color:var(--muted);margin-top:3px;}
+.pjlh-stats{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--border-s);}
+.pjlh-stat{padding:10px 12px;text-align:center;border-right:1px solid var(--border-s);}
+.pjlh-stat:last-child{border-right:none;}
+.pjlh-stat-val{font-size:0.88rem;font-weight:700;color:var(--lime);}
+.pjlh-stat-lbl{font-size:0.52rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-top:2px;}
+.pjlh-foot{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border-s);}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="authScreen">
+  <div class="auth-card">
+    <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="Logo YSKI">
+    <h2>Dashboard Tim</h2>
+    <p>Masuk sebagai anggota Tim Sekola Konang</p>
+    <div class="form-group" style="text-align:left;">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="email@sekolakonang.id">
+    </div>
+    <div class="form-group" style="text-align:left;">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••">
+    </div>
+    <button class="btn-submit-full" id="btnLogin"><i class="fas fa-sign-in-alt"></i> Masuk</button>
+    <div class="auth-err" id="authErr"></div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="appShell">
+
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="Logo">
+      <div class="nav-brand-text">
+        <strong>Sekola Konang</strong>
+        <small>Tim Lapangan</small>
+      </div>
+    </div>
+    <div class="nav-right">
+      <a href="index.html" class="nav-icon-btn" title="Beranda Web"><i class="fas fa-home"></i></a>
+      <div class="nav-icon-btn" onclick="switchTab('notif')">
+        <i class="fas fa-bell"></i>
+        <div class="notif-dot" id="navNotifDot"></div>
+      </div>
+      <div class="avatar-btn" id="navAvatar" onclick="switchTab('profil')">TM</div>
+    </div>
+  </nav>
+
+  <!-- ── BERANDA ── -->
+  <div class="panel active" id="panel-beranda">
+    <div class="page-header">
+      <div class="page-label">Selamat Datang</div>
+      <div class="page-title" id="greetName">—</div>
+      <div class="page-sub" id="greetJabatan">Tim Lapangan · Sekola Konang</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-icon"><i class="fas fa-clipboard-check"></i></div><div class="stat-val" id="stat-total">—</div><div class="stat-lbl">Total Laporan</div></div>
+      <div class="stat-card cyan"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-val" id="stat-bulan">—</div><div class="stat-lbl">Bulan Ini</div></div>
+      <div class="stat-card green"><div class="stat-icon"><i class="fas fa-search-location"></i></div><div class="stat-val" id="stat-pjlh">—</div><div class="stat-lbl">Verifikasi PJLH</div></div>
+      <div class="stat-card orange"><div class="stat-icon"><i class="fas fa-tasks"></i></div><div class="stat-val" id="stat-program">—</div><div class="stat-lbl">Program Aktif</div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h3 style="font-family:var(--display);font-size:1rem;font-weight:900;color:#fff;">Laporan Terbaru</h3>
+      <button style="font-size:0.68rem;font-weight:700;color:var(--lime);background:none;border:none;cursor:pointer;" onclick="switchTab('laporan')">Lihat semua →</button>
+    </div>
+    <div id="recentList"><div class="loading-spinner"><div class="spinner"></div><span>Memuat...</span></div></div>
+  </div>
+
+  <!-- ── LAPORAN PROGRAM ── -->
+  <div class="panel" id="panel-laporan">
+    <div class="page-header">
+      <div class="page-label">Progress Report</div>
+      <div class="page-title">Laporan Kegiatan</div>
+      <div class="page-sub">Semua laporan program yang sudah Anda kirim.</div>
+    </div>
+    <!-- Filter -->
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;margin-bottom:8px;scrollbar-width:none;">
+      <button class="badge badge-done" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" onclick="filterLaporan('semua')">Semua</button>
+      <button class="badge badge-program" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" onclick="filterLaporan('program')">Program</button>
+      <button class="badge badge-pjlh" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" onclick="filterLaporan('pjlh')">Verif. PJLH</button>
+      <button class="badge badge-lain" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" onclick="filterLaporan('lain')">Lain-lain</button>
+    </div>
+    <div class="card-list" id="laporanList"><div class="loading-spinner"><div class="spinner"></div><span>Memuat...</span></div></div>
+  </div>
+
+  <!-- ── BUAT LAPORAN ── -->
+  <div class="panel" id="panel-buat">
+    <div class="page-header">
+      <div class="page-label">Laporan Baru</div>
+      <div class="page-title">Progress Report</div>
+      <div class="page-sub">Pilih jenis kegiatan, isi form, lalu kirim.</div>
+    </div>
+
+    <!-- PILIH JENIS LAPORAN -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-layer-group"></i> Jenis Laporan</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div id="jenis-program" class="jenis-btn" onclick="pilihJenis('program')" style="background:var(--lime-dim);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:0.2s;">
+          <i class="fas fa-bullseye" style="font-size:1.2rem;color:var(--lime);display:block;margin-bottom:6px;"></i>
+          <div style="font-size:0.6rem;font-weight:700;color:var(--lime);">Program</div>
+        </div>
+        <div id="jenis-pjlh" class="jenis-btn" onclick="pilihJenis('pjlh')" style="background:rgba(255,255,255,0.02);border:1px solid var(--border-s);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:0.2s;">
+          <i class="fas fa-search-location" style="font-size:1.2rem;color:var(--muted);display:block;margin-bottom:6px;"></i>
+          <div style="font-size:0.6rem;font-weight:700;color:var(--muted);">Verif. PJLH</div>
+        </div>
+        <div id="jenis-lain" class="jenis-btn" onclick="pilihJenis('lain')" style="background:rgba(255,255,255,0.02);border:1px solid var(--border-s);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:0.2s;">
+          <i class="fas fa-ellipsis-h" style="font-size:1.2rem;color:var(--muted);display:block;margin-bottom:6px;"></i>
+          <div style="font-size:0.6rem;font-weight:700;color:var(--muted);">Lain-lain</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM PROGRAM -->
+    <div id="formProgram">
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-bullseye"></i> Target Capaian</div>
+        <div class="form-group">
+          <label>Pilih Program</label>
+          <select id="f-program" onchange="loadTargetDropdown()">
+            <option value="">— Pilih Program —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Pilih Target Capaian</label>
+          <select id="f-target">
+            <option value="">— Pilih dulu program di atas —</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM PJLH -->
+    <div id="formPjlh" style="display:none;">
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-search-location"></i> Pengajuan PJLH</div>
+        <div class="form-group">
+          <label>Pilih Pengajuan yang Akan Dicek</label>
+          <select id="f-pjlh">
+            <option value="">— Memuat daftar pengajuan... —</option>
+          </select>
+        </div>
+        <div id="pjlh-detail-box" style="display:none;background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.15);border-radius:10px;padding:12px;margin-top:8px;font-size:0.72rem;color:var(--sub);"></div>
+      </div>
+    </div>
+
+    <!-- FORM LAIN -->
+    <div id="formLain" style="display:none;">
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-ellipsis-h"></i> Kegiatan Lain-lain</div>
+        <div class="form-group">
+          <label>Judul Kegiatan</label>
+          <input type="text" id="f-lain-judul" placeholder="contoh: Rapat koordinasi stakeholder">
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAIL LAPORAN (semua jenis) -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-edit"></i> Detail Laporan</div>
+      <div class="form-group">
+        <label>Tanggal Kegiatan</label>
+        <input type="date" id="f-tanggal">
+      </div>
+      <div class="form-group">
+        <label>Deskripsi Kegiatan</label>
+        <textarea id="f-deskripsi" placeholder="Jelaskan apa yang dilakukan, hasil yang dicapai, kendala jika ada..."></textarea>
+      </div>
+      <!-- Khusus PJLH: rekomendasi -->
+      <div id="rekomendasiBox" style="display:none;">
+        <div class="form-group">
+          <label>Hasil Verifikasi Lapangan</label>
+          <select id="f-rekomendasi">
+            <option value="sesuai">✅ Sesuai — data seller terbukti benar</option>
+            <option value="sebagian">⚠️ Sebagian — ada ketidaksesuaian minor</option>
+            <option value="tidak_sesuai">❌ Tidak Sesuai — data tidak terbukti</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Catatan untuk Admin</label>
+          <textarea id="f-catatan-admin" placeholder="Tuliskan detail ketidaksesuaian atau catatan penting untuk admin..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOTO DOKUMENTASI -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-camera"></i> Foto Dokumentasi</div>
+      <div class="foto-grid">
+        <div class="foto-box" id="fotoBox1"><input type="file" id="fotoInput1" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox1')"><i class="fas fa-camera"></i><span>Foto 1</span></div>
+        <div class="foto-box" id="fotoBox2"><input type="file" id="fotoInput2" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox2')"><i class="fas fa-camera"></i><span>Foto 2</span></div>
+        <div class="foto-box" id="fotoBox3"><input type="file" id="fotoInput3" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox3')"><i class="fas fa-camera"></i><span>Foto 3</span></div>
+        <div class="foto-box" id="fotoBox4"><input type="file" id="fotoInput4" accept="image/*" capture="environment" onchange="previewFoto(this,'fotoBox4')"><i class="fas fa-camera"></i><span>Foto 4</span></div>
+      </div>
+    </div>
+
+    <!-- LAMPIRAN -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-paperclip"></i> Lampiran (opsional)</div>
+      <div class="upload-box" id="lampiranBox" onclick="document.getElementById('lampiranInput').click()">
+        <input type="file" id="lampiranInput" accept=".pdf,.doc,.docx,image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="previewLampiran(this)">
+        <i class="fas fa-file-upload"></i>
+        <span id="lampiranLabel">Klik untuk pilih file (PDF, Word, gambar)</span>
+      </div>
+    </div>
+
+    <button class="btn-submit-full" id="btnKirimLaporan" onclick="kirimLaporan()">
+      <i class="fas fa-paper-plane"></i> Kirim Laporan
+    </button>
+    <p style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;">
+      Laporan akan langsung masuk ke Dashboard Admin.
+    </p>
+  </div>
+
+  <!-- ── NOTIF ── -->
+  <div class="panel" id="panel-notif">
+    <div class="page-header">
+      <div class="page-label">Pesan Masuk</div>
+      <div class="page-title">Notifikasi</div>
+    </div>
+    <div id="notifList"><div class="loading-spinner"><div class="spinner"></div><span>Memuat...</span></div></div>
+  </div>
+
+  <!-- ── PROFIL ── -->
+  <div class="panel" id="panel-profil">
+    <div class="page-header">
+      <div class="page-label">Akun Saya</div>
+      <div class="page-title">Profil</div>
+    </div>
+    <div class="profil-header">
+      <div class="profil-avatar" id="profilAvatar">TM</div>
+      <div class="profil-name" id="profilName">—</div>
+      <div class="profil-email" id="profilEmail">—</div>
+      <div class="profil-badge"><i class="fas fa-users-cog"></i> Tim Lapangan</div>
+    </div>
+    <div class="form-section">
+      <div class="profil-section-label">Data Diri</div>
+      <div class="info-row"><span class="info-row-lbl">Nama</span><span class="info-row-val" id="profilNama">—</span></div>
+      <div class="info-row"><span class="info-row-lbl">Jabatan</span><span class="info-row-val" id="profilJabatan">—</span></div>
+      <div class="info-row"><span class="info-row-lbl">Email</span><span class="info-row-val" id="profilEmailVal">—</span></div>
+    </div>
+    <div class="form-section">
+      <div class="profil-section-label">Edit Profil</div>
+      <div class="form-group"><label>Nama Lengkap</label><input type="text" id="editNama" placeholder="Nama lengkap"></div>
+      <div class="form-group"><label>Password Baru (kosongkan jika tidak ubah)</label><input type="password" id="editPass" placeholder="Min. 6 karakter"></div>
+      <button class="btn-submit-full" onclick="simpanProfil()"><i class="fas fa-save"></i> Simpan</button>
+    </div>
+    <div class="form-section">
+      <a href="index.html" class="btn-submit-full" style="background:var(--surface2);color:var(--parchment);text-decoration:none;"><i class="fas fa-home"></i> Kembali ke Beranda Web</a>
+    </div>
+    <div class="form-section">
+      <button class="btn-submit-full" onclick="logout()" style="background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);color:var(--danger);"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM TAB BAR -->
+<div class="tab-bar" id="tabBar" style="display:none;">
+  <div class="tab-item active" id="tab-beranda" onclick="switchTab('beranda')"><i class="fas fa-home"></i><span>Beranda</span></div>
+  <div class="tab-item" id="tab-laporan" onclick="switchTab('laporan')"><i class="fas fa-list-alt"></i><span>Laporan</span></div>
+  <div class="tab-item" id="tab-buat" onclick="switchTab('buat')"><i class="fas fa-plus-circle"></i><span>Buat</span></div>
+  <div class="tab-item" id="tab-notif" onclick="switchTab('notif')">
+    <i class="fas fa-bell"></i><span>Notif</span>
+    <div class="tab-notif" id="tabNotifDot"></div>
+  </div>
+  <div class="tab-item" id="tab-profil" onclick="switchTab('profil')"><i class="fas fa-user"></i><span>Profil</span></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
+
+<script type="module">
+import { initializeApp }                                      from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, updatePassword,
+         onAuthStateChanged, signOut }                        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, addDoc,
+         collection, query, where, orderBy,
+         onSnapshot, serverTimestamp, getDocs }               from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL }       from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+  authDomain:"sekola-konang.firebaseapp.com",
+  projectId:"sekola-konang",
+  storageBucket:"sekola-konang.firebasestorage.app",
+  messagingSenderId:"9338352073",
+  appId:"1:9338352073:web:b56481b836888b1a8bf818"
+};
+const app     = initializeApp(firebaseConfig);
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+
+let currentUser = null;
+let userData    = {};
+let jenisAktif  = 'program';
+let allLaporan  = [];
+
+// ── AUTH STATE ──
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const snap = await getDoc(doc(db,'users',user.uid));
+    if (snap.exists() && snap.data().role === 'tim') {
+      currentUser = user; userData = snap.data();
+      showApp();
+    } else {
+      showAuthErr('Akun ini bukan Tim Sekola Konang.');
+      await signOut(auth);
+    }
+  } else {
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('appShell').style.display   = 'none';
+    document.getElementById('tabBar').style.display     = 'none';
+  }
+});
+
+function showApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appShell').style.display   = 'block';
+  document.getElementById('tabBar').style.display     = 'flex';
+  populateProfil();
+  loadBeranda();
+  loadNotif();
+  loadProgramDropdown();
+  loadPjlhDropdown();
+  // Set default tanggal hari ini
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f-tanggal').value = today;
+}
+
+// ── LOGIN ──
+document.getElementById('btnLogin').addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  if (!email || !pass) { showAuthErr('Isi email dan password.'); return; }
+  const btn = document.getElementById('btnLogin');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Memproses...';
+  try { await signInWithEmailAndPassword(auth, email, pass); }
+  catch(e) { showAuthErr(e.code==='auth/invalid-credential'?'Email atau password salah.':'Login gagal.'); }
+  finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Masuk'; }
+});
+['loginEmail','loginPass'].forEach(id =>
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key==='Enter') document.getElementById('btnLogin').click();
+  })
+);
+function showAuthErr(msg) {
+  const el = document.getElementById('authErr');
+  el.textContent=msg; el.style.display='block';
+  setTimeout(()=>el.style.display='none', 4000);
+}
+
+// ── PROFIL ──
+function populateProfil() {
+  const initials = (userData.fullName||'TM').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  ['navAvatar','profilAvatar'].forEach(id=>document.getElementById(id).textContent=initials);
+  document.getElementById('greetName').textContent    = (userData.fullName||'Tim').split(' ')[0];
+  document.getElementById('greetJabatan').textContent = (userData.jabatan||'Tim Lapangan')+' · Sekola Konang';
+  document.getElementById('profilName').textContent   = userData.fullName||'—';
+  document.getElementById('profilEmail').textContent  = currentUser.email;
+  document.getElementById('profilNama').textContent   = userData.fullName||'—';
+  document.getElementById('profilJabatan').textContent= userData.jabatan||'—';
+  document.getElementById('profilEmailVal').textContent= currentUser.email;
+  document.getElementById('editNama').value = userData.fullName||'';
+}
+
+window.simpanProfil = async () => {
+  const nama = document.getElementById('editNama').value.trim();
+  const pass = document.getElementById('editPass').value;
+  if (!nama) { showToast('Nama tidak boleh kosong.','error'); return; }
+  try {
+    await updateDoc(doc(db,'users',currentUser.uid), { fullName:nama });
+    if (pass.length>=6) await updatePassword(currentUser, pass);
+    userData.fullName = nama; populateProfil();
+    showToast('Profil disimpan!','success');
+  } catch(e) { showToast('Gagal: '+e.message,'error'); }
+};
+window.logout = async () => { await signOut(auth); };
+
+// ── BERANDA ──
+function loadBeranda() {
+  const q = query(collection(db,'progress_reports'), where('timId','==',currentUser.uid), orderBy('createdAt','desc'));
+  onSnapshot(q, snap => {
+    allLaporan = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const now   = new Date();
+    const bulan = allLaporan.filter(l=>{
+      const d = l.createdAt?.toDate?.();
+      return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    }).length;
+    const pjlh    = allLaporan.filter(l=>l.jenis==='pjlh').length;
+    const program = allLaporan.filter(l=>l.jenis==='program').length;
+    document.getElementById('stat-total').textContent   = allLaporan.length;
+    document.getElementById('stat-bulan').textContent   = bulan;
+    document.getElementById('stat-pjlh').textContent    = pjlh;
+    document.getElementById('stat-program').textContent = program;
+    renderRecentList();
+    renderLaporanList('semua');
+  });
+}
+
+function renderRecentList() {
+  const el = document.getElementById('recentList');
+  const recent = allLaporan.slice(0,4);
+  if (!recent.length) {
+    el.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>Belum ada laporan.<br>Buat laporan pertama Anda.</p></div>`; return;
+  }
+  el.innerHTML = recent.map(l => laporanCardHTML(l)).join('');
+}
+
+function laporanCardHTML(l) {
+  const tgl = l.createdAt?.toDate ? l.createdAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : '—';
+  const badge = l.jenis==='program' ? `<span class="badge badge-program">Program</span>` : l.jenis==='pjlh' ? `<span class="badge badge-pjlh">Verif. PJLH</span>` : `<span class="badge badge-lain">Lain-lain</span>`;
+  return `<div class="report-card">
+    <div class="rc-head">
+      <div>
+        <div class="rc-title">${l.judul||l.targetNama||l.pjlhLokasi||'Laporan'}</div>
+        <div class="rc-sub">${l.deskripsi ? l.deskripsi.slice(0,60)+(l.deskripsi.length>60?'...':'') : ''}</div>
+      </div>
+      ${badge}
+    </div>
+    <div class="rc-foot">
+      <span class="rc-date"><i class="fas fa-calendar-alt" style="margin-right:4px;"></i>${tgl}</span>
+      ${l.foto?.length ? `<span style="font-size:0.62rem;color:var(--muted);"><i class="fas fa-images" style="margin-right:3px;"></i>${l.foto.length} foto</span>` : ''}
+    </div>
+  </div>`;
+}
+
+window.renderLaporanList = (filter) => {
+  const el   = document.getElementById('laporanList');
+  let data   = [...allLaporan];
+  if (filter !== 'semua') data = data.filter(l => l.jenis === filter);
+  if (!data.length) {
+    el.innerHTML = `<div class="empty-state"><i class="fas fa-folder-open"></i><p>Tidak ada laporan${filter!=='semua'?' kategori ini':''}.</p></div>`; return;
+  }
+  el.innerHTML = data.map(l => laporanCardHTML(l)).join('');
+};
+
+window.filterLaporan = (f) => renderLaporanList(f);
+
+// ── FORM LAPORAN ──
+window.pilihJenis = (jenis) => {
+  jenisAktif = jenis;
+  ['program','pjlh','lain'].forEach(j => {
+    const btn = document.getElementById('jenis-'+j);
+    const isActive = j===jenis;
+    btn.style.background = isActive ? 'var(--lime-dim)' : 'rgba(255,255,255,0.02)';
+    btn.style.borderColor= isActive ? 'var(--lime)' : 'rgba(255,255,255,0.07)';
+    btn.querySelectorAll('i,div').forEach(el=>{el.style.color=isActive?'var(--lime)':'var(--muted)';});
+  });
+  document.getElementById('formProgram').style.display = jenis==='program'?'block':'none';
+  document.getElementById('formPjlh').style.display    = jenis==='pjlh'?'block':'none';
+  document.getElementById('formLain').style.display    = jenis==='lain'?'block':'none';
+  document.getElementById('rekomendasiBox').style.display = jenis==='pjlh'?'block':'none';
+};
+
+async function loadProgramDropdown() {
+  const sel = document.getElementById('f-program');
+  try {
+    const snap = await getDocs(query(collection(db,'programs'), orderBy('createdAt','desc')));
+    sel.innerHTML = '<option value="">— Pilih Program —</option>';
+    snap.forEach(d => {
+      const p = d.data();
+      sel.innerHTML += `<option value="${d.id}">${p.nama||d.id}</option>`;
+    });
+  } catch(e) { console.error(e); }
+}
+
+window.loadTargetDropdown = async () => {
+  const progId = document.getElementById('f-program').value;
+  const sel    = document.getElementById('f-target');
+  sel.innerHTML = '<option value="">— Memuat... —</option>';
+  if (!progId) { sel.innerHTML='<option value="">— Pilih dulu program di atas —</option>'; return; }
+  try {
+    const snap = await getDocs(collection(db,'programs',progId,'targets'));
+    sel.innerHTML = '<option value="">— Pilih Target Capaian —</option>';
+    snap.forEach(d => {
+      const t = d.data();
+      sel.innerHTML += `<option value="${d.id}" data-nama="${t.nama||''}">${t.kode?t.kode+'. ':''} ${t.nama||d.id}</option>`;
+    });
+    sel.innerHTML += '<option value="lain-lain">Lain-lain (kegiatan di luar target)</option>';
+  } catch(e) { console.error(e); }
+};
+
+async function loadPjlhDropdown() {
+  const sel = document.getElementById('f-pjlh');
+  try {
+    const snap = await getDocs(query(collection(db,'pengajuan_pjlh'), where('status','==','review')));
+    sel.innerHTML = '<option value="">— Pilih Pengajuan PJLH —</option>';
+    if (snap.empty) {
+      sel.innerHTML = '<option value="">Belum ada pengajuan yang perlu dicek</option>'; return;
+    }
+    snap.forEach(d => {
+      const p = d.data();
+      sel.innerHTML += `<option value="${d.id}" data-lokasi="${p.lokasi||''}" data-seller="${p.sellerName||''}" data-rorak="${p.jumlahRorak||0}" data-sumur="${p.jumlahSumur||0}">${p.lokasi||'Tanpa nama'} — ${p.sellerName||''}</option>`;
+    });
+    sel.addEventListener('change', () => {
+      const opt = sel.options[sel.selectedIndex];
+      const box = document.getElementById('pjlh-detail-box');
+      if (!opt.value) { box.style.display='none'; return; }
+      box.style.display='block';
+      box.innerHTML = `<i class="fas fa-user" style="color:var(--cyan);margin-right:6px;"></i>${opt.dataset.seller}<br>
+        <i class="fas fa-water" style="color:var(--cyan);margin-right:6px;"></i>${opt.dataset.rorak} Rorak · ${opt.dataset.sumur} Sumur<br>
+        <i class="fas fa-map-marker-alt" style="color:var(--cyan);margin-right:6px;"></i>${opt.dataset.lokasi}`;
+    });
+  } catch(e) { console.error(e); }
+}
+
+window.kirimLaporan = async () => {
+  const tgl  = document.getElementById('f-tanggal').value;
+  const desk = document.getElementById('f-deskripsi').value.trim();
+  if (!tgl)  { showToast('Pilih tanggal kegiatan.','error'); return; }
+  if (!desk) { showToast('Isi deskripsi kegiatan.','error'); return; }
+
+  // Validasi per jenis
+  if (jenisAktif==='program') {
+    if (!document.getElementById('f-program').value) { showToast('Pilih program terlebih dahulu.','error'); return; }
+    if (!document.getElementById('f-target').value)  { showToast('Pilih target capaian.','error'); return; }
+  }
+  if (jenisAktif==='pjlh') {
+    if (!document.getElementById('f-pjlh').value) { showToast('Pilih pengajuan PJLH yang akan dicek.','error'); return; }
+  }
+  if (jenisAktif==='lain') {
+    if (!document.getElementById('f-lain-judul').value.trim()) { showToast('Isi judul kegiatan.','error'); return; }
+  }
+
+  const btn = document.getElementById('btnKirimLaporan');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+
+  try {
+    // Upload foto
+    const fotoUrls = [];
+    for (let i=1;i<=4;i++) {
+      const input = document.getElementById('fotoInput'+i);
+      if (input.files[0]) {
+        const fRef = ref(storage,`progress_reports/${currentUser.uid}/${Date.now()}_${i}`);
+        const snap = await uploadBytes(fRef, input.files[0]);
+        fotoUrls.push(await getDownloadURL(snap.ref));
+      }
+    }
+    // Upload lampiran
+    let lampiranUrl = '';
+    const lampiranInput = document.getElementById('lampiranInput');
+    if (lampiranInput.files[0]) {
+      const fRef = ref(storage,`progress_lampiran/${currentUser.uid}/${Date.now()}_${lampiranInput.files[0].name}`);
+      const snap = await uploadBytes(fRef, lampiranInput.files[0]);
+      lampiranUrl = await getDownloadURL(snap.ref);
+    }
+
+    const data = {
+      timId:       currentUser.uid,
+      timNama:     userData.fullName,
+      timJabatan:  userData.jabatan||'',
+      jenis:       jenisAktif,
+      tanggal:     tgl,
+      deskripsi:   desk,
+      foto:        fotoUrls,
+      lampiran:    lampiranUrl,
+      createdAt:   serverTimestamp()
+    };
+
+    if (jenisAktif==='program') {
+      const progId   = document.getElementById('f-program').value;
+      const targetId = document.getElementById('f-target').value;
+      const targetOpt= document.getElementById('f-target').options[document.getElementById('f-target').selectedIndex];
+      const progOpt  = document.getElementById('f-program').options[document.getElementById('f-program').selectedIndex];
+      data.programId   = progId;
+      data.programNama = progOpt.textContent;
+      data.targetId    = targetId;
+      data.targetNama  = targetId==='lain-lain' ? 'Lain-lain' : targetOpt.dataset.nama;
+      data.judul       = data.targetNama;
+    }
+    if (jenisAktif==='pjlh') {
+      const pjlhId  = document.getElementById('f-pjlh').value;
+      const pjlhOpt = document.getElementById('f-pjlh').options[document.getElementById('f-pjlh').selectedIndex];
+      data.pjlhId      = pjlhId;
+      data.pjlhLokasi  = pjlhOpt.dataset.lokasi;
+      data.rekomendasi = document.getElementById('f-rekomendasi').value;
+      data.catatanAdmin= document.getElementById('f-catatan-admin').value;
+      data.judul       = 'Verifikasi: '+pjlhOpt.dataset.lokasi;
+      // Update status PJLH ke 'lapangan' (sudah dicek tim)
+      await updateDoc(doc(db,'pengajuan_pjlh',pjlhId), { status:'lapangan', timId:currentUser.uid, timNama:userData.fullName });
+    }
+    if (jenisAktif==='lain') {
+      data.judul = document.getElementById('f-lain-judul').value.trim();
+    }
+
+    await addDoc(collection(db,'progress_reports'), data);
+    // Notif ke admin
+    await addDoc(collection(db,'notifikasi_admin'), {
+      type:'progress_report', timId:currentUser.uid, timNama:userData.fullName,
+      judul:data.judul, jenis:jenisAktif, message:`Laporan baru dari ${userData.fullName}: ${data.judul}`,
+      read:false, createdAt:serverTimestamp()
+    });
+
+    showToast('Laporan berhasil dikirim!','success');
+    switchTab('laporan');
+    resetFormLaporan();
+  } catch(e) { showToast('Gagal: '+e.message,'error'); }
+  finally    { btn.disabled=false; btn.innerHTML='<i class="fas fa-paper-plane"></i> Kirim Laporan'; }
+};
+
+function resetFormLaporan() {
+  document.getElementById('f-deskripsi').value = '';
+  document.getElementById('f-lain-judul').value = '';
+  document.getElementById('f-catatan-admin').value = '';
+  document.getElementById('f-pjlh').value = '';
+  document.getElementById('f-program').value = '';
+  document.getElementById('f-target').innerHTML = '<option value="">— Pilih dulu program di atas —</option>';
+  document.getElementById('pjlh-detail-box').style.display = 'none';
+  document.getElementById('f-tanggal').value = new Date().toISOString().split('T')[0];
+  document.getElementById('lampiranLabel').textContent = 'Klik untuk pilih file (PDF, Word, gambar)';
+  document.getElementById('lampiranBox').classList.remove('has-file');
+  for (let i=1;i<=4;i++) {
+    document.getElementById('fotoInput'+i).value='';
+    const box = document.getElementById('fotoBox'+i);
+    const img = box.querySelector('img'); if(img) img.remove();
+  }
+}
+
+// ── NOTIF ──
+function loadNotif() {
+  const q = query(collection(db,'notifikasi'), where('userId','==',currentUser.uid), orderBy('createdAt','desc'));
+  onSnapshot(q, snap => {
+    const notifs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const unread  = notifs.filter(n=>!n.read).length;
+    document.getElementById('navNotifDot').style.display  = unread>0?'block':'none';
+    document.getElementById('tabNotifDot').style.display  = unread>0?'block':'none';
+    const el = document.getElementById('notifList');
+    if (!notifs.length) {
+      el.innerHTML=`<div class="empty-state"><i class="fas fa-bell-slash"></i><p>Belum ada notifikasi.</p></div>`; return;
+    }
+    el.innerHTML = notifs.map(n => {
+      const ico = n.type==='approved'?'check-circle':n.type==='rejected'?'times-circle':'bell';
+      const clr = n.type==='approved'?'var(--lime)':n.type==='rejected'?'var(--danger)':'var(--cyan)';
+      const tgl = n.createdAt?.toDate?n.createdAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'short'}):''
+      return `<div style="background:var(--surface);border:1px solid var(--border-s)${!n.read?';border-left:3px solid var(--lime)':''};border-radius:var(--r);padding:14px;display:flex;gap:12px;align-items:flex-start;margin-bottom:8px;" onclick="bacaNotif('${n.id}',this)">
+        <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.05);color:${clr};display:flex;align-items:center;justify-content:center;font-size:0.78rem;flex-shrink:0;"><i class="fas fa-${ico}"></i></div>
+        <div><div style="font-size:0.78rem;font-weight:600;color:#fff;">${n.title||'Notifikasi'}</div><div style="font-size:0.68rem;color:var(--muted);margin-top:3px;">${n.message||''}</div><div style="font-size:0.58rem;color:var(--muted);margin-top:5px;">${tgl}</div></div>
+      </div>`;
+    }).join('');
+  });
+}
+
+window.bacaNotif = async (id,el) => {
+  el.style.borderLeft='1px solid var(--border-s)';
+  await updateDoc(doc(db,'notifikasi',id),{read:true});
+};
+
+// ── HELPERS ──
+window.previewFoto = (input, boxId) => {
+  if (!input.files[0]) return;
+  const box = document.getElementById(boxId);
+  let img = box.querySelector('img');
+  if (!img) { img = document.createElement('img'); box.appendChild(img); }
+  img.src = URL.createObjectURL(input.files[0]);
+};
+
+window.previewLampiran = (input) => {
+  const box = document.getElementById('lampiranBox');
+  const lbl = document.getElementById('lampiranLabel');
+  if (input.files[0]) {
+    lbl.textContent = '✓ '+input.files[0].name;
+    box.classList.add('has-file');
+  }
+};
+
+window.switchTab = (name) => {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name)?.classList.add('active');
+  document.getElementById('tab-'+name)?.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+window.showToast = (msg, type='success') => {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = `toast show ${type}`;
+  t.querySelector('i').className = `fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle'}`;
+  setTimeout(()=>t.classList.remove('show'), 3500);
+};
+</script>
+</body>
+</html>
