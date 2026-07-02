@@ -154,30 +154,42 @@ input, textarea, select { font-family: var(--body); }
 .act-title { font-size: 0.78rem; font-weight: 600; color: var(--parchment); }
 .act-meta  { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
 
+/* List Konservasi/Biodiversitas: 2 kartu per baris supaya tidak terlalu lebar */
+#konsList, #bioList { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+#konsList .empty-state, #bioList .empty-state,
+#konsList .loading-spinner, #bioList .loading-spinner { grid-column: 1 / -1; }
+
 /* ─── PROGRAM CARD (Konservasi / Biodiversitas) ───
    Foto ditampilkan sebagai thumbnail kecil di header kartu (bukan foto besar
    full-width) supaya list tetap ringkas dan enak di-scroll. */
 .program-card {
   background: var(--surface); border: 1px solid var(--border-s);
-  border-radius: var(--r); overflow: hidden; margin-bottom: 12px;
+  border-radius: var(--r); overflow: hidden; margin-bottom: 0;
 }
-.program-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 0; }
-.program-thumb { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; background: var(--surface2); flex-shrink: 0; }
-.program-thumb-ph { width: 44px; height: 44px; border-radius: 10px; background: var(--surface2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 1rem; }
-.program-body { padding: 14px; }
-.program-body.has-head { padding-top: 10px; }
-.program-year { font-size: 0.56rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--lime); margin-bottom: 4px; }
+.program-head { display: flex; align-items: center; gap: 8px; padding: 10px 10px 0; }
+.program-thumb { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; background: var(--surface2); flex-shrink: 0; }
+.program-thumb-ph { width: 34px; height: 34px; border-radius: 8px; background: var(--surface2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.8rem; }
+.program-body { padding: 10px; }
+.program-body.has-head { padding-top: 8px; }
+.program-year { font-size: 0.5rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--lime); margin-bottom: 2px; }
 .program-title { font-family: var(--display); font-size: 1rem; font-weight: 900; color: #fff; margin-bottom: 4px; }
-.program-loc { font-size: 0.68rem; color: var(--muted); margin-bottom: 12px; }
-.program-loc i { margin-right: 4px; }
-.stat-mini-row { display: grid; grid-template-columns: repeat(4,1fr); border-top: 1px solid var(--border-s); border-bottom: 1px solid var(--border-s); margin: 10px 0; }
-.stat-mini { text-align: center; padding: 10px 4px; border-right: 1px solid var(--border-s); }
-.stat-mini:last-child { border-right: none; }
-.stat-mini-val { font-size: 0.9rem; font-weight: 800; color: var(--lime); font-family: var(--display); }
-.stat-mini-lbl { font-size: 0.48rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-top: 2px; }
-.species-tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
-.species-tag { font-size: 0.6rem; padding: 3px 9px; border-radius: 50px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-s); color: var(--sub); }
+.program-loc { font-size: 0.6rem; color: var(--muted); margin-bottom: 8px; line-height: 1.4; }
+.program-loc i { margin-right: 3px; }
+.stat-mini-row { display: grid; grid-template-columns: repeat(2,1fr); border-top: 1px solid var(--border-s); border-bottom: 1px solid var(--border-s); margin: 8px 0; }
+.stat-mini { text-align: center; padding: 6px 2px; border-right: 1px solid var(--border-s); }
+.stat-mini:nth-child(2n) { border-right: none; }
+.stat-mini:nth-child(1), .stat-mini:nth-child(2) { border-bottom: 1px solid var(--border-s); }
+.stat-mini-val { font-size: 0.75rem; font-weight: 800; color: var(--lime); font-family: var(--display); }
+.stat-mini-lbl { font-size: 0.42rem; text-transform: uppercase; letter-spacing: 0.3px; color: var(--muted); margin-top: 1px; }
+.species-tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.species-tag { font-size: 0.52rem; padding: 2px 7px; border-radius: 50px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-s); color: var(--sub); }
 .index-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+.program-detail-btn { font-size: 0.6rem; padding: 8px; }
+
+@media (max-width: 420px) {
+  #konsList, #bioList { gap: 8px; }
+  .program-title { font-size: 0.82rem; }
+}
 .index-box { background: rgba(255,255,255,0.03); border: 1px solid var(--border-s); border-radius: 10px; padding: 10px; text-align: center; }
 .index-box-val { font-family: var(--display); font-size: 1.1rem; font-weight: 900; color: var(--cyan); }
 .index-box-lbl { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-top: 2px; }
@@ -310,7 +322,7 @@ input, textarea, select { font-family: var(--body); }
   </div>
 
   <!-- ── BERANDA ── -->
-  <div class="panel active" id="panel-beranda">
+  <div class="panel" id="panel-beranda">
     <div class="page-header">
       <div class="page-label">Selamat Datang</div>
       <div class="page-title" id="greetName">—</div>
@@ -332,7 +344,7 @@ input, textarea, select { font-family: var(--body); }
   </div>
 
   <!-- ── KONSERVASI ── -->
-  <div class="panel" id="panel-konservasi">
+  <div class="panel active" id="panel-konservasi">
     <div class="page-header">
       <div class="page-label">Riwayat & Progress</div>
       <div class="page-title">Program Konservasi</div>
@@ -419,11 +431,9 @@ input, textarea, select { font-family: var(--body); }
 
 <!-- TAB BAR -->
 <div class="tab-bar" id="tabBar" style="display:none;">
-  <div class="tab-item active" id="tab-beranda" onclick="switchTab('beranda')"><i class="fas fa-home"></i><span>Beranda</span></div>
-  <div class="tab-item" id="tab-konservasi" onclick="switchTab('konservasi')"><i class="fas fa-seedling"></i><span>Konservasi</span></div>
+  <div class="tab-item active" id="tab-konservasi" onclick="switchTab('konservasi')"><i class="fas fa-seedling"></i><span>Konservasi</span></div>
   <div class="tab-item" id="tab-bio" onclick="switchTab('bio')"><i class="fas fa-dove"></i><span>Biodiversitas</span></div>
   <div class="tab-item" id="tab-pjlh" onclick="switchTab('pjlh')"><i class="fas fa-handshake"></i><span>PJLH</span></div>
-  <div class="tab-item" id="tab-profil" onclick="switchTab('profil')"><i class="fas fa-user"></i><span>Profil</span></div>
 </div>
 
 <!-- TOAST -->
