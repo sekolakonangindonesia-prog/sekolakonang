@@ -374,6 +374,11 @@ input,textarea,select{font-family:var(--body);}
           <div class="form-group"><label>Lokasi / Desa</label><input type="text" id="kons-location" placeholder="Desa Galih, Probolinggo"></div>
         </div>
         <div class="form-group">
+          <label>Tautkan ke Mitra ES-Buyer (opsional)</label>
+          <select id="kons-buyer"><option value="">-- Tidak ditautkan ke mitra tertentu --</option></select>
+          <div class="form-hint">Kalau dipilih, program ini otomatis tampil di dashboard mitra tersebut.</div>
+        </div>
+        <div class="form-group">
           <label>Judul Program</label>
           <input type="text" id="kons-title" placeholder="Cth: Program Konservasi Hutan Lindung - PT Tirta Investama Keboncandi">
           <div class="form-hint">Judul ini yang akan tampil di kartu daftar, tabel riwayat, dan halaman detail.</div>
@@ -493,6 +498,11 @@ input,textarea,select{font-family:var(--body);}
         <!-- FLORA -->
         <div class="section-divider"><i class="fas fa-seedling"></i> Data Flora</div>
         <div class="row-3">
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>Tautkan ke Mitra ES-Buyer (opsional)</label>
+            <select id="bio-buyer"><option value="">-- Tidak ditautkan ke mitra tertentu --</option></select>
+            <div class="form-hint">Kalau dipilih, data biodiversitas tahun ini otomatis tampil di dashboard mitra tersebut.</div>
+          </div>
           <div class="form-group"><label>Jumlah Spesies</label><input type="number" id="bio-flora-total" placeholder="0" min="0"></div>
           <div class="form-group"><label>Jumlah Famili</label><input type="number" id="bio-flora-famili" placeholder="0" min="0"></div>
           <div class="form-group"><label>Kategori Status</label>
@@ -850,6 +860,11 @@ input,textarea,select{font-family:var(--body);}
       <select id="buyer-status"><option>Aktif</option><option>Negosiasi</option><option>Selesai</option></select>
     </div>
     <div class="form-group"><label>Catatan MOU / Perjanjian</label><textarea id="buyer-catatan" rows="2"></textarea></div>
+    <div class="section-divider" style="margin-top:14px;"><i class="fas fa-link"></i> Tautkan ke Akun Login Dashboard</div>
+    <div class="form-hint" style="margin-bottom:8px;">Isi email yang dipakai mitra saat mendaftar (role ES-Buyer) di halaman login. Setelah ditautkan, program konservasi/biodiversitas yang Anda kaitkan ke mitra ini akan otomatis tampil di dashboard mereka.</div>
+    <input type="hidden" id="buyer-uid">
+    <div class="form-group"><label>Email Akun Buyer</label><input type="email" id="buyer-email" placeholder="perusahaan@contoh.com"></div>
+    <div id="buyer-link-status" style="font-size:0.72rem;margin-bottom:8px;"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-buyer">Batal</button>
       <button class="btn btn-lime" id="saveBuyerBtn"><i class="fas fa-save"></i> Simpan</button>
@@ -1973,8 +1988,28 @@ async function loadKonservasiList() {
   } catch(e) { wrap.innerHTML='<p style="color:var(--danger);">Gagal memuat: '+e.message+'</p>'; console.error(e); }
 }
 
+// Isi dropdown "Tautkan ke Mitra ES-Buyer" di form Konservasi & Biodiversitas.
+// Dipanggil setiap form dibuka supaya daftar mitra selalu terbaru.
+let buyerOptionsCache = null;
+async function loadBuyerOptions(selectedId) {
+  try {
+    if (!buyerOptionsCache) {
+      const snap = await getDocs(collection(db,'es_buyers'));
+      buyerOptionsCache = snap.docs.map(d => ({ id:d.id, nama:(d.data().nama||'(tanpa nama)') }));
+    }
+    const optsHTML = '<option value="">-- Tidak ditautkan ke mitra tertentu --</option>' +
+      buyerOptionsCache.map(b => `<option value="${b.id}">${b.nama}</option>`).join('');
+    ['kons-buyer','bio-buyer'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.innerHTML = optsHTML; if (selectedId) el.value = selectedId; }
+    });
+  } catch(e) { console.error('Gagal memuat daftar mitra buyer', e); }
+}
+
 function newKonsForm() {
   document.getElementById('kons-doc-id').value='';
+  document.getElementById('kons-buyer').value='';
+  loadBuyerOptions();
   document.getElementById('kons-year').value='';
   document.getElementById('kons-title').value='';
   document.getElementById('kons-location').value='';
@@ -2000,6 +2035,7 @@ async function editKons(id) {
   document.getElementById('kons-year').value     = d.year||'';
   document.getElementById('kons-title').value    = d.title||'';
   document.getElementById('kons-location').value = d.location||'';
+  loadBuyerOptions(d.linkedBuyerId||'');
   document.getElementById('kons-trees').value    = s.trees||0;
   document.getElementById('kons-rorak').value    = s.rorak||0;
   document.getElementById('kons-sumur').value    = s.sumur||0;
@@ -2025,8 +2061,11 @@ document.getElementById('saveKonsBtn').addEventListener('click', async () => {
   if (!year||!location) { alert('Tahun dan Lokasi wajib diisi.'); return; }
   const species = getSpeciesData();
   const relatedNewsIds = getSelectedNewsIds();
+  const buyerSel = document.getElementById('kons-buyer');
+  const linkedBuyerId = buyerSel ? buyerSel.value : '';
+  const linkedBuyerNama = linkedBuyerId && buyerOptionsCache ? (buyerOptionsCache.find(b=>b.id===linkedBuyerId)||{}).nama||'' : '';
   const data = {
-    year, title, location, species, relatedNewsIds,
+    year, title, location, species, relatedNewsIds, linkedBuyerId, linkedBuyerNama,
     stats: {
       trees:   parseInt(document.getElementById('kons-trees').value)||0,
       rorak:   parseInt(document.getElementById('kons-rorak').value)||0,
@@ -2270,6 +2309,7 @@ window.clearBioFlagshipImg = function() {
 
 function newBioForm() {
   document.getElementById('bio-doc-id').value='';
+  loadBuyerOptions();
   document.getElementById('bio-year').value='';
   document.getElementById('bio-location-select').value='';
   document.getElementById('bio-location-custom').value='';
@@ -2299,6 +2339,7 @@ async function editBio(id) {
   const idx = d.indices || {}, bidx = d.birdIndices || {};
   const fs = d.floraStats || {}, bs = d.birdStats || {};
   const flag = d.flagshipSpecies || {};
+  loadBuyerOptions(d.linkedBuyerId||'');
   document.getElementById('bio-doc-id').value = id;
   document.getElementById('bio-year').value = d.year||'';
   // lokasi
@@ -2362,9 +2403,12 @@ document.getElementById('saveBioBtn').addEventListener('click', async () => {
 
   const flagshipName = document.getElementById('bio-flagship-name').value.trim();
   const { labels: chartLabels, h: historyH, e: historyE, r: historyR } = getHistoryData();
+  const bioBuyerSel = document.getElementById('bio-buyer');
+  const linkedBuyerId = bioBuyerSel ? bioBuyerSel.value : '';
+  const linkedBuyerNama = linkedBuyerId && buyerOptionsCache ? (buyerOptionsCache.find(b=>b.id===linkedBuyerId)||{}).nama||'' : '';
 
   const data = {
-    year, location,
+    year, location, linkedBuyerId, linkedBuyerNama,
     catatan: document.getElementById('bio-catatan').value.trim(),
     relatedNewsIds: getSelectedBioNewsIds(),
     indices: {
@@ -2533,6 +2577,7 @@ async function loadBuyers() {
               <div style="font-weight:700;font-size:0.85rem;color:var(--white);">${b.nama||'—'}</div>
               <div style="font-size:0.68rem;color:var(--text-muted);">${b.sektor||''} · Rp ${(b.kontribusi||0).toLocaleString('id-ID')}/tahun</div>
               <span class="list-badge badge-blue" style="margin-top:6px;">${b.status||'—'}</span>
+              <span class="list-badge ${b.linkedUid?'badge-lime':'badge-orange'}" style="margin-top:6px;margin-left:4px;"><i class="fas fa-${b.linkedUid?'link':'unlink'}"></i> ${b.linkedUid?'Tertaut akun':'Belum tertaut'}</span>
             </div>
             <div class="list-card-actions">
               <button class="btn btn-outline btn-sm" onclick="editBuyer('${d.id}')"><i class="fas fa-edit"></i></button>
@@ -2553,23 +2598,44 @@ async function editBuyer(id) {
   document.getElementById('buyer-kontribusi').value = b.kontribusi||'';
   document.getElementById('buyer-status').value   = b.status||'Aktif';
   document.getElementById('buyer-catatan').value  = b.catatan||'';
+  document.getElementById('buyer-uid').value      = b.linkedUid||'';
+  document.getElementById('buyer-email').value    = b.linkedEmail||'';
+  const statusEl = document.getElementById('buyer-link-status');
+  statusEl.innerHTML = b.linkedUid
+    ? `<i class="fas fa-check-circle" style="color:var(--lime);"></i> Sudah tertaut ke akun: ${b.linkedEmail||b.linkedUid}`
+    : `<i class="fas fa-exclamation-circle" style="color:var(--orange);"></i> Belum tertaut ke akun manapun.`;
   document.getElementById('modal-buyer-title').textContent='Edit ES-Buyer';
   openModal('modal-buyer');
 }
 window.editBuyer = editBuyer;
 document.getElementById('addBuyerBtn').addEventListener('click', () => {
-  ['buyer-id','buyer-nama','buyer-sektor','buyer-kontribusi','buyer-catatan'].forEach(id=>document.getElementById(id).value='');
+  ['buyer-id','buyer-nama','buyer-sektor','buyer-kontribusi','buyer-catatan','buyer-uid','buyer-email'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('buyer-link-status').innerHTML='';
   document.getElementById('modal-buyer-title').textContent='Tambah ES-Buyer';
   openModal('modal-buyer');
 });
 document.getElementById('saveBuyerBtn').addEventListener('click', async () => {
   const id = document.getElementById('buyer-id').value;
   const data = { nama:document.getElementById('buyer-nama').value.trim(), sektor:document.getElementById('buyer-sektor').value.trim(), kontribusi:parseInt(document.getElementById('buyer-kontribusi').value)||0, status:document.getElementById('buyer-status').value, catatan:document.getElementById('buyer-catatan').value.trim() };
+  const emailInput = document.getElementById('buyer-email').value.trim().toLowerCase();
+  if (emailInput) {
+    try {
+      const uSnap = await getDocs(query(collection(db,'users'), where('email','==',emailInput), where('role','==','buyer')));
+      if (!uSnap.empty) {
+        data.linkedUid   = uSnap.docs[0].id;
+        data.linkedEmail = emailInput;
+      } else {
+        alert('Peringatan: tidak ditemukan akun ES-Buyer terdaftar dengan email tersebut. Data tetap disimpan, tapi belum tertaut — pastikan mitra sudah mendaftar di halaman login dengan role ES-Buyer, lalu simpan ulang.');
+        data.linkedEmail = emailInput;
+      }
+    } catch(e) { console.error('Gagal cari akun buyer', e); }
+  }
   if (!data.nama) { alert('Nama wajib diisi.'); return; }
   const btn=document.getElementById('saveBuyerBtn'); btn.disabled=true;
   try {
     if (id) await setDoc(doc(db,'es_buyers',id), data, {merge:true});
     else await addDoc(collection(db,'es_buyers'), data);
+    buyerOptionsCache = null; // paksa reload daftar mitra di dropdown kons/bio berikutnya
     closeModal('modal-buyer'); loadBuyers();
   } catch(e) { alert('Gagal: '+e.message); } finally { btn.disabled=false; }
 });
