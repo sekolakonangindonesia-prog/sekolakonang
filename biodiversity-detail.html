@@ -477,7 +477,7 @@ footer {
       <small>Indonesia</small>
     </div>
   </div>
-  <a href="biodiversity.html" class="nav-back">
+  <a href="biodiversity.html" class="nav-back" id="navBackLink">
     <i class="fas fa-arrow-left"></i>
     <span>Kembali ke Monitoring Kehati</span>
   </a>
@@ -677,6 +677,14 @@ footer {
 
   /* ---- URL PARAM ---- */
   const locId = new URLSearchParams(window.location.search).get('id') || 'kehati_aqua';
+
+/* Kalau halaman ini dibuka dari dashboard mitra (ES Buyer), tombol "Kembali"
+   mengarah balik ke dashboard-buyer.html, bukan ke index biodiversitas publik. */
+if (document.referrer.includes('dashboard-buyer.html')) {
+  const backLink = document.getElementById('navBackLink');
+  backLink.href = 'dashboard-buyer.html';
+  backLink.querySelector('span').textContent = 'Kembali ke Dashboard Mitra';
+}
 
   /* ---- CHART DEFAULTS ---- */
   Chart.defaults.color = 'rgba(245,245,240,0.5)';
