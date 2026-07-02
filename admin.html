@@ -860,10 +860,13 @@ input,textarea,select{font-family:var(--body);}
       <select id="buyer-status"><option>Aktif</option><option>Negosiasi</option><option>Selesai</option></select>
     </div>
     <div class="form-group"><label>Catatan MOU / Perjanjian</label><textarea id="buyer-catatan" rows="2"></textarea></div>
-    <div class="section-divider" style="margin-top:14px;"><i class="fas fa-link"></i> Tautkan ke Akun Login Dashboard</div>
-    <div class="form-hint" style="margin-bottom:8px;">Isi email yang dipakai mitra saat mendaftar (role ES-Buyer) di halaman login. Setelah ditautkan, program konservasi/biodiversitas yang Anda kaitkan ke mitra ini akan otomatis tampil di dashboard mereka.</div>
+    <div class="section-divider" style="margin-top:14px;"><i class="fas fa-link"></i> Akun Login Dashboard Mitra</div>
+    <div class="form-hint" style="margin-bottom:8px;">Isi Email + Password untuk <b>membuatkan akun baru</b> langsung — mitra tidak perlu daftar sendiri, tinggal login pakai email &amp; password ini. Kalau mitra <b>sudah</b> punya akun (pernah daftar sendiri di halaman login), cukup isi Email saja dan kosongkan Password — sistem akan mencari &amp; menautkan akun yang sudah ada.</div>
     <input type="hidden" id="buyer-uid">
-    <div class="form-group"><label>Email Akun Buyer</label><input type="email" id="buyer-email" placeholder="perusahaan@contoh.com"></div>
+    <div class="row-2">
+      <div class="form-group"><label>Email Akun Buyer</label><input type="email" id="buyer-email" placeholder="perusahaan@contoh.com"></div>
+      <div class="form-group"><label>Password Baru (opsional)</label><input type="password" id="buyer-password" placeholder="Kosongkan jika akun sudah ada"></div>
+    </div>
     <div id="buyer-link-status" style="font-size:0.72rem;margin-bottom:8px;"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-buyer">Batal</button>
@@ -979,6 +982,22 @@ const app     = initializeApp(firebaseConfig);
 const db      = getFirestore(app);
 const auth    = getAuth(app);
 const storage = getStorage(app);
+
+// ── APP KEDUA khusus untuk MEMBUAT akun login baru (Tim / Mitra) ──
+const secondaryApp  = initializeApp(firebaseConfig, 'AccountCreator');
+const secondaryAuth = getAuth(secondaryApp);
+
+// Buat akun login baru (Firebase Auth) + dokumen users/{uid} dengan role tertentu,
+// tanpa mengganggu sesi admin yang sedang login. Return uid akun baru.
+async function createLoginAccount(nama, email, password, role) {
+  const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+  const uid = cred.user.uid;
+  await setDoc(doc(db, 'users', uid), {
+    fullName: nama, email, role, createdAt: new Date().toISOString()
+  });
+  await signOut(secondaryAuth);
+  return uid;
+}
 
 
 // ── KML parse state ──
@@ -2600,44 +2619,61 @@ async function editBuyer(id) {
   document.getElementById('buyer-catatan').value  = b.catatan||'';
   document.getElementById('buyer-uid').value      = b.linkedUid||'';
   document.getElementById('buyer-email').value    = b.linkedEmail||'';
+  document.getElementById('buyer-password').value = '';
   const statusEl = document.getElementById('buyer-link-status');
   statusEl.innerHTML = b.linkedUid
-    ? `<i class="fas fa-check-circle" style="color:var(--lime);"></i> Sudah tertaut ke akun: ${b.linkedEmail||b.linkedUid}`
-    : `<i class="fas fa-exclamation-circle" style="color:var(--orange);"></i> Belum tertaut ke akun manapun.`;
+    ? `<i class="fas fa-check-circle" style="color:var(--lime);"></i> Sudah tertaut ke akun: ${b.linkedEmail||b.linkedUid}. <br>Isi Password baru hanya jika ingin membuat akun BARU yang berbeda (bukan mengganti password akun ini).`
+    : `<i class="fas fa-exclamation-circle" style="color:var(--orange);"></i> Belum tertaut ke akun manapun. Isi Email+Password untuk buatkan akun baru.`;
   document.getElementById('modal-buyer-title').textContent='Edit ES-Buyer';
   openModal('modal-buyer');
 }
 window.editBuyer = editBuyer;
 document.getElementById('addBuyerBtn').addEventListener('click', () => {
-  ['buyer-id','buyer-nama','buyer-sektor','buyer-kontribusi','buyer-catatan','buyer-uid','buyer-email'].forEach(id=>document.getElementById(id).value='');
+  ['buyer-id','buyer-nama','buyer-sektor','buyer-kontribusi','buyer-catatan','buyer-uid','buyer-email','buyer-password'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('buyer-link-status').innerHTML='';
   document.getElementById('modal-buyer-title').textContent='Tambah ES-Buyer';
   openModal('modal-buyer');
 });
 document.getElementById('saveBuyerBtn').addEventListener('click', async () => {
   const id = document.getElementById('buyer-id').value;
-  const data = { nama:document.getElementById('buyer-nama').value.trim(), sektor:document.getElementById('buyer-sektor').value.trim(), kontribusi:parseInt(document.getElementById('buyer-kontribusi').value)||0, status:document.getElementById('buyer-status').value, catatan:document.getElementById('buyer-catatan').value.trim() };
+  const namaPerusahaan = document.getElementById('buyer-nama').value.trim();
+  const data = { nama:namaPerusahaan, sektor:document.getElementById('buyer-sektor').value.trim(), kontribusi:parseInt(document.getElementById('buyer-kontribusi').value)||0, status:document.getElementById('buyer-status').value, catatan:document.getElementById('buyer-catatan').value.trim() };
+  if (!data.nama) { alert('Nama wajib diisi.'); return; }
+
   const emailInput = document.getElementById('buyer-email').value.trim().toLowerCase();
-  if (emailInput) {
-    try {
+  const pwInput     = document.getElementById('buyer-password').value;
+  const existingUid = document.getElementById('buyer-uid').value; // sudah tertaut sebelumnya (kalau edit)
+
+  const btn=document.getElementById('saveBuyerBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+  try {
+    if (emailInput && pwInput) {
+      // ── Mode: buatkan akun login baru langsung, lalu tautkan ──
+      if (pwInput.length < 6) { alert('Password minimal 6 karakter.'); btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan'; return; }
+      const uid = await createLoginAccount(namaPerusahaan, emailInput, pwInput, 'buyer');
+      data.linkedUid   = uid;
+      data.linkedEmail = emailInput;
+    } else if (emailInput) {
+      // ── Mode: tautkan ke akun yang sudah ada (dicari berdasarkan email) ──
       const uSnap = await getDocs(query(collection(db,'users'), where('email','==',emailInput), where('role','==','buyer')));
       if (!uSnap.empty) {
         data.linkedUid   = uSnap.docs[0].id;
         data.linkedEmail = emailInput;
       } else {
-        alert('Peringatan: tidak ditemukan akun ES-Buyer terdaftar dengan email tersebut. Data tetap disimpan, tapi belum tertaut — pastikan mitra sudah mendaftar di halaman login dengan role ES-Buyer, lalu simpan ulang.');
+        alert('Peringatan: tidak ditemukan akun ES-Buyer terdaftar dengan email tersebut. Data tetap disimpan, tapi belum tertaut. Isi kolom Password untuk membuatkan akun baru, atau pastikan mitra sudah mendaftar sendiri lalu simpan ulang.');
         data.linkedEmail = emailInput;
+        if (existingUid) data.linkedUid = existingUid; // jangan hapus tautan lama kalau cuma edit field lain
       }
-    } catch(e) { console.error('Gagal cari akun buyer', e); }
-  }
-  if (!data.nama) { alert('Nama wajib diisi.'); return; }
-  const btn=document.getElementById('saveBuyerBtn'); btn.disabled=true;
-  try {
+    }
     if (id) await setDoc(doc(db,'es_buyers',id), data, {merge:true});
     else await addDoc(collection(db,'es_buyers'), data);
     buyerOptionsCache = null; // paksa reload daftar mitra di dropdown kons/bio berikutnya
     closeModal('modal-buyer'); loadBuyers();
-  } catch(e) { alert('Gagal: '+e.message); } finally { btn.disabled=false; }
+  } catch(e) {
+    const msg = e.code==='auth/email-already-in-use'
+      ? 'Email ini sudah terdaftar sebagai akun login. Kosongkan Password lalu simpan ulang untuk menautkan ke akun yang sudah ada.'
+      : e.message;
+    alert('Gagal: '+msg);
+  } finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan'; }
 });
 
 // ============================================================
@@ -2675,12 +2711,17 @@ document.getElementById('saveTimBtn').addEventListener('click', async () => {
   const pw=document.getElementById('tim-password').value;
   const jabatan=document.getElementById('tim-jabatan').value.trim();
   if (!nama||!email||!pw) { alert('Nama, email, dan password wajib diisi.'); return; }
+  if (pw.length < 6) { alert('Password minimal 6 karakter.'); return; }
   const btn=document.getElementById('saveTimBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, pw);
-    await setDoc(doc(db,'tim_accounts',cred.user.uid), { nama, email, jabatan, createdAt: new Date().toISOString() });
+    const uid = await createLoginAccount(nama, email, pw, 'tim');
+    await setDoc(doc(db,'tim_accounts',uid), { nama, email, jabatan, createdAt: new Date().toISOString() });
     closeModal('modal-tim'); loadTim();
-  } catch(e) { alert('Gagal buat akun: '+e.message); }
+    alert('Akun tim berhasil dibuat. Mitra bisa langsung login dengan email & password tersebut.');
+  } catch(e) {
+    const msg = e.code==='auth/email-already-in-use' ? 'Email ini sudah terdaftar sebagai akun login.' : e.message;
+    alert('Gagal buat akun: '+msg);
+  }
   finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Buat Akun'; }
 });
 
