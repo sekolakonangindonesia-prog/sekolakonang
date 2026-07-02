@@ -177,6 +177,18 @@ input, textarea, select { font-family: var(--body); }
 .index-box-val { font-family: var(--display); font-size: 1.1rem; font-weight: 900; color: var(--cyan); }
 .index-box-lbl { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-top: 2px; }
 
+/* Tombol Detail di program-card — buka konservasi-year-detail.html /
+   biodiversity-detail.html berdasarkan ID dokumen ini saja (bukan agregat
+   semua mitra), jadi datanya otomatis tetap eksklusif untuk mitra ini. */
+.program-detail-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; margin-top: 12px; padding: 10px;
+  background: var(--lime-dim); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--lime); font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; transition: 0.2s;
+}
+.program-detail-btn:hover { background: var(--lime); color: var(--bg); }
+
 /* ─── BADGE ─── */
 .badge {
   display: inline-flex; align-items: center; gap: 5px;
@@ -600,6 +612,7 @@ function renderKonsList() {
           <div class="stat-mini"><div class="stat-mini-val">${(s.biopori||0).toLocaleString('id-ID')}</div><div class="stat-mini-lbl">Biopori</div></div>
         </div>
         ${speciesTags?`<div class="species-tag-row">${speciesTags}</div>`:''}
+        <a class="program-detail-btn" href="konservasi-year-detail.html?id=${d.id}"><i class="fas fa-expand-alt"></i> Lihat Detail</a>
       </div>
     </div>`;
   }).join('');
@@ -640,6 +653,7 @@ function renderBioList() {
           <div class="index-box"><div class="index-box-val">${(idx.R||0).toFixed(2)}</div><div class="index-box-lbl">Richness (R)</div></div>
         </div>
         ${d.catatan?`<div style="font-size:0.7rem;color:var(--muted);margin-top:10px;line-height:1.6;">${d.catatan}</div>`:''}
+        <a class="program-detail-btn" href="biodiversity-detail.html?id=${d.id}"><i class="fas fa-expand-alt"></i> Lihat Detail</a>
       </div>
     </div>`;
   }).join('');
