@@ -335,7 +335,7 @@ footer {
       <small>Indonesia</small>
     </div>
   </div>
-  <a href="konservasi.html" class="nav-back">
+  <a href="konservasi.html" class="nav-back" id="navBackLink">
     <i class="fas fa-arrow-left"></i>
     <span>Kembali ke Dashboard</span>
   </a>
@@ -496,6 +496,14 @@ footer {
   );
 
   const docId = new URLSearchParams(window.location.search).get('id');
+
+  /* Kalau halaman ini dibuka dari dashboard mitra (ES Buyer), tombol "Kembali"
+     mengarah balik ke dashboard-buyer.html, bukan ke index konservasi publik. */
+  if (document.referrer.includes('dashboard-buyer.html')) {
+    const backLink = document.getElementById('navBackLink');
+    backLink.href = 'dashboard-buyer.html';
+    backLink.querySelector('span').textContent = 'Kembali ke Dashboard Mitra';
+  }
 
   /* Palet warna — sama persis konservasi.html */
   const SP_COLORS = [
