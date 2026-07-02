@@ -225,6 +225,14 @@ input,textarea,select{font-family:var(--body);}
     </div>
   </nav>
 
+  <!-- ── PEMILIH ANGGOTA TIM (khusus tampil untuk admin) ── -->
+  <div id="adminPickerBar" style="display:none;background:rgba(198,255,0,0.10);border-bottom:1px solid rgba(198,255,0,0.15);padding:10px 16px;">
+    <div style="font-size:0.68rem;color:#C6FF00;font-weight:700;letter-spacing:0.5px;margin-bottom:6px;"><i class="fas fa-user-shield"></i> MODE ADMIN — Lihat laporan milik:</div>
+    <select id="adminTimPicker" style="width:100%;padding:8px 10px;border-radius:8px;background:var(--surface2,#252625);color:#F5F5F0;border:1px solid rgba(255,255,255,0.07);font-size:0.78rem;">
+      <option value="">-- Pilih anggota tim --</option>
+    </select>
+  </div>
+
   <!-- ── BERANDA ── -->
   <div class="panel active" id="panel-beranda">
     <div class="page-header">
@@ -544,6 +552,10 @@ let laporanFotoFiles = [];
 let lampiranBase64   = '';
 let lampiranNamaFile = '';
 
+let isAdminMode = false;
+let viewedTimId = null; // uid tim yang datanya sedang dilihat (default: diri sendiri, bisa diganti admin)
+let beranadaUnsub = null; // untuk hentikan listener lama saat admin ganti pilihan tim
+
 // ── AUTH STATE ──
 onAuthStateChanged(auth, async (user) => {
   if (user) {
@@ -552,6 +564,11 @@ onAuthStateChanged(auth, async (user) => {
       let snap = await getDoc(doc(db,'users',user.uid));
       if (snap.exists() && snap.data().role === 'tim') {
         currentUser = user; userData = snap.data();
+        showApp(); return;
+      }
+      if (snap.exists() && snap.data().role === 'admin') {
+        currentUser = user; userData = snap.data();
+        isAdminMode = true;
         showApp(); return;
       }
       // Cek di collection tim_accounts
@@ -582,13 +599,38 @@ function showApp() {
   document.getElementById('appShell').style.display   = 'block';
   document.getElementById('tabBar').style.display     = 'flex';
   populateProfil();
-  loadBeranda();
   loadNotif();
   loadProgramDropdown();
   loadPjlhDropdown();
   // Set default tanggal hari ini
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('f-tanggal').value = today;
+
+  if (isAdminMode) {
+    document.getElementById('adminPickerBar').style.display = 'block';
+    populateAdminTimPicker();
+    // Belum ada tim dipilih — kosongkan daftar laporan dulu
+    allLaporan = []; renderRecentList(); renderLaporanList('semua');
+  } else {
+    viewedTimId = currentUser.uid;
+    loadBeranda();
+  }
+}
+
+// ── MODE ADMIN: pilih anggota tim mana yang laporannya mau dilihat ──
+async function populateAdminTimPicker() {
+  const sel = document.getElementById('adminTimPicker');
+  try {
+    const snap = await getDocs(collection(db,'tim_accounts'));
+    const list = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.nama||'').localeCompare(b.nama||''));
+    sel.innerHTML = '<option value="">-- Pilih anggota tim --</option>' +
+      list.map(t => `<option value="${t.id}">${t.nama||t.email||t.id}</option>`).join('');
+    sel.onchange = () => {
+      if (!sel.value) { viewedTimId = null; allLaporan=[]; renderRecentList(); renderLaporanList('semua'); return; }
+      viewedTimId = sel.value;
+      loadBeranda();
+    };
+  } catch(e) { console.error('Gagal muat daftar tim', e); sel.innerHTML = '<option value="">Gagal memuat daftar tim</option>'; }
 }
 
 // ── LOGIN ──
@@ -642,8 +684,10 @@ window.logout = async () => { await signOut(auth); window.location.href = 'index
 
 // ── BERANDA ──
 function loadBeranda() {
-  const q = query(collection(db,'progress_reports'), where('timId','==',currentUser.uid));
-  onSnapshot(q, snap => {
+  if (beranadaUnsub) { beranadaUnsub(); beranadaUnsub = null; } // hentikan listener sebelumnya (penting saat admin ganti pilihan tim)
+  const targetUid = viewedTimId || currentUser.uid;
+  const q = query(collection(db,'progress_reports'), where('timId','==',targetUid));
+  beranadaUnsub = onSnapshot(q, snap => {
     allLaporan = snap.docs.map(d=>({id:d.id,...d.data()}))
       .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
     const now   = new Date();
