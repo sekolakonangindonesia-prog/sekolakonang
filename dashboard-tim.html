@@ -524,7 +524,8 @@ input,textarea,select{font-family:var(--body);}
 <script type="module">
 import { initializeApp }                                      from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, updatePassword,
-         onAuthStateChanged, signOut }                        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+         onAuthStateChanged, signOut,
+         setPersistence, browserSessionPersistence }           from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc, addDoc,
          collection, query, where, orderBy,
          onSnapshot, serverTimestamp, getDocs }               from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -540,6 +541,10 @@ const firebaseConfig = {
 const app     = initializeApp(firebaseConfig);
 const auth    = getAuth(app);
 const db      = getFirestore(app);
+
+// Sesi login per-TAB (bukan dibagi satu origin) — supaya buka admin/tim/buyer
+// sekaligus di tab berbeda tidak saling menimpa sesi login.
+await setPersistence(auth, browserSessionPersistence);
 
 let currentUser = null;
 let userData    = {};
