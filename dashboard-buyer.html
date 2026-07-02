@@ -154,13 +154,18 @@ input, textarea, select { font-family: var(--body); }
 .act-title { font-size: 0.78rem; font-weight: 600; color: var(--parchment); }
 .act-meta  { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
 
-/* ─── PROGRAM CARD (Konservasi / Biodiversitas) ─── */
+/* ─── PROGRAM CARD (Konservasi / Biodiversitas) ───
+   Foto ditampilkan sebagai thumbnail kecil di header kartu (bukan foto besar
+   full-width) supaya list tetap ringkas dan enak di-scroll. */
 .program-card {
   background: var(--surface); border: 1px solid var(--border-s);
   border-radius: var(--r); overflow: hidden; margin-bottom: 12px;
 }
-.program-photo { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: var(--surface2); }
+.program-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 0; }
+.program-thumb { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; background: var(--surface2); flex-shrink: 0; }
+.program-thumb-ph { width: 44px; height: 44px; border-radius: 10px; background: var(--surface2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 1rem; }
 .program-body { padding: 14px; }
+.program-body.has-head { padding-top: 10px; }
 .program-year { font-size: 0.56rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--lime); margin-bottom: 4px; }
 .program-title { font-family: var(--display); font-size: 1rem; font-weight: 900; color: #fff; margin-bottom: 4px; }
 .program-loc { font-size: 0.68rem; color: var(--muted); margin-bottom: 12px; }
@@ -600,10 +605,14 @@ function renderKonsList() {
     const photo = (d.photos&&d.photos[0]) ? d.photos[0] : '';
     const speciesTags = d.species ? Object.keys(d.species).slice(0,4).map(k=>`<span class="species-tag">${k}</span>`).join('') : '';
     return `<div class="program-card">
-      ${photo?`<img class="program-photo" src="${photo}" loading="lazy" onerror="this.style.display='none'">`:''}
-      <div class="program-body">
-        <div class="program-year">${d.year}</div>
-        <div class="program-title">${d.title||'Program Konservasi'}</div>
+      <div class="program-head">
+        ${photo?`<img class="program-thumb" src="${photo}" loading="lazy" onerror="this.outerHTML='<div class=&quot;program-thumb-ph&quot;><i class=&quot;fas fa-seedling&quot;></i></div>'">`:`<div class="program-thumb-ph"><i class="fas fa-seedling"></i></div>`}
+        <div>
+          <div class="program-year">${d.year}</div>
+          <div class="program-title" style="font-size:0.85rem;margin-bottom:0;">${d.title||'Program Konservasi'}</div>
+        </div>
+      </div>
+      <div class="program-body has-head">
         <div class="program-loc"><i class="fas fa-map-marker-alt"></i>${d.location||'—'}</div>
         <div class="stat-mini-row">
           <div class="stat-mini"><div class="stat-mini-val">${(s.trees||0).toLocaleString('id-ID')}</div><div class="stat-mini-lbl">Pohon</div></div>
@@ -636,10 +645,14 @@ function renderBioList() {
     const idx = d.indices||{}, fs = d.floraStats||{}, bs = d.birdStats||{};
     const photo = (d.photos&&d.photos[0]) ? d.photos[0] : '';
     return `<div class="program-card">
-      ${photo?`<img class="program-photo" src="${photo}" loading="lazy" onerror="this.style.display='none'">`:''}
-      <div class="program-body">
-        <div class="program-year">${d.year}</div>
-        <div class="program-title">Monitoring Taman Kehati</div>
+      <div class="program-head">
+        ${photo?`<img class="program-thumb" src="${photo}" loading="lazy" onerror="this.outerHTML='<div class=&quot;program-thumb-ph&quot;><i class=&quot;fas fa-dove&quot;></i></div>'">`:`<div class="program-thumb-ph"><i class="fas fa-dove"></i></div>`}
+        <div>
+          <div class="program-year">${d.year}</div>
+          <div class="program-title" style="font-size:0.85rem;margin-bottom:0;">Monitoring Taman Kehati</div>
+        </div>
+      </div>
+      <div class="program-body has-head">
         <div class="program-loc"><i class="fas fa-map-marker-alt"></i>${d.location||'—'} <span class="badge badge-cyan" style="margin-left:6px;">${idx.cat||'—'}</span></div>
         <div class="stat-mini-row">
           <div class="stat-mini"><div class="stat-mini-val">${fs.total||0}</div><div class="stat-mini-lbl">Sp. Flora</div></div>
@@ -725,7 +738,7 @@ window.showToast = (msg, type='success') => {
   t.className = `toast show ${type}`;
   t.querySelector('i').className = `fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle'}`;
   setTimeout(() => t.classList.remove('show'), 3500);
-};    
+};  
 </script>
 </body>
 </html>
