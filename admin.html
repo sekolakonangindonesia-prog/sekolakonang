@@ -964,7 +964,8 @@ import {
   deleteDoc, addDoc, query, orderBy, limit, where, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
-  getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, onAuthStateChanged
+  getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, onAuthStateChanged,
+  setPersistence, browserSessionPersistence
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   getStorage, ref, uploadBytes, getDownloadURL
@@ -983,9 +984,16 @@ const db      = getFirestore(app);
 const auth    = getAuth(app);
 const storage = getStorage(app);
 
+// Sesi login disimpan per-TAB (sessionStorage), bukan dibagi satu origin (localStorage/IndexedDB).
+// Ini supaya kalau Anda buka admin.html, dashboard-tim.html, dan dashboard-buyer.html
+// sekaligus di tab berbeda (browser sama), sesi login masing-masing tab TIDAK saling menimpa
+// — sebelumnya ini penyebab admin sering "keluar sendiri" saat tab lain login akun berbeda.
+await setPersistence(auth, browserSessionPersistence);
+
 // ── APP KEDUA khusus untuk MEMBUAT akun login baru (Tim / Mitra) ──
 const secondaryApp  = initializeApp(firebaseConfig, 'AccountCreator');
 const secondaryAuth = getAuth(secondaryApp);
+await setPersistence(secondaryAuth, browserSessionPersistence);
 
 // Buat akun login baru (Firebase Auth) + dokumen users/{uid} dengan role tertentu,
 // tanpa mengganggu sesi admin yang sedang login. Return uid akun baru.
