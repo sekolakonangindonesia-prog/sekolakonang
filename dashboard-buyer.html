@@ -284,6 +284,14 @@ input, textarea, select { font-family: var(--body); }
     </div>
   </nav>
 
+  <!-- ── PEMILIH MITRA (khusus tampil untuk admin) ── -->
+  <div id="adminPickerBar" style="display:none;background:var(--lime-dim);border-bottom:1px solid var(--border);padding:10px 16px;">
+    <div style="font-size:0.68rem;color:var(--lime);font-weight:700;letter-spacing:0.5px;margin-bottom:6px;"><i class="fas fa-user-shield"></i> MODE ADMIN — Lihat dashboard sebagai mitra:</div>
+    <select id="adminBuyerPicker" style="width:100%;padding:8px 10px;border-radius:8px;background:var(--surface2);color:var(--parchment);border:1px solid var(--border-s);font-size:0.78rem;">
+      <option value="">-- Pilih mitra ES-Buyer --</option>
+    </select>
+  </div>
+
   <!-- ── BERANDA ── -->
   <div class="panel active" id="panel-beranda">
     <div class="page-header">
@@ -425,6 +433,7 @@ const db   = getFirestore(app);
 
 let currentUser  = null;
 let userData     = {};
+let isAdminMode  = false;  // true kalau yang login adalah akun admin (mode "lihat sebagai")
 let buyerDoc     = null;   // dokumen es_buyers milik akun ini (jika sudah ditautkan admin)
 let konsData     = [];     // monitoring_reboisasi milik mitra ini
 let bioData      = [];     // monitoring_kehati milik mitra ini
@@ -436,8 +445,10 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     try {
       const snap = await getDoc(doc(db, 'users', user.uid));
-      if (snap.exists() && snap.data().role === 'buyer') {
+      const role = snap.exists() ? snap.data().role : null;
+      if (role === 'buyer' || role === 'admin') {
         currentUser = user; userData = snap.data();
+        isAdminMode = role === 'admin';
         await showApp();
       } else {
         showToast('Akun ini bukan ES Buyer.', 'error');
@@ -459,11 +470,35 @@ async function showApp() {
   document.getElementById('navAvatar').textContent = initials;
   document.getElementById('greetName').textContent = userData.fullName || 'Mitra';
 
-  await loadBuyerProfile();
-  await loadKonsBio();
-  renderBeranda();
-  renderProfil();
+  if (isAdminMode) {
+    document.getElementById('adminPickerBar').style.display = 'block';
+    await populateAdminBuyerPicker();
+    renderBeranda(); renderProfil(); // render kosong dulu sampai admin pilih mitra
+  } else {
+    await loadBuyerProfile();
+    await loadKonsBio();
+    renderBeranda();
+    renderProfil();
+  }
   renderPJLHPitch();
+}
+
+// ── MODE ADMIN: isi dropdown semua mitra ES-Buyer, biarkan admin pilih yang mau dilihat ──
+async function populateAdminBuyerPicker() {
+  const sel = document.getElementById('adminBuyerPicker');
+  try {
+    const snap = await getDocs(collection(db,'es_buyers'));
+    const list = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(a.nama||'').localeCompare(b.nama||''));
+    sel.innerHTML = '<option value="">-- Pilih mitra ES-Buyer --</option>' +
+      list.map(b => `<option value="${b.id}">${b.nama || b.id}${b.linkedUid?'':' (belum tertaut akun)'}</option>`).join('');
+    sel.onchange = async () => {
+      if (!sel.value) { buyerDoc = null; konsData=[]; bioData=[]; renderBeranda(); renderProfil(); renderKonsYearTabs(); renderKonsList(); renderBioYearTabs(); renderBioList(); return; }
+      const bSnap = list.find(b=>b.id===sel.value);
+      buyerDoc = bSnap ? {...bSnap} : null;
+      await loadKonsBio();
+      renderBeranda(); renderProfil(); renderKonsYearTabs(); renderKonsList(); renderBioYearTabs(); renderBioList();
+    };
+  } catch(e) { console.error('Gagal muat daftar mitra', e); sel.innerHTML = '<option value="">Gagal memuat daftar mitra</option>'; }
 }
 
 // ── AMBIL PROFIL MITRA (es_buyers) YANG TERTAUT KE AKUN INI ──
