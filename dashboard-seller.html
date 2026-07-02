@@ -429,6 +429,14 @@ input, textarea, select { font-family: var(--body); }
     </div>
   </nav>
 
+  <!-- ── PEMILIH SELLER (khusus tampil untuk admin) ── -->
+  <div id="adminPickerBar" style="display:none;background:rgba(198,255,0,0.10);border-bottom:1px solid rgba(198,255,0,0.15);padding:10px 16px;">
+    <div style="font-size:0.68rem;color:#C6FF00;font-weight:700;letter-spacing:0.5px;margin-bottom:6px;"><i class="fas fa-user-shield"></i> MODE ADMIN — Lihat dashboard sebagai seller:</div>
+    <select id="adminSellerPicker" style="width:100%;padding:8px 10px;border-radius:8px;background:var(--surface2,#252625);color:#F5F5F0;border:1px solid rgba(255,255,255,0.07);font-size:0.78rem;">
+      <option value="">-- Pilih akun ES-Seller --</option>
+    </select>
+  </div>
+
   <!-- ── BERANDA ── -->
   <div class="panel active" id="panel-beranda">
     <div class="page-header">
@@ -787,17 +795,22 @@ const auth    = getAuth(app);
 const db      = getFirestore(app);
 const storage = getStorage(app);
 
-let currentUser = null;
-let userData    = {};
+let currentUser  = null;
+let userData     = {};
 let allPengajuan = [];
+let isAdminMode  = false;
+let viewedSellerId = null; // uid seller yang datanya sedang dilihat
+let beranadaUnsub   = null;
 
 // ── AUTH STATE ──
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     try {
       const snap = await getDoc(doc(db, 'users', user.uid));
-      if (snap.exists() && snap.data().role === 'seller') {
+      const role = snap.exists() ? snap.data().role : null;
+      if (role === 'seller' || role === 'admin') {
         currentUser = user; userData = snap.data();
+        isAdminMode = role === 'admin';
         showApp();
       } else {
         showToast('Akun ini bukan ES Seller.', 'error');
@@ -815,10 +828,44 @@ function showApp() {
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('appShell').style.display   = 'block';
   document.getElementById('tabBar').style.display     = 'flex';
-  populateProfil();
-  loadBeranda();
   loadNotif();
-  renderTitikList();
+
+  if (isAdminMode) {
+    document.getElementById('adminPickerBar').style.display = 'block';
+    populateAdminSellerPicker();
+    populateProfil(); // profil admin sendiri dulu, sampai admin pilih seller
+    allPengajuan = []; renderTitikList();
+  } else {
+    viewedSellerId = currentUser.uid;
+    populateProfil();
+    loadBeranda();
+    renderTitikList();
+  }
+}
+
+// ── MODE ADMIN: pilih akun seller mana yang datanya mau dilihat ──
+async function populateAdminSellerPicker() {
+  const sel = document.getElementById('adminSellerPicker');
+  try {
+    const snap = await getDocs(query(collection(db,'users'), where('role','==','seller')));
+    const list = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.fullName||'').localeCompare(b.fullName||''));
+    sel.innerHTML = '<option value="">-- Pilih akun ES-Seller --</option>' +
+      list.map(s => `<option value="${s.id}">${s.fullName||s.email||s.id}</option>`).join('');
+    sel.onchange = () => {
+      if (!sel.value) { viewedSellerId = null; allPengajuan=[]; renderTitikList(); return; }
+      viewedSellerId = sel.value;
+      const picked = list.find(s=>s.id===sel.value);
+      if (picked) {
+        userData = picked; populateProfil();
+        // populateProfil() memakai currentUser.email (email admin) — timpa dengan email seller yang dipilih
+        if (picked.email) {
+          document.getElementById('profilEmail').textContent    = picked.email;
+          document.getElementById('profilEmailVal').textContent = picked.email;
+        }
+      }
+      loadBeranda();
+    };
+  } catch(e) { console.error('Gagal muat daftar seller', e); sel.innerHTML = '<option value="">Gagal memuat daftar seller</option>'; }
 }
 
 // ── PROFIL ──
@@ -863,8 +910,10 @@ window.logout = async () => {
 
 // ── BERANDA ──
 function loadBeranda() {
-  const q = query(collection(db,'pengajuan_pjlh'), where('sellerId','==',currentUser.uid));
-  onSnapshot(q, snap => {
+  if (beranadaUnsub) { beranadaUnsub(); beranadaUnsub = null; }
+  const targetUid = viewedSellerId || currentUser.uid;
+  const q = query(collection(db,'pengajuan_pjlh'), where('sellerId','==',targetUid));
+  beranadaUnsub = onSnapshot(q, snap => {
     allPengajuan = snap.docs.map(d => ({id:d.id,...d.data()}));
     const total    = allPengajuan.length;
     const approved = allPengajuan.filter(p => ['approved','mou'].includes(p.status)).length;
