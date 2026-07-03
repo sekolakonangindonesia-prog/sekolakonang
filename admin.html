@@ -374,11 +374,6 @@ input,textarea,select{font-family:var(--body);}
           <div class="form-group"><label>Lokasi / Desa</label><input type="text" id="kons-location" placeholder="Desa Galih, Probolinggo"></div>
         </div>
         <div class="form-group">
-          <label>Tautkan ke Mitra ES-Buyer (opsional)</label>
-          <select id="kons-buyer"><option value="">-- Tidak ditautkan ke mitra tertentu --</option></select>
-          <div class="form-hint">Kalau dipilih, program ini otomatis tampil di dashboard mitra tersebut.</div>
-        </div>
-        <div class="form-group">
           <label>Judul Program</label>
           <input type="text" id="kons-title" placeholder="Cth: Program Konservasi Hutan Lindung - PT Tirta Investama Keboncandi">
           <div class="form-hint">Judul ini yang akan tampil di kartu daftar, tabel riwayat, dan halaman detail.</div>
@@ -498,11 +493,6 @@ input,textarea,select{font-family:var(--body);}
         <!-- FLORA -->
         <div class="section-divider"><i class="fas fa-seedling"></i> Data Flora</div>
         <div class="row-3">
-          <div class="form-group" style="grid-column:1/-1;">
-            <label>Tautkan ke Mitra ES-Buyer (opsional)</label>
-            <select id="bio-buyer"><option value="">-- Tidak ditautkan ke mitra tertentu --</option></select>
-            <div class="form-hint">Kalau dipilih, data biodiversitas tahun ini otomatis tampil di dashboard mitra tersebut.</div>
-          </div>
           <div class="form-group"><label>Jumlah Spesies</label><input type="number" id="bio-flora-total" placeholder="0" min="0"></div>
           <div class="form-group"><label>Jumlah Famili</label><input type="number" id="bio-flora-famili" placeholder="0" min="0"></div>
           <div class="form-group"><label>Kategori Status</label>
@@ -616,6 +606,7 @@ input,textarea,select{font-family:var(--body);}
       <div class="tab-bar">
         <button class="tab-btn active" data-tab="pjlh-sellers">ES-Sellers</button>
         <button class="tab-btn" data-tab="pjlh-buyers">ES-Buyers</button>
+        <button class="tab-btn" data-tab="pjlh-aktivitas">Aktivitas PJLH</button>
       </div>
 
       <!-- SELLERS -->
@@ -628,6 +619,20 @@ input,textarea,select{font-family:var(--body);}
       <div class="tab-pane" id="tab-pjlh-buyers">
         <div class="toolbar"><button class="btn btn-lime" id="addBuyerBtn"><i class="fas fa-plus"></i> Tambah ES-Buyer</button></div>
         <div id="buyers-list"><p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p></div>
+      </div>
+
+      <!-- AKTIVITAS PJLH (Pembuatan/Perawatan per ES-Seller, tertaut ke Program Konservasi) -->
+      <div class="tab-pane" id="tab-pjlh-aktivitas">
+        <div class="toolbar">
+          <button class="btn btn-lime" id="addAktivitasBtn"><i class="fas fa-plus"></i> Tambah Aktivitas</button>
+          <select id="filter-aktivitas" style="background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:8px 12px;font-size:0.75rem;cursor:pointer;">
+            <option value="">Semua Jenis Aktivitas</option>
+            <option value="pembuatan">Pembuatan</option>
+            <option value="perawatan">Perawatan</option>
+          </select>
+        </div>
+        <div class="form-hint" style="margin-bottom:14px;">Catatan rinci per ES-Seller: pembuatan vs perawatan infrastruktur, tertaut ke Program Konservasi supaya total besarnya tetap sinkron.</div>
+        <div id="aktivitas-list"><p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p></div>
       </div>
     </section>
 
@@ -844,6 +849,83 @@ input,textarea,select{font-family:var(--body);}
   </div>
 </div>
 
+<!-- AKTIVITAS PJLH -->
+<div class="modal-backdrop" id="modal-aktivitas">
+  <div class="modal-box">
+    <button class="modal-close" data-close="modal-aktivitas"><i class="fas fa-times"></i></button>
+    <h3 id="modal-aktivitas-title">Tambah Aktivitas PJLH</h3>
+    <div class="sub">Catatan pembuatan/perawatan infrastruktur oleh satu ES-Seller, tertaut ke Program Konservasi.</div>
+    <input type="hidden" id="aktivitas-id">
+
+    <div class="row-2">
+      <div class="form-group"><label>Program Konservasi Terkait</label>
+        <select id="aktivitas-linked-konservasi"><option value="">Memuat...</option></select>
+      </div>
+      <div class="form-group"><label>ES-Seller</label>
+        <select id="aktivitas-seller"><option value="">Memuat...</option></select>
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="form-group"><label>Jenis Aktivitas</label>
+        <select id="aktivitas-jenis">
+          <option value="pembuatan">Pembuatan</option>
+          <option value="perawatan">Perawatan</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Jenis Infra</label>
+        <select id="aktivitas-infra">
+          <option value="rorak">Rorak</option>
+          <option value="sumur">Sumur Resapan</option>
+          <option value="biopori">Biopori</option>
+          <option value="tanaman">Tanaman</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="form-group"><label>Jumlah</label><input type="number" id="aktivitas-jumlah" step="0.1" placeholder="250"></div>
+      <div class="form-group"><label>Satuan</label>
+        <select id="aktivitas-satuan">
+          <option value="m">Meter (m)</option>
+          <option value="unit">Unit</option>
+          <option value="pohon">Pohon</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="form-group"><label>Lokasi</label><input type="text" id="aktivitas-lokasi" placeholder="Desa Galih, Kec. Pasrepan"></div>
+      <div class="form-group"><label>Tanggal</label><input type="date" id="aktivitas-tanggal"></div>
+    </div>
+
+    <div class="section-divider"><i class="fas fa-map-marker-alt"></i> Titik GPS (Opsional)</div>
+    <div class="row-2">
+      <div class="form-group"><label>Latitude</label><input type="number" id="aktivitas-lat" step="0.000001" placeholder="-7.xxxxxx"></div>
+      <div class="form-group"><label>Longitude</label><input type="number" id="aktivitas-lng" step="0.000001" placeholder="112.xxxxxx"></div>
+    </div>
+    <button type="button" class="btn btn-outline btn-sm" id="ambilGpsBtn"><i class="fas fa-location-crosshairs"></i> Ambil Lokasi Sekarang</button>
+    <div class="form-hint" style="margin-top:8px;">Kosongkan kalau ini data lama dan titiknya tidak diketahui — bisa dilengkapi belakangan.</div>
+
+    <div class="form-group" style="margin-top:14px;"><label>Catatan</label><textarea id="aktivitas-catatan" rows="2"></textarea></div>
+
+    <div class="section-divider"><i class="fas fa-camera"></i> Dokumentasi Foto</div>
+    <div class="upload-zone" id="aktivitas-photo-drop-zone" onclick="document.getElementById('aktivitas-photo-input').click()">
+      <i class="fas fa-camera"></i>
+      <p>Klik untuk pilih foto dari <b>HP, laptop, atau perangkat lain</b> (bisa pilih banyak sekaligus)</p>
+      <div class="file-name" id="aktivitas-photo-file-name">Belum ada file dipilih</div>
+    </div>
+    <input type="file" id="aktivitas-photo-input" accept="image/*" multiple style="display:none">
+    <div class="form-hint">Foto otomatis dikompres lalu disimpan langsung di database. Disarankan maksimal 6-8 foto per aktivitas.</div>
+    <div id="aktivitas-photo-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" data-close="modal-aktivitas">Batal</button>
+      <button class="btn btn-lime" id="saveAktivitasBtn"><i class="fas fa-save"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL ES-BUYER -->
 <div class="modal-backdrop" id="modal-buyer">
   <div class="modal-box">
@@ -860,14 +942,6 @@ input,textarea,select{font-family:var(--body);}
       <select id="buyer-status"><option>Aktif</option><option>Negosiasi</option><option>Selesai</option></select>
     </div>
     <div class="form-group"><label>Catatan MOU / Perjanjian</label><textarea id="buyer-catatan" rows="2"></textarea></div>
-    <div class="section-divider" style="margin-top:14px;"><i class="fas fa-link"></i> Akun Login Dashboard Mitra</div>
-    <div class="form-hint" style="margin-bottom:8px;">Isi Email + Password untuk <b>membuatkan akun baru</b> langsung — mitra tidak perlu daftar sendiri, tinggal login pakai email &amp; password ini. Kalau mitra <b>sudah</b> punya akun (pernah daftar sendiri di halaman login), cukup isi Email saja dan kosongkan Password — sistem akan mencari &amp; menautkan akun yang sudah ada.</div>
-    <input type="hidden" id="buyer-uid">
-    <div class="row-2">
-      <div class="form-group"><label>Email Akun Buyer</label><input type="email" id="buyer-email" placeholder="perusahaan@contoh.com"></div>
-      <div class="form-group"><label>Password Baru (opsional)</label><input type="password" id="buyer-password" placeholder="Kosongkan jika akun sudah ada"></div>
-    </div>
-    <div id="buyer-link-status" style="font-size:0.72rem;margin-bottom:8px;"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-buyer">Batal</button>
       <button class="btn btn-lime" id="saveBuyerBtn"><i class="fas fa-save"></i> Simpan</button>
@@ -908,21 +982,9 @@ input,textarea,select{font-family:var(--body);}
 
     <div id="pd-context" style="font-size:0.78rem;color:var(--text-sub);margin-bottom:14px;line-height:1.6;"></div>
 
-    <div class="form-group" id="pd-judul-wrap" style="display:none;">
-      <label>Judul Kegiatan</label>
-      <input type="text" id="pd-judul-input" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:10px 12px;font-size:0.8rem;">
-    </div>
-
-    <div class="row-2">
-      <div class="form-group">
-        <label>Tanggal Kegiatan</label>
-        <input type="date" id="pd-tanggal-input" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:10px 12px;font-size:0.8rem;">
-      </div>
-    </div>
-
     <div class="form-group">
       <label>Deskripsi Kegiatan</label>
-      <textarea id="pd-deskripsi-input" rows="4" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:10px 12px;font-size:0.8rem;resize:vertical;white-space:pre-wrap;"></textarea>
+      <div id="pd-deskripsi" style="font-size:0.8rem;color:var(--parchment);line-height:1.6;white-space:pre-wrap;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:var(--r-sm);padding:12px;">—</div>
     </div>
 
     <div class="form-group">
@@ -952,7 +1014,7 @@ input,textarea,select{font-family:var(--body);}
 
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-progress-detail">Tutup</button>
-      <button class="btn btn-lime" id="pd-save-btn"><i class="fas fa-save"></i> Simpan Perubahan</button>
+      <button class="btn btn-lime" id="pd-save-btn"><i class="fas fa-save"></i> Simpan Status</button>
     </div>
   </div>
 </div>
@@ -961,11 +1023,10 @@ input,textarea,select{font-family:var(--body);}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
   getFirestore, doc, getDoc, setDoc, collection, getDocs,
-  deleteDoc, addDoc, query, orderBy, limit, where, updateDoc
+  deleteDoc, addDoc, query, orderBy, limit, where, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
-  getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, onAuthStateChanged,
-  setPersistence, browserSessionPersistence
+  getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   getStorage, ref, uploadBytes, getDownloadURL
@@ -983,29 +1044,6 @@ const app     = initializeApp(firebaseConfig);
 const db      = getFirestore(app);
 const auth    = getAuth(app);
 const storage = getStorage(app);
-
-// Sesi login disimpan per-TAB (sessionStorage), bukan dibagi satu origin (localStorage/IndexedDB).
-// Ini supaya kalau Anda buka admin.html, dashboard-tim.html, dan dashboard-buyer.html
-// sekaligus di tab berbeda (browser sama), sesi login masing-masing tab TIDAK saling menimpa
-// — sebelumnya ini penyebab admin sering "keluar sendiri" saat tab lain login akun berbeda.
-await setPersistence(auth, browserSessionPersistence);
-
-// ── APP KEDUA khusus untuk MEMBUAT akun login baru (Tim / Mitra) ──
-const secondaryApp  = initializeApp(firebaseConfig, 'AccountCreator');
-const secondaryAuth = getAuth(secondaryApp);
-await setPersistence(secondaryAuth, browserSessionPersistence);
-
-// Buat akun login baru (Firebase Auth) + dokumen users/{uid} dengan role tertentu,
-// tanpa mengganggu sesi admin yang sedang login. Return uid akun baru.
-async function createLoginAccount(nama, email, password, role) {
-  const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-  const uid = cred.user.uid;
-  await setDoc(doc(db, 'users', uid), {
-    fullName: nama, email, role, createdAt: new Date().toISOString()
-  });
-  await signOut(secondaryAuth);
-  return uid;
-}
 
 
 // ── KML parse state ──
@@ -1048,7 +1086,7 @@ function switchPanel(name) {
     overview: loadOverview, mitra: loadMitra, laporan: loadLaporan,
     berita: () => { loadBeritaInternal(); loadBeritaExternal(); },
     konservasi: loadKonservasiList, biodiversitas: loadBioList,
-    pjlh: () => { loadSellers(); loadBuyers(); },
+    pjlh: () => { loadSellers(); loadBuyers(); loadAktivitas(); },
     tim: loadTim, target: loadProgram, progress: loadProgress
   };
   if (loaders[name]) loaders[name]();
@@ -1111,25 +1149,6 @@ document.getElementById('loginPassword').addEventListener('keydown', e => {
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await signOut(auth);
   location.reload();
-});
-
-// Pantau status login secara real-time. Kalau sesi tiba-tiba hilang/berakhir
-// (mis. token kedaluwarsa, storage diblokir browser, dsb) — sebelumnya panel
-// admin tetap tampil seolah masih login lalu baru gagal saat Simpan dengan
-// pesan error mentah dari Firestore ("Missing or insufficient permissions").
-// Sekarang begitu sesi hilang, otomatis kembali ke layar login supaya admin
-// langsung sadar harus login ulang.
-let sudahPernahLogin = false;
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    sudahPernahLogin = true;
-  } else if (sudahPernahLogin) {
-    alert('Sesi login Anda berakhir. Silakan login kembali.');
-    document.getElementById('appShell').style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('loginBtn').disabled = false;
-    document.getElementById('loginBtn').innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
-  }
 });
 
 // Modal helpers
@@ -1497,60 +1516,18 @@ document.getElementById('addMitraBtn').addEventListener('click', () => {
   document.getElementById('modal-mitra-title').textContent='Tambah Mitra';
   openModal('modal-mitra');
 });
-// Kompres logo mitra jadi base64 & simpan LANGSUNG di Firestore — TANPA Firebase
-// Storage — karena Storage belum aktif/dikonfigurasi di project ini (itulah sebabnya
-// upload logo sebelumnya loading terus/tidak pernah selesai). Pola ini sama dengan
-// kompresFotoKons yang sudah terbukti jalan di Konservasi & Biodiversitas, hanya saja
-// TANPA crop persegi (logo dijaga rasio aslinya, bukan dipotong jadi kotak) dan
-// disimpan sebagai PNG supaya logo dengan latar transparan tidak berubah jadi putih.
-function kompresLogoMitra(file, maxPx = 400, targetKB = 200) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const longSide = Math.max(img.naturalWidth, img.naturalHeight);
-        const tryPx = (px) => {
-          const scale = Math.min(1, px / longSide);
-          const w = Math.max(1, Math.round(img.naturalWidth * scale));
-          const h = Math.max(1, Math.round(img.naturalHeight * scale));
-          const c = document.createElement('canvas');
-          c.width = w; c.height = h;
-          c.getContext('2d').drawImage(img, 0, 0, w, h);
-          const result = c.toDataURL('image/png');
-          const kb = Math.round(result.length * 0.75 / 1024);
-          if (kb > targetKB && px > 100) {
-            tryPx(Math.round(px * 0.8));
-          } else {
-            resolve(result);
-          }
-        };
-        tryPx(Math.min(maxPx, longSide));
-      };
-      img.onerror = () => reject(new Error('Gagal membuka file logo: ' + file.name));
-      img.src = e.target.result;
-    };
-    reader.onerror = () => reject(new Error('Gagal membaca file logo: ' + file.name));
-    reader.readAsDataURL(file);
-  });
-}
-
 document.getElementById('saveMitraBtn').addEventListener('click', async () => {
   const id   = document.getElementById('mitra-id').value;
   const name = document.getElementById('mitra-name').value.trim();
   if (!name) { alert('Nama wajib diisi.'); return; }
-  if (!auth.currentUser) {
-    alert('Sesi login Anda sudah berakhir/terputus. Silakan klik "Keluar", login ulang, lalu coba simpan lagi.');
-    return;
-  }
   const btn = document.getElementById('saveMitraBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
   try {
     let logoUrl = document.getElementById('mitra-logo-existing-url').value || '';
     const fileInput = document.getElementById('mitra-logo-input');
     if (fileInput.files[0]) {
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengompres logo...';
-      logoUrl = await kompresLogoMitra(fileInput.files[0]);
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+      const fRef = ref(storage, `mitra-logo/${Date.now()}_${fileInput.files[0].name}`);
+      const snap = await uploadBytes(fRef, fileInput.files[0]);
+      logoUrl = await getDownloadURL(snap.ref);
     }
     const data = { name, logoUrl };
     if (id) await setDoc(doc(db,'mitra',id), data, {merge:true});
@@ -2015,28 +1992,8 @@ async function loadKonservasiList() {
   } catch(e) { wrap.innerHTML='<p style="color:var(--danger);">Gagal memuat: '+e.message+'</p>'; console.error(e); }
 }
 
-// Isi dropdown "Tautkan ke Mitra ES-Buyer" di form Konservasi & Biodiversitas.
-// Dipanggil setiap form dibuka supaya daftar mitra selalu terbaru.
-let buyerOptionsCache = null;
-async function loadBuyerOptions(selectedId) {
-  try {
-    if (!buyerOptionsCache) {
-      const snap = await getDocs(collection(db,'es_buyers'));
-      buyerOptionsCache = snap.docs.map(d => ({ id:d.id, nama:(d.data().nama||'(tanpa nama)') }));
-    }
-    const optsHTML = '<option value="">-- Tidak ditautkan ke mitra tertentu --</option>' +
-      buyerOptionsCache.map(b => `<option value="${b.id}">${b.nama}</option>`).join('');
-    ['kons-buyer','bio-buyer'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { el.innerHTML = optsHTML; if (selectedId) el.value = selectedId; }
-    });
-  } catch(e) { console.error('Gagal memuat daftar mitra buyer', e); }
-}
-
 function newKonsForm() {
   document.getElementById('kons-doc-id').value='';
-  document.getElementById('kons-buyer').value='';
-  loadBuyerOptions();
   document.getElementById('kons-year').value='';
   document.getElementById('kons-title').value='';
   document.getElementById('kons-location').value='';
@@ -2062,7 +2019,6 @@ async function editKons(id) {
   document.getElementById('kons-year').value     = d.year||'';
   document.getElementById('kons-title').value    = d.title||'';
   document.getElementById('kons-location').value = d.location||'';
-  loadBuyerOptions(d.linkedBuyerId||'');
   document.getElementById('kons-trees').value    = s.trees||0;
   document.getElementById('kons-rorak').value    = s.rorak||0;
   document.getElementById('kons-sumur').value    = s.sumur||0;
@@ -2088,11 +2044,8 @@ document.getElementById('saveKonsBtn').addEventListener('click', async () => {
   if (!year||!location) { alert('Tahun dan Lokasi wajib diisi.'); return; }
   const species = getSpeciesData();
   const relatedNewsIds = getSelectedNewsIds();
-  const buyerSel = document.getElementById('kons-buyer');
-  const linkedBuyerId = buyerSel ? buyerSel.value : '';
-  const linkedBuyerNama = linkedBuyerId && buyerOptionsCache ? (buyerOptionsCache.find(b=>b.id===linkedBuyerId)||{}).nama||'' : '';
   const data = {
-    year, title, location, species, relatedNewsIds, linkedBuyerId, linkedBuyerNama,
+    year, title, location, species, relatedNewsIds,
     stats: {
       trees:   parseInt(document.getElementById('kons-trees').value)||0,
       rorak:   parseInt(document.getElementById('kons-rorak').value)||0,
@@ -2336,7 +2289,6 @@ window.clearBioFlagshipImg = function() {
 
 function newBioForm() {
   document.getElementById('bio-doc-id').value='';
-  loadBuyerOptions();
   document.getElementById('bio-year').value='';
   document.getElementById('bio-location-select').value='';
   document.getElementById('bio-location-custom').value='';
@@ -2366,7 +2318,6 @@ async function editBio(id) {
   const idx = d.indices || {}, bidx = d.birdIndices || {};
   const fs = d.floraStats || {}, bs = d.birdStats || {};
   const flag = d.flagshipSpecies || {};
-  loadBuyerOptions(d.linkedBuyerId||'');
   document.getElementById('bio-doc-id').value = id;
   document.getElementById('bio-year').value = d.year||'';
   // lokasi
@@ -2430,12 +2381,9 @@ document.getElementById('saveBioBtn').addEventListener('click', async () => {
 
   const flagshipName = document.getElementById('bio-flagship-name').value.trim();
   const { labels: chartLabels, h: historyH, e: historyE, r: historyR } = getHistoryData();
-  const bioBuyerSel = document.getElementById('bio-buyer');
-  const linkedBuyerId = bioBuyerSel ? bioBuyerSel.value : '';
-  const linkedBuyerNama = linkedBuyerId && buyerOptionsCache ? (buyerOptionsCache.find(b=>b.id===linkedBuyerId)||{}).nama||'' : '';
 
   const data = {
-    year, location, linkedBuyerId, linkedBuyerNama,
+    year, location,
     catatan: document.getElementById('bio-catatan').value.trim(),
     relatedNewsIds: getSelectedBioNewsIds(),
     indices: {
@@ -2604,7 +2552,6 @@ async function loadBuyers() {
               <div style="font-weight:700;font-size:0.85rem;color:var(--white);">${b.nama||'—'}</div>
               <div style="font-size:0.68rem;color:var(--text-muted);">${b.sektor||''} · Rp ${(b.kontribusi||0).toLocaleString('id-ID')}/tahun</div>
               <span class="list-badge badge-blue" style="margin-top:6px;">${b.status||'—'}</span>
-              <span class="list-badge ${b.linkedUid?'badge-lime':'badge-orange'}" style="margin-top:6px;margin-left:4px;"><i class="fas fa-${b.linkedUid?'link':'unlink'}"></i> ${b.linkedUid?'Tertaut akun':'Belum tertaut'}</span>
             </div>
             <div class="list-card-actions">
               <button class="btn btn-outline btn-sm" onclick="editBuyer('${d.id}')"><i class="fas fa-edit"></i></button>
@@ -2625,63 +2572,226 @@ async function editBuyer(id) {
   document.getElementById('buyer-kontribusi').value = b.kontribusi||'';
   document.getElementById('buyer-status').value   = b.status||'Aktif';
   document.getElementById('buyer-catatan').value  = b.catatan||'';
-  document.getElementById('buyer-uid').value      = b.linkedUid||'';
-  document.getElementById('buyer-email').value    = b.linkedEmail||'';
-  document.getElementById('buyer-password').value = '';
-  const statusEl = document.getElementById('buyer-link-status');
-  statusEl.innerHTML = b.linkedUid
-    ? `<i class="fas fa-check-circle" style="color:var(--lime);"></i> Sudah tertaut ke akun: ${b.linkedEmail||b.linkedUid}. <br>Isi Password baru hanya jika ingin membuat akun BARU yang berbeda (bukan mengganti password akun ini).`
-    : `<i class="fas fa-exclamation-circle" style="color:var(--orange);"></i> Belum tertaut ke akun manapun. Isi Email+Password untuk buatkan akun baru.`;
   document.getElementById('modal-buyer-title').textContent='Edit ES-Buyer';
   openModal('modal-buyer');
 }
 window.editBuyer = editBuyer;
 document.getElementById('addBuyerBtn').addEventListener('click', () => {
-  ['buyer-id','buyer-nama','buyer-sektor','buyer-kontribusi','buyer-catatan','buyer-uid','buyer-email','buyer-password'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('buyer-link-status').innerHTML='';
+  ['buyer-id','buyer-nama','buyer-sektor','buyer-kontribusi','buyer-catatan'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('modal-buyer-title').textContent='Tambah ES-Buyer';
   openModal('modal-buyer');
 });
 document.getElementById('saveBuyerBtn').addEventListener('click', async () => {
   const id = document.getElementById('buyer-id').value;
-  const namaPerusahaan = document.getElementById('buyer-nama').value.trim();
-  const data = { nama:namaPerusahaan, sektor:document.getElementById('buyer-sektor').value.trim(), kontribusi:parseInt(document.getElementById('buyer-kontribusi').value)||0, status:document.getElementById('buyer-status').value, catatan:document.getElementById('buyer-catatan').value.trim() };
+  const data = { nama:document.getElementById('buyer-nama').value.trim(), sektor:document.getElementById('buyer-sektor').value.trim(), kontribusi:parseInt(document.getElementById('buyer-kontribusi').value)||0, status:document.getElementById('buyer-status').value, catatan:document.getElementById('buyer-catatan').value.trim() };
   if (!data.nama) { alert('Nama wajib diisi.'); return; }
-
-  const emailInput = document.getElementById('buyer-email').value.trim().toLowerCase();
-  const pwInput     = document.getElementById('buyer-password').value;
-  const existingUid = document.getElementById('buyer-uid').value; // sudah tertaut sebelumnya (kalau edit)
-
-  const btn=document.getElementById('saveBuyerBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+  const btn=document.getElementById('saveBuyerBtn'); btn.disabled=true;
   try {
-    if (emailInput && pwInput) {
-      // ── Mode: buatkan akun login baru langsung, lalu tautkan ──
-      if (pwInput.length < 6) { alert('Password minimal 6 karakter.'); btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan'; return; }
-      const uid = await createLoginAccount(namaPerusahaan, emailInput, pwInput, 'buyer');
-      data.linkedUid   = uid;
-      data.linkedEmail = emailInput;
-    } else if (emailInput) {
-      // ── Mode: tautkan ke akun yang sudah ada (dicari berdasarkan email) ──
-      const uSnap = await getDocs(query(collection(db,'users'), where('email','==',emailInput), where('role','==','buyer')));
-      if (!uSnap.empty) {
-        data.linkedUid   = uSnap.docs[0].id;
-        data.linkedEmail = emailInput;
-      } else {
-        alert('Peringatan: tidak ditemukan akun ES-Buyer terdaftar dengan email tersebut. Data tetap disimpan, tapi belum tertaut. Isi kolom Password untuk membuatkan akun baru, atau pastikan mitra sudah mendaftar sendiri lalu simpan ulang.');
-        data.linkedEmail = emailInput;
-        if (existingUid) data.linkedUid = existingUid; // jangan hapus tautan lama kalau cuma edit field lain
-      }
-    }
     if (id) await setDoc(doc(db,'es_buyers',id), data, {merge:true});
     else await addDoc(collection(db,'es_buyers'), data);
-    buyerOptionsCache = null; // paksa reload daftar mitra di dropdown kons/bio berikutnya
     closeModal('modal-buyer'); loadBuyers();
-  } catch(e) {
-    const msg = e.code==='auth/email-already-in-use'
-      ? 'Email ini sudah terdaftar sebagai akun login. Kosongkan Password lalu simpan ulang untuk menautkan ke akun yang sudah ada.'
-      : e.message;
-    alert('Gagal: '+msg);
-  } finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan'; }
+  } catch(e) { alert('Gagal: '+e.message); } finally { btn.disabled=false; }
+});
+
+// ============================================================
+// AKTIVITAS PJLH (Pembuatan/Perawatan per ES-Seller, tertaut ke Program Konservasi)
+// ============================================================
+let aktivitasNewPhotoFiles = [];   // File baru yang dipilih user, belum diupload
+let aktivitasExistingPhotos = [];  // Foto lama (base64) yang dipertahankan saat edit
+
+function renderAktivitasPhotoPreview() {
+  const wrap = document.getElementById('aktivitas-photo-preview');
+  const fname = document.getElementById('aktivitas-photo-file-name');
+  wrap.innerHTML = '';
+  aktivitasExistingPhotos.forEach((b64, idx) => {
+    wrap.innerHTML += `<div style="position:relative;width:64px;height:64px;"><img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--border-subtle);"><button type="button" onclick="removeAktivitasExistingPhoto(${idx})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:0.6rem;cursor:pointer;">✕</button></div>`;
+  });
+  aktivitasNewPhotoFiles.forEach((file, idx) => {
+    const url = URL.createObjectURL(file);
+    wrap.innerHTML += `<div style="position:relative;width:64px;height:64px;"><img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--lime);"><button type="button" onclick="removeAktivitasNewPhoto(${idx})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:0.6rem;cursor:pointer;">✕</button></div>`;
+  });
+  const total = aktivitasExistingPhotos.length + aktivitasNewPhotoFiles.length;
+  fname.textContent = total > 0 ? `${total} foto siap (${aktivitasNewPhotoFiles.length} baru)` : 'Belum ada file dipilih';
+}
+function removeAktivitasExistingPhoto(idx) { aktivitasExistingPhotos.splice(idx,1); renderAktivitasPhotoPreview(); }
+function removeAktivitasNewPhoto(idx) { aktivitasNewPhotoFiles.splice(idx,1); renderAktivitasPhotoPreview(); }
+window.removeAktivitasExistingPhoto = removeAktivitasExistingPhoto;
+window.removeAktivitasNewPhoto = removeAktivitasNewPhoto;
+document.getElementById('aktivitas-photo-input').addEventListener('change', (e) => {
+  aktivitasNewPhotoFiles.push(...Array.from(e.target.files));
+  e.target.value = '';
+  renderAktivitasPhotoPreview();
+});
+
+// Ambil Lokasi Sekarang — isi otomatis lat/lng dari GPS perangkat
+document.getElementById('ambilGpsBtn').addEventListener('click', () => {
+  if (!navigator.geolocation) { alert('Perangkat/browser ini tidak mendukung GPS.'); return; }
+  const btn = document.getElementById('ambilGpsBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengambil lokasi...';
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      document.getElementById('aktivitas-lat').value = pos.coords.latitude.toFixed(6);
+      document.getElementById('aktivitas-lng').value = pos.coords.longitude.toFixed(6);
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-location-crosshairs"></i> Ambil Lokasi Sekarang';
+    },
+    (err) => {
+      alert('Gagal ambil lokasi: ' + err.message);
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-location-crosshairs"></i> Ambil Lokasi Sekarang';
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+});
+
+// Isi dropdown "Program Konservasi Terkait" dari monitoring_reboisasi, dan
+// "ES-Seller" dari es_sellers. Dipanggil setiap modal dibuka supaya datanya segar.
+async function populateAktivitasDropdowns(selectedKonsId, selectedSellerId) {
+  const konsSel = document.getElementById('aktivitas-linked-konservasi');
+  const sellerSel = document.getElementById('aktivitas-seller');
+  try {
+    const konsSnap = await getDocs(collection(db,'monitoring_reboisasi'));
+    const konsList = konsSnap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(b.year||0)-(a.year||0));
+    konsSel.innerHTML = '<option value="">— Tidak ditautkan —</option>' +
+      konsList.map(k => `<option value="${k.id}" data-title="${(k.title||'Program Konservasi').replace(/"/g,'&quot;')}" ${k.id===selectedKonsId?'selected':''}>${k.year||'—'} · ${k.title||'Program Konservasi'}</option>`).join('');
+  } catch(e) { konsSel.innerHTML = '<option value="">Gagal memuat daftar program</option>'; }
+  try {
+    const sellerSnap = await getDocs(collection(db,'es_sellers'));
+    const sellerList = sellerSnap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(a.nama||'').localeCompare(b.nama||''));
+    sellerSel.innerHTML = '<option value="">— Pilih ES-Seller —</option>' +
+      sellerList.map(s => `<option value="${s.id}" data-nama="${(s.nama||'').replace(/"/g,'&quot;')}" ${s.id===selectedSellerId?'selected':''}>${s.nama||s.id}${s.desa?' · '+s.desa:''}</option>`).join('');
+  } catch(e) { sellerSel.innerHTML = '<option value="">Gagal memuat daftar ES-Seller</option>'; }
+}
+
+async function loadAktivitas() {
+  const wrap = document.getElementById('aktivitas-list');
+  wrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
+  try {
+    const snap = await getDocs(collection(db,'pjlh_aktivitas'));
+    if (snap.empty) { wrap.innerHTML = '<p style="color:var(--text-muted);">Belum ada catatan aktivitas PJLH.</p>'; return; }
+    const filterVal = document.getElementById('filter-aktivitas').value;
+    let items = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    if (filterVal) items = items.filter(a => a.jenisAktivitas === filterVal);
+    items.sort((a,b) => (b.tanggal||'').localeCompare(a.tanggal||''));
+    if (!items.length) { wrap.innerHTML = '<p style="color:var(--text-muted);">Tidak ada data untuk filter ini.</p>'; return; }
+    wrap.innerHTML = '';
+    items.forEach(a => {
+      const jenisBadge = a.jenisAktivitas === 'pembuatan' ? 'badge-lime' : 'badge-blue';
+      const jumlahTxt = `${a.jumlah||0} ${a.satuan||''}`.trim();
+      const gpsTxt = a.koordinat ? `<i class="fas fa-map-marker-alt"></i> ${a.koordinat.latitude.toFixed(5)}, ${a.koordinat.longitude.toFixed(5)}` : `<i class="fas fa-map-marker-alt" style="opacity:0.35;"></i> Titik belum diisi`;
+      const fotoTxt = (a.foto&&a.foto.length) ? `<i class="fas fa-camera"></i> ${a.foto.length} foto` : '';
+      wrap.innerHTML += `
+        <div class="list-card">
+          <div class="list-card-header">
+            <div>
+              <div style="font-weight:700;font-size:0.85rem;color:var(--white);">${a.sellerName||'—'} · ${a.jenisInfra||'—'}</div>
+              <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">${a.konservasiTitle?('Program: '+a.konservasiTitle):'Tidak tertaut ke program'} · ${a.lokasi||'—'} · ${a.tanggal||'—'}</div>
+              <div style="font-size:0.68rem;color:var(--text-muted);margin-top:4px;">${gpsTxt} ${fotoTxt?(' · '+fotoTxt):''}</div>
+              <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
+                <span class="list-badge ${jenisBadge}">${a.jenisAktivitas==='pembuatan'?'Pembuatan':'Perawatan'}</span>
+                <span class="list-badge badge-orange">${jumlahTxt}</span>
+              </div>
+            </div>
+            <div class="list-card-actions">
+              <button class="btn btn-outline btn-sm" onclick="editAktivitas('${a.id}')"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm" onclick="delDoc('pjlh_aktivitas','${a.id}',loadAktivitas)"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        </div>`;
+    });
+  } catch(e) { console.error(e); wrap.innerHTML = '<p style="color:var(--danger);">Gagal memuat data.</p>'; }
+}
+document.getElementById('filter-aktivitas').addEventListener('change', loadAktivitas);
+
+function resetAktivitasForm() {
+  ['aktivitas-id','aktivitas-jumlah','aktivitas-lokasi','aktivitas-tanggal','aktivitas-lat','aktivitas-lng','aktivitas-catatan'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('aktivitas-jenis').value = 'pembuatan';
+  document.getElementById('aktivitas-infra').value = 'rorak';
+  document.getElementById('aktivitas-satuan').value = 'm';
+  aktivitasNewPhotoFiles = []; aktivitasExistingPhotos = [];
+  renderAktivitasPhotoPreview();
+}
+
+async function editAktivitas(id) {
+  const snap = await getDoc(doc(db,'pjlh_aktivitas',id));
+  if (!snap.exists()) return;
+  const a = snap.data();
+  resetAktivitasForm();
+  document.getElementById('aktivitas-id').value = id;
+  document.getElementById('aktivitas-jenis').value = a.jenisAktivitas||'pembuatan';
+  document.getElementById('aktivitas-infra').value = a.jenisInfra||'rorak';
+  document.getElementById('aktivitas-jumlah').value = a.jumlah||'';
+  document.getElementById('aktivitas-satuan').value = a.satuan||'m';
+  document.getElementById('aktivitas-lokasi').value = a.lokasi||'';
+  document.getElementById('aktivitas-tanggal').value = a.tanggal||'';
+  document.getElementById('aktivitas-catatan').value = a.catatan||'';
+  if (a.koordinat) {
+    document.getElementById('aktivitas-lat').value = a.koordinat.latitude;
+    document.getElementById('aktivitas-lng').value = a.koordinat.longitude;
+  }
+  aktivitasExistingPhotos = a.foto ? [...a.foto] : [];
+  renderAktivitasPhotoPreview();
+  await populateAktivitasDropdowns(a.linkedKonservasiId||'', a.sellerId||'');
+  document.getElementById('modal-aktivitas-title').textContent = 'Edit Aktivitas PJLH';
+  openModal('modal-aktivitas');
+}
+window.editAktivitas = editAktivitas;
+
+document.getElementById('addAktivitasBtn').addEventListener('click', async () => {
+  resetAktivitasForm();
+  document.getElementById('aktivitas-tanggal').value = new Date().toISOString().split('T')[0];
+  await populateAktivitasDropdowns('', '');
+  document.getElementById('modal-aktivitas-title').textContent = 'Tambah Aktivitas PJLH';
+  openModal('modal-aktivitas');
+});
+
+document.getElementById('saveAktivitasBtn').addEventListener('click', async () => {
+  const id = document.getElementById('aktivitas-id').value;
+  const konsSel = document.getElementById('aktivitas-linked-konservasi');
+  const sellerSel = document.getElementById('aktivitas-seller');
+  const sellerId = sellerSel.value;
+  if (!sellerId) { alert('ES-Seller wajib dipilih.'); return; }
+  const jumlah = parseFloat(document.getElementById('aktivitas-jumlah').value) || 0;
+  if (jumlah <= 0) { alert('Jumlah wajib diisi.'); return; }
+
+  const lat = parseFloat(document.getElementById('aktivitas-lat').value);
+  const lng = parseFloat(document.getElementById('aktivitas-lng').value);
+
+  const data = {
+    linkedKonservasiId: konsSel.value || '',
+    konservasiTitle: konsSel.value ? (konsSel.options[konsSel.selectedIndex].dataset.title||'') : '',
+    sellerId: sellerId,
+    sellerName: sellerSel.options[sellerSel.selectedIndex].dataset.nama || '',
+    jenisAktivitas: document.getElementById('aktivitas-jenis').value,
+    jenisInfra: document.getElementById('aktivitas-infra').value,
+    jumlah: jumlah,
+    satuan: document.getElementById('aktivitas-satuan').value,
+    lokasi: document.getElementById('aktivitas-lokasi').value.trim(),
+    tanggal: document.getElementById('aktivitas-tanggal').value,
+    catatan: document.getElementById('aktivitas-catatan').value.trim(),
+    koordinat: (!isNaN(lat) && !isNaN(lng) && document.getElementById('aktivitas-lat').value !== '' && document.getElementById('aktivitas-lng').value !== '')
+      ? { latitude: lat, longitude: lng } : null,
+    updatedAt: serverTimestamp()
+  };
+
+  const btn = document.getElementById('saveAktivitasBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+  try {
+    // Kompres foto baru jadi base64 (tanpa Firebase Storage — sama seperti pola
+    // Konservasi/Biodiversitas/Progress Report), gabungkan dengan foto lama.
+    const newPhotosB64 = await kompresFotoList(aktivitasNewPhotoFiles, (cur,total) => {
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mengompres foto ${cur}/${total}...`;
+    });
+    data.foto = [...aktivitasExistingPhotos, ...newPhotosB64];
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan data...';
+    if (id) {
+      await setDoc(doc(db,'pjlh_aktivitas',id), data, {merge:true});
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db,'pjlh_aktivitas'), data);
+    }
+    closeModal('modal-aktivitas');
+    loadAktivitas();
+  } catch(e) { alert('Gagal menyimpan: '+e.message); } finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan'; }
 });
 
 // ============================================================
@@ -2719,17 +2829,12 @@ document.getElementById('saveTimBtn').addEventListener('click', async () => {
   const pw=document.getElementById('tim-password').value;
   const jabatan=document.getElementById('tim-jabatan').value.trim();
   if (!nama||!email||!pw) { alert('Nama, email, dan password wajib diisi.'); return; }
-  if (pw.length < 6) { alert('Password minimal 6 karakter.'); return; }
   const btn=document.getElementById('saveTimBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
   try {
-    const uid = await createLoginAccount(nama, email, pw, 'tim');
-    await setDoc(doc(db,'tim_accounts',uid), { nama, email, jabatan, createdAt: new Date().toISOString() });
+    const cred = await createUserWithEmailAndPassword(auth, email, pw);
+    await setDoc(doc(db,'tim_accounts',cred.user.uid), { nama, email, jabatan, createdAt: new Date().toISOString() });
     closeModal('modal-tim'); loadTim();
-    alert('Akun tim berhasil dibuat. Mitra bisa langsung login dengan email & password tersebut.');
-  } catch(e) {
-    const msg = e.code==='auth/email-already-in-use' ? 'Email ini sudah terdaftar sebagai akun login.' : e.message;
-    alert('Gagal buat akun: '+msg);
-  }
+  } catch(e) { alert('Gagal buat akun: '+e.message); }
   finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Buat Akun'; }
 });
 
@@ -2942,7 +3047,7 @@ async function loadProgress() {
               ${fotoRow}
             </div>
             <div class="list-card-actions">
-              <button class="btn btn-outline btn-sm" onclick="bukaDetailProgress('${r.id}')"><i class="fas fa-edit"></i> Lihat / Edit</button>
+              <button class="btn btn-outline btn-sm" onclick="bukaDetailProgress('${r.id}')"><i class="fas fa-eye"></i> Detail</button>
               <button class="btn btn-danger btn-sm" onclick="delDoc('progress_reports','${r.id}',loadProgress)"><i class="fas fa-trash"></i></button>
             </div>
           </div>
@@ -2969,17 +3074,7 @@ function bukaDetailProgress(id) {
   else if (r.jenis==='pjlh') ctx = `<i class="fas fa-map-marker-alt" style="color:var(--lime);margin-right:6px;"></i>Lokasi PJLH: ${r.pjlhLokasi||'—'}${r.rekomendasi?`<br><i class="fas fa-comment-dots" style="color:var(--lime);margin-right:6px;"></i>Rekomendasi: ${r.rekomendasi}`:''}`;
   document.getElementById('pd-context').innerHTML = ctx;
 
-  // Judul hanya bisa diedit bebas untuk jenis "lain" — untuk Program/PJLH judul
-  // mengikuti nama target/lokasi supaya tetap konsisten dengan data terkait.
-  const judulWrap = document.getElementById('pd-judul-wrap');
-  if (r.jenis === 'lain') {
-    judulWrap.style.display = 'block';
-    document.getElementById('pd-judul-input').value = r.judul || '';
-  } else {
-    judulWrap.style.display = 'none';
-  }
-  document.getElementById('pd-tanggal-input').value = r.tanggal || '';
-  document.getElementById('pd-deskripsi-input').value = r.deskripsi || '';
+  document.getElementById('pd-deskripsi').textContent = r.deskripsi || '—';
 
   const fotoWrap = document.getElementById('pd-foto-wrap');
   fotoWrap.innerHTML = (r.foto&&r.foto.length)
@@ -3000,34 +3095,16 @@ window.bukaDetailProgress = bukaDetailProgress;
 document.getElementById('pd-save-btn').addEventListener('click', async () => {
   const id = document.getElementById('pd-save-btn').dataset.id;
   if (!id) return;
-  if (!auth.currentUser) {
-    alert('Sesi login Anda sudah berakhir/terputus. Silakan klik "Keluar", login ulang, lalu coba simpan lagi.');
-    return;
-  }
-  const r = daftarProgressLoaded.find(x => x.id === id);
-  const tanggal   = document.getElementById('pd-tanggal-input').value;
-  const deskripsi = document.getElementById('pd-deskripsi-input').value.trim();
-  if (!tanggal)   { alert('Tanggal kegiatan wajib diisi.'); return; }
-  if (!deskripsi) { alert('Deskripsi kegiatan wajib diisi.'); return; }
-
   const btn = document.getElementById('pd-save-btn');
   btn.disabled = true;
   try {
-    const updateData = {
+    await updateDoc(doc(db,'progress_reports',id), {
       status: document.getElementById('pd-status-select').value,
-      catatanAdmin: document.getElementById('pd-catatan').value.trim(),
-      tanggal: tanggal,
-      deskripsi: deskripsi
-    };
-    if (r && r.jenis === 'lain') {
-      const judulBaru = document.getElementById('pd-judul-input').value.trim();
-      if (!judulBaru) { alert('Judul kegiatan wajib diisi.'); btn.disabled=false; return; }
-      updateData.judul = judulBaru;
-    }
-    await updateDoc(doc(db,'progress_reports',id), updateData);
+      catatanAdmin: document.getElementById('pd-catatan').value.trim()
+    });
     closeModal('modal-progress-detail');
     loadProgress();
-  } catch(e) { alert('Gagal menyimpan perubahan: '+e.message); }
+  } catch(e) { alert('Gagal simpan status: '+e.message); }
   finally { btn.disabled = false; }
 });
 
