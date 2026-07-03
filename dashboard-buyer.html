@@ -154,7 +154,27 @@ input, textarea, select { font-family: var(--body); }
 .act-title { font-size: 0.78rem; font-weight: 600; color: var(--parchment); }
 .act-meta  { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
 
-/* Kartu navigasi cepat di Beranda: Konservasi / Biodiversitas / PJLH */
+/* Analisis Infiltrasi Air — kartu ringkasan PJLH */
+.infil-card { background: var(--surface); border: 1px solid var(--border-s); border-radius: var(--r); padding: 16px; margin-bottom: 12px; }
+.water-badge { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 14px; margin-bottom: 14px; background: rgba(0,198,255,0.06); border: 1px solid rgba(0,198,255,0.2); border-radius: 12px; }
+.water-badge i { font-size: 1.6rem; color: #00c6ff; margin-bottom: 6px; }
+.water-badge .total-num { font-family: var(--display); font-size: 1.8rem; font-weight: 900; color: #fff; }
+.water-badge .total-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 2px; }
+.formula-table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
+.formula-table thead th { text-align: left; padding: 8px 6px; color: var(--muted); font-weight: 700; text-transform: uppercase; font-size: 0.56rem; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-s); }
+.formula-table thead th.text-end, .formula-table td.text-end { text-align: right; }
+.formula-table tbody td { padding: 9px 6px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--sub); }
+.formula-table tbody td:first-child { color: #fff; font-weight: 600; }
+.formula-table tbody td.text-end { color: #00c6ff; font-weight: 700; }
+
+/* List rincian per aktivitas PJLH */
+.pjlh-akt-item { background: var(--surface); border: 1px solid var(--border-s); border-radius: var(--r); padding: 12px 14px; margin-bottom: 8px; }
+.pjlh-akt-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.pjlh-akt-name { font-weight: 700; font-size: 0.78rem; color: #fff; }
+.pjlh-akt-meta { font-size: 0.62rem; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+.pjlh-akt-badge { font-size: 0.56rem; padding: 3px 8px; border-radius: 50px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+.pjlh-akt-badge.pembuatan { background: rgba(0,255,136,0.12); color: #00ff88; border: 1px solid rgba(0,255,136,0.25); }
+.pjlh-akt-badge.perawatan { background: rgba(0,198,255,0.12); color: #00c6ff; border: 1px solid rgba(0,198,255,0.25); }
 .quicknav-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
 .quicknav-card {
   background: var(--surface); border: 1px solid var(--border-s); border-radius: var(--r);
@@ -405,14 +425,40 @@ input, textarea, select { font-family: var(--body); }
       <h2>Lanjutkan Dampak Konservasi Anda Lewat PJLH</h2>
       <p>Setiap rorak dan sumur resapan yang didanai tercatat lengkap dengan titik GPS, foto lapangan, dan proses validasi Admin — sehingga dampaknya bisa dipertanggungjawabkan secara transparan.</p>
     </div>
-    <div class="section-head"><h3>Rekam Jejak Program PJLH</h3></div>
+    <div class="section-head"><h3>Rekam Jejak Program PJLH Anda</h3></div>
     <div class="track-record-row">
       <div class="tr-card"><div class="tr-val" id="pjlh-desa">—</div><div class="tr-lbl">Desa / Lokasi Terlibat</div></div>
       <div class="tr-card"><div class="tr-val" id="pjlh-titik">—</div><div class="tr-lbl">Titik Rorak &amp; Sumur Tervalidasi</div></div>
       <div class="tr-card"><div class="tr-val" id="pjlh-air">—</div><div class="tr-lbl">m³ Estimasi Serapan Air / Tahun</div></div>
-      <div class="tr-card"><div class="tr-val" id="pjlh-mou">—</div><div class="tr-lbl">Kesepakatan MOU Aktif</div></div>
+      <div class="tr-card"><div class="tr-val" id="pjlh-seller">—</div><div class="tr-lbl">ES-Seller Terlibat</div></div>
     </div>
-    <div class="section-head"><h3>Alur Validasi Setiap Titik</h3></div>
+
+    <div class="section-head" style="margin-top:20px;"><h3>Pembuatan vs Perawatan</h3></div>
+    <div class="track-record-row" style="grid-template-columns:repeat(2,1fr);">
+      <div class="tr-card" style="border-color:rgba(0,255,136,0.25);"><div class="tr-val" id="pjlh-pembuatan" style="color:#00ff88;">—</div><div class="tr-lbl">Titik Pembuatan Baru</div></div>
+      <div class="tr-card" style="border-color:rgba(0,198,255,0.25);"><div class="tr-val" id="pjlh-perawatan" style="color:#00c6ff;">—</div><div class="tr-lbl">Titik Perawatan</div></div>
+    </div>
+
+    <div class="section-head" style="margin-top:20px;"><h3>Analisis Infiltrasi Air (Kumulatif Aktivitas PJLH)</h3></div>
+    <div class="infil-card" id="pjlhInfilCard" style="display:none;">
+      <div class="water-badge">
+        <i class="fas fa-water"></i>
+        <span class="total-num" id="pjlh-total-water">—</span>
+        <span class="total-label">Estimasi Total Infiltrasi</span>
+        <span style="font-size:0.6rem;opacity:0.65;margin-top:2px;">m³ / Tahun (kumulatif titik PJLH)</span>
+      </div>
+      <table class="formula-table">
+        <thead><tr><th>Item</th><th class="text-end">Estimasi (m³/Thn)</th></tr></thead>
+        <tbody id="pjlhFormulaBody"></tbody>
+      </table>
+      <p style="font-size:0.62rem;color:var(--muted);margin-top:10px;line-height:1.6;">Dihitung dari titik yang tercatat lewat skema PJLH saja (bukan seluruh Program Konservasi), memakai rumus hidrologi yang sama dengan detail Konservasi.</p>
+    </div>
+    <div class="empty-state" id="pjlhInfilEmpty"><i class="fas fa-inbox"></i><p>Belum ada aktivitas PJLH tercatat untuk program Anda.</p></div>
+
+    <div class="section-head" style="margin-top:20px;"><h3>Rincian per Aktivitas</h3></div>
+    <div id="pjlhAktivitasList"></div>
+
+    <div class="section-head" style="margin-top:8px;"><h3>Alur Validasi Setiap Titik</h3></div>
     <div class="activity-list">
       <div class="activity-item"><div class="act-icon lime"><i class="fas fa-map-marker-alt"></i></div><div class="act-body"><div class="act-title">1. Penerima manfaat mendaftarkan titik</div><div class="act-meta">GPS, dimensi, dan foto lapangan direkam langsung oleh penerima (ES-Seller).</div></div></div>
       <div class="activity-item"><div class="act-icon cyan"><i class="fas fa-user-check"></i></div><div class="act-body"><div class="act-title">2. Tim &amp; Admin memverifikasi</div><div class="act-meta">Data ditinjau, dicek lapangan bila perlu, lalu disetujui secara resmi.</div></div></div>
@@ -542,7 +588,7 @@ async function showApp() {
     renderBeranda();
     renderProfil();
   }
-  renderPJLHPitch();
+  renderPJLHBuyerData();
 }
 
 // ── MODE ADMIN: isi dropdown semua mitra ES-Buyer, biarkan admin pilih yang mau dilihat ──
@@ -554,11 +600,11 @@ async function populateAdminBuyerPicker() {
     sel.innerHTML = '<option value="">-- Pilih mitra ES-Buyer --</option>' +
       list.map(b => `<option value="${b.id}">${b.nama || b.id}${b.linkedUid?'':' (belum tertaut akun)'}</option>`).join('');
     sel.onchange = async () => {
-      if (!sel.value) { buyerDoc = null; konsData=[]; bioData=[]; renderBeranda(); renderProfil(); renderKonsYearTabs(); renderKonsList(); renderBioYearTabs(); renderBioList(); return; }
+      if (!sel.value) { buyerDoc = null; konsData=[]; bioData=[]; renderBeranda(); renderProfil(); renderKonsYearTabs(); renderKonsList(); renderBioYearTabs(); renderBioList(); renderPJLHBuyerData(); return; }
       const bSnap = list.find(b=>b.id===sel.value);
       buyerDoc = bSnap ? {...bSnap} : null;
       await loadKonsBio();
-      renderBeranda(); renderProfil(); renderKonsYearTabs(); renderKonsList(); renderBioYearTabs(); renderBioList();
+      renderBeranda(); renderProfil(); renderKonsYearTabs(); renderKonsList(); renderBioYearTabs(); renderBioList(); renderPJLHBuyerData();
     };
   } catch(e) { console.error('Gagal muat daftar mitra', e); sel.innerHTML = '<option value="">Gagal memuat daftar mitra</option>'; }
 }
@@ -689,25 +735,98 @@ function renderBioList() {
   }).join('');
 }
 
-// ── TAWARAN PJLH (portofolio umum, tidak spesifik per mitra) ──
-async function renderPJLHPitch() {
+// ── REKAM JEJAK PJLH MITRA — ditarik dari pjlh_aktivitas yang tertaut ke
+// Program Konservasi milik mitra ini (bukan koleksi terpisah), supaya datanya
+// selalu konsisten dengan Konservasi. ──
+async function renderPJLHBuyerData() {
+  const infilCard  = document.getElementById('pjlhInfilCard');
+  const infilEmpty = document.getElementById('pjlhInfilEmpty');
+  const listWrap    = document.getElementById('pjlhAktivitasList');
+  ['pjlh-desa','pjlh-titik','pjlh-air','pjlh-seller','pjlh-pembuatan','pjlh-perawatan'].forEach(id=>document.getElementById(id).textContent='—');
+  infilCard.style.display = 'none'; infilEmpty.style.display = 'block';
+  listWrap.innerHTML = '';
+
+  if (!buyerDoc || !konsData.length) return;
+
   try {
-    const snap = await getDocs(query(collection(db,'pengajuan_pjlh'), where('status','in',['approved','mou'])));
-    const docs = snap.docs.map(d => d.data());
-    const desaSet = new Set(docs.map(d => d.lokasi || d.location).filter(Boolean));
-    let totalTitik = 0, totalSerapan = 0, totalMou = 0;
-    docs.forEach(d => {
-      totalTitik   += (d.jumlahRorak||0) + (d.jumlahSumur||0);
-      totalSerapan += (d.serapanM3||0);
-      if (d.status === 'mou') totalMou++;
+    // Firestore 'in' dibatasi maksimal 10 nilai per query — pecah jadi beberapa
+    // batch kalau program mitra ini lebih dari 10.
+    const konsIds = konsData.map(d => d.id);
+    const chunks = [];
+    for (let i=0; i<konsIds.length; i+=10) chunks.push(konsIds.slice(i, i+10));
+
+    let items = [];
+    for (const chunk of chunks) {
+      const snap = await getDocs(query(collection(db,'pjlh_aktivitas'), where('linkedKonservasiId','in',chunk)));
+      items.push(...snap.docs.map(d=>({id:d.id, ...d.data()})));
+    }
+
+    if (!items.length) return;
+
+    // ── Agregasi ──
+    const desaSet = new Set(items.map(a=>a.lokasi).filter(Boolean));
+    const sellerSet = new Set(items.map(a=>a.sellerId).filter(Boolean));
+    let totalTitik = 0, totalPembuatan = 0, totalPerawatan = 0;
+    let sumRorak = 0, sumSumur = 0, sumBiopori = 0, sumTanaman = 0;
+    items.forEach(a => {
+      const j = a.jumlah || 0;
+      if (a.jenisInfra === 'rorak' || a.jenisInfra === 'sumur') totalTitik += j;
+      if (a.jenisAktivitas === 'pembuatan') totalPembuatan += j; else totalPerawatan += j;
+      if (a.jenisInfra === 'rorak')   sumRorak   += j;
+      if (a.jenisInfra === 'sumur')   sumSumur   += j;
+      if (a.jenisInfra === 'biopori') sumBiopori += j;
+      if (a.jenisInfra === 'tanaman') sumTanaman += j;
     });
-    document.getElementById('pjlh-desa').textContent  = desaSet.size || '—';
-    document.getElementById('pjlh-titik').textContent = totalTitik.toLocaleString('id-ID');
-    document.getElementById('pjlh-air').textContent   = Math.round(totalSerapan).toLocaleString('id-ID');
-    document.getElementById('pjlh-mou').textContent   = totalMou;
+
+    document.getElementById('pjlh-desa').textContent   = desaSet.size || '—';
+    document.getElementById('pjlh-titik').textContent  = totalTitik.toLocaleString('id-ID');
+    document.getElementById('pjlh-seller').textContent = sellerSet.size || '—';
+    document.getElementById('pjlh-pembuatan').textContent = totalPembuatan.toLocaleString('id-ID');
+    document.getElementById('pjlh-perawatan').textContent = totalPerawatan.toLocaleString('id-ID');
+
+    // ── Analisis Infiltrasi Air — rumus sama persis dengan detail Konservasi ──
+    const VWB = 0.02495, TIME = 31.536, RAIN = 163;
+    const resP = (sumTanaman / 400) * VWB * TIME * 0.75;
+    const resR = (sumRorak   * 490 * 3 * RAIN) / 1000000;
+    const resS = (sumSumur   * 754 * 3 * RAIN) / 1000000;
+    const resB = (sumBiopori / 300) * 1.5;
+    const total = resP + resR + resS + resB;
+
+    document.getElementById('pjlh-air').textContent = total.toFixed(1);
+    document.getElementById('pjlh-total-water').textContent = total.toFixed(2);
+
+    const rows = [
+      { item:'Pohon / Vegetasi (PJLH)', val:resP },
+      { item:'Rorak (PJLH)',            val:resR },
+      { item:'Sumur Resapan (PJLH)',    val:resS },
+      { item:'Biopori (PJLH)',          val:resB }
+    ].filter(r => r.val > 0);
+    const tbody = document.getElementById('pjlhFormulaBody');
+    tbody.innerHTML = rows.map(r => `<tr><td>${r.item}</td><td class="text-end">${r.val.toFixed(2)}</td></tr>`).join('');
+
+    if (rows.length) { infilCard.style.display = 'block'; infilEmpty.style.display = 'none'; }
+
+    // ── Rincian per aktivitas (transparansi ke penerima manfaat) ──
+    items.sort((a,b) => (b.tanggal||'').localeCompare(a.tanggal||''));
+    listWrap.innerHTML = items.map(a => {
+      const jumlahTxt = `${a.jumlah||0} ${a.satuan||''}`.trim();
+      const fotoTxt = (a.foto && a.foto.length) ? `<i class="fas fa-camera"></i> ${a.foto.length} foto` : '';
+      const gpsTxt  = a.koordinat ? `<i class="fas fa-map-marker-alt"></i> Titik GPS ada` : '';
+      return `
+      <div class="pjlh-akt-item">
+        <div class="pjlh-akt-top">
+          <div>
+            <div class="pjlh-akt-name">${a.sellerName||'—'} · ${a.jenisInfra||'—'}</div>
+            <div class="pjlh-akt-meta">${a.lokasi||'—'} · ${a.tanggal||'—'} · ${jumlahTxt}</div>
+            <div class="pjlh-akt-meta">${[gpsTxt,fotoTxt].filter(Boolean).join(' · ')}</div>
+          </div>
+          <span class="pjlh-akt-badge ${a.jenisAktivitas}">${a.jenisAktivitas==='pembuatan'?'Pembuatan':'Perawatan'}</span>
+        </div>
+      </div>`;
+    }).join('');
+
   } catch(e) {
-    console.error('Gagal ambil rekam jejak PJLH', e);
-    ['pjlh-desa','pjlh-titik','pjlh-air','pjlh-mou'].forEach(id=>document.getElementById(id).textContent='—');
+    console.error('Gagal ambil data PJLH mitra', e);
   }
 }
 
