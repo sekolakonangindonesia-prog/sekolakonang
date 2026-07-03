@@ -322,7 +322,7 @@ input, textarea, select { font-family: var(--body); }
   </div>
 
   <!-- ── BERANDA ── -->
-  <div class="panel" id="panel-beranda">
+  <div class="panel active" id="panel-beranda">
     <div class="page-header">
       <div class="page-label">Selamat Datang</div>
       <div class="page-title" id="greetName">—</div>
@@ -344,7 +344,7 @@ input, textarea, select { font-family: var(--body); }
   </div>
 
   <!-- ── KONSERVASI ── -->
-  <div class="panel active" id="panel-konservasi">
+  <div class="panel" id="panel-konservasi">
     <div class="page-header">
       <div class="page-label">Riwayat & Progress</div>
       <div class="page-title">Program Konservasi</div>
@@ -431,9 +431,11 @@ input, textarea, select { font-family: var(--body); }
 
 <!-- TAB BAR -->
 <div class="tab-bar" id="tabBar" style="display:none;">
-  <div class="tab-item active" id="tab-konservasi" onclick="switchTab('konservasi')"><i class="fas fa-seedling"></i><span>Konservasi</span></div>
+  <div class="tab-item active" id="tab-beranda" onclick="switchTab('beranda')"><i class="fas fa-home"></i><span>Beranda</span></div>
+  <div class="tab-item" id="tab-konservasi" onclick="switchTab('konservasi')"><i class="fas fa-seedling"></i><span>Konservasi</span></div>
   <div class="tab-item" id="tab-bio" onclick="switchTab('bio')"><i class="fas fa-dove"></i><span>Biodiversitas</span></div>
   <div class="tab-item" id="tab-pjlh" onclick="switchTab('pjlh')"><i class="fas fa-handshake"></i><span>PJLH</span></div>
+  <div class="tab-item" id="tab-profil" onclick="switchTab('profil')"><i class="fas fa-user"></i><span>Profil</span></div>
 </div>
 
 <!-- TOAST -->
