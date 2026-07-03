@@ -45,11 +45,11 @@
   .nav-back { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--lime); padding: 10px 20px; border: 1px solid var(--border); border-radius: 50px; transition: 0.2s; }
   .nav-back:hover { background: var(--lime); color: var(--black); }
 
-  /* ── HERO ── */
+  /* ── HERO — tinggi dipersingkat, mirip konservasi.html (bukan full-screen) ── */
   .hero {
-    min-height: 100svh;
+    min-height: 52svh;
     display: flex; flex-direction: column; justify-content: flex-end;
-    padding: 64px 0 0;
+    padding: 80px 0 40px;
     position: relative; overflow: hidden;
   }
   .hero-bg {
@@ -79,15 +79,39 @@
   .hero-eyebrow::before { content: ''; width: 36px; height: 2px; background: var(--lime); }
   .hero-title { font-family: var(--display); font-size: clamp(2.4rem, 6vw, 5rem); font-weight: 900; line-height: 1.05; color: #fff; letter-spacing: -1px; margin-bottom: 24px; max-width: 780px; }
   .hero-title em { font-style: normal; color: var(--lime); }
-  .hero-desc { font-size: 0.95rem; line-height: 1.8; color: var(--muted); max-width: 540px; margin-bottom: 48px; }
+  .hero-desc { font-size: 0.95rem; line-height: 1.8; color: var(--muted); max-width: 540px; margin-bottom: 0; }
 
-  /* ── STAT ROW ── */
-  .hero-stats { display: flex; gap: 0; border-top: 1px solid var(--border); padding-top: 36px; flex-wrap: wrap; }
-  .stat-item { flex: 1; min-width: 160px; padding: 0 32px 0 0; border-right: 1px solid var(--border); }
-  .stat-item:last-child { border-right: none; padding-right: 0; padding-left: 32px; }
-  .stat-item:first-child { padding-left: 0; }
-  .stat-num { font-family: var(--display); font-size: 2.4rem; font-weight: 900; color: var(--lime); line-height: 1; }
-  .stat-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-top: 6px; }
+  /* ── STAT CARDS — mengambang di bawah hero, sama persis konservasi.html ── */
+  .stats-row-wrap { padding: 0 5%; position: relative; z-index: 2; }
+  .stats-row {
+    max-width: 1100px; margin: -28px auto 0;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+  .stat-card {
+    background: var(--canopy); border: 1px solid var(--border);
+    border-radius: var(--r-md); padding: 16px 10px; text-align: center;
+    position: relative; overflow: hidden; transition: 0.3s;
+  }
+  .stat-card:hover { transform: translateY(-5px); }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 2px; border-radius: var(--r-md) var(--r-md) 0 0;
+  }
+  .stat-card.c-green::before  { background: linear-gradient(90deg,transparent,#00ff88,transparent); }
+  .stat-card.c-blue::before   { background: linear-gradient(90deg,transparent,#00c6ff,transparent); }
+  .stat-card.c-lime::before   { background: linear-gradient(90deg,transparent,var(--lime),transparent); }
+  .stat-card.c-orange::before { background: linear-gradient(90deg,transparent,#ff8c00,transparent); }
+  .stat-card.c-green:hover  { border-color: #00ff88; }
+  .stat-card.c-blue:hover   { border-color: #00c6ff; }
+  .stat-card.c-lime:hover   { border-color: var(--lime); }
+  .stat-card.c-orange:hover { border-color: #ff8c00; }
+  .stat-card i { font-size: 1.4rem; margin-bottom: 10px; display: block; }
+  .stat-card.c-green  i { color: #00ff88; }
+  .stat-card.c-blue   i { color: #00c6ff; }
+  .stat-card.c-lime   i { color: var(--lime); }
+  .stat-card.c-orange i { color: #ff8c00; }
+  .stat-card .stat-num { font-family: var(--display); font-size: 1.6rem; font-weight: 900; color: #fff; line-height: 1; display: block; }
+  .stat-card .stat-label { font-size: 0.56rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 6px; display: block; }
 
   /* ── SCROLL HINT ── */
   .scroll-hint { position: absolute; bottom: 90px; right: 5%; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); font-size: 0.55rem; letter-spacing: 2px; text-transform: uppercase; }
@@ -214,12 +238,14 @@
     .flow-grid { grid-template-columns: 1fr; }
     .narasi-grid { grid-template-columns: 1fr; gap: 36px; }
     .narasi-visual img { height: 280px; }
-    .hero-stats { gap: 20px; }
-    .stat-item { border-right: none; border-bottom: 1px solid var(--border); padding: 0 0 20px; }
-    .stat-item:last-child { border-bottom: none; }
+    .stats-row { grid-template-columns: repeat(2,1fr); margin-top: -18px; gap: 8px; }
+    .stat-card { padding: 12px 6px; }
+    .stat-card i { font-size: 1.1rem; margin-bottom: 7px; }
+    .stat-card .stat-num { font-size: 1.3rem; }
     .cta-box { flex-direction: column; padding: 36px 24px; }
     .section { padding: 60px 5%; }
-    .hero-content { padding: 40px 5% 50px; }
+    .hero-content { padding: 40px 5% 30px; }
+    .hero { min-height: 46svh; padding: 68px 0 30px; }
     .scroll-hint { display: none; }
   }
 
@@ -351,30 +377,34 @@
     <p class="hero-desc">
       Model inovatif konservasi sumberdaya air lestari berbasis kolaborasi investasi terukur — menghimpun Dana Konservasi melalui skema Imbal Jasa Lingkungan (PES) bersama mitra swasta dan pemerintah di DAS Rejoso, Probolinggo.
     </p>
-    <div class="hero-stats">
-      <div class="stat-item">
-        <div class="stat-num">3.6</div>
-        <div class="stat-label">Rejoso Biodiversity Index</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">1,2 Jt m³</div>
-        <div class="stat-label">Water Conservation Funds</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">55 Ha</div>
-        <div class="stat-label">Sebaran Penanaman</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">62.773</div>
-        <div class="stat-label">Ha DAS Rejoso</div>
-      </div>
-    </div>
-  </div>
-  <div class="scroll-hint">
-    <div class="scroll-line"></div>
-    <span>Scroll</span>
   </div>
 </section>
+
+<!-- STAT CARDS — mengambang di bawah hero, sama persis konservasi.html -->
+<div class="stats-row-wrap">
+  <div class="stats-row reveal">
+    <div class="stat-card c-green">
+      <i class="fas fa-dna"></i>
+      <span class="stat-num">3.6</span>
+      <span class="stat-label">Rejoso Biodiversity Index</span>
+    </div>
+    <div class="stat-card c-blue">
+      <i class="fas fa-tint"></i>
+      <span class="stat-num">1,2 Jt m³</span>
+      <span class="stat-label">Water Conservation Funds</span>
+    </div>
+    <div class="stat-card c-lime">
+      <i class="fas fa-seedling"></i>
+      <span class="stat-num">55 Ha</span>
+      <span class="stat-label">Sebaran Penanaman</span>
+    </div>
+    <div class="stat-card c-orange">
+      <i class="fas fa-map"></i>
+      <span class="stat-num">62.773</span>
+      <span class="stat-label">Ha DAS Rejoso</span>
+    </div>
+  </div>
+</div>
 
 <!-- CAPAIAN -->
 <section class="section capaian-section">
