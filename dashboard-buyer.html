@@ -154,6 +154,16 @@ input, textarea, select { font-family: var(--body); }
 .act-title { font-size: 0.78rem; font-weight: 600; color: var(--parchment); }
 .act-meta  { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
 
+/* Kartu navigasi cepat di Beranda: Konservasi / Biodiversitas / PJLH */
+.quicknav-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.quicknav-card {
+  background: var(--surface); border: 1px solid var(--border-s); border-radius: var(--r);
+  padding: 18px 8px; text-align: center; cursor: pointer; transition: 0.2s;
+}
+.quicknav-card:hover, .quicknav-card:active { border-color: var(--lime); background: var(--lime-dim); }
+.quicknav-card i { display: block; font-size: 1.3rem; color: var(--lime); margin-bottom: 8px; }
+.quicknav-card span { font-size: 0.68rem; font-weight: 700; color: #fff; letter-spacing: 0.2px; }
+
 /* List Konservasi/Biodiversitas: 2 kartu per baris supaya tidak terlalu lebar */
 #konsList, #bioList { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
 #konsList .empty-state, #bioList .empty-state,
@@ -335,11 +345,29 @@ input, textarea, select { font-family: var(--body); }
       <div class="stat-card orange"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-val" id="stat-tahun">—</div><div class="stat-lbl">Tahun Kemitraan</div></div>
     </div>
     <div class="section-head">
-      <h3>Aktivitas Terekam</h3>
-      <button class="btn-text" onclick="switchTab('konservasi')">Lihat semua →</button>
+      <h3>Riwayat Program</h3>
     </div>
-    <div class="activity-list" id="activityList">
-      <div class="loading-spinner"><div class="spinner"></div><span>Memuat data...</span></div>
+    <div class="quicknav-row">
+      <div class="quicknav-card" onclick="switchTab('konservasi')">
+        <i class="fas fa-seedling"></i>
+        <span>Konservasi</span>
+      </div>
+      <div class="quicknav-card" onclick="switchTab('bio')">
+        <i class="fas fa-dove"></i>
+        <span>Biodiversitas</span>
+      </div>
+      <div class="quicknav-card" onclick="switchTab('pjlh')">
+        <i class="fas fa-handshake"></i>
+        <span>PJLH</span>
+      </div>
+    </div>
+
+    <div class="section-head" style="margin-top:24px;">
+      <h3>Progress Report</h3>
+    </div>
+    <div class="empty-state">
+      <i class="fas fa-hourglass-half"></i>
+      <p>Laporan progres program yang sedang berjalan akan tampil di sini. Fitur ini sedang disiapkan.</p>
     </div>
   </div>
 
@@ -569,29 +597,6 @@ function renderBeranda() {
   document.getElementById('stat-air').textContent      = (totalRorakSumur * 1).toLocaleString('id-ID'); // placeholder proporsional, admin bisa sesuaikan rumus
   document.getElementById('stat-spesies').textContent  = totalSpesies.toLocaleString('id-ID');
   document.getElementById('stat-tahun').textContent    = tahunKemitraan;
-
-  const wrap = document.getElementById('activityList');
-  if (!buyerDoc) {
-    wrap.innerHTML = emptyBelumTertaut();
-    return;
-  }
-  const items = [
-    ...konsData.map(d => ({ type:'kons', year:d.year, title:d.title||'Program Konservasi', loc:d.location })),
-    ...bioData.map(d => ({ type:'bio', year:d.year, title:'Monitoring Biodiversitas', loc:d.location }))
-  ].sort((a,b)=> (parseInt(b.year)||0)-(parseInt(a.year)||0)).slice(0,6);
-
-  if (!items.length) {
-    wrap.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p>Belum ada data program yang tercatat untuk mitra ini.<br>Hubungi Admin bila Anda merasa ada program yang belum tertaut.</p></div>`;
-    return;
-  }
-  wrap.innerHTML = items.map(it => `
-    <div class="activity-item">
-      <div class="act-icon ${it.type==='kons'?'lime':'cyan'}"><i class="fas fa-${it.type==='kons'?'seedling':'dove'}"></i></div>
-      <div class="act-body">
-        <div class="act-title">${it.title}</div>
-        <div class="act-meta">${it.year} · ${it.loc||'—'}</div>
-      </div>
-    </div>`).join('');
 }
 
 function emptyBelumTertaut() {
