@@ -916,7 +916,7 @@ input,textarea,select{font-family:var(--body);}
       <div class="file-name" id="aktivitas-photo-file-name">Belum ada file dipilih</div>
     </div>
     <input type="file" id="aktivitas-photo-input" accept="image/*" multiple style="display:none">
-    <div class="form-hint">Foto otomatis dikompres lalu disimpan langsung di database. Disarankan maksimal 6-8 foto per aktivitas.</div>
+    <div class="form-hint">Foto otomatis dikompres lalu disimpan langsung di database. Disarankan maksimal 4-5 foto per aktivitas (limit teknis 1 dokumen database).</div>
     <div id="aktivitas-photo-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
 
     <div class="modal-actions">
@@ -1838,14 +1838,15 @@ function kompresFotoKons(file, maxPx = 800, targetKB = 150) {
 // Kompres array file foto jadi base64, kembalikan array data-URL.
 // onProgress(current, total, label) dipanggil di setiap langkah supaya UI bisa kasih feedback.
 // Reusable untuk Konservasi maupun Biodiversitas — keduanya kirim array file-nya sendiri.
-async function kompresFotoList(fileList, onProgress) {
+async function kompresFotoList(fileList, onProgress, opts = {}) {
+  const { maxPx = 800, targetKB = 150 } = opts;
   const results = [];
   const total = fileList.length;
   for (let i = 0; i < total; i++) {
     const file = fileList[i];
     try {
       if (onProgress) onProgress(i+1, total, 'Mengompres');
-      const b64 = await kompresFotoKons(file);
+      const b64 = await kompresFotoKons(file, maxPx, targetKB);
       results.push(b64);
     } catch (errOne) {
       console.error('Gagal proses foto', file.name, errOne);
@@ -1854,6 +1855,16 @@ async function kompresFotoList(fileList, onProgress) {
   }
   return results;
 }
+
+// Perkiraan ukuran (bytes) field `foto` (array string base64) di dalam sebuah dokumen.
+// String base64 disimpan apa adanya di Firestore, jadi panjang string ≈ ukuran bytes-nya
+// (beda dengan kompresFotoKons yang menghitung ukuran BINER hasil decode).
+function estimasiUkuranFotoArray(fotoArr) {
+  return (fotoArr || []).reduce((sum, s) => sum + (s ? s.length : 0), 0);
+}
+// Batas aman jauh di bawah limit keras Firestore (1.048.576 bytes/dokumen), supaya
+// masih ada ruang untuk field lain (teks, timestamp, dsb) + margin jaga-jaga.
+const FIRESTORE_DOC_SAFE_LIMIT = 900000;
 async function uploadKonsPhotos(docId, onProgress) {
   return kompresFotoList(konsNewPhotoFiles, onProgress);
 }
@@ -2777,10 +2788,22 @@ document.getElementById('saveAktivitasBtn').addEventListener('click', async () =
   try {
     // Kompres foto baru jadi base64 (tanpa Firebase Storage — sama seperti pola
     // Konservasi/Biodiversitas/Progress Report), gabungkan dengan foto lama.
+    // Target dibuat lebih ketat (maxPx 700, ~90KB) dibanding galeri Konservasi/Biodiversitas
+    // (800px, ~150KB) karena di sini biasa upload lebih banyak foto sekaligus per dokumen —
+    // targetKB di sini adalah ukuran BINER, string base64-nya nanti tetap ~33% lebih besar.
     const newPhotosB64 = await kompresFotoList(aktivitasNewPhotoFiles, (cur,total) => {
       btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mengompres foto ${cur}/${total}...`;
-    });
-    data.foto = [...aktivitasExistingPhotos, ...newPhotosB64];
+    }, { maxPx: 700, targetKB: 90 });
+    const gabunganFoto = [...aktivitasExistingPhotos, ...newPhotosB64];
+
+    // Validasi ukuran TOTAL sebelum kirim ke Firestore — supaya kalau kelebihan,
+    // user langsung dapat pesan jelas (bukan error teknis dari Firestore di tengah proses).
+    const ukuranFoto = estimasiUkuranFotoArray(gabunganFoto);
+    if (ukuranFoto > FIRESTORE_DOC_SAFE_LIMIT) {
+      const perkiraanMaks = Math.max(1, Math.floor(gabunganFoto.length * FIRESTORE_DOC_SAFE_LIMIT / ukuranFoto));
+      throw new Error(`Total ukuran ${gabunganFoto.length} foto terlalu besar (±${Math.round(ukuranFoto/1024)}KB, batas ±${Math.round(FIRESTORE_DOC_SAFE_LIMIT/1024)}KB per aktivitas). Kurangi jadi sekitar ${perkiraanMaks} foto, atau simpan sisanya sebagai catatan aktivitas baru.`);
+    }
+    data.foto = gabunganFoto;
 
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan data...';
     if (id) {
