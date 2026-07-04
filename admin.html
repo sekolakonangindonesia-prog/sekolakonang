@@ -2660,7 +2660,14 @@ async function populateAktivitasDropdowns(selectedKonsId, selectedSellerId) {
   const sellerSel = document.getElementById('aktivitas-seller');
   try {
     const konsSnap = await getDocs(collection(db,'monitoring_reboisasi'));
-    const konsList = konsSnap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(b.year||0)-(a.year||0));
+    // Filter sama persis dengan loadKonservasiList(): hanya dokumen berskema "tanam_<tahun>_..."
+    // yang aktif dipakai. Ada sisa dokumen lama (ID cuma angka tahun, mis. "2021") dari sebelum
+    // skema ini dipakai — dokumen itu tidak lagi ditampilkan di manapun di panel Konservasi,
+    // jadi di sini pun harus diabaikan supaya tidak muncul dobel di dropdown.
+    const konsList = konsSnap.docs
+      .filter(d => d.id.startsWith('tanam_'))
+      .map(d=>({id:d.id, ...d.data()}))
+      .sort((a,b)=>(b.year||0)-(a.year||0));
     konsSel.innerHTML = '<option value="">— Tidak ditautkan —</option>' +
       konsList.map(k => `<option value="${k.id}" data-title="${(k.title||'Program Konservasi').replace(/"/g,'&quot;')}" ${k.id===selectedKonsId?'selected':''}>${k.year||'—'} · ${k.title||'Program Konservasi'}</option>`).join('');
   } catch(e) { konsSel.innerHTML = '<option value="">Gagal memuat daftar program</option>'; }
