@@ -255,6 +255,9 @@ input,textarea,select{font-family:var(--body);}
     <div class="sidebar-section-label">PJLH</div>
     <div class="menu-item" data-panel="pjlh"><i class="fas fa-project-diagram"></i> ES-Sellers & Buyers</div>
 
+    <div class="sidebar-section-label">Laporan Mitra</div>
+    <div class="menu-item" data-panel="rabkurva"><i class="fas fa-chart-line"></i> RAB & Kurva S</div>
+
     <div class="sidebar-section-label">Manajemen</div>
     <div class="menu-item" data-panel="tim"><i class="fas fa-users-cog"></i> Akun Tim</div>
     <div class="menu-item" data-panel="target"><i class="fas fa-bullseye"></i> Target Capaian</div>
@@ -636,6 +639,13 @@ input,textarea,select{font-family:var(--body);}
       </div>
     </section>
 
+    <!-- ===== RAB & KURVA S ===== -->
+    <section class="panel" id="panel-rabkurva">
+      <div class="main-header"><h1>RAB & Kurva S</h1><p>Kelola rencana anggaran per Kegiatan (dari RAB yang sudah ACC) dan pantau kurva S (Target vs Aktual) untuk laporan ke Mitra.</p></div>
+      <div class="toolbar"><button class="btn btn-lime" id="addRabBtn"><i class="fas fa-plus"></i> Tambah Program RAB</button></div>
+      <div id="rabkurva-list"><p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p></div>
+    </section>
+
     <!-- ===== TIM ===== -->
     <section class="panel" id="panel-tim">
       <div class="main-header"><h1>Akun Tim</h1><p>Buat dan kelola akun anggota tim lapangan.</p></div>
@@ -997,6 +1007,25 @@ input,textarea,select{font-family:var(--body);}
       <a id="pd-lampiran-link" href="#" target="_blank" class="btn btn-outline btn-sm" style="display:inline-flex;"><i class="fas fa-paperclip"></i> Buka Lampiran</a>
     </div>
 
+    <div class="form-group">
+      <label>Kegiatan RAB Terkait <span style="color:var(--text-muted);font-weight:400;">(untuk laporan Kurva S & rekap bulanan ke Mitra)</span></label>
+      <select id="pd-kegiatan-rab" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:10px 12px;font-size:0.8rem;">
+        <option value="">— Tidak ditautkan —</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Penerima Manfaat <span style="color:var(--text-muted);font-weight:400;">(diisi Tim, admin bisa koreksi)</span></label>
+      <div class="row-2" style="margin-bottom:8px;">
+        <div><div class="form-hint" style="margin-bottom:4px;">Langsung — Laki-laki</div><input type="number" min="0" id="pd-manfaat-langsung-l" placeholder="0" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:8px 10px;font-size:0.8rem;"></div>
+        <div><div class="form-hint" style="margin-bottom:4px;">Langsung — Perempuan</div><input type="number" min="0" id="pd-manfaat-langsung-p" placeholder="0" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:8px 10px;font-size:0.8rem;"></div>
+      </div>
+      <div class="row-2">
+        <div><div class="form-hint" style="margin-bottom:4px;">Tidak Langsung — Laki-laki</div><input type="number" min="0" id="pd-manfaat-tidak-l" placeholder="0" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:8px 10px;font-size:0.8rem;"></div>
+        <div><div class="form-hint" style="margin-bottom:4px;">Tidak Langsung — Perempuan</div><input type="number" min="0" id="pd-manfaat-tidak-p" placeholder="0" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:8px 10px;font-size:0.8rem;"></div>
+      </div>
+    </div>
+
     <div class="row-2">
       <div class="form-group">
         <label>Status Kegiatan</label>
@@ -1019,6 +1048,58 @@ input,textarea,select{font-family:var(--body);}
   </div>
 </div>
 
+<!-- MODAL TAMBAH/EDIT PROGRAM RAB + KEGIATAN -->
+<div class="modal-backdrop" id="modal-rabkurva">
+  <div class="modal-box wide">
+    <button class="modal-close" data-close="modal-rabkurva"><i class="fas fa-times"></i></button>
+    <h3 id="modal-rab-title">Tambah Program RAB</h3>
+    <div class="sub">Transkrip dari RAB/Project Brief yang sudah ACC — daftar Kegiatan, budget, dan target % per bulan.</div>
+    <input type="hidden" id="rab-id">
+
+    <div class="row-2">
+      <div class="form-group"><label>Judul Program</label><input type="text" id="rab-judul" placeholder="Program Kehati 2026"></div>
+      <div class="form-group"><label>Jenis</label>
+        <select id="rab-tipe">
+          <option value="konservasi">Konservasi</option>
+          <option value="kehati">Kehati</option>
+          <option value="comdev">ComDev</option>
+        </select>
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="form-group"><label>Periode Mulai</label><input type="month" id="rab-periode-mulai"></div>
+      <div class="form-group"><label>Periode Selesai</label><input type="month" id="rab-periode-selesai"></div>
+    </div>
+    <button class="btn btn-outline btn-sm" id="loadTemplateKehati2026Btn" style="margin-bottom:14px;"><i class="fas fa-file-import"></i> Muat Template Kehati 2026</button>
+    <div class="form-hint" style="margin-bottom:14px;">Template mengisi 8 Kegiatan dari Project Brief (budget masih 0 — sesuaikan dengan RAB Excel Lampiran 1 yang sebenarnya).</div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px;">
+      <label style="font-size:0.7rem;font-weight:700;color:var(--lime);text-transform:uppercase;letter-spacing:1px;">Daftar Kegiatan</label>
+      <button class="btn btn-lime btn-sm" id="addKegiatanRowBtn"><i class="fas fa-plus"></i> Tambah Kegiatan</button>
+    </div>
+    <div id="kegiatan-rows"></div>
+    <div style="text-align:right;font-size:0.75rem;color:var(--text-muted);margin:8px 0 16px;">Total Budget: <span id="rab-total-budget" style="color:var(--lime);font-weight:700;">Rp 0</span></div>
+
+    <div id="kegiatan-grid-wrap"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" data-close="modal-rabkurva">Batal</button>
+      <button class="btn btn-lime" id="saveRabBtn"><i class="fas fa-save"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LIHAT KURVA S -->
+<div class="modal-backdrop" id="modal-rab-view">
+  <div class="modal-box wide">
+    <button class="modal-close" data-close="modal-rab-view"><i class="fas fa-times"></i></button>
+    <h3 id="rv-judul">—</h3>
+    <div class="sub" id="rv-periode">—</div>
+    <div id="rv-chart-wrap" style="margin:16px 0;"></div>
+    <div id="rv-table-wrap" style="overflow-x:auto;"></div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
@@ -1027,6 +1108,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
   getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword
+
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   getStorage, ref, uploadBytes, getDownloadURL
@@ -1087,7 +1169,8 @@ function switchPanel(name) {
     berita: () => { loadBeritaInternal(); loadBeritaExternal(); },
     konservasi: loadKonservasiList, biodiversitas: loadBioList,
     pjlh: () => { loadSellers(); loadBuyers(); loadAktivitas(); },
-    tim: loadTim, target: loadProgram, progress: loadProgress
+    tim: loadTim, target: loadProgram, progress: loadProgress,
+    rabkurva: loadRabKurva
   };
   if (loaders[name]) loaders[name]();
   if (name === 'hero') loadHero();
@@ -2825,6 +2908,266 @@ document.getElementById('saveAktivitasBtn').addEventListener('click', async () =
 });
 
 // ============================================================
+// RAB & KURVA S
+// ============================================================
+// Skema per dokumen (collection `rab_kurva_s`):
+// { judul, tipe, periodeMulai:'YYYY-MM', periodeSelesai:'YYYY-MM',
+//   kegiatan: [{ nama, output, budget, ik, targetPerBulan:{'YYYY-MM':pct}, aktualPerBulan:{'YYYY-MM':pct} }] }
+const BULAN_LABEL = {'01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'Mei','06':'Jun','07':'Jul','08':'Agu','09':'Sep','10':'Okt','11':'Nov','12':'Des'};
+let daftarRabLoaded = [];
+let kegiatanRowsState = []; // state sementara form (array of {nama, output, budget, ik, targetPerBulan, aktualPerBulan})
+
+// Bikin daftar bulan 'YYYY-MM' dari periodeMulai s/d periodeSelesai (inklusif)
+function generateRentangBulan(mulai, selesai) {
+  if (!mulai || !selesai) return [];
+  const bulanList = [];
+  let [y,m] = mulai.split('-').map(Number);
+  const [yEnd,mEnd] = selesai.split('-').map(Number);
+  let guard = 0;
+  while ((y < yEnd || (y===yEnd && m<=mEnd)) && guard < 60) {
+    bulanList.push(`${y}-${String(m).padStart(2,'0')}`);
+    m++; if (m>12) { m=1; y++; }
+    guard++;
+  }
+  return bulanList;
+}
+function labelBulan(ym) {
+  const [y,m] = ym.split('-');
+  return `${BULAN_LABEL[m]||m} ${y}`;
+}
+
+async function loadRabKurva() {
+  const wrap = document.getElementById('rabkurva-list');
+  wrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
+  try {
+    const snap = await getDocs(collection(db,'rab_kurva_s'));
+    daftarRabLoaded = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    if (!daftarRabLoaded.length) { wrap.innerHTML = '<p style="color:var(--text-muted);">Belum ada Program RAB. Klik "Tambah Program RAB" untuk mulai.</p>'; return; }
+    wrap.innerHTML = '';
+    daftarRabLoaded.forEach(r => {
+      const totalBudget = (r.kegiatan||[]).reduce((s,k)=>s+(Number(k.budget)||0),0);
+      wrap.innerHTML += `
+        <div class="list-card" style="margin-bottom:14px;">
+          <div class="list-card-header">
+            <div>
+              <div style="font-weight:700;font-size:0.88rem;color:var(--white);">${r.judul||'—'}</div>
+              <div style="font-size:0.68rem;color:var(--text-muted);">${r.periodeMulai&&r.periodeSelesai?labelBulan(r.periodeMulai)+' – '+labelBulan(r.periodeSelesai):'—'} · ${(r.kegiatan||[]).length} Kegiatan · Rp ${totalBudget.toLocaleString('id-ID')}</div>
+            </div>
+            <div class="list-card-actions">
+              <button class="btn btn-outline btn-sm" onclick="lihatKurvaS('${r.id}')"><i class="fas fa-chart-line"></i> Kurva S</button>
+              <button class="btn btn-outline btn-sm" onclick="editRabKurva('${r.id}')"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm" onclick="delDoc('rab_kurva_s','${r.id}',loadRabKurva)"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        </div>`;
+    });
+  } catch(e) { wrap.innerHTML = `<p style="color:var(--danger);">Gagal: ${e.message}</p>`; }
+}
+window.loadRabKurva = loadRabKurva;
+
+function renderKegiatanRows() {
+  const mulai = document.getElementById('rab-periode-mulai').value;
+  const selesai = document.getElementById('rab-periode-selesai').value;
+  const bulanList = generateRentangBulan(mulai, selesai);
+  const totalBudget = kegiatanRowsState.reduce((s,k)=>s+(Number(k.budget)||0),0);
+  document.getElementById('rab-total-budget').textContent = 'Rp ' + totalBudget.toLocaleString('id-ID');
+
+  const rowsWrap = document.getElementById('kegiatan-rows');
+  rowsWrap.innerHTML = kegiatanRowsState.map((k,i) => {
+    const bobot = totalBudget>0 ? ((Number(k.budget)||0)/totalBudget*100).toFixed(2) : '0.00';
+    return `
+    <div class="list-card" style="margin-bottom:10px;padding:12px;">
+      <div class="row-2" style="margin-bottom:8px;">
+        <div class="form-group" style="margin:0;"><label>Nama Kegiatan</label><input type="text" value="${(k.nama||'').replace(/"/g,'&quot;')}" oninput="kegiatanRowsState[${i}].nama=this.value" placeholder="mis. PENANAMAN"></div>
+        <div class="form-group" style="margin:0;"><label>Output (Kuantitatif)</label><input type="text" value="${(k.output||'').replace(/"/g,'&quot;')}" oninput="kegiatanRowsState[${i}].output=this.value" placeholder="mis. penanaman 1200 bibit"></div>
+      </div>
+      <div class="row-2" style="margin-bottom:8px;">
+        <div class="form-group" style="margin:0;"><label>Budget (IDR)</label><input type="number" min="0" value="${k.budget||0}" oninput="kegiatanRowsState[${i}].budget=Number(this.value)||0; renderKegiatanRows();"></div>
+        <div class="form-group" style="margin:0;"><label>Bobot dari Total Budget</label><input type="text" value="${bobot}%" disabled style="opacity:0.6;"></div>
+      </div>
+      <div class="form-group" style="margin:0 0 8px;"><label>Indikator Kinerja (IK) — satu per baris</label><textarea rows="2" oninput="kegiatanRowsState[${i}].ik=this.value" placeholder="Persiapan bibit&#10;Persiapan iven penanaman">${k.ik||''}</textarea></div>
+      <button class="btn btn-danger btn-sm" onclick="kegiatanRowsState.splice(${i},1); renderKegiatanRows();"><i class="fas fa-trash"></i> Hapus Kegiatan</button>
+    </div>`;
+  }).join('') || '<p style="color:var(--text-muted);font-size:0.78rem;">Belum ada Kegiatan. Klik "+ Tambah Kegiatan".</p>';
+
+  // Grid Target%/Aktual% per bulan — hanya tampil kalau periode & minimal 1 kegiatan sudah diisi
+  const gridWrap = document.getElementById('kegiatan-grid-wrap');
+  if (!bulanList.length || !kegiatanRowsState.length) { gridWrap.innerHTML = ''; return; }
+  let gridHtml = `<label style="font-size:0.7rem;font-weight:700;color:var(--lime);text-transform:uppercase;letter-spacing:1px;display:block;margin:8px 0;">Target % / Aktual % per Bulan</label>
+    <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.72rem;">
+    <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border-subtle);">Kegiatan</th>${bulanList.map(b=>`<th style="padding:6px;border-bottom:1px solid var(--border-subtle);text-align:center;">${labelBulan(b)}</th>`).join('')}</tr></thead><tbody>`;
+  kegiatanRowsState.forEach((k,i) => {
+    if (!k.targetPerBulan) k.targetPerBulan = {};
+    if (!k.aktualPerBulan) k.aktualPerBulan = {};
+    gridHtml += `<tr><td style="padding:6px;border-bottom:1px solid var(--border-subtle);font-weight:600;">${k.nama||'(belum diisi)'}</td>`;
+    bulanList.forEach(b => {
+      gridHtml += `<td style="padding:4px;border-bottom:1px solid var(--border-subtle);text-align:center;">
+        <input type="number" min="0" max="100" value="${k.targetPerBulan[b]||0}" oninput="kegiatanRowsState[${i}].targetPerBulan['${b}']=Number(this.value)||0" title="Target %" style="width:44px;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:4px;color:var(--lime);padding:3px;font-size:0.68rem;text-align:center;margin-bottom:2px;">
+        <input type="number" min="0" max="100" value="${k.aktualPerBulan[b]||0}" oninput="kegiatanRowsState[${i}].aktualPerBulan['${b}']=Number(this.value)||0" title="Aktual %" style="width:44px;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:4px;color:#ff8a8a;padding:3px;font-size:0.68rem;text-align:center;">
+      </td>`;
+    });
+    gridHtml += `</tr>`;
+  });
+  gridHtml += `</tbody></table></div><div class="form-hint" style="margin-top:6px;">Baris hijau = Target %, baris merah = Aktual % (isi berjalan tiap bulan).</div>`;
+  gridWrap.innerHTML = gridHtml;
+}
+window.renderKegiatanRows = renderKegiatanRows;
+window.kegiatanRowsState = kegiatanRowsState;
+
+document.getElementById('addKegiatanRowBtn').addEventListener('click', () => {
+  kegiatanRowsState.push({ nama:'', output:'', budget:0, ik:'', targetPerBulan:{}, aktualPerBulan:{} });
+  renderKegiatanRows();
+});
+document.getElementById('rab-periode-mulai').addEventListener('change', renderKegiatanRows);
+document.getElementById('rab-periode-selesai').addEventListener('change', renderKegiatanRows);
+
+// Template cepat dari Project Brief Kehati 2026 (budget sengaja 0 — isi manual dari RAB Excel Lampiran 1)
+document.getElementById('loadTemplateKehati2026Btn').addEventListener('click', () => {
+  document.getElementById('rab-judul').value = 'Program Kehati 2026';
+  document.getElementById('rab-tipe').value = 'kehati';
+  document.getElementById('rab-periode-mulai').value = '2026-04';
+  document.getElementById('rab-periode-selesai').value = '2026-11';
+  kegiatanRowsState = [
+    { nama:'A. INOVASI', output:'Buku Inovasi Kehati ber-ISBN, lahan kas desa jadi lahan kehati', budget:0, ik:'Pengembangan Inovasi Kehati\nProgram Pemberdayaan Masyarakat', targetPerBulan:{}, aktualPerBulan:{} },
+    { nama:'B. PEMBAHARUAN DOKUMEN PROPER', output:'Dokumen pendukung PROPER bagian Kehati', budget:0, ik:'Inventarisasi/revisi dokumen pendukung PROPER', targetPerBulan:{}, aktualPerBulan:{} },
+    { nama:'C. PERENCANAAN', output:'Renstra, RKT, MOU kerjasama lembaga', budget:0, ik:'Workshop evaluasi & perencanaan\nPenyusunan RKT\nKerjasama lembaga kompeten', targetPerBulan:{}, aktualPerBulan:{} },
+    { nama:'D. ANALISIS KEHATI', output:'Baseline data kehati, laporan tahunan', budget:0, ik:'Inventarisasi & analisis kehati\nIdentifikasi flora fauna langka\nLaporan Kehati tahunan', targetPerBulan:{}, aktualPerBulan:{} },
+    { nama:'E. PENELITIAN DAMPAK', output:'Jurnal penelitian dampak positif kehati', budget:0, ik:'Penelitian dampak positif pengelolaan kehati', targetPerBulan:{}, aktualPerBulan:{} },
+    { nama:'F. PUBLIKASI', output:'Berita acara & pemberitaan cetak/online', budget:0, ik:'Publikasi ke pemerintah setempat & media massa', targetPerBulan:{}, aktualPerBulan:{} },
+    { nama:'G. PEMBIBITAN DAN DISTRIBUSI POHON', output:'Greenhouse + distribusi 1200 bibit pohon', budget:0, ik:'Pembuatan greenhouse\nDistribusi bibit ke DAS\nPendataan penanaman', targetPerBulan:{}, aktualPerBulan:{} },
+    { nama:'H. KEGIATAN NON PROPER', output:'Revitalisasi gazebo, kompos, papan info, sekolah stomata', budget:0, ik:'Pembibitan & perawatan pohon\nMedia tanam & pupuk organik\nRevitalisasi gazebo\nPendampingan sekolah stomata\nBenchmarking\nPapan informasi', targetPerBulan:{}, aktualPerBulan:{} },
+  ];
+  renderKegiatanRows();
+});
+
+document.getElementById('addRabBtn').addEventListener('click', () => {
+  document.getElementById('rab-id').value = '';
+  document.getElementById('rab-judul').value = '';
+  document.getElementById('rab-tipe').value = 'konservasi';
+  document.getElementById('rab-periode-mulai').value = '';
+  document.getElementById('rab-periode-selesai').value = '';
+  kegiatanRowsState = [];
+  document.getElementById('modal-rab-title').textContent = 'Tambah Program RAB';
+  renderKegiatanRows();
+  openModal('modal-rabkurva');
+});
+
+async function editRabKurva(id) {
+  const r = daftarRabLoaded.find(x=>x.id===id);
+  if (!r) return;
+  document.getElementById('rab-id').value = id;
+  document.getElementById('rab-judul').value = r.judul||'';
+  document.getElementById('rab-tipe').value = r.tipe||'konservasi';
+  document.getElementById('rab-periode-mulai').value = r.periodeMulai||'';
+  document.getElementById('rab-periode-selesai').value = r.periodeSelesai||'';
+  kegiatanRowsState = JSON.parse(JSON.stringify(r.kegiatan||[]));
+  document.getElementById('modal-rab-title').textContent = 'Edit Program RAB';
+  renderKegiatanRows();
+  openModal('modal-rabkurva');
+}
+window.editRabKurva = editRabKurva;
+
+document.getElementById('saveRabBtn').addEventListener('click', async () => {
+  const id = document.getElementById('rab-id').value;
+  const judul = document.getElementById('rab-judul').value.trim();
+  const periodeMulai = document.getElementById('rab-periode-mulai').value;
+  const periodeSelesai = document.getElementById('rab-periode-selesai').value;
+  if (!judul) { alert('Judul program wajib diisi.'); return; }
+  if (!periodeMulai || !periodeSelesai) { alert('Periode mulai & selesai wajib diisi.'); return; }
+  const btn = document.getElementById('saveRabBtn'); btn.disabled = true;
+  try {
+    const data = {
+      judul, tipe: document.getElementById('rab-tipe').value,
+      periodeMulai, periodeSelesai,
+      kegiatan: kegiatanRowsState
+    };
+    if (id) await setDoc(doc(db,'rab_kurva_s',id), data, {merge:true});
+    else { data.createdAt = serverTimestamp(); await addDoc(collection(db,'rab_kurva_s'), data); }
+    closeModal('modal-rabkurva');
+    loadRabKurva();
+  } catch(e) { alert('Gagal menyimpan: '+e.message); }
+  finally { btn.disabled = false; }
+});
+
+// ── Kurva S: hitung kumulatif Target% & Aktual% per bulan (weighted by bobot budget), lalu gambar grafik SVG ──
+function hitungKurvaS(r) {
+  const bulanList = generateRentangBulan(r.periodeMulai, r.periodeSelesai);
+  const kegiatan = r.kegiatan||[];
+  const totalBudget = kegiatan.reduce((s,k)=>s+(Number(k.budget)||0),0);
+  const perBulanTarget = [], perBulanAktual = [];
+  bulanList.forEach(b => {
+    let tgt=0, akt=0;
+    kegiatan.forEach(k => {
+      const bobot = totalBudget>0 ? (Number(k.budget)||0)/totalBudget : (1/(kegiatan.length||1));
+      tgt += bobot * (Number(k.targetPerBulan?.[b])||0);
+      akt += bobot * (Number(k.aktualPerBulan?.[b])||0);
+    });
+    perBulanTarget.push(tgt); perBulanAktual.push(akt);
+  });
+  // Kumulatif
+  const kumulatifTarget = []; const kumulatifAktual = [];
+  perBulanTarget.forEach((v,i)=>kumulatifTarget.push((kumulatifTarget[i-1]||0)+v));
+  perBulanAktual.forEach((v,i)=>kumulatifAktual.push((kumulatifAktual[i-1]||0)+v));
+  return { bulanList, perBulanTarget, perBulanAktual, kumulatifTarget, kumulatifAktual, totalBudget };
+}
+
+function gambarKurvaSSvg(bulanList, kumulatifTarget, kumulatifAktual) {
+  const w=700, h=280, padL=40, padB=30, padT=16, padR=16;
+  const plotW = w-padL-padR, plotH = h-padT-padB;
+  const n = bulanList.length;
+  const xFor = i => padL + (n<=1 ? 0 : (i/(n-1))*plotW);
+  const yFor = v => padT + plotH - (Math.min(v,100)/100)*plotH;
+  const pathFrom = arr => arr.map((v,i)=>`${i===0?'M':'L'} ${xFor(i).toFixed(1)} ${yFor(v).toFixed(1)}`).join(' ');
+  const gridLines = [0,25,50,75,100].map(v=>`<line x1="${padL}" y1="${yFor(v)}" x2="${w-padR}" y2="${yFor(v)}" stroke="rgba(255,255,255,0.08)"/><text x="${padL-8}" y="${yFor(v)+4}" font-size="10" fill="#888" text-anchor="end">${v}%</text>`).join('');
+  const xLabels = bulanList.map((b,i)=>`<text x="${xFor(i)}" y="${h-padB+16}" font-size="9" fill="#888" text-anchor="middle">${labelBulan(b).split(' ')[0]}</text>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;background:rgba(255,255,255,0.02);border-radius:8px;">
+    ${gridLines}${xLabels}
+    <path d="${pathFrom(kumulatifTarget)}" fill="none" stroke="#5b8bf0" stroke-width="2.5"/>
+    <path d="${pathFrom(kumulatifAktual)}" fill="none" stroke="#ff6b6b" stroke-width="2.5"/>
+    ${kumulatifTarget.map((v,i)=>`<circle cx="${xFor(i)}" cy="${yFor(v)}" r="3" fill="#5b8bf0"/>`).join('')}
+    ${kumulatifAktual.map((v,i)=>`<circle cx="${xFor(i)}" cy="${yFor(v)}" r="3" fill="#ff6b6b"/>`).join('')}
+    <circle cx="${padL+plotW-90}" cy="${padT+8}" r="4" fill="#5b8bf0"/><text x="${padL+plotW-80}" y="${padT+12}" font-size="10" fill="#ccc">Target</text>
+    <circle cx="${padL+plotW-30}" cy="${padT+8}" r="4" fill="#ff6b6b"/><text x="${padL+plotW-20}" y="${padT+12}" font-size="10" fill="#ccc">Aktual</text>
+  </svg>`;
+}
+
+function lihatKurvaS(id) {
+  const r = daftarRabLoaded.find(x=>x.id===id);
+  if (!r) return;
+  const { bulanList, perBulanTarget, perBulanAktual, kumulatifTarget, kumulatifAktual, totalBudget } = hitungKurvaS(r);
+  document.getElementById('rv-judul').textContent = r.judul||'—';
+  document.getElementById('rv-periode').textContent = `${labelBulan(r.periodeMulai)} – ${labelBulan(r.periodeSelesai)} · Total Budget Rp ${totalBudget.toLocaleString('id-ID')}`;
+  document.getElementById('rv-chart-wrap').innerHTML = bulanList.length ? gambarKurvaSSvg(bulanList, kumulatifTarget, kumulatifAktual) : '<p style="color:var(--text-muted);">Periode belum diisi.</p>';
+  let tbl = `<table style="width:100%;border-collapse:collapse;font-size:0.72rem;"><thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border-subtle);">Ringkasan</th>${bulanList.map(b=>`<th style="padding:6px;border-bottom:1px solid var(--border-subtle);text-align:center;">${labelBulan(b)}</th>`).join('')}</tr></thead><tbody>
+    <tr><td style="padding:6px;border-bottom:1px solid var(--border-subtle);">% Target per Bulan</td>${perBulanTarget.map(v=>`<td style="padding:6px;border-bottom:1px solid var(--border-subtle);text-align:center;color:#5b8bf0;">${v.toFixed(1)}%</td>`).join('')}</tr>
+    <tr><td style="padding:6px;border-bottom:1px solid var(--border-subtle);">% Aktual per Bulan</td>${perBulanAktual.map(v=>`<td style="padding:6px;border-bottom:1px solid var(--border-subtle);text-align:center;color:#ff6b6b;">${v.toFixed(1)}%</td>`).join('')}</tr>
+    <tr><td style="padding:6px;border-bottom:1px solid var(--border-subtle);font-weight:700;">Akumulasi Target %</td>${kumulatifTarget.map(v=>`<td style="padding:6px;border-bottom:1px solid var(--border-subtle);text-align:center;color:#5b8bf0;font-weight:700;">${v.toFixed(1)}%</td>`).join('')}</tr>
+    <tr><td style="padding:6px;border-bottom:1px solid var(--border-subtle);font-weight:700;">Akumulasi Aktual %</td>${kumulatifAktual.map(v=>`<td style="padding:6px;border-bottom:1px solid var(--border-subtle);text-align:center;color:#ff6b6b;font-weight:700;">${v.toFixed(1)}%</td>`).join('')}</tr>
+  </tbody></table>`;
+  document.getElementById('rv-table-wrap').innerHTML = tbl;
+  openModal('modal-rab-view');
+}
+window.lihatKurvaS = lihatKurvaS;
+
+// ── Isi dropdown "Kegiatan RAB Terkait" di modal Progress Report, dari semua rab_kurva_s ──
+async function populateKegiatanRabDropdown(selectedValue) {
+  const sel = document.getElementById('pd-kegiatan-rab');
+  try {
+    const snap = await getDocs(collection(db,'rab_kurva_s'));
+    let opts = '<option value="">— Tidak ditautkan —</option>';
+    snap.docs.forEach(d => {
+      const r = d.data();
+      (r.kegiatan||[]).forEach((k,i) => {
+        const val = `${d.id}::${i}`;
+        opts += `<option value="${val}" ${val===selectedValue?'selected':''}>${r.judul} → ${k.nama||'(kegiatan '+(i+1)+')'}</option>`;
+      });
+    });
+    sel.innerHTML = opts;
+  } catch(e) { sel.innerHTML = '<option value="">Gagal memuat</option>'; }
+}
+window.populateKegiatanRabDropdown = populateKegiatanRabDropdown;
+
+// ============================================================
 // TIM
 // ============================================================
 async function loadTim() {
@@ -3117,6 +3460,11 @@ function bukaDetailProgress(id) {
 
   document.getElementById('pd-status-select').value = st;
   document.getElementById('pd-catatan').value = r.catatanAdmin || '';
+  populateKegiatanRabDropdown(r.linkedKegiatanRab || '');
+  document.getElementById('pd-manfaat-langsung-l').value = r.penerimaLangsungL || '';
+  document.getElementById('pd-manfaat-langsung-p').value = r.penerimaLangsungP || '';
+  document.getElementById('pd-manfaat-tidak-l').value = r.penerimaTidakLangsungL || '';
+  document.getElementById('pd-manfaat-tidak-p').value = r.penerimaTidakLangsungP || '';
   document.getElementById('pd-save-btn').dataset.id = id;
   openModal('modal-progress-detail');
 }
@@ -3130,7 +3478,12 @@ document.getElementById('pd-save-btn').addEventListener('click', async () => {
   try {
     await updateDoc(doc(db,'progress_reports',id), {
       status: document.getElementById('pd-status-select').value,
-      catatanAdmin: document.getElementById('pd-catatan').value.trim()
+      catatanAdmin: document.getElementById('pd-catatan').value.trim(),
+      linkedKegiatanRab: document.getElementById('pd-kegiatan-rab').value,
+      penerimaLangsungL: Number(document.getElementById('pd-manfaat-langsung-l').value)||0,
+      penerimaLangsungP: Number(document.getElementById('pd-manfaat-langsung-p').value)||0,
+      penerimaTidakLangsungL: Number(document.getElementById('pd-manfaat-tidak-l').value)||0,
+      penerimaTidakLangsungP: Number(document.getElementById('pd-manfaat-tidak-p').value)||0
     });
     closeModal('modal-progress-detail');
     loadProgress();
@@ -3156,27 +3509,7 @@ window.editBeritaInternal = editBeritaInternal;
 window.editBeritaExternal = editBeritaExternal;
 window.editMitra = editMitra;
 window.editLaporan = editLaporan;
-window.loadBioList = loadBioList;
-// Semua fungsi reload di bawah ini dipanggil lewat atribut onclick="..." di HTML
-// (mis. delDoc('es_sellers', id, loadSellers)) — karena ini <script type="module">,
-// fungsi top-level TIDAK otomatis nempel ke window, jadi harus di-expose manual di
-// sini. Tanpa ini, tombol Hapus akan gagal diam-diam (ReferenceError saat browser
-// coba baca nama fungsinya, sebelum delDoc sempat dipanggil).
-window.loadBeritaInternal = loadBeritaInternal;
-window.loadBeritaExternal = loadBeritaExternal;
-window.loadMitra = loadMitra;
-window.loadLaporan = loadLaporan;
-window.loadKonservasiList = loadKonservasiList;
-window.loadSellers = loadSellers;
-window.loadBuyers = loadBuyers;
-window.loadAktivitas = loadAktivitas;
-window.loadTim = loadTim;
-window.loadProgress = loadProgress;
-window.editProgram = editProgram;
-window.delProgram = delProgram;
-window.editTarget = editTarget;
-window.delTarget = delTarget;
-  
+window.loadBioList = loadBioList;  
 </script>
 </body>
 </html>
