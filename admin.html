@@ -1061,7 +1061,7 @@ input,textarea,select{font-family:var(--body);}
       <div class="form-group"><label>Jenis</label>
         <select id="rab-tipe">
           <option value="konservasi">Konservasi</option>
-          <option value="biodiversity">Biodiversitas (termasuk Kehati)</option>
+          <option value="biodiversity">Biodiversity</option>
           <option value="comdev">ComDev</option>
           <option value="pjlh">PJLH</option>
         </select>
@@ -1071,8 +1071,11 @@ input,textarea,select{font-family:var(--body);}
       <div class="form-group"><label>Periode Mulai</label><input type="month" id="rab-periode-mulai"></div>
       <div class="form-group"><label>Periode Selesai</label><input type="month" id="rab-periode-selesai"></div>
     </div>
-    <button class="btn btn-outline btn-sm" id="loadTemplateKehati2026Btn" style="margin-bottom:14px;"><i class="fas fa-file-import"></i> Muat Template Kehati 2026</button>
-    <div class="form-hint" style="margin-bottom:14px;">Template mengisi 8 Kegiatan dari Project Brief (budget masih 0 — sesuaikan dengan RAB Excel Lampiran 1 yang sebenarnya).</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+      <button class="btn btn-lime btn-sm" id="loadFromTargetCapaianBtn"><i class="fas fa-sync-alt"></i> Muat dari Target Capaian</button>
+      <button class="btn btn-outline btn-sm" id="loadTemplateKehati2026Btn"><i class="fas fa-file-import"></i> Muat Template Kehati 2026</button>
+    </div>
+    <div class="form-hint" style="margin-bottom:14px;">"Muat dari Target Capaian" mengambil daftar Kegiatan (kode+nama+deskripsi) sesuai Jenis yang dipilih di atas — dari data yang sudah Ibu tulis di menu Target Capaian. Template Kehati 2026 hanya cadangan kalau Target Capaian belum diisi.</div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px;">
       <label style="font-size:0.7rem;font-weight:700;color:var(--lime);text-transform:uppercase;letter-spacing:1px;">Daftar Kegiatan</label>
@@ -3014,6 +3017,33 @@ function renderKegiatanRows() {
 }
 window.renderKegiatanRows = renderKegiatanRows;
 window.kegiatanRowsState = kegiatanRowsState;
+
+// Muat daftar Kegiatan otomatis dari "Target Capaian Program" (programs/{tipe}/targets),
+// sesuai Jenis yang dipilih — supaya tidak perlu ketik ulang nama Kegiatan yang sudah ada.
+document.getElementById('loadFromTargetCapaianBtn').addEventListener('click', async () => {
+  const tipe = document.getElementById('rab-tipe').value;
+  const btn = document.getElementById('loadFromTargetCapaianBtn');
+  btn.disabled = true; const teksAsli = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
+  try {
+    const progSnap = await getDocs(query(collection(db,'programs'), where('nama','==',tipe)));
+    if (progSnap.empty) { alert(`Belum ada data "Target Capaian" untuk kategori "${tipe}". Isi dulu di menu Target Capaian, atau pilih Jenis lain.`); return; }
+    const progDoc = progSnap.docs[0];
+    const tSnap = await getDocs(collection(db,'programs',progDoc.id,'targets'));
+    const targets = tSnap.docs.map(t=>({id:t.id,...t.data()}))
+      .sort((a,b) => (a.kode||'\uffff').localeCompare(b.kode||'\uffff'));
+    if (!targets.length) { alert(`Kategori "${tipe}" ada, tapi belum punya Target Capaian. Isi dulu di menu Target Capaian.`); return; }
+    // Kegiatan yang namanya sudah ada di form (hasil edit sebelumnya) tidak ditimpa budget/target%/aktual%-nya —
+    // hanya kegiatan BARU dari Target Capaian yang ditambahkan, supaya aman diklik berulang.
+    const namaSudahAda = new Set(kegiatanRowsState.map(k=>k.nama));
+    targets.forEach(t => {
+      const nama = `${t.kode?t.kode+'. ':''}${t.nama||''}`.trim();
+      if (namaSudahAda.has(nama)) return;
+      kegiatanRowsState.push({ nama, output: t.deskripsi||'', budget:0, ik:'', targetPerBulan:{}, aktualPerBulan:{} });
+    });
+    renderKegiatanRows();
+  } catch(e) { alert('Gagal memuat: '+e.message); }
+  finally { btn.disabled = false; btn.innerHTML = teksAsli; }
+});
 
 document.getElementById('addKegiatanRowBtn').addEventListener('click', () => {
   kegiatanRowsState.push({ nama:'', output:'', budget:0, ik:'', targetPerBulan:{}, aktualPerBulan:{} });
