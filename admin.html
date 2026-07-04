@@ -3058,7 +3058,8 @@ document.getElementById('loadTemplateKehati2026Btn').addEventListener('click', (
   document.getElementById('rab-tipe').value = 'biodiversity';
   document.getElementById('rab-periode-mulai').value = '2026-04';
   document.getElementById('rab-periode-selesai').value = '2026-11';
-  kegiatanRowsState = [
+  kegiatanRowsState.length = 0;
+  kegiatanRowsState.push(
     { nama:'A. INOVASI', output:'Buku Inovasi Kehati ber-ISBN, lahan kas desa jadi lahan kehati', budget:0, ik:'Pengembangan Inovasi Kehati\nProgram Pemberdayaan Masyarakat', targetPerBulan:{}, aktualPerBulan:{} },
     { nama:'B. PEMBAHARUAN DOKUMEN PROPER', output:'Dokumen pendukung PROPER bagian Kehati', budget:0, ik:'Inventarisasi/revisi dokumen pendukung PROPER', targetPerBulan:{}, aktualPerBulan:{} },
     { nama:'C. PERENCANAAN', output:'Renstra, RKT, MOU kerjasama lembaga', budget:0, ik:'Workshop evaluasi & perencanaan\nPenyusunan RKT\nKerjasama lembaga kompeten', targetPerBulan:{}, aktualPerBulan:{} },
@@ -3066,8 +3067,8 @@ document.getElementById('loadTemplateKehati2026Btn').addEventListener('click', (
     { nama:'E. PENELITIAN DAMPAK', output:'Jurnal penelitian dampak positif kehati', budget:0, ik:'Penelitian dampak positif pengelolaan kehati', targetPerBulan:{}, aktualPerBulan:{} },
     { nama:'F. PUBLIKASI', output:'Berita acara & pemberitaan cetak/online', budget:0, ik:'Publikasi ke pemerintah setempat & media massa', targetPerBulan:{}, aktualPerBulan:{} },
     { nama:'G. PEMBIBITAN DAN DISTRIBUSI POHON', output:'Greenhouse + distribusi 1200 bibit pohon', budget:0, ik:'Pembuatan greenhouse\nDistribusi bibit ke DAS\nPendataan penanaman', targetPerBulan:{}, aktualPerBulan:{} },
-    { nama:'H. KEGIATAN NON PROPER', output:'Revitalisasi gazebo, kompos, papan info, sekolah stomata', budget:0, ik:'Pembibitan & perawatan pohon\nMedia tanam & pupuk organik\nRevitalisasi gazebo\nPendampingan sekolah stomata\nBenchmarking\nPapan informasi', targetPerBulan:{}, aktualPerBulan:{} },
-  ];
+    { nama:'H. KEGIATAN NON PROPER', output:'Revitalisasi gazebo, kompos, papan info, sekolah stomata', budget:0, ik:'Pembibitan & perawatan pohon\nMedia tanam & pupuk organik\nRevitalisasi gazebo\nPendampingan sekolah stomata\nBenchmarking\nPapan informasi', targetPerBulan:{}, aktualPerBulan:{} }
+  );
   renderKegiatanRows();
 });
 
@@ -3077,7 +3078,7 @@ document.getElementById('addRabBtn').addEventListener('click', () => {
   document.getElementById('rab-tipe').value = 'konservasi';
   document.getElementById('rab-periode-mulai').value = '';
   document.getElementById('rab-periode-selesai').value = '';
-  kegiatanRowsState = [];
+  kegiatanRowsState.length = 0;
   document.getElementById('modal-rab-title').textContent = 'Tambah Program RAB';
   renderKegiatanRows();
   openModal('modal-rabkurva');
@@ -3091,7 +3092,8 @@ async function editRabKurva(id) {
   document.getElementById('rab-tipe').value = r.tipe||'konservasi';
   document.getElementById('rab-periode-mulai').value = r.periodeMulai||'';
   document.getElementById('rab-periode-selesai').value = r.periodeSelesai||'';
-  kegiatanRowsState = JSON.parse(JSON.stringify(r.kegiatan||[]));
+  kegiatanRowsState.length = 0;
+  kegiatanRowsState.push(...JSON.parse(JSON.stringify(r.kegiatan||[])));
   document.getElementById('modal-rab-title').textContent = 'Edit Program RAB';
   renderKegiatanRows();
   openModal('modal-rabkurva');
