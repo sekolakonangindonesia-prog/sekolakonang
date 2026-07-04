@@ -3156,7 +3156,26 @@ window.editBeritaInternal = editBeritaInternal;
 window.editBeritaExternal = editBeritaExternal;
 window.editMitra = editMitra;
 window.editLaporan = editLaporan;
-window.loadBioList = loadBioList;    
+window.loadBioList = loadBioList;
+// Semua fungsi reload di bawah ini dipanggil lewat atribut onclick="..." di HTML
+// (mis. delDoc('es_sellers', id, loadSellers)) — karena ini <script type="module">,
+// fungsi top-level TIDAK otomatis nempel ke window, jadi harus di-expose manual di
+// sini. Tanpa ini, tombol Hapus akan gagal diam-diam (ReferenceError saat browser
+// coba baca nama fungsinya, sebelum delDoc sempat dipanggil).
+window.loadBeritaInternal = loadBeritaInternal;
+window.loadBeritaExternal = loadBeritaExternal;
+window.loadMitra = loadMitra;
+window.loadLaporan = loadLaporan;
+window.loadKonservasiList = loadKonservasiList;
+window.loadSellers = loadSellers;
+window.loadBuyers = loadBuyers;
+window.loadAktivitas = loadAktivitas;
+window.loadTim = loadTim;
+window.loadProgress = loadProgress;
+window.editProgram = editProgram;
+window.delProgram = delProgram;
+window.editTarget = editTarget;
+window.delTarget = delTarget;
   
 </script>
 </body>
