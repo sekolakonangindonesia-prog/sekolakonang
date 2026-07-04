@@ -1061,8 +1061,9 @@ input,textarea,select{font-family:var(--body);}
       <div class="form-group"><label>Jenis</label>
         <select id="rab-tipe">
           <option value="konservasi">Konservasi</option>
-          <option value="kehati">Kehati</option>
+          <option value="biodiversity">Biodiversitas (termasuk Kehati)</option>
           <option value="comdev">ComDev</option>
+          <option value="pjlh">PJLH</option>
         </select>
       </div>
     </div>
@@ -3024,7 +3025,7 @@ document.getElementById('rab-periode-selesai').addEventListener('change', render
 // Template cepat dari Project Brief Kehati 2026 (budget sengaja 0 — isi manual dari RAB Excel Lampiran 1)
 document.getElementById('loadTemplateKehati2026Btn').addEventListener('click', () => {
   document.getElementById('rab-judul').value = 'Program Kehati 2026';
-  document.getElementById('rab-tipe').value = 'kehati';
+  document.getElementById('rab-tipe').value = 'biodiversity';
   document.getElementById('rab-periode-mulai').value = '2026-04';
   document.getElementById('rab-periode-selesai').value = '2026-11';
   kegiatanRowsState = [
@@ -3245,7 +3246,10 @@ async function loadProgram() {
       const d = { id: p.id };
       // Ambil sub-koleksi targets
       const tSnap = await getDocs(collection(db,'programs',d.id,'targets'));
-      const targets = tSnap.docs.map(t=>({id:t.id,...t.data()}));
+      const targets = tSnap.docs.map(t=>({id:t.id,...t.data()}))
+        // Urutkan berdasarkan kode (A, B, C, ...) supaya berurutan — bukan urutan Firestore
+        // yang acak (biasanya urutan insert). Kode kosong ditaruh paling akhir.
+        .sort((a,b) => (a.kode||'\uffff').localeCompare(b.kode||'\uffff'));
       const targetHTML = targets.length
         ? targets.map(t => `
             <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border-subtle);">
