@@ -1112,7 +1112,8 @@ input,textarea,select{font-family:var(--body);}
   <div class="modal-box wide">
     <button class="modal-close" data-close="modal-laporan-mitra"><i class="fas fa-times"></i></button>
     <h3>Export Laporan ke Mitra</h3>
-    <div class="sub">1) Muat laporan harian Tim bulan ini → 2) Admin rangkum jadi naratif bulanan + Kendala + Rencana Selanjutnya → 3) Preview final digabung dengan Kurva S.</div>
+    <div class="sub">1) Muat laporan harian Tim bulan ini → 2) Admin rangkum jadi naratif bulanan + Kendala + Rencana Selanjutnya → 3) Generate Laporan Status lengkap (format resmi) → 4) Review/edit langsung di preview → 5) Export.</div>
+    <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">Disiapkan oleh: <b id="lap-disiapkan-oleh-display" style="color:var(--lime);">—</b> <a href="#" id="lap-ubah-penyiap" style="color:var(--text-muted);text-decoration:underline;">(ubah)</a></div>
     <div class="row-2" style="margin:14px 0;">
       <div class="form-group" style="margin:0;"><label>Bulan Laporan</label><input type="month" id="lap-bulan"></div>
       <div class="form-group" style="margin:0;display:flex;align-items:flex-end;"><button class="btn btn-outline" id="lap-muat-btn" style="width:100%;"><i class="fas fa-sync-alt"></i> Muat Laporan Harian Bulan Ini</button></div>
@@ -1120,7 +1121,8 @@ input,textarea,select{font-family:var(--body);}
 
     <div id="lap-rangkuman-editor"></div>
 
-    <div id="lap-preview" style="background:#fff;color:#111;padding:20px;border-radius:8px;max-height:40vh;overflow-y:auto;font-size:0.8rem;margin-top:14px;"><p style="color:#999;">Pilih bulan → "Muat Laporan Harian Bulan Ini" → isi rangkuman → "Simpan & Buat Preview Final".</p></div>
+    <div id="lap-preview" contenteditable="true" style="background:#fff;color:#111;padding:20px;border-radius:8px;max-height:40vh;overflow-y:auto;font-size:0.8rem;margin-top:14px;"><p style="color:#999;">Pilih bulan → "Muat Laporan Harian Bulan Ini" → isi rangkuman → "Simpan & Generate Laporan Status".</p></div>
+    <div class="form-hint" style="margin-top:4px;">Preview di atas bisa diedit langsung (klik teksnya) sebelum di-export — ini tahap Review sebelum dikirim ke Mitra.</div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-laporan-mitra">Tutup</button>
       <button class="btn btn-outline" id="lap-print-btn"><i class="fas fa-print"></i> Cetak / Simpan PDF</button>
@@ -3014,6 +3016,9 @@ function renderKegiatanRows() {
         <div class="form-group" style="margin:0;"><label>Budget (IDR)</label><input type="number" min="0" value="${k.budget||0}" oninput="kegiatanRowsState[${i}].budget=Number(this.value)||0; updateBudgetSummary();"></div>
         <div class="form-group" style="margin:0;"><label>Bobot dari Total Budget</label><input type="text" id="bobot-display-${i}" value="${bobot}%" disabled style="opacity:0.6;"></div>
       </div>
+      <div class="row-2" style="margin-bottom:8px;">
+        <div class="form-group" style="margin:0;"><label>Target Selesai (bulan)</label><input type="month" value="${k.targetSelesai||''}" oninput="kegiatanRowsState[${i}].targetSelesai=this.value"></div>
+      </div>
       <div class="form-group" style="margin:0 0 8px;"><label>Indikator Kinerja (IK) — satu per baris</label><textarea rows="2" oninput="kegiatanRowsState[${i}].ik=this.value" placeholder="Persiapan bibit&#10;Persiapan iven penanaman">${k.ik||''}</textarea></div>
       <button class="btn btn-danger btn-sm" onclick="kegiatanRowsState.splice(${i},1); renderKegiatanRows();"><i class="fas fa-trash"></i> Hapus Kegiatan</button>
     </div>`;
@@ -3235,6 +3240,33 @@ window.lihatKurvaS = lihatKurvaS;
 
 // ── Export Laporan ke Mitra: gabungan Kurva S + Narasi Capaian per bulan ──
 let rabIdUntukExport = null;
+// ── Setelan "Disiapkan Oleh" — diset sekali, dipakai otomatis di semua laporan berikutnya ──
+async function muatDisiapkanOleh() {
+  try {
+    const snap = await getDoc(doc(db,'app_settings','laporan_mitra'));
+    document.getElementById('lap-disiapkan-oleh-display').textContent = snap.exists() ? (snap.data().disiapkanOleh||'(belum diset)') : '(belum diset)';
+  } catch(e) { document.getElementById('lap-disiapkan-oleh-display').textContent = '(belum diset)'; }
+}
+document.getElementById('lap-ubah-penyiap').addEventListener('click', async (e) => {
+  e.preventDefault();
+  const nama = prompt('Nama yang disiapkan sebagai "Disiapkan Oleh" (dipakai otomatis di semua laporan berikutnya):', document.getElementById('lap-disiapkan-oleh-display').textContent.replace('(belum diset)',''));
+  if (nama === null) return;
+  try {
+    await setDoc(doc(db,'app_settings','laporan_mitra'), {disiapkanOleh: nama.trim()}, {merge:true});
+    muatDisiapkanOleh();
+  } catch(err) { alert('Gagal menyimpan: '+err.message); }
+});
+
+// ── Setup awal berdasar profil yayasan (header surat) — fallback ke teks statis kalau field tidak ada ──
+async function ambilInfoYayasan() {
+  const fallback = { nama:'YAYASAN SEKOLA KONANG INDONESIA', alamat:'Perum Taman Sadeng Kentjana Block FF 2, Dringu - Probolinggo', logoUrl:'' };
+  try {
+    const snap = await getDoc(doc(db,'profil_yayasan','tentang_kami'));
+    if (snap.exists()) { const d = snap.data(); return { nama: d.namaYayasan||fallback.nama, alamat: d.alamat||fallback.alamat, logoUrl: d.logoUrl||fallback.logoUrl }; }
+  } catch(e) {}
+  return fallback;
+}
+
 // Ambil laporan harian Tim untuk 1 Program RAB pada 1 bulan tertentu, dikelompokkan per index Kegiatan
 async function ambilLaporanHarian(rabId, bulanYM) {
   const snap = await getDocs(collection(db,'progress_reports'));
@@ -3293,7 +3325,7 @@ document.getElementById('lap-muat-btn').addEventListener('click', async () => {
         </div>
       </div>`;
     }
-    html += `<button class="btn btn-lime" id="lap-simpan-preview-btn" style="margin-bottom:6px;"><i class="fas fa-save"></i> Simpan & Buat Preview Final</button>`;
+    html += `<button class="btn btn-lime" id="lap-simpan-preview-btn" style="margin-bottom:6px;"><i class="fas fa-save"></i> Simpan & Generate Laporan Status</button>`;
     editorWrap.innerHTML = html;
     document.getElementById('lap-simpan-preview-btn').addEventListener('click', simpanRangkumanDanBuatPreview);
   } catch(e) { editorWrap.innerHTML = `<p style="color:var(--danger);">Gagal memuat: ${e.message}</p>`; }
@@ -3317,7 +3349,7 @@ async function simpanRangkumanDanBuatPreview() {
     }
     document.getElementById('lap-preview').innerHTML = await susunHtmlLaporanMitra(rabId, bulanYM);
   } catch(e) { alert('Gagal menyimpan rangkuman: '+e.message); }
-  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan & Buat Preview Final'; }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan & Generate Laporan Status'; }
 }
 
 document.getElementById('rv-export-btn').addEventListener('click', () => {
@@ -3327,7 +3359,8 @@ document.getElementById('rv-export-btn').addEventListener('click', () => {
   // Default: bulan terakhir dari periode program
   document.getElementById('lap-bulan').value = r.periodeSelesai || '';
   document.getElementById('lap-rangkuman-editor').innerHTML = '';
-  document.getElementById('lap-preview').innerHTML = '<p style="color:#999;">Pilih bulan → "Muat Laporan Harian Bulan Ini" → isi rangkuman → "Simpan & Buat Preview Final".</p>';
+  document.getElementById('lap-preview').innerHTML = '<p style="color:#999;">Pilih bulan → "Muat Laporan Harian Bulan Ini" → isi rangkuman → "Simpan & Generate Laporan Status".</p>';
+  muatDisiapkanOleh();
   closeModal('modal-rab-view');
   openModal('modal-laporan-mitra');
 });
@@ -3358,57 +3391,127 @@ function svgKeGambarPng(svgString, width, height) {
 async function susunHtmlLaporanMitra(rabId, bulanYM) {
   const r = daftarRabLoaded.find(x=>x.id===rabId);
   if (!r) throw new Error('Program tidak ditemukan');
-  const { bulanList, kumulatifTarget, kumulatifAktual, totalBudget } = hitungKurvaS(r);
+  const kegiatanList = r.kegiatan || [];
+  const totalBudget = kegiatanList.reduce((s,k)=>s+(Number(k.budget)||0),0);
+  const { bulanList, kumulatifTarget, kumulatifAktual } = hitungKurvaS(r);
+  const idxBulanIni = bulanList.indexOf(bulanYM);
+  const overallProgress = idxBulanIni>=0 ? kumulatifAktual[idxBulanIni] : (kumulatifAktual[kumulatifAktual.length-1]||0);
+
+  // Grafik Kurva S sebagai gambar (supaya aman dibuka di Word)
   const svg = bulanList.length ? gambarKurvaSSvg(bulanList, kumulatifTarget, kumulatifAktual) : '';
   let chartImgTag = '';
   if (svg) {
     try { const png = await svgKeGambarPng(svg, 700, 280); chartImgTag = `<img src="${png}" style="width:100%;max-width:650px;display:block;margin:12px 0;">`; }
     catch(e) { chartImgTag = '<p><i>(Grafik gagal dimuat)</i></p>'; }
   }
-  // Ambil laporan harian (untuk hitung total Penerima Manfaat) + Rangkuman Bulanan tersimpan (untuk narasi)
-  const laporanPerKegiatan = await ambilLaporanHarian(rabId, bulanYM);
-  let narasiHtml = '';
+
+  const info = await ambilInfoYayasan();
+  let disiapkanOleh = '(belum diset)';
+  try { const s = await getDoc(doc(db,'app_settings','laporan_mitra')); if (s.exists()) disiapkanOleh = s.data().disiapkanOleh||disiapkanOleh; } catch(e){}
+  const tglLaporan = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+
+  // Kumpulkan data per Kegiatan: rangkuman, foto, %selesai kegiatan sendiri (diturunkan dari bobot & akumulasi kontribusi)
+  const laporanBulanIni = await ambilLaporanHarian(rabId, bulanYM);
+  const detailKegiatan = [];
   let totalL=0, totalP=0, totalTL=0, totalTP=0;
-  for (let i=0; i<(r.kegiatan||[]).length; i++) {
-    const k = r.kegiatan[i];
-    const laporanKegiatan = laporanPerKegiatan[i] || [];
+  for (let i=0; i<kegiatanList.length; i++) {
+    const k = kegiatanList[i];
+    const bobot = totalBudget>0 ? (Number(k.budget)||0)/totalBudget : 0;
+    // Akumulasi kontribusi Kegiatan ini s/d bulan terpilih (jumlah aktualPerBulan-nya sendiri, bukan gabungan semua Kegiatan)
+    let akumulasiKontribusiKegiatan = 0;
+    for (const b of bulanList) { akumulasiKontribusiKegiatan += Number(k.aktualPerBulan?.[b])||0; if (b===bulanYM) break; }
+    const persenSelesaiSendiri = bobot>0 ? Math.min(100, (akumulasiKontribusiKegiatan/bobot)) : 0;
+
+    const laporanKegiatan = laporanBulanIni[i] || [];
     laporanKegiatan.forEach(x => {
       totalL += Number(x.penerimaLangsungL)||0; totalP += Number(x.penerimaLangsungP)||0;
       totalTL += Number(x.penerimaTidakLangsungL)||0; totalTP += Number(x.penerimaTidakLangsungP)||0;
     });
     let rangkuman = null;
     try { const snap = await getDoc(doc(db,'rangkuman_bulanan', idRangkuman(rabId, i, bulanYM))); if (snap.exists()) rangkuman = snap.data(); } catch(e){}
-    if (!laporanKegiatan.length && !rangkuman) continue; // tidak ada aktivitas bulan ini untuk Kegiatan ini
-    narasiHtml += `<h4 style="margin:14px 0 6px;">${k.nama||'(Kegiatan '+(i+1)+')'}</h4>`;
-    if (rangkuman && rangkuman.narasi) {
-      narasiHtml += `<p>${rangkuman.narasi.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</p>`;
-      if (rangkuman.kendala) narasiHtml += `<p><b>Kendala:</b> ${rangkuman.kendala.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</p>`;
-      if (rangkuman.rencana) narasiHtml += `<p><b>Rencana Bulan Depan:</b> ${rangkuman.rencana.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</p>`;
-    } else {
-      narasiHtml += `<p><i>Rangkuman bulanan belum diisi Admin — buka "Muat Laporan Harian Bulan Ini" untuk merangkumnya (ada ${laporanKegiatan.length} laporan harian Tim menunggu dirangkum).</i></p>`;
-    }
+    // Ambil foto dari laporan harian bulan ini (maks 4 biar ukuran dokumen wajar)
+    let fotoTag = '';
+    const semuaFoto = laporanKegiatan.flatMap(x => x.foto||[]).slice(0,4);
+    if (semuaFoto.length) fotoTag = semuaFoto.map(f=>`<img src="${f}" style="width:120px;height:90px;object-fit:cover;margin:2px;border:1px solid #ccc;">`).join('');
+
+    if (!laporanKegiatan.length && !rangkuman && !k.targetSelesai) continue; // tidak ada progres bulan ini utk kegiatan ini
+    detailKegiatan.push({ nama:k.nama||'(Kegiatan '+(i+1)+')', ik:k.ik||'', targetSelesai:k.targetSelesai?labelBulan(k.targetSelesai):'-', persenSelesaiSendiri, rangkuman, fotoTag });
   }
-  if (!narasiHtml) narasiHtml = '<p><i>Belum ada laporan Tim yang tertaut ke Kegiatan program ini untuk bulan tsb.</i></p>';
+
+  // Bagian "Ringkasan Status": narasi bullet per Kegiatan dengan %-nya sendiri
+  const bulletsHtml = detailKegiatan.map((d,idx) => `<li style="margin-bottom:6px;"><b>${d.nama} (${d.persenSelesaiSendiri.toFixed(0)}%):</b> ${d.rangkuman?.narasi ? d.rangkuman.narasi.replace(/</g,'&lt;').split('\n')[0] : '<i>(rangkuman belum diisi)</i>'}</li>`).join('');
+
+  // Bagian "Daftar Kegiatan Program": tabel detail per Kegiatan + foto
+  const daftarKegiatanHtml = detailKegiatan.map(d => `
+    <tr style="background:#eaf1fa;">
+      <td style="padding:6px;font-weight:bold;">${d.nama}</td>
+      <td style="padding:6px;text-align:center;">${d.persenSelesaiSendiri.toFixed(0)} %</td>
+      <td style="padding:6px;text-align:center;">${d.targetSelesai}</td>
+      <td style="padding:6px;">${(d.ik||'').split('\n').filter(Boolean).map((x,i)=>`${i+1}. ${x}`).join('<br>')}</td>
+    </tr>
+    <tr><td style="padding:6px;background:#eee;font-weight:bold;">DISKRIPSI KEGIATAN</td><td colspan="3" style="padding:6px;background:#eee;font-weight:bold;">FOTO KEGIATAN</td></tr>
+    <tr>
+      <td style="padding:6px;vertical-align:top;">${d.rangkuman?.narasi ? d.rangkuman.narasi.replace(/</g,'&lt;').replace(/\n/g,'<br>') : '<i>Rangkuman belum diisi.</i>'}
+        ${d.rangkuman?.kendala ? `<p><b>Kendala:</b> ${d.rangkuman.kendala.replace(/</g,'&lt;')}</p>` : ''}
+        ${d.rangkuman?.rencana ? `<p><b>Rencana Bulan Depan:</b> ${d.rangkuman.rencana.replace(/</g,'&lt;')}</p>` : ''}
+      </td>
+      <td colspan="3" style="padding:6px;vertical-align:top;">${d.fotoTag || '<i>(tidak ada foto)</i>'}</td>
+    </tr>`).join('');
+
+  // Bagian "Gambaran Umum Anggaran"
+  const anggaranHtml = detailKegiatan.map(d => `<tr><td style="padding:5px;">${d.nama}</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri.toFixed(0)}%</td><td style="padding:5px;text-align:center;">100%</td><td style="padding:5px;text-align:center;">Sesuai</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri>=100?'Selesai':(d.persenSelesaiSendiri>0?'Proses Penyelesaian':'Belum Dimulai')}</td></tr>`).join('');
+
+  // Parameter Umum: total Penerima Manfaat KUMULATIF sejak awal proyek s/d bulan terpilih
+  const laporanKumulatif = [];
+  for (const b of bulanList) { if (b>bulanYM) break; const l = await ambilLaporanHarian(rabId, b); Object.values(l).forEach(arr=>laporanKumulatif.push(...arr)); }
+  let kumL=0, kumP=0;
+  laporanKumulatif.forEach(x => { kumL += (Number(x.penerimaLangsungL)||0)+(Number(x.penerimaTidakLangsungL)||0); kumP += (Number(x.penerimaLangsungP)||0)+(Number(x.penerimaTidakLangsungP)||0); });
 
   return `
   <div style="font-family:Arial,sans-serif;">
-    <h2 style="margin-bottom:2px;">${r.judul}</h2>
-    <div style="color:#555;margin-bottom:14px;">Laporan Bulan: ${labelBulan(bulanYM)} · Periode Proyek: ${labelBulan(r.periodeMulai)} – ${labelBulan(r.periodeSelesai)} · Total Budget: Rp ${totalBudget.toLocaleString('id-ID')}</div>
-    <h3>Kurva S</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #7ba7d4;padding-bottom:8px;margin-bottom:14px;">
+      <div><b style="color:#1a3a5c;">${info.nama}</b><br><span style="font-size:0.7rem;color:#555;">${info.alamat}</span></div>
+    </div>
+    <h2 style="color:#7ba7d4;font-weight:normal;">LAPORAN STATUS UPDATE ${r.judul.toUpperCase()}</h2>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.78rem;margin-bottom:14px;">
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="3">RINGKASAN PROGRAM</th></tr>
+      <tr style="background:#eaf1fa;"><th>TANGGAL LAPORAN</th><th>NAMA PROGRAM</th><th>DISIAPKAN OLEH</th></tr>
+      <tr><td style="text-align:center;">${tglLaporan}</td><td style="text-align:center;">${r.judul}</td><td style="text-align:center;">${disiapkanOleh}</td></tr>
+    </table>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.78rem;margin-bottom:16px;">
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="2">RINGKASAN STATUS</th></tr>
+      <tr>
+        <td style="width:110px;text-align:center;background:#eaf1fa;font-weight:bold;">OVERALL PROGRESS<br><span style="font-size:1.8rem;color:#1a3a5c;">${overallProgress.toFixed(0)}%</span></td>
+        <td style="padding:10px;">Hingga Bulan ${labelBulan(bulanYM)}, ${r.judul} telah mencapai sejumlah capaian ${overallProgress.toFixed(0)}%. Berikut rangkuman dari berbagai kegiatan yang telah dilakukan:
+          <ul>${bulletsHtml || '<li><i>Belum ada kegiatan tercatat bulan ini.</i></li>'}</ul>
+        </td>
+      </tr>
+    </table>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.75rem;margin-bottom:16px;">
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="4">DAFTAR KEGIATAN PROGRAM</th></tr>
+      <tr style="background:#eaf1fa;"><th>TUGAS</th><th>% SELESAI</th><th>TARGET SELESAI</th><th>KEGIATAN</th></tr>
+      ${daftarKegiatanHtml || '<tr><td colspan="4" style="padding:8px;"><i>Belum ada data.</i></td></tr>'}
+    </table>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.75rem;margin-bottom:16px;">
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="5">GAMBARAN UMUM ANGGARAN</th></tr>
+      <tr style="background:#eaf1fa;"><th>KATEGORI</th><th>TERPAKAI</th><th>% TOTAL</th><th>SESUAI JALUR?</th><th>CATATAN</th></tr>
+      ${anggaranHtml || '<tr><td colspan="5" style="padding:8px;"><i>Belum ada data.</i></td></tr>'}
+    </table>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.78rem;margin-bottom:8px;">
+      <tr style="background:#7ba7d4;color:#fff;"><th>KURVA S</th></tr>
+    </table>
     ${chartImgTag}
-    <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;width:100%;font-size:0.75rem;margin-bottom:16px;">
+    <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;width:100%;font-size:0.72rem;margin-bottom:16px;">
       <tr style="background:#eee;"><th>Bulan</th>${bulanList.map(b=>`<th>${labelBulan(b)}</th>`).join('')}</tr>
       <tr><td>Akumulasi Target %</td>${kumulatifTarget.map(v=>`<td style="text-align:center;">${v.toFixed(1)}%</td>`).join('')}</tr>
       <tr><td>Akumulasi Aktual %</td>${kumulatifAktual.map(v=>`<td style="text-align:center;">${v.toFixed(1)}%</td>`).join('')}</tr>
     </table>
-    <h3>Ringkasan Penerima Manfaat Bulan ${labelBulan(bulanYM)}</h3>
-    <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;font-size:0.75rem;margin-bottom:16px;">
-      <tr style="background:#eee;"><th></th><th>Laki-laki</th><th>Perempuan</th><th>Total</th></tr>
-      <tr><td>Langsung</td><td style="text-align:center;">${totalL}</td><td style="text-align:center;">${totalP}</td><td style="text-align:center;">${totalL+totalP}</td></tr>
-      <tr><td>Tidak Langsung</td><td style="text-align:center;">${totalTL}</td><td style="text-align:center;">${totalTP}</td><td style="text-align:center;">${totalTL+totalTP}</td></tr>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-size:0.75rem;">
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="2">PARAMETER UMUM (Kumulatif s/d ${labelBulan(bulanYM)})</th></tr>
+      <tr style="background:#eaf1fa;"><th>Penerima Manfaat</th><th>Jumlah</th></tr>
+      <tr><td>Laki-laki</td><td style="text-align:center;">${kumL} orang</td></tr>
+      <tr><td>Perempuan</td><td style="text-align:center;">${kumP} orang</td></tr>
     </table>
-    <h3>Narasi Capaian Kegiatan</h3>
-    ${narasiHtml}
   </div>`;
 }
 
