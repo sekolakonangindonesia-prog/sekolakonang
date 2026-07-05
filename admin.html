@@ -9,7 +9,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
-<style>  
+<style>
 :root {
   --deep-forest:#050505; --canopy:#1a1b1a; --canopy2:#252625;
   --lime:#C6FF00; --lime-dim:rgba(198,255,0,0.10); --lime-dim2:rgba(198,255,0,0.06);
@@ -3041,7 +3041,7 @@ function renderKegiatanRows() {
       </td>`).join('')}
     </tr>`;
   });
-  gridHtml += `</tbody></table></div><div class="form-hint" style="margin-top:6px;">Baris <b style="color:var(--lime);">TARGET %</b> = rencana per bulan (dari RAB). Baris <b style="color:#ff8a8a;">AKTUAL %</b> = realisasi berjalan (diupdate tiap bulan).</div>`;
+  gridHtml += `</tbody></table></div><div class="form-hint" style="margin-top:6px;">Baris <b style="color:var(--lime);">TARGET %</b> = rencana (dari RAB). Baris <b style="color:#ff8a8a;">AKTUAL %</b> = realisasi berjalan. Angka yang diisi adalah <b>% kontribusi ke total proyek</b> (persis kolom Persentase Target/Aktual di Excel RAB) — kalau dijumlah SEMUA Kegiatan &amp; SEMUA bulan, totalnya harus 100%.</div>`;
   gridWrap.innerHTML = gridHtml;
 }
 window.renderKegiatanRows = renderKegiatanRows;
@@ -3172,10 +3172,14 @@ function hitungKurvaS(r) {
   const perBulanTarget = [], perBulanAktual = [];
   bulanList.forEach(b => {
     let tgt=0, akt=0;
+    // Nilai Target%/Aktual% yang diisi per Kegiatan per bulan SUDAH berupa kontribusi
+    // terhadap total proyek (persis kolom "Persentase Target/Aktual (%)" di Excel RAB —
+    // kalau dijumlah semua Kegiatan semua bulan, totalnya = 100%). Jadi di sini cukup
+    // dijumlah langsung, TIDAK dikalikan bobot budget lagi (bobot budget cuma referensi
+    // di form input, bukan pengali kedua).
     kegiatan.forEach(k => {
-      const bobot = totalBudget>0 ? (Number(k.budget)||0)/totalBudget : (1/(kegiatan.length||1));
-      tgt += bobot * (Number(k.targetPerBulan?.[b])||0);
-      akt += bobot * (Number(k.aktualPerBulan?.[b])||0);
+      tgt += (Number(k.targetPerBulan?.[b])||0);
+      akt += (Number(k.aktualPerBulan?.[b])||0);
     });
     perBulanTarget.push(tgt); perBulanAktual.push(akt);
   });
@@ -3715,7 +3719,7 @@ window.editBeritaInternal = editBeritaInternal;
 window.editBeritaExternal = editBeritaExternal;
 window.editMitra = editMitra;
 window.editLaporan = editLaporan;
-window.loadBioList = loadBioList;    
+window.loadBioList = loadBioList;  
 </script>
 </body>
 </html>
