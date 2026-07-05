@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
 :root {
   --deep-forest:#050505; --canopy:#1a1b1a; --canopy2:#252625;
@@ -1099,8 +1101,28 @@ input,textarea,select{font-family:var(--body);}
     <button class="modal-close" data-close="modal-rab-view"><i class="fas fa-times"></i></button>
     <h3 id="rv-judul">—</h3>
     <div class="sub" id="rv-periode">—</div>
+    <div style="margin:10px 0;"><button class="btn btn-lime btn-sm" id="rv-export-btn"><i class="fas fa-file-export"></i> Export Laporan ke Mitra</button></div>
     <div id="rv-chart-wrap" style="margin:16px 0;"></div>
     <div id="rv-table-wrap" style="overflow-x:auto;"></div>
+  </div>
+</div>
+
+<!-- MODAL EXPORT LAPORAN GABUNGAN (NARASI + KURVA S) -->
+<div class="modal-backdrop" id="modal-laporan-mitra">
+  <div class="modal-box wide">
+    <button class="modal-close" data-close="modal-laporan-mitra"><i class="fas fa-times"></i></button>
+    <h3>Export Laporan ke Mitra</h3>
+    <div class="sub">Gabungan Kurva S + Narasi Capaian Kegiatan bulan terpilih (dari Progress Report Tim yang sudah ditautkan).</div>
+    <div class="row-2" style="margin:14px 0;">
+      <div class="form-group" style="margin:0;"><label>Bulan Laporan</label><input type="month" id="lap-bulan"></div>
+      <div class="form-group" style="margin:0;display:flex;align-items:flex-end;"><button class="btn btn-outline" id="lap-generate-btn" style="width:100%;"><i class="fas fa-sync-alt"></i> Buat Preview</button></div>
+    </div>
+    <div id="lap-preview" style="background:#fff;color:#111;padding:20px;border-radius:8px;max-height:50vh;overflow-y:auto;font-size:0.8rem;"><p style="color:#999;">Pilih bulan lalu klik "Buat Preview".</p></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" data-close="modal-laporan-mitra">Tutup</button>
+      <button class="btn btn-outline" id="lap-print-btn"><i class="fas fa-print"></i> Cetak / Simpan PDF</button>
+      <button class="btn btn-lime" id="lap-word-btn"><i class="fas fa-file-word"></i> Download Word (.docx)</button>
+    </div>
   </div>
 </div>
 
@@ -2986,8 +3008,8 @@ function renderKegiatanRows() {
         <div class="form-group" style="margin:0;"><label>Output (Kuantitatif)</label><input type="text" value="${(k.output||'').replace(/"/g,'&quot;')}" oninput="kegiatanRowsState[${i}].output=this.value" placeholder="mis. penanaman 1200 bibit"></div>
       </div>
       <div class="row-2" style="margin-bottom:8px;">
-        <div class="form-group" style="margin:0;"><label>Budget (IDR)</label><input type="number" min="0" value="${k.budget||0}" oninput="kegiatanRowsState[${i}].budget=Number(this.value)||0; renderKegiatanRows();"></div>
-        <div class="form-group" style="margin:0;"><label>Bobot dari Total Budget</label><input type="text" value="${bobot}%" disabled style="opacity:0.6;"></div>
+        <div class="form-group" style="margin:0;"><label>Budget (IDR)</label><input type="number" min="0" value="${k.budget||0}" oninput="kegiatanRowsState[${i}].budget=Number(this.value)||0; updateBudgetSummary();"></div>
+        <div class="form-group" style="margin:0;"><label>Bobot dari Total Budget</label><input type="text" id="bobot-display-${i}" value="${bobot}%" disabled style="opacity:0.6;"></div>
       </div>
       <div class="form-group" style="margin:0 0 8px;"><label>Indikator Kinerja (IK) — satu per baris</label><textarea rows="2" oninput="kegiatanRowsState[${i}].ik=this.value" placeholder="Persiapan bibit&#10;Persiapan iven penanaman">${k.ik||''}</textarea></div>
       <button class="btn btn-danger btn-sm" onclick="kegiatanRowsState.splice(${i},1); renderKegiatanRows();"><i class="fas fa-trash"></i> Hapus Kegiatan</button>
@@ -3017,6 +3039,19 @@ function renderKegiatanRows() {
 }
 window.renderKegiatanRows = renderKegiatanRows;
 window.kegiatanRowsState = kegiatanRowsState;
+
+// Dipanggil tiap ketik di field Budget — HANYA update angka bobot% & total budget,
+// TIDAK menggambar ulang seluruh form (kalau innerHTML digambar ulang tiap 1 digit diketik,
+// kursor/fokus input ikut hilang sehingga harus klik lagi tiap mau lanjut ketik).
+function updateBudgetSummary() {
+  const totalBudget = kegiatanRowsState.reduce((s,k)=>s+(Number(k.budget)||0),0);
+  document.getElementById('rab-total-budget').textContent = 'Rp ' + totalBudget.toLocaleString('id-ID');
+  kegiatanRowsState.forEach((k,i) => {
+    const bobotEl = document.getElementById('bobot-display-'+i);
+    if (bobotEl) bobotEl.value = (totalBudget>0 ? ((Number(k.budget)||0)/totalBudget*100).toFixed(2) : '0.00') + '%';
+  });
+}
+window.updateBudgetSummary = updateBudgetSummary;
 
 // Muat daftar Kegiatan otomatis dari "Target Capaian Program" (programs/{tipe}/targets),
 // sesuai Jenis yang dipilih — supaya tidak perlu ketik ulang nama Kegiatan yang sudah ada.
@@ -3164,7 +3199,9 @@ function gambarKurvaSSvg(bulanList, kumulatifTarget, kumulatifAktual) {
   </svg>`;
 }
 
+let currentKurvaSId = null;
 function lihatKurvaS(id) {
+  currentKurvaSId = id;
   const r = daftarRabLoaded.find(x=>x.id===id);
   if (!r) return;
   const { bulanList, perBulanTarget, perBulanAktual, kumulatifTarget, kumulatifAktual, totalBudget } = hitungKurvaS(r);
@@ -3181,6 +3218,132 @@ function lihatKurvaS(id) {
   openModal('modal-rab-view');
 }
 window.lihatKurvaS = lihatKurvaS;
+
+// ── Export Laporan ke Mitra: gabungan Kurva S + Narasi Capaian per bulan ──
+let rabIdUntukExport = null;
+document.getElementById('rv-export-btn').addEventListener('click', () => {
+  rabIdUntukExport = currentKurvaSId;
+  if (!rabIdUntukExport) { alert('Tidak menemukan Program ini.'); return; }
+  const r = daftarRabLoaded.find(x=>x.id===rabIdUntukExport);
+  // Default: bulan terakhir dari periode program
+  document.getElementById('lap-bulan').value = r.periodeSelesai || '';
+  document.getElementById('lap-preview').innerHTML = '<p style="color:#999;">Pilih bulan lalu klik "Buat Preview".</p>';
+  closeModal('modal-rab-view');
+  openModal('modal-laporan-mitra');
+});
+
+// Konversi SVG (string) jadi PNG data-URL — supaya bisa dibaca Word (Word tidak selalu render <svg> dg baik)
+function svgKeGambarPng(svgString, width, height) {
+  return new Promise((resolve, reject) => {
+    try {
+      const img = new Image();
+      const svgBlob = new Blob([svgString], {type:'image/svg+xml;charset=utf-8'});
+      const url = URL.createObjectURL(svgBlob);
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,width,height);
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = (e) => { URL.revokeObjectURL(url); reject(new Error('Gagal render grafik')); };
+      img.src = url;
+    } catch(e) { reject(e); }
+  });
+}
+
+// Susun HTML laporan lengkap (dipakai untuk preview, cetak/PDF, dan export Word)
+async function susunHtmlLaporanMitra(rabId, bulanYM) {
+  const r = daftarRabLoaded.find(x=>x.id===rabId);
+  if (!r) throw new Error('Program tidak ditemukan');
+  const { bulanList, kumulatifTarget, kumulatifAktual, totalBudget } = hitungKurvaS(r);
+  const svg = bulanList.length ? gambarKurvaSSvg(bulanList, kumulatifTarget, kumulatifAktual) : '';
+  let chartImgTag = '';
+  if (svg) {
+    try { const png = await svgKeGambarPng(svg, 700, 280); chartImgTag = `<img src="${png}" style="width:100%;max-width:650px;display:block;margin:12px 0;">`; }
+    catch(e) { chartImgTag = '<p><i>(Grafik gagal dimuat)</i></p>'; }
+  }
+  // Ambil SEMUA progress_reports lalu filter di sisi klien (bulan + tertaut ke Kegiatan program ini)
+  const snap = await getDocs(collection(db,'progress_reports'));
+  const semuaLaporan = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const cocokBulan = (r) => {
+    if (!r.createdAt || !r.createdAt.toDate) return false;
+    const d = r.createdAt.toDate();
+    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    return ym === bulanYM;
+  };
+  let narasiHtml = '';
+  let totalL=0, totalP=0, totalTL=0, totalTP=0;
+  (r.kegiatan||[]).forEach((k,i) => {
+    const linkVal = `${rabId}::${i}`;
+    const laporanKegiatan = semuaLaporan.filter(x => x.linkedKegiatanRab===linkVal && cocokBulan(x));
+    if (!laporanKegiatan.length) return;
+    let itemHtml = '';
+    laporanKegiatan.forEach(x => {
+      const tgl = x.createdAt && x.createdAt.toDate ? x.createdAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) : '-';
+      const l = Number(x.penerimaLangsungL)||0, p = Number(x.penerimaLangsungP)||0, tl = Number(x.penerimaTidakLangsungL)||0, tp = Number(x.penerimaTidakLangsungP)||0;
+      totalL+=l; totalP+=p; totalTL+=tl; totalTP+=tp;
+      itemHtml += `<div style="margin-bottom:8px;padding-left:10px;border-left:2px solid #ccc;">
+        <div style="font-size:0.72rem;color:#666;">${tgl}${x.timNama?' · '+x.timNama:''}</div>
+        <div>${(x.deskripsi||'').replace(/</g,'&lt;')}</div>
+        ${(l||p||tl||tp) ? `<div style="font-size:0.72rem;color:#444;margin-top:4px;">Penerima manfaat: Langsung ${l+p} orang (L:${l}/P:${p}), Tidak Langsung ${tl+tp} orang (L:${tl}/P:${tp})</div>` : ''}
+      </div>`;
+    });
+    narasiHtml += `<h4 style="margin:14px 0 6px;">${k.nama||'(Kegiatan '+(i+1)+')'}</h4>${itemHtml}`;
+  });
+  if (!narasiHtml) narasiHtml = '<p><i>Belum ada laporan Tim yang tertaut ke Kegiatan program ini untuk bulan tsb.</i></p>';
+
+  return `
+  <div style="font-family:Arial,sans-serif;">
+    <h2 style="margin-bottom:2px;">${r.judul}</h2>
+    <div style="color:#555;margin-bottom:14px;">Laporan Bulan: ${labelBulan(bulanYM)} · Periode Proyek: ${labelBulan(r.periodeMulai)} – ${labelBulan(r.periodeSelesai)} · Total Budget: Rp ${totalBudget.toLocaleString('id-ID')}</div>
+    <h3>Kurva S</h3>
+    ${chartImgTag}
+    <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;width:100%;font-size:0.75rem;margin-bottom:16px;">
+      <tr style="background:#eee;"><th>Bulan</th>${bulanList.map(b=>`<th>${labelBulan(b)}</th>`).join('')}</tr>
+      <tr><td>Akumulasi Target %</td>${kumulatifTarget.map(v=>`<td style="text-align:center;">${v.toFixed(1)}%</td>`).join('')}</tr>
+      <tr><td>Akumulasi Aktual %</td>${kumulatifAktual.map(v=>`<td style="text-align:center;">${v.toFixed(1)}%</td>`).join('')}</tr>
+    </table>
+    <h3>Ringkasan Penerima Manfaat Bulan ${labelBulan(bulanYM)}</h3>
+    <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;font-size:0.75rem;margin-bottom:16px;">
+      <tr style="background:#eee;"><th></th><th>Laki-laki</th><th>Perempuan</th><th>Total</th></tr>
+      <tr><td>Langsung</td><td style="text-align:center;">${totalL}</td><td style="text-align:center;">${totalP}</td><td style="text-align:center;">${totalL+totalP}</td></tr>
+      <tr><td>Tidak Langsung</td><td style="text-align:center;">${totalTL}</td><td style="text-align:center;">${totalTP}</td><td style="text-align:center;">${totalTL+totalTP}</td></tr>
+    </table>
+    <h3>Narasi Capaian Kegiatan</h3>
+    ${narasiHtml}
+  </div>`;
+}
+
+document.getElementById('lap-generate-btn').addEventListener('click', async () => {
+  const bulanYM = document.getElementById('lap-bulan').value;
+  if (!bulanYM) { alert('Pilih bulan dulu.'); return; }
+  const prev = document.getElementById('lap-preview');
+  prev.innerHTML = '<p style="color:#999;">Memuat...</p>';
+  try { prev.innerHTML = await susunHtmlLaporanMitra(rabIdUntukExport, bulanYM); }
+  catch(e) { prev.innerHTML = `<p style="color:red;">Gagal: ${e.message}</p>`; }
+});
+
+document.getElementById('lap-print-btn').addEventListener('click', () => {
+  const html = document.getElementById('lap-preview').innerHTML;
+  if (!html || html.includes('Pilih bulan')) { alert('Klik "Buat Preview" dulu.'); return; }
+  const w = window.open('', '_blank');
+  w.document.write(`<html><head><title>Laporan Mitra</title></head><body>${html}</body></html>`);
+  w.document.close();
+  setTimeout(() => { w.print(); }, 400);
+});
+
+document.getElementById('lap-word-btn').addEventListener('click', () => {
+  const html = document.getElementById('lap-preview').innerHTML;
+  if (!html || html.includes('Pilih bulan')) { alert('Klik "Buat Preview" dulu.'); return; }
+  try {
+    const fullHtml = `<html><head><meta charset="utf-8"></head><body>${html}</body></html>`;
+    const blob = htmlDocx.asBlob(fullHtml);
+    saveAs(blob, `Laporan_Mitra_${document.getElementById('lap-bulan').value}.docx`);
+  } catch(e) { alert('Gagal membuat file Word: '+e.message+' — coba gunakan "Cetak / Simpan PDF" sebagai alternatif.'); }
+});
 
 // ── Isi dropdown "Kegiatan RAB Terkait" di modal Progress Report, dari semua rab_kurva_s ──
 async function populateKegiatanRabDropdown(selectedValue) {
