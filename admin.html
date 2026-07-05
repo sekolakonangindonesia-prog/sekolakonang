@@ -9,7 +9,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
-<style>  
+<style>
 :root {
   --deep-forest:#050505; --canopy:#1a1b1a; --canopy2:#252625;
   --lime:#C6FF00; --lime-dim:rgba(198,255,0,0.10); --lime-dim2:rgba(198,255,0,0.06);
@@ -1112,12 +1112,15 @@ input,textarea,select{font-family:var(--body);}
   <div class="modal-box wide">
     <button class="modal-close" data-close="modal-laporan-mitra"><i class="fas fa-times"></i></button>
     <h3>Export Laporan ke Mitra</h3>
-    <div class="sub">Gabungan Kurva S + Narasi Capaian Kegiatan bulan terpilih (dari Progress Report Tim yang sudah ditautkan).</div>
+    <div class="sub">1) Muat laporan harian Tim bulan ini → 2) Admin rangkum jadi naratif bulanan + Kendala + Rencana Selanjutnya → 3) Preview final digabung dengan Kurva S.</div>
     <div class="row-2" style="margin:14px 0;">
       <div class="form-group" style="margin:0;"><label>Bulan Laporan</label><input type="month" id="lap-bulan"></div>
-      <div class="form-group" style="margin:0;display:flex;align-items:flex-end;"><button class="btn btn-outline" id="lap-generate-btn" style="width:100%;"><i class="fas fa-sync-alt"></i> Buat Preview</button></div>
+      <div class="form-group" style="margin:0;display:flex;align-items:flex-end;"><button class="btn btn-outline" id="lap-muat-btn" style="width:100%;"><i class="fas fa-sync-alt"></i> Muat Laporan Harian Bulan Ini</button></div>
     </div>
-    <div id="lap-preview" style="background:#fff;color:#111;padding:20px;border-radius:8px;max-height:50vh;overflow-y:auto;font-size:0.8rem;"><p style="color:#999;">Pilih bulan lalu klik "Buat Preview".</p></div>
+
+    <div id="lap-rangkuman-editor"></div>
+
+    <div id="lap-preview" style="background:#fff;color:#111;padding:20px;border-radius:8px;max-height:40vh;overflow-y:auto;font-size:0.8rem;margin-top:14px;"><p style="color:#999;">Pilih bulan → "Muat Laporan Harian Bulan Ini" → isi rangkuman → "Simpan & Buat Preview Final".</p></div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-laporan-mitra">Tutup</button>
       <button class="btn btn-outline" id="lap-print-btn"><i class="fas fa-print"></i> Cetak / Simpan PDF</button>
@@ -3232,13 +3235,99 @@ window.lihatKurvaS = lihatKurvaS;
 
 // ── Export Laporan ke Mitra: gabungan Kurva S + Narasi Capaian per bulan ──
 let rabIdUntukExport = null;
+// Ambil laporan harian Tim untuk 1 Program RAB pada 1 bulan tertentu, dikelompokkan per index Kegiatan
+async function ambilLaporanHarian(rabId, bulanYM) {
+  const snap = await getDocs(collection(db,'progress_reports'));
+  const semua = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const cocokBulan = (x) => {
+    if (!x.createdAt || !x.createdAt.toDate) return false;
+    const d = x.createdAt.toDate();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === bulanYM;
+  };
+  const hasil = {}; // { kegiatanIndex: [laporan...] }
+  semua.forEach(x => {
+    if (!x.linkedKegiatanRab || !cocokBulan(x)) return;
+    const [xRabId, idxStr] = x.linkedKegiatanRab.split('::');
+    if (xRabId !== rabId) return;
+    if (!hasil[idxStr]) hasil[idxStr] = [];
+    hasil[idxStr].push(x);
+  });
+  return hasil;
+}
+
+function idRangkuman(rabId, idx, bulanYM) { return `${rabId}__${idx}__${bulanYM}`; }
+
+// Langkah 1: muat laporan harian bulan ini, tampilkan editor Rangkuman/Kendala/Rencana per Kegiatan
+document.getElementById('lap-muat-btn').addEventListener('click', async () => {
+  const rabId = rabIdUntukExport, bulanYM = document.getElementById('lap-bulan').value;
+  if (!bulanYM) { alert('Pilih bulan dulu.'); return; }
+  const r = daftarRabLoaded.find(x=>x.id===rabId);
+  const editorWrap = document.getElementById('lap-rangkuman-editor');
+  editorWrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Memuat laporan harian...</p>';
+  try {
+    const laporanPerKegiatan = await ambilLaporanHarian(rabId, bulanYM);
+    const idxDenganLaporan = Object.keys(laporanPerKegiatan);
+    if (!idxDenganLaporan.length) {
+      editorWrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Belum ada laporan harian Tim yang tertaut ke Kegiatan program ini untuk bulan tsb.</p>';
+      return;
+    }
+    let html = '<label style="font-size:0.7rem;font-weight:700;color:var(--lime);text-transform:uppercase;letter-spacing:1px;display:block;margin:10px 0;">Rangkuman Bulanan per Kegiatan</label>';
+    for (const idx of idxDenganLaporan) {
+      const k = (r.kegiatan||[])[idx] || {nama:'(Kegiatan '+idx+')'};
+      const laporan = laporanPerKegiatan[idx];
+      // Muat rangkuman yang sudah pernah disimpan (kalau ada), supaya bisa dikoreksi lagi
+      let existing = null;
+      try { const snap = await getDoc(doc(db,'rangkuman_bulanan', idRangkuman(rabId, idx, bulanYM))); if (snap.exists()) existing = snap.data(); } catch(e){}
+      const draftNarasi = existing?.narasi || laporan.map(x=>`- ${x.deskripsi||''}`).join('\n');
+      const daftarHarianHtml = laporan.map(x => {
+        const tgl = x.createdAt?.toDate ? x.createdAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'short'}) : '-';
+        return `<div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:3px;">• ${tgl} (${x.timNama||'Tim'}): ${(x.deskripsi||'').slice(0,120)}${(x.deskripsi||'').length>120?'…':''}</div>`;
+      }).join('');
+      html += `<div class="list-card" style="margin-bottom:12px;padding:12px;" data-kegiatan-idx="${idx}">
+        <div style="font-weight:700;margin-bottom:6px;">${k.nama}</div>
+        <details style="margin-bottom:8px;"><summary style="cursor:pointer;font-size:0.72rem;color:var(--text-muted);">Lihat ${laporan.length} laporan harian Tim (referensi)</summary>${daftarHarianHtml}</details>
+        <div class="form-group" style="margin:0 0 8px;"><label>Rangkuman Bulanan</label><textarea rows="3" class="lap-input-narasi" placeholder="Rangkum jadi 1 paragraf naratif dari laporan harian di atas...">${draftNarasi}</textarea></div>
+        <div class="row-2">
+          <div class="form-group" style="margin:0;"><label>Kendala</label><textarea rows="2" class="lap-input-kendala" placeholder="Kendala yang dihadapi bulan ini (kalau ada)...">${existing?.kendala||''}</textarea></div>
+          <div class="form-group" style="margin:0;"><label>Rencana Bulan Depan</label><textarea rows="2" class="lap-input-rencana" placeholder="Rencana tindak lanjut bulan berikutnya...">${existing?.rencana||''}</textarea></div>
+        </div>
+      </div>`;
+    }
+    html += `<button class="btn btn-lime" id="lap-simpan-preview-btn" style="margin-bottom:6px;"><i class="fas fa-save"></i> Simpan & Buat Preview Final</button>`;
+    editorWrap.innerHTML = html;
+    document.getElementById('lap-simpan-preview-btn').addEventListener('click', simpanRangkumanDanBuatPreview);
+  } catch(e) { editorWrap.innerHTML = `<p style="color:var(--danger);">Gagal memuat: ${e.message}</p>`; }
+});
+
+// Langkah 2: simpan tiap Rangkuman/Kendala/Rencana ke Firestore, lalu susun preview final
+async function simpanRangkumanDanBuatPreview() {
+  const rabId = rabIdUntukExport, bulanYM = document.getElementById('lap-bulan').value;
+  const btn = document.getElementById('lap-simpan-preview-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+  try {
+    const blok = document.querySelectorAll('#lap-rangkuman-editor [data-kegiatan-idx]');
+    for (const el of blok) {
+      const idx = el.dataset.kegiatanIdx;
+      const narasi = el.querySelector('.lap-input-narasi').value.trim();
+      const kendala = el.querySelector('.lap-input-kendala').value.trim();
+      const rencana = el.querySelector('.lap-input-rencana').value.trim();
+      await setDoc(doc(db,'rangkuman_bulanan', idRangkuman(rabId, idx, bulanYM)), {
+        rabId, kegiatanIndex: Number(idx), bulan: bulanYM, narasi, kendala, rencana, updatedAt: serverTimestamp()
+      }, {merge:true});
+    }
+    document.getElementById('lap-preview').innerHTML = await susunHtmlLaporanMitra(rabId, bulanYM);
+  } catch(e) { alert('Gagal menyimpan rangkuman: '+e.message); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan & Buat Preview Final'; }
+}
+
 document.getElementById('rv-export-btn').addEventListener('click', () => {
   rabIdUntukExport = currentKurvaSId;
   if (!rabIdUntukExport) { alert('Tidak menemukan Program ini.'); return; }
   const r = daftarRabLoaded.find(x=>x.id===rabIdUntukExport);
   // Default: bulan terakhir dari periode program
   document.getElementById('lap-bulan').value = r.periodeSelesai || '';
-  document.getElementById('lap-preview').innerHTML = '<p style="color:#999;">Pilih bulan lalu klik "Buat Preview".</p>';
+  document.getElementById('lap-rangkuman-editor').innerHTML = '';
+  document.getElementById('lap-preview').innerHTML = '<p style="color:#999;">Pilih bulan → "Muat Laporan Harian Bulan Ini" → isi rangkuman → "Simpan & Buat Preview Final".</p>';
   closeModal('modal-rab-view');
   openModal('modal-laporan-mitra');
 });
@@ -3276,34 +3365,29 @@ async function susunHtmlLaporanMitra(rabId, bulanYM) {
     try { const png = await svgKeGambarPng(svg, 700, 280); chartImgTag = `<img src="${png}" style="width:100%;max-width:650px;display:block;margin:12px 0;">`; }
     catch(e) { chartImgTag = '<p><i>(Grafik gagal dimuat)</i></p>'; }
   }
-  // Ambil SEMUA progress_reports lalu filter di sisi klien (bulan + tertaut ke Kegiatan program ini)
-  const snap = await getDocs(collection(db,'progress_reports'));
-  const semuaLaporan = snap.docs.map(d=>({id:d.id,...d.data()}));
-  const cocokBulan = (r) => {
-    if (!r.createdAt || !r.createdAt.toDate) return false;
-    const d = r.createdAt.toDate();
-    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    return ym === bulanYM;
-  };
+  // Ambil laporan harian (untuk hitung total Penerima Manfaat) + Rangkuman Bulanan tersimpan (untuk narasi)
+  const laporanPerKegiatan = await ambilLaporanHarian(rabId, bulanYM);
   let narasiHtml = '';
   let totalL=0, totalP=0, totalTL=0, totalTP=0;
-  (r.kegiatan||[]).forEach((k,i) => {
-    const linkVal = `${rabId}::${i}`;
-    const laporanKegiatan = semuaLaporan.filter(x => x.linkedKegiatanRab===linkVal && cocokBulan(x));
-    if (!laporanKegiatan.length) return;
-    let itemHtml = '';
+  for (let i=0; i<(r.kegiatan||[]).length; i++) {
+    const k = r.kegiatan[i];
+    const laporanKegiatan = laporanPerKegiatan[i] || [];
     laporanKegiatan.forEach(x => {
-      const tgl = x.createdAt && x.createdAt.toDate ? x.createdAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) : '-';
-      const l = Number(x.penerimaLangsungL)||0, p = Number(x.penerimaLangsungP)||0, tl = Number(x.penerimaTidakLangsungL)||0, tp = Number(x.penerimaTidakLangsungP)||0;
-      totalL+=l; totalP+=p; totalTL+=tl; totalTP+=tp;
-      itemHtml += `<div style="margin-bottom:8px;padding-left:10px;border-left:2px solid #ccc;">
-        <div style="font-size:0.72rem;color:#666;">${tgl}${x.timNama?' · '+x.timNama:''}</div>
-        <div>${(x.deskripsi||'').replace(/</g,'&lt;')}</div>
-        ${(l||p||tl||tp) ? `<div style="font-size:0.72rem;color:#444;margin-top:4px;">Penerima manfaat: Langsung ${l+p} orang (L:${l}/P:${p}), Tidak Langsung ${tl+tp} orang (L:${tl}/P:${tp})</div>` : ''}
-      </div>`;
+      totalL += Number(x.penerimaLangsungL)||0; totalP += Number(x.penerimaLangsungP)||0;
+      totalTL += Number(x.penerimaTidakLangsungL)||0; totalTP += Number(x.penerimaTidakLangsungP)||0;
     });
-    narasiHtml += `<h4 style="margin:14px 0 6px;">${k.nama||'(Kegiatan '+(i+1)+')'}</h4>${itemHtml}`;
-  });
+    let rangkuman = null;
+    try { const snap = await getDoc(doc(db,'rangkuman_bulanan', idRangkuman(rabId, i, bulanYM))); if (snap.exists()) rangkuman = snap.data(); } catch(e){}
+    if (!laporanKegiatan.length && !rangkuman) continue; // tidak ada aktivitas bulan ini untuk Kegiatan ini
+    narasiHtml += `<h4 style="margin:14px 0 6px;">${k.nama||'(Kegiatan '+(i+1)+')'}</h4>`;
+    if (rangkuman && rangkuman.narasi) {
+      narasiHtml += `<p>${rangkuman.narasi.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</p>`;
+      if (rangkuman.kendala) narasiHtml += `<p><b>Kendala:</b> ${rangkuman.kendala.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</p>`;
+      if (rangkuman.rencana) narasiHtml += `<p><b>Rencana Bulan Depan:</b> ${rangkuman.rencana.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</p>`;
+    } else {
+      narasiHtml += `<p><i>Rangkuman bulanan belum diisi Admin — buka "Muat Laporan Harian Bulan Ini" untuk merangkumnya (ada ${laporanKegiatan.length} laporan harian Tim menunggu dirangkum).</i></p>`;
+    }
+  }
   if (!narasiHtml) narasiHtml = '<p><i>Belum ada laporan Tim yang tertaut ke Kegiatan program ini untuk bulan tsb.</i></p>';
 
   return `
@@ -3327,15 +3411,6 @@ async function susunHtmlLaporanMitra(rabId, bulanYM) {
     ${narasiHtml}
   </div>`;
 }
-
-document.getElementById('lap-generate-btn').addEventListener('click', async () => {
-  const bulanYM = document.getElementById('lap-bulan').value;
-  if (!bulanYM) { alert('Pilih bulan dulu.'); return; }
-  const prev = document.getElementById('lap-preview');
-  prev.innerHTML = '<p style="color:#999;">Memuat...</p>';
-  try { prev.innerHTML = await susunHtmlLaporanMitra(rabIdUntukExport, bulanYM); }
-  catch(e) { prev.innerHTML = `<p style="color:red;">Gagal: ${e.message}</p>`; }
-});
 
 document.getElementById('lap-print-btn').addEventListener('click', () => {
   const html = document.getElementById('lap-preview').innerHTML;
