@@ -3021,20 +3021,27 @@ function renderKegiatanRows() {
   if (!bulanList.length || !kegiatanRowsState.length) { gridWrap.innerHTML = ''; return; }
   let gridHtml = `<label style="font-size:0.7rem;font-weight:700;color:var(--lime);text-transform:uppercase;letter-spacing:1px;display:block;margin:8px 0;">Target % / Aktual % per Bulan</label>
     <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.72rem;">
-    <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border-subtle);">Kegiatan</th>${bulanList.map(b=>`<th style="padding:6px;border-bottom:1px solid var(--border-subtle);text-align:center;">${labelBulan(b)}</th>`).join('')}</tr></thead><tbody>`;
+    <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border-subtle);">Kegiatan</th><th style="padding:6px;border-bottom:1px solid var(--border-subtle);"></th>${bulanList.map(b=>`<th style="padding:6px;border-bottom:1px solid var(--border-subtle);text-align:center;">${labelBulan(b)}</th>`).join('')}</tr></thead><tbody>`;
   kegiatanRowsState.forEach((k,i) => {
     if (!k.targetPerBulan) k.targetPerBulan = {};
     if (!k.aktualPerBulan) k.aktualPerBulan = {};
-    gridHtml += `<tr><td style="padding:6px;border-bottom:1px solid var(--border-subtle);font-weight:600;">${k.nama||'(belum diisi)'}</td>`;
-    bulanList.forEach(b => {
-      gridHtml += `<td style="padding:4px;border-bottom:1px solid var(--border-subtle);text-align:center;">
-        <input type="number" min="0" max="100" value="${k.targetPerBulan[b]||0}" oninput="kegiatanRowsState[${i}].targetPerBulan['${b}']=Number(this.value)||0" title="Target %" style="width:44px;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:4px;color:var(--lime);padding:3px;font-size:0.68rem;text-align:center;margin-bottom:2px;">
-        <input type="number" min="0" max="100" value="${k.aktualPerBulan[b]||0}" oninput="kegiatanRowsState[${i}].aktualPerBulan['${b}']=Number(this.value)||0" title="Aktual %" style="width:44px;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:4px;color:#ff8a8a;padding:3px;font-size:0.68rem;text-align:center;">
-      </td>`;
-    });
-    gridHtml += `</tr>`;
+    // Baris TARGET — background kehijauan, label eksplisit "TARGET %" (bukan cuma warna teks) supaya tidak tertukar dengan baris Aktual
+    gridHtml += `<tr style="background:rgba(198,255,0,0.05);">
+      <td rowspan="2" style="padding:6px;border-bottom:1px solid var(--border-subtle);font-weight:600;vertical-align:top;">${k.nama||'(belum diisi)'}</td>
+      <td style="padding:6px;border-bottom:1px solid var(--border-subtle);color:var(--lime);font-weight:700;white-space:nowrap;">TARGET %</td>
+      ${bulanList.map(b=>`<td style="padding:4px;border-bottom:1px solid var(--border-subtle);text-align:center;">
+        <input type="number" min="0" max="100" value="${k.targetPerBulan[b]||0}" oninput="kegiatanRowsState[${i}].targetPerBulan['${b}']=Number(this.value)||0" style="width:48px;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:4px;color:var(--lime);padding:4px;font-size:0.7rem;text-align:center;">
+      </td>`).join('')}
+    </tr>`;
+    // Baris AKTUAL — background kemerahan, label eksplisit "AKTUAL %"
+    gridHtml += `<tr style="background:rgba(255,107,107,0.05);">
+      <td style="padding:6px;border-bottom:1px solid var(--border-subtle);color:#ff8a8a;font-weight:700;white-space:nowrap;">AKTUAL %</td>
+      ${bulanList.map(b=>`<td style="padding:4px;border-bottom:1px solid var(--border-subtle);text-align:center;">
+        <input type="number" min="0" max="100" value="${k.aktualPerBulan[b]||0}" oninput="kegiatanRowsState[${i}].aktualPerBulan['${b}']=Number(this.value)||0" style="width:48px;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:4px;color:#ff8a8a;padding:4px;font-size:0.7rem;text-align:center;">
+      </td>`).join('')}
+    </tr>`;
   });
-  gridHtml += `</tbody></table></div><div class="form-hint" style="margin-top:6px;">Baris hijau = Target %, baris merah = Aktual % (isi berjalan tiap bulan).</div>`;
+  gridHtml += `</tbody></table></div><div class="form-hint" style="margin-top:6px;">Baris <b style="color:var(--lime);">TARGET %</b> = rencana per bulan (dari RAB). Baris <b style="color:#ff8a8a;">AKTUAL %</b> = realisasi berjalan (diupdate tiap bulan).</div>`;
   gridWrap.innerHTML = gridHtml;
 }
 window.renderKegiatanRows = renderKegiatanRows;
@@ -3708,7 +3715,7 @@ window.editBeritaInternal = editBeritaInternal;
 window.editBeritaExternal = editBeritaExternal;
 window.editMitra = editMitra;
 window.editLaporan = editLaporan;
-window.loadBioList = loadBioList;    
+window.loadBioList = loadBioList;  
 </script>
 </body>
 </html>
