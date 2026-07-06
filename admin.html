@@ -1073,6 +1073,12 @@ input,textarea,select{font-family:var(--body);}
       <div class="form-group"><label>Periode Mulai</label><input type="month" id="rab-periode-mulai"></div>
       <div class="form-group"><label>Periode Selesai</label><input type="month" id="rab-periode-selesai"></div>
     </div>
+    <div class="form-group">
+      <label>Mitra (ES-Buyer) Terkait <span style="color:var(--text-muted);font-weight:400;">(supaya laporan bulanan bisa dikirim ke Dashboard Mitra ini)</span></label>
+      <select id="rab-mitra" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:10px 12px;font-size:0.8rem;">
+        <option value="">— Belum ditautkan —</option>
+      </select>
+    </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
       <button class="btn btn-lime btn-sm" id="loadFromTargetCapaianBtn"><i class="fas fa-sync-alt"></i> Muat dari Target Capaian</button>
       <button class="btn btn-outline btn-sm" id="loadTemplateKehati2026Btn"><i class="fas fa-file-import"></i> Muat Template Kehati 2026</button>
@@ -1118,6 +1124,7 @@ input,textarea,select{font-family:var(--body);}
       <div class="form-group" style="margin:0;"><label>Bulan Laporan</label><input type="month" id="lap-bulan"></div>
       <div class="form-group" style="margin:0;display:flex;align-items:flex-end;"><button class="btn btn-outline" id="lap-muat-btn" style="width:100%;"><i class="fas fa-sync-alt"></i> Muat Laporan Harian Bulan Ini</button></div>
     </div>
+    <div id="lap-status-box" style="display:none;margin-bottom:10px;padding:10px 12px;border-radius:8px;font-size:0.75rem;line-height:1.6;"></div>
 
     <div id="lap-rangkuman-editor"></div>
 
@@ -1126,7 +1133,8 @@ input,textarea,select{font-family:var(--body);}
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-laporan-mitra">Tutup</button>
       <button class="btn btn-outline" id="lap-print-btn"><i class="fas fa-print"></i> Cetak / Simpan PDF</button>
-      <button class="btn btn-lime" id="lap-word-btn"><i class="fas fa-file-word"></i> Download Word (.docx)</button>
+      <button class="btn btn-outline" id="lap-word-btn"><i class="fas fa-file-word"></i> Download Word (.docx)</button>
+      <button class="btn btn-lime" id="lap-kirim-mitra-btn"><i class="fas fa-paper-plane"></i> Kirim ke Dashboard Mitra</button>
     </div>
   </div>
 </div>
@@ -3122,6 +3130,18 @@ document.getElementById('loadTemplateKehati2026Btn').addEventListener('click', (
   renderKegiatanRows();
 });
 
+// ── Isi dropdown "Mitra (ES-Buyer) Terkait" di modal Program RAB ──
+async function populateMitraRabDropdown(selectedId) {
+  const sel = document.getElementById('rab-mitra');
+  sel.innerHTML = '<option value="">Memuat...</option>';
+  try {
+    const snap = await getDocs(collection(db,'es_buyers'));
+    const list = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.nama||'').localeCompare(b.nama||''));
+    sel.innerHTML = '<option value="">— Belum ditautkan —</option>' +
+      list.map(b=>`<option value="${b.id}" ${b.id===selectedId?'selected':''}>${b.nama||b.id}</option>`).join('');
+  } catch(e) { sel.innerHTML = '<option value="">Gagal memuat daftar mitra</option>'; }
+}
+
 document.getElementById('addRabBtn').addEventListener('click', () => {
   document.getElementById('rab-id').value = '';
   document.getElementById('rab-judul').value = '';
@@ -3130,6 +3150,7 @@ document.getElementById('addRabBtn').addEventListener('click', () => {
   document.getElementById('rab-periode-selesai').value = '';
   kegiatanRowsState.length = 0;
   document.getElementById('modal-rab-title').textContent = 'Tambah Program RAB';
+  populateMitraRabDropdown('');
   renderKegiatanRows();
   openModal('modal-rabkurva');
 });
@@ -3145,6 +3166,7 @@ async function editRabKurva(id) {
   kegiatanRowsState.length = 0;
   kegiatanRowsState.push(...JSON.parse(JSON.stringify(r.kegiatan||[])));
   document.getElementById('modal-rab-title').textContent = 'Edit Program RAB';
+  populateMitraRabDropdown(r.linkedBuyerId||'');
   renderKegiatanRows();
   openModal('modal-rabkurva');
 }
@@ -3162,6 +3184,7 @@ document.getElementById('saveRabBtn').addEventListener('click', async () => {
     const data = {
       judul, tipe: document.getElementById('rab-tipe').value,
       periodeMulai, periodeSelesai,
+      linkedBuyerId: document.getElementById('rab-mitra').value || null,
       kegiatan: kegiatanRowsState
     };
     if (id) await setDoc(doc(db,'rab_kurva_s',id), data, {merge:true});
@@ -3307,10 +3330,33 @@ async function salinPromptAi(idx) {
 }
 window.salinPromptAi = salinPromptAi;
 
+// ── Status "Kirim ke Dashboard Mitra" untuk Program+Bulan yang sedang dibuka ──
+async function muatStatusLaporan(rabId, bulanYM) {
+  const box = document.getElementById('lap-status-box');
+  if (!rabId || !bulanYM) { box.style.display = 'none'; return; }
+  try {
+    const snap = await getDoc(doc(db,'laporan_terkirim', `${rabId}__${bulanYM}`));
+    if (!snap.exists()) { box.style.display = 'none'; return; }
+    const d = snap.data();
+    box.style.display = 'block';
+    if (d.status === 'perlu_revisi') {
+      box.style.background = 'rgba(255,107,107,0.10)'; box.style.border = '1px solid rgba(255,107,107,0.3)'; box.style.color = '#ff8a8a';
+      box.innerHTML = `<b><i class="fas fa-exclamation-triangle"></i> Mitra minta revisi` +
+        (d.revisedAt?.toDate ? ` (${d.revisedAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})})` : '') +
+        `:</b><br>${(d.catatanRevisi||'(tanpa catatan)').replace(/</g,'&lt;')}`;
+    } else if (d.status === 'terkirim') {
+      box.style.background = 'rgba(198,255,0,0.08)'; box.style.border = '1px solid rgba(198,255,0,0.25)'; box.style.color = 'var(--lime)';
+      box.innerHTML = `<i class="fas fa-check-circle"></i> Sudah terkirim ke Dashboard Mitra` +
+        (d.sentAt?.toDate ? ` pada ${d.sentAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}` : '') + `.`;
+    } else { box.style.display = 'none'; }
+  } catch(e) { box.style.display = 'none'; }
+}
+
 // Langkah 1: muat laporan harian bulan ini, tampilkan editor Rangkuman/Kendala/Rencana per Kegiatan
 document.getElementById('lap-muat-btn').addEventListener('click', async () => {
   const rabId = rabIdUntukExport, bulanYM = document.getElementById('lap-bulan').value;
   if (!bulanYM) { alert('Pilih bulan dulu.'); return; }
+  muatStatusLaporan(rabId, bulanYM);
   const r = daftarRabLoaded.find(x=>x.id===rabId);
   const editorWrap = document.getElementById('lap-rangkuman-editor');
   editorWrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Memuat laporan harian...</p>';
@@ -3393,8 +3439,32 @@ document.getElementById('rv-export-btn').addEventListener('click', () => {
   document.getElementById('lap-rangkuman-editor').innerHTML = '';
   document.getElementById('lap-preview').innerHTML = '<p style="color:#999;">Pilih bulan → "Muat Laporan Harian Bulan Ini" → isi rangkuman → "Simpan & Generate Laporan Status".</p>';
   muatDisiapkanOleh();
+  muatStatusLaporan(rabIdUntukExport, document.getElementById('lap-bulan').value);
   closeModal('modal-rab-view');
   openModal('modal-laporan-mitra');
+});
+
+// Kirim laporan bulan ini ke Dashboard Mitra — hanya menyimpan status ringan (bukan foto),
+// supaya tidak kena limit ukuran dokumen Firestore. Dashboard Mitra menyusun ulang
+// tampilan lengkapnya secara live dari rab_kurva_s + rangkuman_bulanan + progress_reports.
+document.getElementById('lap-kirim-mitra-btn').addEventListener('click', async () => {
+  const rabId = rabIdUntukExport, bulanYM = document.getElementById('lap-bulan').value;
+  if (!bulanYM) { alert('Pilih bulan dulu.'); return; }
+  const html = document.getElementById('lap-preview').innerHTML;
+  if (!html || html.includes('Pilih bulan')) { alert('Klik "Simpan & Generate Laporan Status" dulu sebelum kirim ke Mitra.'); return; }
+  const r = daftarRabLoaded.find(x=>x.id===rabId);
+  if (!r || !r.linkedBuyerId) { alert('Program RAB ini belum ditautkan ke Mitra (ES-Buyer).\n\nBuka "RAB & Kurva S" → Edit Program ini → pilih "Mitra (ES-Buyer) Terkait" → Simpan, lalu coba kirim lagi.'); return; }
+  const btn = document.getElementById('lap-kirim-mitra-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+  try {
+    await setDoc(doc(db,'laporan_terkirim', `${rabId}__${bulanYM}`), {
+      rabId, bulanYM, buyerId: r.linkedBuyerId, judul: r.judul||'', status: 'terkirim',
+      catatanRevisi: '', sentAt: serverTimestamp()
+    }, {merge:true});
+    alert('Laporan berhasil dikirim ke Dashboard Mitra.');
+    muatStatusLaporan(rabId, bulanYM);
+  } catch(e) { alert('Gagal mengirim ke Mitra: '+e.message); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim ke Dashboard Mitra'; }
 });
 
 // Konversi SVG (string) jadi PNG data-URL — supaya bisa dibaca Word (Word tidak selalu render <svg> dg baik)
