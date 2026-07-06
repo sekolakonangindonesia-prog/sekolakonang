@@ -6,6 +6,8 @@
 <title>Dashboard Mitra (ES Buyer) — Sekola Konang</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <style>
 :root {
   --bg:        #050505;
@@ -236,6 +238,32 @@ input, textarea, select { font-family: var(--body); }
 }
 .program-detail-btn:hover { background: var(--lime); color: var(--bg); }
 
+/* ─── LAPORAN BULANAN (Beranda) ─── */
+.lap-card { background: var(--surface); border: 1px solid var(--border-s); border-radius: var(--r); padding: 14px; margin-bottom: 10px; }
+.lap-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+.lap-card-title { font-weight: 700; font-size: 0.82rem; color: #fff; }
+.lap-card-bulan { font-size: 0.66rem; color: var(--muted); margin-top: 2px; }
+.lap-badge { font-size: 0.56rem; padding: 3px 9px; border-radius: 50px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0; }
+.lap-badge.terkirim { background: var(--lime-dim); color: var(--lime); border: 1px solid var(--border); }
+.lap-badge.perlu_revisi { background: rgba(255,107,107,0.12); color: var(--danger); border: 1px solid rgba(255,107,107,0.25); }
+.lap-catatan-revisi { font-size: 0.68rem; color: var(--danger); background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.2); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; line-height: 1.5; }
+.lap-actions { display: flex; gap: 6px; }
+.lap-actions button { flex: 1; padding: 9px 4px; font-size: 0.64rem; font-weight: 700; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-family: var(--body); border: 1px solid var(--border-s); background: var(--surface2); color: var(--sub); }
+.lap-actions button.primary { background: var(--lime-dim); border-color: var(--border); color: var(--lime); }
+.lap-actions button.warn { background: rgba(255,171,0,0.10); border-color: rgba(255,171,0,0.25); color: var(--orange); }
+
+/* ─── MODAL (Minta Revisi) ─── */
+.modal-backdrop { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.65); display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-backdrop.show { display: flex; }
+.modal-box { background: var(--surface); border: 1px solid var(--border-s); border-radius: var(--r); padding: 20px; width: 100%; max-width: 380px; position: relative; }
+.modal-box h3 { font-family: var(--display); font-size: 1.05rem; color: #fff; margin-bottom: 6px; }
+.modal-box .sub { font-size: 0.72rem; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+.modal-box textarea { width: 100%; min-height: 90px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-s); border-radius: 10px; color: var(--parchment); padding: 10px 12px; font-size: 0.8rem; font-family: var(--body); resize: vertical; }
+.modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--muted); font-size: 1rem; cursor: pointer; }
+.modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+.modal-actions button { flex: 1; padding: 11px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: var(--body); border: 1px solid var(--border-s); background: var(--surface2); color: var(--sub); }
+.modal-actions button.primary { background: var(--lime); border: none; color: var(--bg); }
+
 /* ─── BADGE ─── */
 .badge {
   display: inline-flex; align-items: center; gap: 5px;
@@ -383,12 +411,9 @@ input, textarea, select { font-family: var(--body); }
     </div>
 
     <div class="section-head" style="margin-top:24px;">
-      <h3>Progress Report</h3>
+      <h3>Laporan Bulanan</h3>
     </div>
-    <div class="empty-state">
-      <i class="fas fa-hourglass-half"></i>
-      <p>Laporan progres program yang sedang berjalan akan tampil di sini. Fitur ini sedang disiapkan.</p>
-    </div>
+    <div id="laporanList"><div class="loading-spinner"><div class="spinner"></div><span>Memuat laporan...</span></div></div>
   </div>
 
   <!-- ── KONSERVASI ── -->
@@ -515,12 +540,26 @@ input, textarea, select { font-family: var(--body); }
 <!-- TOAST -->
 <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
 
+<!-- MODAL: MINTA REVISI -->
+<div class="modal-backdrop" id="modal-minta-revisi">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-minta-revisi')"><i class="fas fa-times"></i></button>
+    <h3>Minta Revisi Laporan</h3>
+    <div class="sub">Tulis bagian yang menurut Anda masih kurang lengkap atau perlu diperbaiki. Admin akan menerima catatan ini dan mengirim ulang laporan setelah diperbaiki.</div>
+    <textarea id="revisi-catatan" placeholder="Contoh: Foto dokumentasi Kegiatan penanaman belum ada, tolong dilengkapi..."></textarea>
+    <div class="modal-actions">
+      <button onclick="closeModal('modal-minta-revisi')">Batal</button>
+      <button class="primary" id="revisi-kirim-btn"><i class="fas fa-paper-plane"></i> Kirim</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp }                                    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut,
          setPersistence, browserSessionPersistence }          from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, query, where,
-         getDocs }                                           from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+         getDocs, setDoc, updateDoc, serverTimestamp }        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey:            "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
@@ -547,6 +586,9 @@ let konsData     = [];     // monitoring_reboisasi milik mitra ini
 let bioData      = [];     // monitoring_kehati milik mitra ini
 let konsYearSel  = 'semua';
 let bioYearSel   = 'semua';
+let laporanList  = [];    // laporan_terkirim milik mitra ini (status: 'terkirim' / 'perlu_revisi')
+const BULAN_LABEL = {'01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'Mei','06':'Jun','07':'Jul','08':'Agu','09':'Sep','10':'Okt','11':'Nov','12':'Des'};
+function labelBulan(ym) { if (!ym) return '-'; const [y,m] = ym.split('-'); return `${BULAN_LABEL[m]||m} ${y}`; }
 
 // ── AUTH STATE ──
 onAuthStateChanged(auth, async (user) => {
@@ -589,6 +631,7 @@ async function showApp() {
     renderProfil();
   }
   renderPJLHBuyerData();
+  loadLaporanMitra();
 }
 
 // ── MODE ADMIN: isi dropdown semua mitra ES-Buyer, biarkan admin pilih yang mau dilihat ──
@@ -600,11 +643,12 @@ async function populateAdminBuyerPicker() {
     sel.innerHTML = '<option value="">-- Pilih mitra ES-Buyer --</option>' +
       list.map(b => `<option value="${b.id}">${b.nama || b.id}${b.linkedUid?'':' (belum tertaut akun)'}</option>`).join('');
     sel.onchange = async () => {
-      if (!sel.value) { buyerDoc = null; konsData=[]; bioData=[]; renderBeranda(); renderProfil(); renderKonsYearTabs(); renderKonsList(); renderBioYearTabs(); renderBioList(); renderPJLHBuyerData(); return; }
+      if (!sel.value) { buyerDoc = null; konsData=[]; bioData=[]; laporanList=[]; renderBeranda(); renderProfil(); renderKonsYearTabs(); renderKonsList(); renderBioYearTabs(); renderBioList(); renderPJLHBuyerData(); renderLaporanList(); return; }
       const bSnap = list.find(b=>b.id===sel.value);
       buyerDoc = bSnap ? {...bSnap} : null;
       await loadKonsBio();
       renderBeranda(); renderProfil(); renderKonsYearTabs(); renderKonsList(); renderBioYearTabs(); renderBioList(); renderPJLHBuyerData();
+      loadLaporanMitra();
     };
   } catch(e) { console.error('Gagal muat daftar mitra', e); sel.innerHTML = '<option value="">Gagal memuat daftar mitra</option>'; }
 }
@@ -829,6 +873,315 @@ async function renderPJLHBuyerData() {
     console.error('Gagal ambil data PJLH mitra', e);
   }
 }
+
+// ============================================================
+// LAPORAN BULANAN — dikirim Admin dari panel "RAB & Kurva S".
+// Hanya status ringan (teks) yang tersimpan di 'laporan_terkirim'; isi lengkap
+// (narasi, foto, Kurva S) disusun ulang di sini secara live dari rab_kurva_s +
+// rangkuman_bulanan + progress_reports, supaya tidak pernah kena limit ukuran
+// dokumen dan datanya selalu konsisten dengan yang Admin lihat.
+// ============================================================
+let rabCacheUntukLaporan = {}; // cache dokumen rab_kurva_s per id, biar tidak fetch berulang
+
+async function loadLaporanMitra() {
+  if (!buyerDoc) { laporanList = []; renderLaporanList(); return; }
+  try {
+    const snap = await getDocs(query(collection(db,'laporan_terkirim'), where('buyerId','==',buyerDoc.id)));
+    laporanList = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(b.bulanYM||'').localeCompare(a.bulanYM||''));
+  } catch(e) { console.error('Gagal ambil laporan mitra', e); laporanList = []; }
+  renderLaporanList();
+}
+
+function renderLaporanList() {
+  const wrap = document.getElementById('laporanList');
+  if (!wrap) return;
+  if (!buyerDoc) { wrap.innerHTML = emptyBelumTertaut(); return; }
+  if (!laporanList.length) {
+    wrap.innerHTML = `<div class="empty-state"><i class="fas fa-hourglass-half"></i><p>Belum ada laporan bulanan yang dikirim Admin untuk mitra ini.</p></div>`;
+    return;
+  }
+  wrap.innerHTML = laporanList.map(l => `
+    <div class="lap-card">
+      <div class="lap-card-top">
+        <div>
+          <div class="lap-card-title">${l.judul||'Laporan Program'}</div>
+          <div class="lap-card-bulan"><i class="fas fa-calendar-alt"></i> ${labelBulan(l.bulanYM)}</div>
+        </div>
+        <span class="lap-badge ${l.status}">${l.status==='perlu_revisi'?'Perlu Revisi':'Terkirim'}</span>
+      </div>
+      ${l.status==='perlu_revisi' ? `<div class="lap-catatan-revisi"><b>Catatan revisi Anda:</b> ${(l.catatanRevisi||'-').replace(/</g,'&lt;')}<br><i style="opacity:0.75;">Menunggu Admin mengirim ulang laporan yang sudah diperbaiki.</i></div>` : ''}
+      <div class="lap-actions">
+        <button onclick="lihatCetakLaporan('${l.rabId}','${l.bulanYM}')"><i class="fas fa-print"></i> Cetak/PDF</button>
+        <button onclick="downloadWordLaporan('${l.rabId}','${l.bulanYM}')"><i class="fas fa-file-word"></i> Word</button>
+        ${l.status!=='perlu_revisi' ? `<button class="warn" onclick="openModal('modal-minta-revisi','${l.rabId}','${l.bulanYM}')"><i class="fas fa-flag"></i> Minta Revisi</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// ── Susun ulang HTML laporan lengkap (sama formatnya dengan yang dibuat Admin) ──
+async function ambilRabUntukLaporan(rabId) {
+  if (rabCacheUntukLaporan[rabId]) return rabCacheUntukLaporan[rabId];
+  const snap = await getDoc(doc(db,'rab_kurva_s', rabId));
+  if (!snap.exists()) throw new Error('Program RAB tidak ditemukan');
+  const r = { id: rabId, ...snap.data() };
+  rabCacheUntukLaporan[rabId] = r;
+  return r;
+}
+
+function generateRentangBulanBuyer(mulai, selesai) {
+  if (!mulai || !selesai) return [];
+  const bulanList = [];
+  let [y,m] = mulai.split('-').map(Number);
+  const [yEnd,mEnd] = selesai.split('-').map(Number);
+  let guard = 0;
+  while ((y < yEnd || (y===yEnd && m<=mEnd)) && guard < 60) {
+    bulanList.push(`${y}-${String(m).padStart(2,'0')}`);
+    m++; if (m>12) { m=1; y++; }
+    guard++;
+  }
+  return bulanList;
+}
+
+function hitungKurvaSBuyer(r) {
+  const bulanList = generateRentangBulanBuyer(r.periodeMulai, r.periodeSelesai);
+  const kegiatan = r.kegiatan||[];
+  const perBulanTarget = [], perBulanAktual = [];
+  bulanList.forEach(b => {
+    let tgt=0, akt=0;
+    kegiatan.forEach(k => { tgt += (Number(k.targetPerBulan?.[b])||0); akt += (Number(k.aktualPerBulan?.[b])||0); });
+    perBulanTarget.push(tgt); perBulanAktual.push(akt);
+  });
+  const kumulatifTarget = []; const kumulatifAktual = [];
+  perBulanTarget.forEach((v,i)=>kumulatifTarget.push((kumulatifTarget[i-1]||0)+v));
+  perBulanAktual.forEach((v,i)=>kumulatifAktual.push((kumulatifAktual[i-1]||0)+v));
+  return { bulanList, kumulatifTarget, kumulatifAktual };
+}
+
+function gambarKurvaSSvgBuyer(bulanList, kumulatifTarget, kumulatifAktual) {
+  const w=700, h=280, padL=40, padB=30, padT=16, padR=16;
+  const plotW = w-padL-padR, plotH = h-padT-padB;
+  const n = bulanList.length;
+  const xFor = i => padL + (n<=1 ? 0 : (i/(n-1))*plotW);
+  const yFor = v => padT + plotH - (Math.min(v,100)/100)*plotH;
+  const pathFrom = arr => arr.map((v,i)=>`${i===0?'M':'L'} ${xFor(i).toFixed(1)} ${yFor(v).toFixed(1)}`).join(' ');
+  const gridLines = [0,25,50,75,100].map(v=>`<line x1="${padL}" y1="${yFor(v)}" x2="${w-padR}" y2="${yFor(v)}" stroke="rgba(255,255,255,0.08)"/><text x="${padL-8}" y="${yFor(v)+4}" font-size="10" fill="#888" text-anchor="end">${v}%</text>`).join('');
+  const xLabels = bulanList.map((b,i)=>`<text x="${xFor(i)}" y="${h-padB+16}" font-size="9" fill="#888" text-anchor="middle">${labelBulan(b).split(' ')[0]}</text>`).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;background:#ffffff;border-radius:8px;">
+    <rect x="0" y="0" width="${w}" height="${h}" fill="#ffffff"/>
+    ${gridLines}${xLabels}
+    <path d="${pathFrom(kumulatifTarget)}" fill="none" stroke="#5b8bf0" stroke-width="2.5"/>
+    <path d="${pathFrom(kumulatifAktual)}" fill="none" stroke="#ff6b6b" stroke-width="2.5"/>
+    ${kumulatifTarget.map((v,i)=>`<circle cx="${xFor(i)}" cy="${yFor(v)}" r="3" fill="#5b8bf0"/>`).join('')}
+    ${kumulatifAktual.map((v,i)=>`<circle cx="${xFor(i)}" cy="${yFor(v)}" r="3" fill="#ff6b6b"/>`).join('')}
+    <circle cx="${padL+plotW-90}" cy="${padT+8}" r="4" fill="#5b8bf0"/><text x="${padL+plotW-80}" y="${padT+12}" font-size="10" fill="#333">Target</text>
+    <circle cx="${padL+plotW-30}" cy="${padT+8}" r="4" fill="#ff6b6b"/><text x="${padL+plotW-20}" y="${padT+12}" font-size="10" fill="#333">Aktual</text>
+  </svg>`;
+}
+
+function svgKeGambarPngBuyer(svgString, width, height) {
+  return new Promise((resolve, reject) => {
+    try {
+      const img = new Image();
+      const svgBlob = new Blob([svgString], {type:'image/svg+xml;charset=utf-8'});
+      const url = URL.createObjectURL(svgBlob);
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,width,height);
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Gagal render grafik')); };
+      img.src = url;
+    } catch(e) { reject(e); }
+  });
+}
+
+async function ambilInfoYayasanBuyer() {
+  const fallback = { nama:'YAYASAN SEKOLA KONANG INDONESIA', alamat:'Perum Taman Sadeng Kentjana Block FF 2, Dringu - Probolinggo' };
+  try {
+    const snap = await getDoc(doc(db,'profil_yayasan','tentang_kami'));
+    if (snap.exists()) { const d = snap.data(); return { nama: d.namaYayasan||fallback.nama, alamat: d.alamat||fallback.alamat }; }
+  } catch(e) {}
+  return fallback;
+}
+
+function idRangkumanBuyer(rabId, idx, bulanYM) { return `${rabId}__${idx}__${bulanYM}`; }
+
+async function ambilLaporanHarianBuyer(rabId, bulanYM) {
+  const snap = await getDocs(collection(db,'progress_reports'));
+  const semua = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const cocokBulan = (x) => {
+    if (!x.createdAt || !x.createdAt.toDate) return false;
+    const d = x.createdAt.toDate();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === bulanYM;
+  };
+  const hasil = {};
+  semua.forEach(x => {
+    if (!x.linkedKegiatanRab || !cocokBulan(x)) return;
+    const [xRabId, idxStr] = x.linkedKegiatanRab.split('::');
+    if (xRabId !== rabId) return;
+    if (!hasil[idxStr]) hasil[idxStr] = [];
+    hasil[idxStr].push(x);
+  });
+  return hasil;
+}
+
+async function susunHtmlLaporanUntukMitra(rabId, bulanYM) {
+  const r = await ambilRabUntukLaporan(rabId);
+  const kegiatanList = r.kegiatan || [];
+  const totalBudget = kegiatanList.reduce((s,k)=>s+(Number(k.budget)||0),0);
+  const { bulanList, kumulatifTarget, kumulatifAktual } = hitungKurvaSBuyer(r);
+  const idxBulanIni = bulanList.indexOf(bulanYM);
+  const overallProgress = idxBulanIni>=0 ? kumulatifAktual[idxBulanIni] : (kumulatifAktual[kumulatifAktual.length-1]||0);
+
+  const svg = bulanList.length ? gambarKurvaSSvgBuyer(bulanList, kumulatifTarget, kumulatifAktual) : '';
+  let chartImgTag = '';
+  if (svg) {
+    try { const png = await svgKeGambarPngBuyer(svg, 700, 280); chartImgTag = `<img src="${png}" style="width:100%;max-width:650px;display:block;margin:12px 0;">`; }
+    catch(e) { chartImgTag = '<p><i>(Grafik gagal dimuat)</i></p>'; }
+  }
+
+  const info = await ambilInfoYayasanBuyer();
+  let disiapkanOleh = '(belum diset)';
+  try { const s = await getDoc(doc(db,'app_settings','laporan_mitra')); if (s.exists()) disiapkanOleh = s.data().disiapkanOleh||disiapkanOleh; } catch(e){}
+  const tglLaporan = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+
+  const laporanBulanIni = await ambilLaporanHarianBuyer(rabId, bulanYM);
+  const detailKegiatan = [];
+  for (let i=0; i<kegiatanList.length; i++) {
+    const k = kegiatanList[i];
+    const bobot = totalBudget>0 ? (Number(k.budget)||0)/totalBudget : 0;
+    let akumulasiKontribusiKegiatan = 0;
+    for (const b of bulanList) { akumulasiKontribusiKegiatan += Number(k.aktualPerBulan?.[b])||0; if (b===bulanYM) break; }
+    const persenSelesaiSendiri = bobot>0 ? Math.min(100, (akumulasiKontribusiKegiatan/bobot)) : 0;
+    const laporanKegiatan = laporanBulanIni[i] || [];
+    let rangkuman = null;
+    try { const snap = await getDoc(doc(db,'rangkuman_bulanan', idRangkumanBuyer(rabId, i, bulanYM))); if (snap.exists()) rangkuman = snap.data(); } catch(e){}
+    let fotoTag = '';
+    const semuaFoto = laporanKegiatan.flatMap(x => x.foto||[]).slice(0,4);
+    if (semuaFoto.length) fotoTag = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:280px;">${semuaFoto.map(f=>`<img src="${f}" style="width:100%;height:85px;object-fit:cover;border:1px solid #ccc;">`).join('')}</div>`;
+    if (!laporanKegiatan.length && !rangkuman && !k.targetSelesai) continue;
+    detailKegiatan.push({ nama:k.nama||'(Kegiatan '+(i+1)+')', ik:k.ik||'', targetSelesai:k.targetSelesai?labelBulan(k.targetSelesai):'-', persenSelesaiSendiri, rangkuman, fotoTag });
+  }
+
+  const bulletsHtml = detailKegiatan.map(d => `<li style="margin-bottom:6px;"><b>${d.nama} (${d.persenSelesaiSendiri.toFixed(0)}%):</b> ${d.rangkuman?.narasi ? d.rangkuman.narasi.replace(/</g,'&lt;').split('\n')[0] : '<i>(rangkuman belum diisi)</i>'}</li>`).join('');
+  const daftarKegiatanHtml = detailKegiatan.map(d => `
+    <tr style="background:#eaf1fa;">
+      <td style="padding:6px;font-weight:bold;">${d.nama}</td>
+      <td style="padding:6px;text-align:center;">${d.persenSelesaiSendiri.toFixed(0)} %</td>
+      <td style="padding:6px;text-align:center;">${d.targetSelesai}</td>
+      <td style="padding:6px;">${(d.ik||'').split('\n').filter(Boolean).map((x,i)=>`${i+1}. ${x}`).join('<br>')}</td>
+    </tr>
+    <tr><td style="padding:6px;background:#eee;font-weight:bold;">DISKRIPSI KEGIATAN</td><td colspan="3" style="padding:6px;background:#eee;font-weight:bold;">FOTO KEGIATAN</td></tr>
+    <tr>
+      <td style="padding:6px;vertical-align:top;">${d.rangkuman?.narasi ? d.rangkuman.narasi.replace(/</g,'&lt;').replace(/\n/g,'<br>') : '<i>Rangkuman belum diisi.</i>'}
+        ${d.rangkuman?.kendala ? `<p><b>Kendala:</b> ${d.rangkuman.kendala.replace(/</g,'&lt;')}</p>` : ''}
+        ${d.rangkuman?.rencana ? `<p><b>Rencana Bulan Depan:</b> ${d.rangkuman.rencana.replace(/</g,'&lt;')}</p>` : ''}
+      </td>
+      <td colspan="3" style="padding:6px;vertical-align:top;">${d.fotoTag || '<i>(tidak ada foto)</i>'}</td>
+    </tr>`).join('');
+
+  const laporanKumulatif = [];
+  for (const b of bulanList) { if (b>bulanYM) break; const l = await ambilLaporanHarianBuyer(rabId, b); Object.values(l).forEach(arr=>laporanKumulatif.push(...arr)); }
+  let kumL=0, kumP=0;
+  laporanKumulatif.forEach(x => { kumL += (Number(x.penerimaLangsungL)||0)+(Number(x.penerimaTidakLangsungL)||0); kumP += (Number(x.penerimaLangsungP)||0)+(Number(x.penerimaTidakLangsungP)||0); });
+
+  return `
+  <div style="font-family:Arial,sans-serif;">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #7ba7d4;padding-bottom:8px;margin-bottom:14px;">
+      <div><b style="color:#1a3a5c;">${info.nama}</b><br><span style="font-size:0.7rem;color:#555;">${info.alamat}</span></div>
+    </div>
+    <h2 style="color:#7ba7d4;font-weight:normal;">LAPORAN STATUS UPDATE ${(r.judul||'').toUpperCase()}</h2>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.78rem;margin-bottom:14px;">
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="3">RINGKASAN PROGRAM</th></tr>
+      <tr style="background:#eaf1fa;"><th>TANGGAL LAPORAN</th><th>NAMA PROGRAM</th><th>DISIAPKAN OLEH</th></tr>
+      <tr><td style="text-align:center;">${tglLaporan}</td><td style="text-align:center;">${r.judul||''}</td><td style="text-align:center;">${disiapkanOleh}</td></tr>
+    </table>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.78rem;margin-bottom:16px;">
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="2">RINGKASAN STATUS</th></tr>
+      <tr>
+        <td style="width:110px;text-align:center;background:#eaf1fa;font-weight:bold;">OVERALL PROGRESS<br><span style="font-size:1.8rem;color:#1a3a5c;">${overallProgress.toFixed(0)}%</span></td>
+        <td style="padding:10px;">Hingga Bulan ${labelBulan(bulanYM)}, ${r.judul||''} telah mencapai sejumlah capaian ${overallProgress.toFixed(0)}%. Berikut rangkuman dari berbagai kegiatan yang telah dilakukan:
+          <ul>${bulletsHtml || '<li><i>Belum ada kegiatan tercatat bulan ini.</i></li>'}</ul>
+        </td>
+      </tr>
+    </table>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.75rem;margin-bottom:16px;">
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="4">DAFTAR KEGIATAN PROGRAM</th></tr>
+      <tr style="background:#eaf1fa;"><th>TUGAS</th><th>% SELESAI</th><th>TARGET SELESAI</th><th>KEGIATAN</th></tr>
+      ${daftarKegiatanHtml || '<tr><td colspan="4" style="padding:8px;"><i>Belum ada data.</i></td></tr>'}
+    </table>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.75rem;margin-bottom:16px;">
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="5">GAMBARAN UMUM ANGGARAN</th></tr>
+      <tr style="background:#eaf1fa;"><th>KATEGORI</th><th>TERPAKAI</th><th>% TOTAL</th><th>SESUAI JALUR?</th><th>CATATAN</th></tr>
+      ${detailKegiatan.map(d => `<tr><td style="padding:5px;">${d.nama}</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri.toFixed(0)}%</td><td style="padding:5px;text-align:center;">100%</td><td style="padding:5px;text-align:center;">Sesuai</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri>=100?'Selesai':(d.persenSelesaiSendiri>0?'Proses Penyelesaian':'Belum Dimulai')}</td></tr>`).join('') || '<tr><td colspan="5" style="padding:8px;"><i>Belum ada data.</i></td></tr>'}
+    </table>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.78rem;margin-bottom:8px;">
+      <tr style="background:#7ba7d4;color:#fff;"><th>KURVA S</th></tr>
+    </table>
+    ${chartImgTag}
+    <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;width:100%;font-size:0.72rem;margin-bottom:16px;">
+      <tr style="background:#eee;"><th>Bulan</th>${bulanList.map(b=>`<th>${labelBulan(b)}</th>`).join('')}</tr>
+      <tr><td>Akumulasi Target %</td>${kumulatifTarget.map(v=>`<td style="text-align:center;">${v.toFixed(1)}%</td>`).join('')}</tr>
+      <tr><td>Akumulasi Aktual %</td>${kumulatifAktual.map(v=>`<td style="text-align:center;">${v.toFixed(1)}%</td>`).join('')}</tr>
+    </table>
+    <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-size:0.75rem;">
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="2">PARAMETER UMUM (Kumulatif s/d ${labelBulan(bulanYM)})</th></tr>
+      <tr style="background:#eaf1fa;"><th>Penerima Manfaat</th><th>Jumlah</th></tr>
+      <tr><td>Laki-laki</td><td style="text-align:center;">${kumL} orang</td></tr>
+      <tr><td>Perempuan</td><td style="text-align:center;">${kumP} orang</td></tr>
+    </table>
+  </div>`;
+}
+
+window.lihatCetakLaporan = async (rabId, bulanYM) => {
+  showToast('Menyusun laporan...', 'info');
+  try {
+    const html = await susunHtmlLaporanUntukMitra(rabId, bulanYM);
+    const w = window.open('', '_blank');
+    w.document.write(`<html><head><title>Laporan Mitra</title></head><body>${html}</body></html>`);
+    w.document.close();
+    setTimeout(() => { w.print(); }, 400);
+  } catch(e) { showToast('Gagal menyusun laporan: '+e.message, 'error'); }
+};
+
+window.downloadWordLaporan = async (rabId, bulanYM) => {
+  showToast('Menyusun laporan...', 'info');
+  try {
+    const html = await susunHtmlLaporanUntukMitra(rabId, bulanYM);
+    const fullHtml = `<html><head><meta charset="utf-8"></head><body>${html}</body></html>`;
+    const blob = htmlDocx.asBlob(fullHtml);
+    saveAs(blob, `Laporan_Mitra_${bulanYM}.docx`);
+  } catch(e) { showToast('Gagal membuat file Word: '+e.message, 'error'); }
+};
+
+// ── MODAL GENERIK (dipakai untuk Minta Revisi) ──
+let revisiTarget = null; // {rabId, bulanYM}
+window.openModal = (id, rabId, bulanYM) => {
+  if (id === 'modal-minta-revisi') { revisiTarget = {rabId, bulanYM}; document.getElementById('revisi-catatan').value = ''; }
+  document.getElementById(id).classList.add('show');
+};
+window.closeModal = (id) => { document.getElementById(id).classList.remove('show'); };
+
+document.getElementById('revisi-kirim-btn').addEventListener('click', async () => {
+  const catatan = document.getElementById('revisi-catatan').value.trim();
+  if (!catatan) { showToast('Tulis catatan revisi dulu.', 'error'); return; }
+  if (!revisiTarget) return;
+  const btn = document.getElementById('revisi-kirim-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+  try {
+    await updateDoc(doc(db,'laporan_terkirim', `${revisiTarget.rabId}__${revisiTarget.bulanYM}`), {
+      status: 'perlu_revisi', catatanRevisi: catatan, revisedAt: serverTimestamp()
+    });
+    closeModal('modal-minta-revisi');
+    showToast('Permintaan revisi terkirim ke Admin.');
+    loadLaporanMitra();
+  } catch(e) { showToast('Gagal mengirim permintaan revisi: '+e.message, 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim'; }
+});
 
 // ── PROFIL ──
 function renderProfil() {
