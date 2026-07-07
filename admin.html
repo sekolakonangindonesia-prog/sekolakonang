@@ -3294,6 +3294,19 @@ async function ambilLaporanHarian(rabId, bulanYM) {
 }
 
 let promptAiPerKegiatan = {};
+let draftMentahPerKegiatan = {};
+
+// Timpa kotak Rangkuman Bulanan dengan gabungan MENTAH semua laporan harian yang sedang tertaut
+// (dipakai kalau Admin mau mulai edit manual dari draft lengkap terbaru, bukan dari rangkuman lama
+// yang mungkin tersimpan sebelum sebagian laporan ditautkan).
+function muatUlangDraftNarasi(idx) {
+  const teks = draftMentahPerKegiatan[idx];
+  if (!teks) { alert('Draft tidak ditemukan, coba muat ulang data dulu.'); return; }
+  const blok = document.querySelector(`#lap-rangkuman-editor [data-kegiatan-idx="${idx}"]`);
+  if (!blok) return;
+  blok.querySelector('.lap-input-narasi').value = teks;
+}
+window.muatUlangDraftNarasi = muatUlangDraftNarasi;
 function idRangkuman(rabId, idx, bulanYM) { return `${rabId}__${idx}__${bulanYM}`; }
 
 // Salin prompt siap-pakai ke clipboard + buka Claude.ai — cara gratis merangkum tanpa perlu API key/biaya,
@@ -3368,6 +3381,7 @@ document.getElementById('lap-muat-btn').addEventListener('click', async () => {
       // Siapkan teks prompt siap-tempel ke Claude.ai/ChatGPT (gratis, tanpa API key) —
       // supaya Admin tidak perlu ketik ulang dari nol, cukup salin-hasil AI ke kotak Rangkuman.
       const isiLaporanUntukPrompt = laporan.map(x => `- ${x.tanggal||'-'}: ${x.deskripsi||''}`).join('\n');
+      draftMentahPerKegiatan[idx] = isiLaporanUntukPrompt;
       promptAiPerKegiatan[idx] = `Tolong rangkum laporan-laporan harian tim lapangan berikut ini (untuk kegiatan "${k.nama}", bulan ${labelBulan(bulanYM)}) menjadi 1 paragraf naratif yang enak dibaca untuk laporan bulanan ke mitra/donor. Bahasa Indonesia formal tapi tidak kaku, jangan tambahkan info yang tidak ada di laporan asli.\n\nLaporan harian:\n${isiLaporanUntukPrompt}\n\nTolong beri hasilnya saja (1 paragraf), tanpa basa-basi pembuka.`;
       html += `<div class="list-card" style="margin-bottom:12px;padding:12px;" data-kegiatan-idx="${idx}">
         <div style="font-weight:700;margin-bottom:6px;">${k.nama}</div>
@@ -3375,7 +3389,10 @@ document.getElementById('lap-muat-btn').addEventListener('click', async () => {
         <div class="form-group" style="margin:0 0 8px;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <label>Rangkuman Bulanan</label>
-            <button type="button" class="btn btn-outline btn-sm" onclick="salinPromptAi('${idx}')" style="font-size:0.68rem;padding:4px 10px;"><i class="fas fa-robot"></i> Salin Prompt AI (gratis)</button>
+            <div style="display:flex;gap:6px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="muatUlangDraftNarasi('${idx}')" style="font-size:0.68rem;padding:4px 10px;"><i class="fas fa-redo"></i> Muat Ulang Draft dari Laporan</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="salinPromptAi('${idx}')" style="font-size:0.68rem;padding:4px 10px;"><i class="fas fa-robot"></i> Salin Prompt AI (gratis)</button>
+            </div>
           </div>
           <textarea rows="3" class="lap-input-narasi" placeholder="Rangkum jadi 1 paragraf naratif dari laporan harian di atas...">${draftNarasi}</textarea>
         </div>
