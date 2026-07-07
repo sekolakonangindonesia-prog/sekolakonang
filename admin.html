@@ -3508,7 +3508,11 @@ async function susunHtmlLaporanMitra(rabId, bulanYM) {
     try { const snap = await getDoc(doc(db,'rangkuman_bulanan', idRangkuman(rabId, i, bulanYM))); if (snap.exists()) rangkuman = snap.data(); } catch(e){}
     // Ambil foto dari laporan harian bulan ini (maks 4 biar ukuran dokumen wajar)
     let fotoTag = '';
-    const semuaFoto = laporanKegiatan.flatMap(x => x.foto||[]).slice(0,4);
+    // Ambil foto MERATA dari tiap laporan harian (maks 2 foto/laporan, total maks 8) —
+    // bukan asal ambil 4 foto pertama dari gabungan semua laporan (yang bisa bikin semua
+    // slot habis dari 1 laporan saja kalau laporan itu kebetulan punya banyak foto).
+    const laporanTerurut = laporanKegiatan.slice().sort((a,b)=>(a.tanggal||'').localeCompare(b.tanggal||''));
+    const semuaFoto = laporanTerurut.flatMap(x => (x.foto||[]).slice(0,2)).slice(0,8);
     if (semuaFoto.length) fotoTag = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:280px;">${semuaFoto.map(f=>`<img src="${f}" style="width:100%;height:85px;object-fit:cover;border:1px solid #ccc;">`).join('')}</div>`;
 
     if (!laporanKegiatan.length && !rangkuman && !k.targetSelesai) continue; // tidak ada progres bulan ini utk kegiatan ini
