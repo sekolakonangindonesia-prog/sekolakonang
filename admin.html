@@ -3545,8 +3545,20 @@ async function susunHtmlLaporanMitra(rabId, bulanYM) {
     detailKegiatan.push({ nama:k.nama||'(Kegiatan '+(i+1)+')', ik:k.ik||'', targetSelesai:k.targetSelesai?labelBulan(k.targetSelesai):'-', persenSelesaiSendiri, rangkuman, fotoTag });
   }
 
-  // Bagian "Ringkasan Status": narasi bullet per Kegiatan dengan %-nya sendiri
-  const bulletsHtml = detailKegiatan.map((d,idx) => `<li style="margin-bottom:6px;"><b>${d.nama} (${d.persenSelesaiSendiri.toFixed(0)}%):</b> ${d.rangkuman?.narasi ? d.rangkuman.narasi.replace(/</g,'&lt;').split('\n')[0] : '<i>(rangkuman belum diisi)</i>'}</li>`).join('');
+  // Bagian "Ringkasan Status": narasi bullet per Kegiatan dengan %-nya sendiri.
+  // Diambil 1-2 kalimat pertama (dipotong per titik/tanda baca akhir kalimat, BUKAN per baris/enter),
+  // supaya tetap ringkas walau Diskripsi Kegiatan ditulis mengalir jadi 1 paragraf tanpa enter.
+  const ringkasSingkatNarasi = (teksSudahDiEscape) => {
+    const bersih = (teksSudahDiEscape||'').replace(/\n+/g,' ').trim();
+    if (!bersih) return '';
+    // pecah per kalimat: titik/!/? diikuti spasi
+    const kalimat = bersih.split(/(?<=[.!?])\s+/).filter(Boolean);
+    let hasil = kalimat.slice(0,2).join(' ').trim();
+    if (hasil.length > 240) hasil = hasil.slice(0,240).trim() + '…';
+    else if (kalimat.length > 2) hasil += ' …';
+    return hasil;
+  };
+  const bulletsHtml = detailKegiatan.map((d,idx) => `<li style="margin-bottom:6px;"><b>${d.nama} (${d.persenSelesaiSendiri.toFixed(0)}%):</b> ${d.rangkuman?.narasi ? ringkasSingkatNarasi(d.rangkuman.narasi.replace(/</g,'&lt;')) : '<i>(rangkuman belum diisi)</i>'}</li>`).join('');
 
   // Bagian "Daftar Kegiatan Program": tabel detail per Kegiatan + foto
   const daftarKegiatanHtml = detailKegiatan.map(d => `
