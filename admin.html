@@ -3308,6 +3308,11 @@ function muatUlangDraftNarasi(idx) {
 }
 window.muatUlangDraftNarasi = muatUlangDraftNarasi;
 function idRangkuman(rabId, idx, bulanYM) { return `${rabId}__${idx}__${bulanYM}`; }
+// Baca pilihan foto tersimpan (format "reportId::fotoIndex") khusus untuk 1 laporan tertentu
+function existingFotoPilihan(existing, reportId) {
+  if (!existing || !Array.isArray(existing.fotoPilihan)) return [];
+  return existing.fotoPilihan.filter(k=>k.startsWith(reportId+'::')).map(k=>Number(k.split('::')[1]));
+}
 
 // Salin prompt siap-pakai ke clipboard + buka Claude.ai — cara gratis merangkum tanpa perlu API key/biaya,
 // cocok untuk kebutuhan sebulan sekali. Admin tinggal tempel di Claude.ai/ChatGPT, lalu salin hasilnya balik
@@ -3376,7 +3381,16 @@ document.getElementById('lap-muat-btn').addEventListener('click', async () => {
       const draftNarasi = existing?.narasi || laporan.map(x=>`- ${x.deskripsi||''}`).join('\n');
       const daftarHarianHtml = laporan.map(x => {
         const tgl = x.tanggal || '-';
-        return `<div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:3px;">• ${tgl} (${x.timNama||'Tim'}): ${(x.deskripsi||'').slice(0,120)}${(x.deskripsi||'').length>120?'…':''}</div>`;
+        const fotoPilihanTersimpan = existingFotoPilihan(existing, x.id);
+        const fotoCheckboxHtml = (x.foto||[]).map((f,fi) => {
+          const key = `${x.id}::${fi}`;
+          const dicentang = fotoPilihanTersimpan.includes(fi);
+          return `<label style="display:inline-block;position:relative;margin:2px;cursor:pointer;">
+            <img src="${f}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;border:2px solid ${dicentang?'var(--lime)':'transparent'};">
+            <input type="checkbox" class="lap-foto-pilihan" data-foto-key="${key}" ${dicentang?'checked':''} style="position:absolute;top:2px;left:2px;width:14px;height:14px;">
+          </label>`;
+        }).join('');
+        return `<div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:6px;">• ${tgl} (${x.timNama||'Tim'}): ${(x.deskripsi||'').slice(0,120)}${(x.deskripsi||'').length>120?'…':''}<br>${fotoCheckboxHtml}</div>`;
       }).join('');
       // Siapkan teks prompt siap-tempel ke Claude.ai/ChatGPT (gratis, tanpa API key) —
       // supaya Admin tidak perlu ketik ulang dari nol, cukup salin-hasil AI ke kotak Rangkuman.
@@ -3385,7 +3399,10 @@ document.getElementById('lap-muat-btn').addEventListener('click', async () => {
       promptAiPerKegiatan[idx] = `Tolong rangkum laporan-laporan harian tim lapangan berikut ini (untuk kegiatan "${k.nama}", bulan ${labelBulan(bulanYM)}) menjadi 1 paragraf naratif yang enak dibaca untuk laporan bulanan ke mitra/donor. Bahasa Indonesia formal tapi tidak kaku, jangan tambahkan info yang tidak ada di laporan asli.\n\nLaporan harian:\n${isiLaporanUntukPrompt}\n\nTolong beri hasilnya saja (1 paragraf), tanpa basa-basi pembuka.`;
       html += `<div class="list-card" style="margin-bottom:12px;padding:12px;" data-kegiatan-idx="${idx}">
         <div style="font-weight:700;margin-bottom:6px;">${k.nama}</div>
-        <details style="margin-bottom:8px;"><summary style="cursor:pointer;font-size:0.72rem;color:var(--text-muted);">Lihat ${laporan.length} laporan harian Tim (referensi)</summary>${daftarHarianHtml}</details>
+        <details style="margin-bottom:8px;"><summary style="cursor:pointer;font-size:0.72rem;color:var(--text-muted);">Lihat ${laporan.length} laporan harian Tim + pilih foto (opsional)</summary>
+          <div class="form-hint" style="margin:4px 0;">Centang foto yang mau dipakai di laporan final. Kalau tidak dicentang sama sekali, sistem otomatis pilihkan (maks 2 foto/laporan).</div>
+          ${daftarHarianHtml}
+        </details>
         <div class="form-group" style="margin:0 0 8px;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <label>Rangkuman Bulanan</label>
@@ -3420,8 +3437,9 @@ async function simpanRangkumanDanBuatPreview() {
       const narasi = el.querySelector('.lap-input-narasi').value.trim();
       const kendala = el.querySelector('.lap-input-kendala').value.trim();
       const rencana = el.querySelector('.lap-input-rencana').value.trim();
+      const fotoPilihan = Array.from(el.querySelectorAll('.lap-foto-pilihan:checked')).map(cb=>cb.dataset.fotoKey);
       await setDoc(doc(db,'rangkuman_bulanan', idRangkuman(rabId, idx, bulanYM)), {
-        rabId, kegiatanIndex: Number(idx), bulan: bulanYM, narasi, kendala, rencana, updatedAt: serverTimestamp()
+        rabId, kegiatanIndex: Number(idx), bulan: bulanYM, narasi, kendala, rencana, fotoPilihan, updatedAt: serverTimestamp()
       }, {merge:true});
     }
     document.getElementById('lap-preview').innerHTML = await susunHtmlLaporanMitra(rabId, bulanYM);
@@ -3506,13 +3524,21 @@ async function susunHtmlLaporanMitra(rabId, bulanYM) {
     });
     let rangkuman = null;
     try { const snap = await getDoc(doc(db,'rangkuman_bulanan', idRangkuman(rabId, i, bulanYM))); if (snap.exists()) rangkuman = snap.data(); } catch(e){}
-    // Ambil foto dari laporan harian bulan ini (maks 4 biar ukuran dokumen wajar)
+    // Foto: pakai pilihan manual Admin kalau pernah dicentang & disimpan; kalau tidak ada
+    // pilihan manual sama sekali, otomatis ambil merata (maks 2 foto/laporan, total maks 8)
+    // supaya tidak lupa/ribet — tapi tetap bisa dikontrol manual kalau sempat.
     let fotoTag = '';
-    // Ambil foto MERATA dari tiap laporan harian (maks 2 foto/laporan, total maks 8) —
-    // bukan asal ambil 4 foto pertama dari gabungan semua laporan (yang bisa bikin semua
-    // slot habis dari 1 laporan saja kalau laporan itu kebetulan punya banyak foto).
-    const laporanTerurut = laporanKegiatan.slice().sort((a,b)=>(a.tanggal||'').localeCompare(b.tanggal||''));
-    const semuaFoto = laporanTerurut.flatMap(x => (x.foto||[]).slice(0,2)).slice(0,8);
+    let semuaFoto = [];
+    if (rangkuman && Array.isArray(rangkuman.fotoPilihan) && rangkuman.fotoPilihan.length) {
+      semuaFoto = rangkuman.fotoPilihan.map(key => {
+        const [reportId, fotoIdxStr] = key.split('::');
+        const rep = laporanKegiatan.find(x=>x.id===reportId);
+        return rep && rep.foto ? rep.foto[Number(fotoIdxStr)] : null;
+      }).filter(Boolean);
+    } else {
+      const laporanTerurut = laporanKegiatan.slice().sort((a,b)=>(a.tanggal||'').localeCompare(b.tanggal||''));
+      semuaFoto = laporanTerurut.flatMap(x => (x.foto||[]).slice(0,2)).slice(0,8);
+    }
     if (semuaFoto.length) fotoTag = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:280px;">${semuaFoto.map(f=>`<img src="${f}" style="width:100%;height:85px;object-fit:cover;border:1px solid #ccc;">`).join('')}</div>`;
 
     if (!laporanKegiatan.length && !rangkuman && !k.targetSelesai) continue; // tidak ada progres bulan ini utk kegiatan ini
