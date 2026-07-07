@@ -1118,6 +1118,9 @@ input,textarea,select{font-family:var(--body);}
       <div class="form-group" style="margin:0;"><label>Bulan Laporan</label><input type="month" id="lap-bulan"></div>
       <div class="form-group" style="margin:0;display:flex;align-items:flex-end;"><button class="btn btn-outline" id="lap-muat-btn" style="width:100%;"><i class="fas fa-sync-alt"></i> Muat Laporan Harian Bulan Ini</button></div>
     </div>
+    <div style="margin-bottom:10px;">
+      <button class="btn btn-outline btn-sm" id="lap-taut-otomatis-btn"><i class="fas fa-link"></i> Tautkan Otomatis (berdasar nama Kegiatan/Target Capaian)</button>
+      <div class="form-hint" style="margin-top:4px;">Laporan Tim yang belum tertaut ke Kegiatan RAB (klik "Detail" satu-satu) akan otomatis ditautkan kalau nama Target Capaian yang dipilih Tim persis sama dengan nama Kegiatan RAB ini.</div>
 
     <div id="lap-rangkuman-editor"></div>
 
@@ -3310,6 +3313,32 @@ async function salinPromptAi(idx) {
 window.salinPromptAi = salinPromptAi;
 
 // Langkah 1: muat laporan harian bulan ini, tampilkan editor Rangkuman/Kendala/Rencana per Kegiatan
+// Tautkan otomatis: laporan Tim (jenis 'program') yang belum ditautkan ke Kegiatan RAB manapun,
+// dicocokkan berdasarkan nama persis antara targetNama (Target Capaian yang dipilih Tim) dan
+// nama Kegiatan RAB — karena Kegiatan RAB kita import dari Target Capaian, namanya identik.
+document.getElementById('lap-taut-otomatis-btn').addEventListener('click', async () => {
+  const rabId = rabIdUntukExport;
+  const r = daftarRabLoaded.find(x=>x.id===rabId);
+  if (!r) { alert('Program tidak ditemukan.'); return; }
+  const btn = document.getElementById('lap-taut-otomatis-btn');
+  btn.disabled = true; const teksAsli = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencocokkan...';
+  try {
+    const snap = await getDocs(collection(db,'progress_reports'));
+    let jumlahDitautkan = 0, jumlahSudahTertaut = 0, jumlahTidakCocok = 0;
+    for (const d of snap.docs) {
+      const x = d.data();
+      if (x.jenis !== 'program' || !x.targetNama) continue;
+      if (x.linkedKegiatanRab) { jumlahSudahTertaut++; continue; }
+      const idx = (r.kegiatan||[]).findIndex(k => (k.nama||'').trim() === (x.targetNama||'').trim());
+      if (idx === -1) { jumlahTidakCocok++; continue; }
+      await updateDoc(doc(db,'progress_reports', d.id), { linkedKegiatanRab: `${rabId}::${idx}` });
+      jumlahDitautkan++;
+    }
+    alert(`Selesai!\n- ${jumlahDitautkan} laporan berhasil ditautkan otomatis\n- ${jumlahSudahTertaut} laporan sudah tertaut sebelumnya\n- ${jumlahTidakCocok} laporan tidak ketemu Kegiatan yang cocok namanya (mungkin nama Target Capaian sudah beda dengan nama Kegiatan RAB, atau bukan kategori Program)`);
+  } catch(e) { alert('Gagal: '+e.message); }
+  finally { btn.disabled = false; btn.innerHTML = teksAsli; }
+});
+
 document.getElementById('lap-muat-btn').addEventListener('click', async () => {
   const rabId = rabIdUntukExport, bulanYM = document.getElementById('lap-bulan').value;
   if (!bulanYM) { alert('Pilih bulan dulu.'); return; }
