@@ -8,6 +8,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
   --bg:        #050505;
@@ -552,7 +553,7 @@ input, textarea, select { font-family: var(--body); }
     <div class="lap-preview-scroll" id="lihat-lap-preview"><p style="color:#999;">Memuat laporan...</p></div>
     <div class="modal-actions">
       <button onclick="closeModal('modal-lihat-laporan')">Tutup</button>
-      <button onclick="lihatCetakLaporan(lihatLapTarget.rabId, lihatLapTarget.bulanYM)"><i class="fas fa-print"></i> Cetak/PDF</button>
+      <button onclick="lihatCetakLaporan(lihatLapTarget.rabId, lihatLapTarget.bulanYM)"><i class="fas fa-file-pdf"></i> Download PDF</button>
       <button class="warn" id="lihat-lap-revisi-btn" onclick="closeModal('modal-lihat-laporan'); openModal('modal-minta-revisi', lihatLapTarget.rabId, lihatLapTarget.bulanYM)"><i class="fas fa-flag"></i> Minta Revisi</button>
     </div>
   </div>
@@ -930,7 +931,7 @@ function renderLaporanList() {
       ${l.status==='perlu_revisi' ? `<div class="lap-catatan-revisi"><b>Catatan revisi Anda:</b> ${(l.catatanRevisi||'-').replace(/</g,'&lt;')}<br><i style="opacity:0.75;">Menunggu Admin mengirim ulang laporan yang sudah diperbaiki.</i></div>` : ''}
       <div class="lap-actions">
         <button class="primary" onclick="lihatPreviewLaporan('${l.rabId}','${l.bulanYM}','${(l.judul||'Laporan Program').replace(/'/g,"\\'")}','${l.status}')"><i class="fas fa-eye"></i> Lihat</button>
-        <button onclick="lihatCetakLaporan('${l.rabId}','${l.bulanYM}')"><i class="fas fa-print"></i> Cetak/PDF</button>
+        <button onclick="lihatCetakLaporan('${l.rabId}','${l.bulanYM}')"><i class="fas fa-file-pdf"></i> Download PDF</button>
         ${l.status!=='perlu_revisi' ? `<button class="warn" onclick="openModal('modal-minta-revisi','${l.rabId}','${l.bulanYM}')"><i class="fas fa-flag"></i> Minta Revisi</button>` : ''}
       </div>
     </div>`).join('');
@@ -1187,15 +1188,27 @@ window.lihatPreviewLaporan = async (rabId, bulanYM, judul, status) => {
   } catch(e) { document.getElementById('lihat-lap-preview').innerHTML = `<p style="color:#c00;">Gagal memuat laporan: ${e.message}</p>`; }
 };
 
+// Download PDF langsung ke file (bukan dialog print via window.open — itu sering diblokir
+// popup-blocker di HP, apalagi karena dipanggil setelah proses async). html2pdf merender
+// laporan jadi PDF di memori lalu langsung memicu download-nya.
 window.lihatCetakLaporan = async (rabId, bulanYM) => {
-  showToast('Menyusun laporan...', 'info');
+  showToast('Menyiapkan PDF...', 'info');
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff;';
   try {
-    const html = await susunHtmlLaporanUntukMitra(rabId, bulanYM);
-    const w = window.open('', '_blank');
-    w.document.write(`<html><head><title>Laporan Mitra</title></head><body>${html}</body></html>`);
-    w.document.close();
-    setTimeout(() => { w.print(); }, 400);
-  } catch(e) { showToast('Gagal menyusun laporan: '+e.message, 'error'); }
+    container.innerHTML = await susunHtmlLaporanUntukMitra(rabId, bulanYM);
+    document.body.appendChild(container);
+    await html2pdf().set({
+      margin: 10,
+      filename: `Laporan_Mitra_${bulanYM}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    }).from(container).save();
+    showToast('PDF berhasil diunduh.');
+  } catch(e) { showToast('Gagal membuat PDF: '+e.message, 'error'); }
+  finally { document.body.removeChild(container); }
 };
 
 window.downloadWordLaporan = async (rabId, bulanYM) => {
