@@ -1130,6 +1130,7 @@ input,textarea,select{font-family:var(--body);}
     <div id="lap-preview" contenteditable="true" style="background:#fff;color:#111;padding:20px;border-radius:8px;max-height:40vh;overflow-y:auto;font-size:0.8rem;margin-top:14px;"><p style="color:#999;">Pilih bulan → "Muat Laporan Harian Bulan Ini" → isi rangkuman → "Simpan & Generate Laporan Status".</p></div>
     <div class="form-hint" style="margin-top:4px;">Preview di atas bisa diedit langsung (klik teksnya) sebelum di-export — ini tahap Review sebelum dikirim ke Mitra.</div>
     <div id="lap-status-kirim" style="margin-top:8px;font-size:0.72rem;color:var(--text-muted);"></div>
+    <div id="lap-riwayat-kirim" style="margin-top:10px;"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-laporan-mitra">Tutup</button>
       <button class="btn btn-outline" id="lap-print-btn"><i class="fas fa-print"></i> Cetak / Simpan PDF</button>
@@ -3473,6 +3474,7 @@ document.getElementById('rv-export-btn').addEventListener('click', async () => {
   document.getElementById('lap-preview').innerHTML = '<p style="color:#999;">Pilih bulan → "Muat Laporan Harian Bulan Ini" → isi rangkuman → "Simpan & Generate Laporan Status".</p>';
   document.getElementById('lap-status-kirim').textContent = '';
   await populateMitraDropdown(r.buyerId||'');
+  muatRiwayatKirim(rabIdUntukExport);
   muatDisiapkanOleh();
   closeModal('modal-rab-view');
   openModal('modal-laporan-mitra');
@@ -3505,7 +3507,31 @@ document.getElementById('lap-kirim-btn').addEventListener('click', async () => {
     document.getElementById('lap-status-kirim').innerHTML = `<i class="fas fa-check-circle" style="color:var(--lime);"></i> Terkirim ke Mitra — akan langsung muncul di Dashboard Mitra.`;
   } catch(e) { alert('Gagal mengirim ke Mitra: '+e.message); }
   btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim ke Mitra';
+  muatRiwayatKirim(rabIdUntukExport);
 });
+
+// ── Riwayat "laporan_terkirim" utk Program ini — supaya kalau kepencet kirim 2x / ID lama-baru
+// dobel, Admin bisa lihat & hapus sendiri yang salah/duplikat tanpa perlu buka Firebase Console ──
+async function muatRiwayatKirim(rabId) {
+  const wrap = document.getElementById('lap-riwayat-kirim');
+  wrap.innerHTML = '<p style="font-size:0.68rem;color:var(--text-muted);">Memuat riwayat kirim...</p>';
+  try {
+    const snap = await getDocs(query(collection(db,'laporan_terkirim'), where('rabId','==',rabId)));
+    const daftar = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(b.bulanYM||'').localeCompare(a.bulanYM||''));
+    if (!daftar.length) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = `<div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:4px;">Riwayat terkirim ke Mitra untuk Program ini:</div>` + daftar.map(d => `
+      <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:6px 10px;margin-bottom:4px;font-size:0.72rem;">
+        <span>${labelBulan(d.bulanYM)} — <b style="color:${d.status==='perlu_revisi'?'#ff9800':'var(--lime)'};">${d.status==='perlu_revisi'?'Perlu Revisi':'Terkirim'}</b> <span style="opacity:0.5;">(id: ${d.id})</span></span>
+        <button class="btn btn-danger btn-sm" onclick="hapusLaporanTerkirim('${d.id}','${rabId}')"><i class="fas fa-trash"></i></button>
+      </div>`).join('');
+  } catch(e) { wrap.innerHTML = `<p style="font-size:0.68rem;color:var(--danger);">Gagal memuat riwayat: ${e.message}</p>`; }
+}
+async function hapusLaporanTerkirim(id, rabId) {
+  if (!confirm('Hapus laporan terkirim ini? Mitra tidak akan lagi melihatnya di Dashboard-nya.')) return;
+  try { await deleteDoc(doc(db,'laporan_terkirim', id)); muatRiwayatKirim(rabId); }
+  catch(e) { alert('Gagal menghapus: '+e.message); }
+}
+window.hapusLaporanTerkirim = hapusLaporanTerkirim;
 
 
 
