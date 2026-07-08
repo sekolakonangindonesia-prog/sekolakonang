@@ -3520,9 +3520,12 @@ async function muatRiwayatKirim(rabId) {
     const daftar = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(b.bulanYM||'').localeCompare(a.bulanYM||''));
     if (!daftar.length) { wrap.innerHTML = ''; return; }
     wrap.innerHTML = `<div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:4px;">Riwayat terkirim ke Mitra untuk Program ini:</div>` + daftar.map(d => `
-      <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:6px 10px;margin-bottom:4px;font-size:0.72rem;">
-        <span>${labelBulan(d.bulanYM)} — <b style="color:${d.status==='perlu_revisi'?'#ff9800':'var(--lime)'};">${d.status==='perlu_revisi'?'Perlu Revisi':'Terkirim'}</b> <span style="opacity:0.5;">(id: ${d.id})</span></span>
-        <button class="btn btn-danger btn-sm" onclick="hapusLaporanTerkirim('${d.id}','${rabId}')"><i class="fas fa-trash"></i></button>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:6px 10px;margin-bottom:4px;font-size:0.72rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span>${labelBulan(d.bulanYM)} — <b style="color:${d.status==='perlu_revisi'?'#ff9800':'var(--lime)'};">${d.status==='perlu_revisi'?'Perlu Revisi':'Terkirim'}</b> <span style="opacity:0.5;">(id: ${d.id})</span></span>
+          <button class="btn btn-danger btn-sm" onclick="hapusLaporanTerkirim('${d.id}','${rabId}')"><i class="fas fa-trash"></i></button>
+        </div>
+        ${d.status==='perlu_revisi' && d.catatanRevisi ? `<div style="margin-top:6px;padding:8px;background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.25);border-radius:6px;color:#ffb74d;"><b>Catatan revisi dari Mitra:</b> ${d.catatanRevisi.replace(/</g,'&lt;')}</div>` : ''}
       </div>`).join('');
   } catch(e) { wrap.innerHTML = `<p style="font-size:0.68rem;color:var(--danger);">Gagal memuat riwayat: ${e.message}</p>`; }
 }
