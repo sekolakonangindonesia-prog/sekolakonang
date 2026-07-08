@@ -1104,11 +1104,11 @@ async function susunHtmlLaporanUntukMitra(rabId, bulanYM) {
     else if (kalimat.length > 2) hasil += ' …';
     return hasil;
   };
-  const bulletsHtml = detailKegiatan.map(d => `<li style="margin-bottom:6px;"><b>${d.nama} (${d.persenSelesaiSendiri.toFixed(0)}%):</b> ${d.rangkuman?.narasi ? ringkasSingkatNarasi(d.rangkuman.narasi.replace(/</g,'&lt;')) : '<i>(rangkuman belum diisi)</i>'}</li>`).join('');
+  const bulletsHtml = detailKegiatan.map(d => `<li style="margin-bottom:6px;"><b>${d.nama} (${d.kontribusiTerpakai.toFixed(1)}%):</b> ${d.rangkuman?.narasi ? ringkasSingkatNarasi(d.rangkuman.narasi.replace(/</g,'&lt;')) : '<i>(rangkuman belum diisi)</i>'}</li>`).join('');
   const daftarKegiatanHtml = detailKegiatan.map(d => `
     <tr style="background:#eaf1fa;">
       <td style="padding:6px;font-weight:bold;">${d.nama}</td>
-      <td style="padding:6px;text-align:center;">${d.persenSelesaiSendiri.toFixed(0)} %</td>
+      <td style="padding:6px;text-align:center;">${d.kontribusiTerpakai.toFixed(1)} %</td>
       <td style="padding:6px;text-align:center;">${d.targetSelesai}</td>
       <td style="padding:6px;">${(d.ik||'').split('\n').filter(Boolean).map((x,i)=>`${i+1}. ${x}`).join('<br>')}</td>
     </tr>
