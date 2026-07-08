@@ -1115,7 +1115,10 @@ input,textarea,select{font-family:var(--body);}
     <div class="sub">1) Muat laporan harian Tim bulan ini → 2) Admin rangkum jadi naratif bulanan + Kendala + Rencana Selanjutnya → 3) Generate Laporan Status lengkap (format resmi) → 4) Review/edit langsung di preview → 5) Export.</div>
     <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">Disiapkan oleh: <b id="lap-disiapkan-oleh-display" style="color:var(--lime);">—</b> <a href="#" id="lap-ubah-penyiap" style="color:var(--text-muted);text-decoration:underline;">(ubah)</a></div>
     <div class="row-2" style="margin:14px 0;">
+      <div class="form-group" style="margin:0;"><label>Mitra Penerima Laporan</label><select id="lap-mitra"><option value="">— Pilih Mitra —</option></select></div>
       <div class="form-group" style="margin:0;"><label>Bulan Laporan</label><input type="month" id="lap-bulan"></div>
+    </div>
+    <div class="row-2" style="margin:14px 0;">
       <div class="form-group" style="margin:0;display:flex;align-items:flex-end;"><button class="btn btn-outline" id="lap-muat-btn" style="width:100%;"><i class="fas fa-sync-alt"></i> Muat Laporan Harian Bulan Ini</button></div>
     </div>
     <div style="margin-bottom:10px;">
@@ -1126,10 +1129,12 @@ input,textarea,select{font-family:var(--body);}
 
     <div id="lap-preview" contenteditable="true" style="background:#fff;color:#111;padding:20px;border-radius:8px;max-height:40vh;overflow-y:auto;font-size:0.8rem;margin-top:14px;"><p style="color:#999;">Pilih bulan → "Muat Laporan Harian Bulan Ini" → isi rangkuman → "Simpan & Generate Laporan Status".</p></div>
     <div class="form-hint" style="margin-top:4px;">Preview di atas bisa diedit langsung (klik teksnya) sebelum di-export — ini tahap Review sebelum dikirim ke Mitra.</div>
+    <div id="lap-status-kirim" style="margin-top:8px;font-size:0.72rem;color:var(--text-muted);"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-laporan-mitra">Tutup</button>
       <button class="btn btn-outline" id="lap-print-btn"><i class="fas fa-print"></i> Cetak / Simpan PDF</button>
-      <button class="btn btn-lime" id="lap-word-btn"><i class="fas fa-file-word"></i> Download Word (.docx)</button>
+      <button class="btn btn-outline" id="lap-word-btn"><i class="fas fa-file-word"></i> Download Word (.docx)</button>
+      <button class="btn btn-lime" id="lap-kirim-btn"><i class="fas fa-paper-plane"></i> Kirim ke Mitra</button>
     </div>
   </div>
 </div>
@@ -3447,7 +3452,18 @@ async function simpanRangkumanDanBuatPreview() {
   finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan & Generate Laporan Status'; }
 }
 
-document.getElementById('rv-export-btn').addEventListener('click', () => {
+// ── Isi dropdown "Mitra Penerima Laporan" dari es_buyers, pre-select mitra yang sudah pernah dipilih utk RAB ini ──
+async function populateMitraDropdown(selectedBuyerId) {
+  const sel = document.getElementById('lap-mitra');
+  sel.innerHTML = '<option value="">— Pilih Mitra —</option>';
+  try {
+    const snap = await getDocs(collection(db,'es_buyers'));
+    snap.forEach(d => { sel.innerHTML += `<option value="${d.id}">${(d.data().nama||'—')}</option>`; });
+    if (selectedBuyerId) sel.value = selectedBuyerId;
+  } catch(e) { console.error('Gagal memuat daftar Mitra', e); }
+}
+
+document.getElementById('rv-export-btn').addEventListener('click', async () => {
   rabIdUntukExport = currentKurvaSId;
   if (!rabIdUntukExport) { alert('Tidak menemukan Program ini.'); return; }
   const r = daftarRabLoaded.find(x=>x.id===rabIdUntukExport);
@@ -3455,10 +3471,43 @@ document.getElementById('rv-export-btn').addEventListener('click', () => {
   document.getElementById('lap-bulan').value = r.periodeSelesai || '';
   document.getElementById('lap-rangkuman-editor').innerHTML = '';
   document.getElementById('lap-preview').innerHTML = '<p style="color:#999;">Pilih bulan → "Muat Laporan Harian Bulan Ini" → isi rangkuman → "Simpan & Generate Laporan Status".</p>';
+  document.getElementById('lap-status-kirim').textContent = '';
+  await populateMitraDropdown(r.buyerId||'');
   muatDisiapkanOleh();
   closeModal('modal-rab-view');
   openModal('modal-laporan-mitra');
 });
+
+// ── Kirim ke Mitra: simpan status ringan di 'laporan_terkirim' (id deterministik rabId_bulanYM,
+// supaya kirim ulang = update dokumen yang sama, bukan dobel). Isi lengkap laporan TIDAK disimpan
+// di sini — dashboard Mitra menyusun ulang secara live dari rab_kurva_s + rangkuman_bulanan, supaya
+// selalu sinkron dan tidak kena limit ukuran dokumen Firestore.
+document.getElementById('lap-kirim-btn').addEventListener('click', async () => {
+  const html = document.getElementById('lap-preview').innerHTML;
+  if (!html || html.includes('Pilih bulan')) { alert('Klik "Simpan & Generate Laporan Status" dulu sebelum mengirim ke Mitra.'); return; }
+  const buyerId = document.getElementById('lap-mitra').value;
+  if (!buyerId) { alert('Pilih Mitra penerima laporan dulu.'); return; }
+  const bulanYM = document.getElementById('lap-bulan').value;
+  if (!bulanYM) { alert('Pilih Bulan Laporan dulu.'); return; }
+  if (!rabIdUntukExport) { alert('Tidak menemukan Program ini.'); return; }
+  const r = daftarRabLoaded.find(x=>x.id===rabIdUntukExport);
+  const btn = document.getElementById('lap-kirim-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+  try {
+    await setDoc(doc(db,'rab_kurva_s', rabIdUntukExport), { buyerId }, {merge:true});
+    r.buyerId = buyerId; // biar konsisten kalau modal dibuka lagi tanpa reload
+    await setDoc(doc(db,'laporan_terkirim', `${rabIdUntukExport}_${bulanYM}`), {
+      rabId: rabIdUntukExport, buyerId, bulanYM,
+      judul: r.judul||'Laporan Program',
+      status: 'terkirim', catatanRevisi: '',
+      dikirimAt: serverTimestamp()
+    }, {merge:true});
+    document.getElementById('lap-status-kirim').innerHTML = `<i class="fas fa-check-circle" style="color:var(--lime);"></i> Terkirim ke Mitra — akan langsung muncul di Dashboard Mitra.`;
+  } catch(e) { alert('Gagal mengirim ke Mitra: '+e.message); }
+  btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim ke Mitra';
+});
+
+
 
 // Konversi SVG (string) jadi PNG data-URL — supaya bisa dibaca Word (Word tidak selalu render <svg> dg baik)
 function svgKeGambarPng(svgString, width, height) {
