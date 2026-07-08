@@ -3542,7 +3542,7 @@ async function susunHtmlLaporanMitra(rabId, bulanYM) {
     if (semuaFoto.length) fotoTag = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:280px;">${semuaFoto.map(f=>`<img src="${f}" style="width:100%;height:85px;object-fit:cover;border:1px solid #ccc;">`).join('')}</div>`;
 
     if (!laporanKegiatan.length && !rangkuman && !k.targetSelesai) continue; // tidak ada progres bulan ini utk kegiatan ini
-    detailKegiatan.push({ nama:k.nama||'(Kegiatan '+(i+1)+')', ik:k.ik||'', targetSelesai:k.targetSelesai?labelBulan(k.targetSelesai):'-', persenSelesaiSendiri, rangkuman, fotoTag });
+    detailKegiatan.push({ nama:k.nama||'(Kegiatan '+(i+1)+')', ik:k.ik||'', targetSelesai:k.targetSelesai?labelBulan(k.targetSelesai):'-', persenSelesaiSendiri, rangkuman, fotoTag, bobotPersen: bobot*100, kontribusiTerpakai: akumulasiKontribusiKegiatan });
   }
 
   // Bagian "Ringkasan Status": narasi bullet per Kegiatan dengan %-nya sendiri.
@@ -3577,8 +3577,10 @@ async function susunHtmlLaporanMitra(rabId, bulanYM) {
       <td colspan="3" style="padding:6px;vertical-align:top;">${d.fotoTag || '<i>(tidak ada foto)</i>'}</td>
     </tr>`).join('');
 
-  // Bagian "Gambaran Umum Anggaran"
-  const anggaranHtml = detailKegiatan.map(d => `<tr><td style="padding:5px;">${d.nama}</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri.toFixed(0)}%</td><td style="padding:5px;text-align:center;">100%</td><td style="padding:5px;text-align:center;">Sesuai</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri>=100?'Selesai':(d.persenSelesaiSendiri>0?'Proses Penyelesaian':'Belum Dimulai')}</td></tr>`).join('');
+  // Bagian "Anggaran Umum": TERPAKAI = kontribusi kegiatan ini thd total budget proyek (kalau dijumlah semua
+  // baris = Overall Progress); % TOTAL = bobot budget kegiatan ini dari total budget proyek (bukan hardcode 100%,
+  // sama persis dengan field "Bobot dari Total Budget" di form Kegiatan RAB).
+  const anggaranHtml = detailKegiatan.map(d => `<tr><td style="padding:5px;">${d.nama}</td><td style="padding:5px;text-align:center;">${d.kontribusiTerpakai.toFixed(1)}%</td><td style="padding:5px;text-align:center;">${d.bobotPersen.toFixed(1)}%</td><td style="padding:5px;text-align:center;">Sesuai</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri>=100?'Selesai':(d.persenSelesaiSendiri>0?'Proses Penyelesaian':'Belum Dimulai')}</td></tr>`).join('');
 
   // Parameter Umum: total Penerima Manfaat KUMULATIF sejak awal proyek s/d bulan terpilih
   const laporanKumulatif = [];
@@ -3612,7 +3614,7 @@ async function susunHtmlLaporanMitra(rabId, bulanYM) {
       ${daftarKegiatanHtml || '<tr><td colspan="4" style="padding:8px;"><i>Belum ada data.</i></td></tr>'}
     </table>
     <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.75rem;margin-bottom:16px;">
-      <tr style="background:#7ba7d4;color:#fff;"><th colspan="5">GAMBARAN UMUM ANGGARAN</th></tr>
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="5">ANGGARAN UMUM</th></tr>
       <tr style="background:#eaf1fa;"><th>KATEGORI</th><th>TERPAKAI</th><th>% TOTAL</th><th>SESUAI JALUR?</th><th>CATATAN</th></tr>
       ${anggaranHtml || '<tr><td colspan="5" style="padding:8px;"><i>Belum ada data.</i></td></tr>'}
     </table>
