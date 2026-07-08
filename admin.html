@@ -3496,7 +3496,7 @@ document.getElementById('lap-kirim-btn').addEventListener('click', async () => {
   try {
     await setDoc(doc(db,'rab_kurva_s', rabIdUntukExport), { buyerId }, {merge:true});
     r.buyerId = buyerId; // biar konsisten kalau modal dibuka lagi tanpa reload
-    await setDoc(doc(db,'laporan_terkirim', `${rabIdUntukExport}_${bulanYM}`), {
+    await setDoc(doc(db,'laporan_terkirim', `${rabIdUntukExport}__${bulanYM}`), {
       rabId: rabIdUntukExport, buyerId, bulanYM,
       judul: r.judul||'Laporan Program',
       status: 'terkirim', catatanRevisi: '',
