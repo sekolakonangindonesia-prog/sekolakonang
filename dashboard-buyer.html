@@ -1031,11 +1031,8 @@ function idRangkumanBuyer(rabId, idx, bulanYM) { return `${rabId}__${idx}__${bul
 async function ambilLaporanHarianBuyer(rabId, bulanYM) {
   const snap = await getDocs(collection(db,'progress_reports'));
   const semua = snap.docs.map(d=>({id:d.id,...d.data()}));
-  const cocokBulan = (x) => {
-    if (!x.createdAt || !x.createdAt.toDate) return false;
-    const d = x.createdAt.toDate();
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === bulanYM;
-  };
+  // PAKAI field `tanggal` (tanggal kegiatan asli), sama seperti panel Admin — bukan `createdAt`.
+  const cocokBulan = (x) => x.tanggal && x.tanggal.slice(0,7) === bulanYM;
   const hasil = {};
   semua.forEach(x => {
     if (!x.linkedKegiatanRab || !cocokBulan(x)) return;
@@ -1078,14 +1075,36 @@ async function susunHtmlLaporanUntukMitra(rabId, bulanYM) {
     const laporanKegiatan = laporanBulanIni[i] || [];
     let rangkuman = null;
     try { const snap = await getDoc(doc(db,'rangkuman_bulanan', idRangkumanBuyer(rabId, i, bulanYM))); if (snap.exists()) rangkuman = snap.data(); } catch(e){}
+    // Foto: pakai pilihan manual Admin kalau pernah dicentang & disimpan; kalau tidak ada
+    // pilihan manual sama sekali, otomatis ambil merata (maks 2 foto/laporan, total maks 8).
     let fotoTag = '';
-    const semuaFoto = laporanKegiatan.flatMap(x => x.foto||[]).slice(0,4);
+    let semuaFoto = [];
+    if (rangkuman && Array.isArray(rangkuman.fotoPilihan) && rangkuman.fotoPilihan.length) {
+      semuaFoto = rangkuman.fotoPilihan.map(key => {
+        const [reportId, fotoIdxStr] = key.split('::');
+        const rep = laporanKegiatan.find(x=>x.id===reportId);
+        return rep && rep.foto ? rep.foto[Number(fotoIdxStr)] : null;
+      }).filter(Boolean);
+    } else {
+      const laporanTerurut = laporanKegiatan.slice().sort((a,b)=>(a.tanggal||'').localeCompare(b.tanggal||''));
+      semuaFoto = laporanTerurut.flatMap(x => (x.foto||[]).slice(0,2)).slice(0,8);
+    }
     if (semuaFoto.length) fotoTag = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:280px;">${semuaFoto.map(f=>`<img src="${f}" style="width:100%;height:85px;object-fit:cover;border:1px solid #ccc;">`).join('')}</div>`;
     if (!laporanKegiatan.length && !rangkuman && !k.targetSelesai) continue;
-    detailKegiatan.push({ nama:k.nama||'(Kegiatan '+(i+1)+')', ik:k.ik||'', targetSelesai:k.targetSelesai?labelBulan(k.targetSelesai):'-', persenSelesaiSendiri, rangkuman, fotoTag });
+    detailKegiatan.push({ nama:k.nama||'(Kegiatan '+(i+1)+')', ik:k.ik||'', targetSelesai:k.targetSelesai?labelBulan(k.targetSelesai):'-', persenSelesaiSendiri, rangkuman, fotoTag, bobotPersen: bobot*100, kontribusiTerpakai: akumulasiKontribusiKegiatan });
   }
 
-  const bulletsHtml = detailKegiatan.map(d => `<li style="margin-bottom:6px;"><b>${d.nama} (${d.persenSelesaiSendiri.toFixed(0)}%):</b> ${d.rangkuman?.narasi ? d.rangkuman.narasi.replace(/</g,'&lt;').split('\n')[0] : '<i>(rangkuman belum diisi)</i>'}</li>`).join('');
+  // Ringkasan Status: ambil 1-2 kalimat pertama saja (dipotong per titik, BUKAN per baris/enter)
+  const ringkasSingkatNarasi = (teksSudahDiEscape) => {
+    const bersih = (teksSudahDiEscape||'').replace(/\n+/g,' ').trim();
+    if (!bersih) return '';
+    const kalimat = bersih.split(/(?<=[.!?])\s+/).filter(Boolean);
+    let hasil = kalimat.slice(0,2).join(' ').trim();
+    if (hasil.length > 240) hasil = hasil.slice(0,240).trim() + '…';
+    else if (kalimat.length > 2) hasil += ' …';
+    return hasil;
+  };
+  const bulletsHtml = detailKegiatan.map(d => `<li style="margin-bottom:6px;"><b>${d.nama} (${d.persenSelesaiSendiri.toFixed(0)}%):</b> ${d.rangkuman?.narasi ? ringkasSingkatNarasi(d.rangkuman.narasi.replace(/</g,'&lt;')) : '<i>(rangkuman belum diisi)</i>'}</li>`).join('');
   const daftarKegiatanHtml = detailKegiatan.map(d => `
     <tr style="background:#eaf1fa;">
       <td style="padding:6px;font-weight:bold;">${d.nama}</td>
@@ -1133,9 +1152,9 @@ async function susunHtmlLaporanUntukMitra(rabId, bulanYM) {
       ${daftarKegiatanHtml || '<tr><td colspan="4" style="padding:8px;"><i>Belum ada data.</i></td></tr>'}
     </table>
     <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.75rem;margin-bottom:16px;">
-      <tr style="background:#7ba7d4;color:#fff;"><th colspan="5">GAMBARAN UMUM ANGGARAN</th></tr>
+      <tr style="background:#7ba7d4;color:#fff;"><th colspan="5">GAMBARAN UMUM</th></tr>
       <tr style="background:#eaf1fa;"><th>KATEGORI</th><th>TERPAKAI</th><th>% TOTAL</th><th>SESUAI JALUR?</th><th>CATATAN</th></tr>
-      ${detailKegiatan.map(d => `<tr><td style="padding:5px;">${d.nama}</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri.toFixed(0)}%</td><td style="padding:5px;text-align:center;">100%</td><td style="padding:5px;text-align:center;">Sesuai</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri>=100?'Selesai':(d.persenSelesaiSendiri>0?'Proses Penyelesaian':'Belum Dimulai')}</td></tr>`).join('') || '<tr><td colspan="5" style="padding:8px;"><i>Belum ada data.</i></td></tr>'}
+      ${detailKegiatan.map(d => `<tr><td style="padding:5px;">${d.nama}</td><td style="padding:5px;text-align:center;">${d.kontribusiTerpakai.toFixed(1)}%</td><td style="padding:5px;text-align:center;">${d.bobotPersen.toFixed(1)}%</td><td style="padding:5px;text-align:center;">Sesuai</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri>=100?'Selesai':(d.persenSelesaiSendiri>0?'Proses Penyelesaian':'Belum Dimulai')}</td></tr>`).join('') || '<tr><td colspan="5" style="padding:8px;"><i>Belum ada data.</i></td></tr>'}
     </table>
     <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.78rem;margin-bottom:8px;">
       <tr style="background:#7ba7d4;color:#fff;"><th>KURVA S</th></tr>
