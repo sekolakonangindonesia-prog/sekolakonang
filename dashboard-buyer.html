@@ -256,6 +256,8 @@ input, textarea, select { font-family: var(--body); }
 .modal-backdrop { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.65); display: none; align-items: center; justify-content: center; padding: 20px; }
 .modal-backdrop.show { display: flex; }
 .modal-box { background: var(--surface); border: 1px solid var(--border-s); border-radius: var(--r); padding: 20px; width: 100%; max-width: 380px; position: relative; }
+.modal-box.wide { max-width: 760px; }
+.modal-box .lap-preview-scroll { background:#fff; color:#111; padding:20px; border-radius:8px; max-height:60vh; overflow-y:auto; font-size:0.8rem; margin:14px 0; }
 .modal-box h3 { font-family: var(--display); font-size: 1.05rem; color: #fff; margin-bottom: 6px; }
 .modal-box .sub { font-size: 0.72rem; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
 .modal-box textarea { width: 100%; min-height: 90px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-s); border-radius: 10px; color: var(--parchment); padding: 10px 12px; font-size: 0.8rem; font-family: var(--body); resize: vertical; }
@@ -263,6 +265,7 @@ input, textarea, select { font-family: var(--body); }
 .modal-actions { display: flex; gap: 8px; margin-top: 14px; }
 .modal-actions button { flex: 1; padding: 11px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: var(--body); border: 1px solid var(--border-s); background: var(--surface2); color: var(--sub); }
 .modal-actions button.primary { background: var(--lime); border: none; color: var(--bg); }
+.modal-actions button.warn { background: rgba(255,171,0,0.10); border-color: rgba(255,171,0,0.25); color: var(--orange); }
 
 /* ─── BADGE ─── */
 .badge {
@@ -539,6 +542,21 @@ input, textarea, select { font-family: var(--body); }
 
 <!-- TOAST -->
 <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
+
+<!-- MODAL: LIHAT LAPORAN (PREVIEW) -->
+<div class="modal-backdrop" id="modal-lihat-laporan">
+  <div class="modal-box wide">
+    <button class="modal-close" onclick="closeModal('modal-lihat-laporan')"><i class="fas fa-times"></i></button>
+    <h3 id="lihat-lap-judul">Laporan Program</h3>
+    <div class="sub">Review laporan status di bawah ini sebelum download atau meminta revisi ke Admin.</div>
+    <div class="lap-preview-scroll" id="lihat-lap-preview"><p style="color:#999;">Memuat laporan...</p></div>
+    <div class="modal-actions">
+      <button onclick="closeModal('modal-lihat-laporan')">Tutup</button>
+      <button onclick="lihatCetakLaporan(lihatLapTarget.rabId, lihatLapTarget.bulanYM)"><i class="fas fa-print"></i> Cetak/PDF</button>
+      <button class="warn" id="lihat-lap-revisi-btn" onclick="closeModal('modal-lihat-laporan'); openModal('modal-minta-revisi', lihatLapTarget.rabId, lihatLapTarget.bulanYM)"><i class="fas fa-flag"></i> Minta Revisi</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: MINTA REVISI -->
 <div class="modal-backdrop" id="modal-minta-revisi">
@@ -911,8 +929,8 @@ function renderLaporanList() {
       </div>
       ${l.status==='perlu_revisi' ? `<div class="lap-catatan-revisi"><b>Catatan revisi Anda:</b> ${(l.catatanRevisi||'-').replace(/</g,'&lt;')}<br><i style="opacity:0.75;">Menunggu Admin mengirim ulang laporan yang sudah diperbaiki.</i></div>` : ''}
       <div class="lap-actions">
+        <button class="primary" onclick="lihatPreviewLaporan('${l.rabId}','${l.bulanYM}','${(l.judul||'Laporan Program').replace(/'/g,"\\'")}','${l.status}')"><i class="fas fa-eye"></i> Lihat</button>
         <button onclick="lihatCetakLaporan('${l.rabId}','${l.bulanYM}')"><i class="fas fa-print"></i> Cetak/PDF</button>
-        <button onclick="downloadWordLaporan('${l.rabId}','${l.bulanYM}')"><i class="fas fa-file-word"></i> Word</button>
         ${l.status!=='perlu_revisi' ? `<button class="warn" onclick="openModal('modal-minta-revisi','${l.rabId}','${l.bulanYM}')"><i class="fas fa-flag"></i> Minta Revisi</button>` : ''}
       </div>
     </div>`).join('');
@@ -1136,6 +1154,19 @@ async function susunHtmlLaporanUntukMitra(rabId, bulanYM) {
     </table>
   </div>`;
 }
+
+// ── Preview laporan sebelum download/minta revisi (modal "Lihat") ──
+let lihatLapTarget = null; // {rabId, bulanYM}
+window.lihatPreviewLaporan = async (rabId, bulanYM, judul, status) => {
+  lihatLapTarget = {rabId, bulanYM};
+  document.getElementById('lihat-lap-judul').textContent = judul || 'Laporan Program';
+  document.getElementById('lihat-lap-preview').innerHTML = '<p style="color:#999;">Memuat laporan...</p>';
+  document.getElementById('lihat-lap-revisi-btn').style.display = status==='perlu_revisi' ? 'none' : '';
+  openModal('modal-lihat-laporan');
+  try {
+    document.getElementById('lihat-lap-preview').innerHTML = await susunHtmlLaporanUntukMitra(rabId, bulanYM);
+  } catch(e) { document.getElementById('lihat-lap-preview').innerHTML = `<p style="color:#c00;">Gagal memuat laporan: ${e.message}</p>`; }
+};
 
 window.lihatCetakLaporan = async (rabId, bulanYM) => {
   showToast('Menyusun laporan...', 'info');
