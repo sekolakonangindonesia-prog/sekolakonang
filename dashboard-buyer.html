@@ -1153,8 +1153,8 @@ async function susunHtmlLaporanUntukMitra(rabId, bulanYM) {
     </table>
     <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.75rem;margin-bottom:16px;">
       <tr style="background:#7ba7d4;color:#fff;"><th colspan="5">GAMBARAN UMUM</th></tr>
-      <tr style="background:#eaf1fa;"><th>KATEGORI</th><th>TERPAKAI</th><th>% TOTAL</th><th>SESUAI JALUR?</th><th>CATATAN</th></tr>
-      ${detailKegiatan.map(d => `<tr><td style="padding:5px;">${d.nama}</td><td style="padding:5px;text-align:center;">${d.kontribusiTerpakai.toFixed(1)}%</td><td style="padding:5px;text-align:center;">${d.bobotPersen.toFixed(1)}%</td><td style="padding:5px;text-align:center;">Sesuai</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri>=100?'Selesai':(d.persenSelesaiSendiri>0?'Proses Penyelesaian':'Belum Dimulai')}</td></tr>`).join('') || '<tr><td colspan="5" style="padding:8px;"><i>Belum ada data.</i></td></tr>'}
+      <tr style="background:#eaf1fa;"><th>KATEGORI</th><th>BOBOT ANGGARAN</th><th>TERSELESAIKAN</th><th>SISA PENYELESAIAN</th><th>CATATAN</th></tr>
+      ${detailKegiatan.map(d => `<tr><td style="padding:5px;">${d.nama}</td><td style="padding:5px;text-align:center;">${d.bobotPersen.toFixed(2)}%</td><td style="padding:5px;text-align:center;">${d.kontribusiTerpakai.toFixed(2)}%</td><td style="padding:5px;text-align:center;">${Math.max(0,d.bobotPersen-d.kontribusiTerpakai).toFixed(2)}%</td><td style="padding:5px;text-align:center;">${d.persenSelesaiSendiri>=100?'Selesai':(d.persenSelesaiSendiri>0?'Proses Penyelesaian':'Belum Dimulai')}</td></tr>`).join('') || '<tr><td colspan="5" style="padding:8px;"><i>Belum ada data.</i></td></tr>'}
     </table>
     <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:0.78rem;margin-bottom:8px;">
       <tr style="background:#7ba7d4;color:#fff;"><th>KURVA S</th></tr>
