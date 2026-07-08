@@ -1176,9 +1176,9 @@ async function susunHtmlLaporanUntukMitra(rabId, bulanYM) {
 }
 
 // ── Preview laporan sebelum download/minta revisi (modal "Lihat") ──
-let lihatLapTarget = null; // {rabId, bulanYM}
+window.lihatLapTarget = null; // {rabId, bulanYM}
 window.lihatPreviewLaporan = async (rabId, bulanYM, judul, status) => {
-  lihatLapTarget = {rabId, bulanYM};
+  window.lihatLapTarget = {rabId, bulanYM};
   document.getElementById('lihat-lap-judul').textContent = judul || 'Laporan Program';
   document.getElementById('lihat-lap-preview').innerHTML = '<p style="color:#999;">Memuat laporan...</p>';
   document.getElementById('lihat-lap-revisi-btn').style.display = status==='perlu_revisi' ? 'none' : '';
