@@ -1198,8 +1198,10 @@ window.lihatCetakLaporan = async (rabId, bulanYM) => {
   const container = document.createElement('div');
   // Diletakkan jauh di luar layar (bukan disembunyikan lewat opacity) — opacity rendah
   // ikut terpotret oleh html2canvas apa adanya, sehingga isi laporan jadi pudar/transparan.
-  // Posisi di luar layar tetap full-opacity sehingga hasil potretan normal.
-  container.style.cssText = 'position:absolute;left:-10000px;top:0;width:800px;background:#fff;';
+  // Posisi di luar layar tetap full-opacity sehingga hasil potretan normal. Ditambah
+  // padding-bottom sebagai jarak aman supaya baris/konten terakhir tidak mepet ke tepi
+  // saat "dipotong" per halaman PDF.
+  container.style.cssText = 'position:absolute;left:-10000px;top:0;width:800px;background:#fff;padding-bottom:24px;';
   try {
     container.innerHTML = await susunHtmlLaporanUntukMitra(rabId, bulanYM);
     document.body.appendChild(container);
@@ -1213,30 +1215,36 @@ window.lihatCetakLaporan = async (rabId, bulanYM) => {
     // Beri browser 2 frame untuk menyelesaikan layout & paint sebelum discreenshot.
     await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
 
-    const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 800 });
+    // scale:3 (naik dari 2) supaya resolusi hasil potret lebih tinggi/tajam saat dibaca
+    // di PDF. useCORS tetap dijaga meski gambar semuanya base64 (aman, tidak berpengaruh).
+    const canvas = await html2canvas(container, { scale: 3, useCORS: true, backgroundColor: '#ffffff', windowWidth: 800 });
     console.log('[PDF] Ukuran canvas hasil render:', canvas.width, 'x', canvas.height);
     if (!canvas.width || !canvas.height) {
       throw new Error('Elemen laporan gagal dirender (canvas 0x0). Coba lagi atau laporkan ke Admin.');
     }
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    // PNG (bukan JPEG) — teks jauh lebih tajam karena tidak kena kompresi lossy JPEG
+    // yang biasanya bikin tulisan terlihat buram/pudar di sekitar tepi huruf.
+    const imgData = canvas.toDataURL('image/png');
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 10;
+    const safety = 1; // mm penyangga tambahan supaya konten tidak mepet ke tepi halaman
     const imgWidth = pageWidth - margin * 2;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const usableHeight = pageHeight - margin * 2 - safety;
     let heightLeft = imgHeight;
     let position = margin;
 
-    pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
-    heightLeft -= (pageHeight - margin * 2);
+    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+    heightLeft -= usableHeight;
     while (heightLeft > 0) {
       position = heightLeft - imgHeight + margin;
       pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
-      heightLeft -= (pageHeight - margin * 2);
+      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+      heightLeft -= usableHeight;
     }
 
     pdf.save(`Laporan_Mitra_${bulanYM}.pdf`);
