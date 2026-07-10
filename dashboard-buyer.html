@@ -9,7 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<style>  
+<style>
 :root {
   --bg:        #050505;
   --surface:   #1a1b1a;
@@ -297,7 +297,7 @@ input, textarea, select { font-family: var(--body); }
   font-family: var(--body); display: flex; align-items: center; justify-content: center; gap: 8px;
 }
 .btn-cta:hover { background: #d4ff33; }
-  
+
 /* ─── PROFIL ─── */
 .profil-header {
   background: var(--surface); border: 1px solid var(--border-s);
@@ -1189,26 +1189,63 @@ window.lihatPreviewLaporan = async (rabId, bulanYM, judul, status) => {
 };
 
 // Download PDF langsung ke file (bukan dialog print via window.open — itu sering diblokir
-// popup-blocker di HP, apalagi karena dipanggil setelah proses async). html2pdf merender
-// laporan jadi PDF di memori lalu langsung memicu download-nya.
+// popup-blocker di HP, apalagi karena dipanggil setelah proses async). Kita pakai html2canvas
+// + jsPDF langsung (bukan lewat pembungkus html2pdf) supaya proses render bisa dikontrol
+// persis dan kalau gagal, errornya kelihatan di Console — tidak lagi gagal diam-diam.
 window.lihatCetakLaporan = async (rabId, bulanYM) => {
   showToast('Menyiapkan PDF...', 'info');
   const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff;';
+  // Diletakkan di posisi 0,0 tapi disembunyikan lewat opacity+pointer-events (bukan
+  // left:-9999px) — beberapa browser tidak melakukan layout/paint penuh untuk elemen
+  // yang diletakkan jauh di luar layar, sehingga html2canvas memotret kanvas kosong.
+  container.style.cssText = 'position:absolute;left:0;top:0;width:800px;background:#fff;opacity:0.01;pointer-events:none;z-index:-1;';
   try {
     container.innerHTML = await susunHtmlLaporanUntukMitra(rabId, bulanYM);
     document.body.appendChild(container);
-    await html2pdf().set({
-      margin: 10,
-      filename: `Laporan_Mitra_${bulanYM}.pdf`,
-      image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'] }
-    }).from(container).save();
+
+    // Tunggu semua gambar (foto base64 + PNG grafik Kurva S) benar-benar selesai dimuat.
+    const imgs = Array.from(container.querySelectorAll('img'));
+    await Promise.all(imgs.map(img => {
+      if (img.complete && img.naturalWidth) return Promise.resolve();
+      return new Promise(res => { img.onload = res; img.onerror = res; });
+    }));
+    // Beri browser 2 frame untuk menyelesaikan layout & paint sebelum discreenshot.
+    await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+
+    const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 800 });
+    console.log('[PDF] Ukuran canvas hasil render:', canvas.width, 'x', canvas.height);
+    if (!canvas.width || !canvas.height) {
+      throw new Error('Elemen laporan gagal dirender (canvas 0x0). Coba lagi atau laporkan ke Admin.');
+    }
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 10;
+    const imgWidth = pageWidth - margin * 2;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = margin;
+
+    pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+    heightLeft -= (pageHeight - margin * 2);
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight + margin;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+      heightLeft -= (pageHeight - margin * 2);
+    }
+
+    pdf.save(`Laporan_Mitra_${bulanYM}.pdf`);
     showToast('PDF berhasil diunduh.');
-  } catch(e) { showToast('Gagal membuat PDF: '+e.message, 'error'); }
-  finally { document.body.removeChild(container); }
+  } catch(e) {
+    console.error('[PDF] Gagal membuat PDF:', e);
+    showToast('Gagal membuat PDF: '+e.message, 'error');
+  } finally {
+    if (container.parentNode) document.body.removeChild(container);
+  }
 };
 
 window.downloadWordLaporan = async (rabId, bulanYM) => {
@@ -1290,7 +1327,7 @@ window.showToast = (msg, type='success') => {
   t.className = `toast show ${type}`;
   t.querySelector('i').className = `fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle'}`;
   setTimeout(() => t.classList.remove('show'), 3500);
-};
+};    
 </script>
 </body>
 </html>
