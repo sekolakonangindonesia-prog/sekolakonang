@@ -1198,10 +1198,11 @@ window.lihatCetakLaporan = async (rabId, bulanYM) => {
   const container = document.createElement('div');
   // Diletakkan jauh di luar layar (bukan disembunyikan lewat opacity) — opacity rendah
   // ikut terpotret oleh html2canvas apa adanya, sehingga isi laporan jadi pudar/transparan.
-  // Posisi di luar layar tetap full-opacity sehingga hasil potretan normal. Ditambah
-  // padding-bottom sebagai jarak aman supaya baris/konten terakhir tidak mepet ke tepi
-  // saat "dipotong" per halaman PDF.
-  container.style.cssText = 'position:absolute;left:-10000px;top:0;width:800px;background:#fff;padding-bottom:24px;';
+  // Posisi di luar layar tetap full-opacity sehingga hasil potretan normal. color:#111 wajib
+  // di-set eksplisit di sini — tanpa ini, teks ikut warisi warna body (terang, untuk tema
+  // gelap situs) karena container ini tidak berada di dalam class .lap-preview-scroll yang
+  // biasanya menimpa warna itu jadi gelap saat tampil di modal.
+  container.style.cssText = 'position:absolute;left:-10000px;top:0;width:800px;background:#fff;color:#111;padding-bottom:24px;';
   try {
     container.innerHTML = await susunHtmlLaporanUntukMitra(rabId, bulanYM);
     document.body.appendChild(container);
@@ -1230,20 +1231,57 @@ window.lihatCetakLaporan = async (rabId, bulanYM) => {
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 10;
-    const safety = 1; // mm penyangga tambahan supaya konten tidak mepet ke tepi halaman
-    const imgWidth = pageWidth - margin * 2;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const usableHeight = pageHeight - margin * 2 - safety;
-    let heightLeft = imgHeight;
-    let position = margin;
 
-    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+    // Ambil info judul & nama yayasan untuk header berulang di tiap halaman.
+    let namaYayasan = 'Yayasan Sekola Konang Indonesia', judulLaporan = 'Laporan Program';
+    try {
+      const info2 = await ambilInfoYayasanBuyer();
+      const r2 = await ambilRabUntukLaporan(rabId);
+      namaYayasan = info2.nama || namaYayasan;
+      judulLaporan = r2.judul || judulLaporan;
+    } catch(e) { /* header pakai default kalau gagal ambil ulang */ }
+
+    const sideMargin = 10;
+    const headerH = 16;   // tinggi pita header di tiap halaman (mm)
+    const footerH = 12;   // tinggi pita footer di tiap halaman (mm)
+    const imgWidth = pageWidth - sideMargin * 2;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const usableHeight = pageHeight - headerH - footerH;
+    const totalPages = Math.max(1, Math.ceil(imgHeight / usableHeight));
+
+    function gambarHeaderFooter(nomorHalaman) {
+      // Header
+      pdf.setFontSize(10);
+      pdf.setTextColor(26, 58, 92);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(namaYayasan, sideMargin, 10);
+      pdf.setFont(undefined, 'normal');
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(90, 90, 90);
+      pdf.text(judulLaporan, sideMargin, 14.5);
+      pdf.setDrawColor(180, 195, 210);
+      pdf.line(sideMargin, headerH - 2, pageWidth - sideMargin, headerH - 2);
+      // Footer
+      pdf.setDrawColor(220, 220, 220);
+      pdf.line(sideMargin, pageHeight - footerH + 3, pageWidth - sideMargin, pageHeight - footerH + 3);
+      pdf.setFontSize(8);
+      pdf.setTextColor(140, 140, 140);
+      pdf.text(`Halaman ${nomorHalaman} dari ${totalPages}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+    }
+
+    let heightLeft = imgHeight;
+    let position = headerH;
+    let halaman = 1;
+
+    gambarHeaderFooter(halaman);
+    pdf.addImage(imgData, 'PNG', sideMargin, position, imgWidth, imgHeight);
     heightLeft -= usableHeight;
     while (heightLeft > 0) {
-      position = heightLeft - imgHeight + margin;
+      position = heightLeft - imgHeight + headerH;
       pdf.addPage();
-      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+      halaman++;
+      gambarHeaderFooter(halaman);
+      pdf.addImage(imgData, 'PNG', sideMargin, position, imgWidth, imgHeight);
       heightLeft -= usableHeight;
     }
 
