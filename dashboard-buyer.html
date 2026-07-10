@@ -1224,9 +1224,12 @@ window.lihatCetakLaporan = async (rabId, bulanYM) => {
       throw new Error('Elemen laporan gagal dirender (canvas 0x0). Coba lagi atau laporkan ke Admin.');
     }
 
-    // PNG (bukan JPEG) — teks jauh lebih tajam karena tidak kena kompresi lossy JPEG
-    // yang biasanya bikin tulisan terlihat buram/pudar di sekitar tepi huruf.
-    const imgData = canvas.toDataURL('image/png');
+    // JPEG (bukan PNG) di kualitas maksimal. PNG hasil html2canvas ikut membawa kanal
+    // alpha (RGBA) yang TIDAK bisa dikompres dengan baik oleh jsPDF — malah tersimpan
+    // sebagai data piksel mentah tanpa kompresi sama sekali, membuat file bisa 60-70MB.
+    // JPEG tidak punya alpha channel sehingga tetap terkompresi normal oleh jsPDF, dan
+    // karena resolusi capture sudah dinaikkan (scale:3), hasilnya tetap tajam dibaca.
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -1274,14 +1277,14 @@ window.lihatCetakLaporan = async (rabId, bulanYM) => {
     let halaman = 1;
 
     gambarHeaderFooter(halaman);
-    pdf.addImage(imgData, 'PNG', sideMargin, position, imgWidth, imgHeight);
+    pdf.addImage(imgData, 'JPEG', sideMargin, position, imgWidth, imgHeight);
     heightLeft -= usableHeight;
     while (heightLeft > 0) {
       position = heightLeft - imgHeight + headerH;
       pdf.addPage();
       halaman++;
       gambarHeaderFooter(halaman);
-      pdf.addImage(imgData, 'PNG', sideMargin, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'JPEG', sideMargin, position, imgWidth, imgHeight);
       heightLeft -= usableHeight;
     }
 
