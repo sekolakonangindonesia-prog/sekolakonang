@@ -1196,10 +1196,10 @@ window.lihatPreviewLaporan = async (rabId, bulanYM, judul, status) => {
 window.lihatCetakLaporan = async (rabId, bulanYM) => {
   showToast('Menyiapkan PDF...', 'info');
   const container = document.createElement('div');
-  // Diletakkan di posisi 0,0 tapi disembunyikan lewat opacity+pointer-events (bukan
-  // left:-9999px) — beberapa browser tidak melakukan layout/paint penuh untuk elemen
-  // yang diletakkan jauh di luar layar, sehingga html2canvas memotret kanvas kosong.
-  container.style.cssText = 'position:absolute;left:0;top:0;width:800px;background:#fff;opacity:0.01;pointer-events:none;z-index:-1;';
+  // Diletakkan jauh di luar layar (bukan disembunyikan lewat opacity) — opacity rendah
+  // ikut terpotret oleh html2canvas apa adanya, sehingga isi laporan jadi pudar/transparan.
+  // Posisi di luar layar tetap full-opacity sehingga hasil potretan normal.
+  container.style.cssText = 'position:absolute;left:-10000px;top:0;width:800px;background:#fff;';
   try {
     container.innerHTML = await susunHtmlLaporanUntukMitra(rabId, bulanYM);
     document.body.appendChild(container);
