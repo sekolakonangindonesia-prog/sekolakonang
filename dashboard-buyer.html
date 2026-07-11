@@ -1252,18 +1252,53 @@ window.lihatCetakLaporan = async (rabId, bulanYM) => {
     } catch(e) { /* header pakai default kalau gagal ambil ulang */ }
 
     const sideMargin = 10;
-    const headerH = 16;   // tinggi pita header di SETIAP halaman (mm), termasuk halaman 1 —
+    const headerH = 18;   // tinggi pita header di SETIAP halaman (mm), termasuk halaman 1 —
                            // kop surat bawaan konten sudah dibuang khusus untuk versi PDF.
+                           // Dinaikkan dari 16 ke 18 supaya garis pemisah tidak mepet ke teks judul.
     const footerH = 12;   // tinggi pita footer di SETIAP halaman (mm)
     const imgWidth = pageWidth - sideMargin * 2;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
     const usableHeight = pageHeight - headerH - footerH; // area A4 (297mm) dikurangi header+footer
-    const totalPages = Math.max(1, Math.ceil(imgHeight / usableHeight));
+
+    // --- Cari titik potong yang "aman" (baris kosong/putih) di sekitar target, supaya
+    // paragraf/foto tidak terpotong persis di tengah. Dicek dari canvas piksel asli
+    // (bukan dari ukuran mm), karena di situlah baris teks & foto benar-benar berada. ---
+    const ctx = canvas.getContext('2d');
+    const scalePxPerMm = canvas.width / imgWidth;
+    const usableHeightPx = usableHeight * scalePxPerMm;
+    const radiusPx = Math.round(scalePxPerMm * 10); // toleransi geser ±10mm dari titik ideal
+
+    function barisHampirPutih(y) {
+      const data = ctx.getImageData(0, y, canvas.width, 1).data;
+      for (let i = 0; i < data.length; i += 16) { // sampling, tidak perlu cek tiap piksel
+        if (data[i] < 245 || data[i+1] < 245 || data[i+2] < 245) return false;
+      }
+      return true;
+    }
+    function cariTitikPotongAman(targetY) {
+      const maxY = canvas.height - 1;
+      if (targetY >= maxY) return canvas.height;
+      for (let d = 0; d <= radiusPx; d++) {
+        const bawah = targetY + d, atas = targetY - d;
+        if (bawah <= maxY && barisHampirPutih(bawah)) return bawah;
+        if (atas > 0 && barisHampirPutih(atas)) return atas;
+      }
+      return targetY; // tidak ketemu celah kosong, terpaksa potong di titik ideal
+    }
+
+    // Hitung dulu semua batas potongan halaman (biar tahu total halaman sebelum menggambar).
+    const potongan = [];
+    { let y = 0;
+      while (y < canvas.height - 1) {
+        const target = Math.min(canvas.height, Math.round(y + usableHeightPx));
+        const batas = target >= canvas.height ? canvas.height : cariTitikPotongAman(target);
+        potongan.push([y, Math.max(batas, y + 1)]);
+        y = Math.max(batas, y + 1);
+      }
+    }
+    const totalPages = potongan.length;
 
     // Dipanggil SETELAH gambar laporan digambar di halaman itu (bukan sebelumnya) — supaya
-    // teks header/footer digambar DI ATAS gambar, bukan malah ketutup olehnya. Area header
-    // & footer dilapis kotak putih polos dulu supaya konten yang "numpang lewat" dari gambar
-    // panjang itu tidak ikut kelihatan bercampur dengan teksnya.
+    // teks header/footer digambar DI ATAS gambar, bukan malah ketutup olehnya.
     function gambarHeaderFooter(nomorHalaman) {
       // Header — tampil di SEMUA halaman
       pdf.setFillColor(255, 255, 255);
@@ -1277,7 +1312,7 @@ window.lihatCetakLaporan = async (rabId, bulanYM) => {
       pdf.setTextColor(110, 110, 110);
       pdf.text(judulLaporan, sideMargin, 14);
       pdf.setDrawColor(180, 195, 210);
-      pdf.line(sideMargin, headerH - 2, pageWidth - sideMargin, headerH - 2);
+      pdf.line(sideMargin, headerH - 2, pageWidth - sideMargin, headerH - 2); // ada jarak ±2mm dari teks judul di atasnya
 
       // Footer — tampil di SEMUA halaman
       pdf.setFillColor(255, 255, 255);
@@ -1289,20 +1324,22 @@ window.lihatCetakLaporan = async (rabId, bulanYM) => {
       pdf.text(`Halaman ${nomorHalaman} dari ${totalPages}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
     }
 
-    let heightLeft = imgHeight;
-    let position = headerH;
-    let halaman = 1;
+    // Gambar tiap halaman dari potongan canvas yang sudah dihitung (bukan menggambar 1
+    // gambar panjang yang digeser-geser) — jadi tiap halaman cuma berisi persis potongan
+    // miliknya sendiri, dipotong tepat di baris kosong tadi.
+    for (let i = 0; i < potongan.length; i++) {
+      const [sy, ey] = potongan[i];
+      const sliceH = ey - sy;
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = sliceH;
+      sliceCanvas.getContext('2d').drawImage(canvas, 0, sy, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+      const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+      const sliceHmm = sliceH / scalePxPerMm;
 
-    pdf.addImage(imgData, 'JPEG', sideMargin, position, imgWidth, imgHeight);
-    gambarHeaderFooter(halaman);
-    heightLeft -= usableHeight;
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight + headerH;
-      pdf.addPage();
-      halaman++;
-      pdf.addImage(imgData, 'JPEG', sideMargin, position, imgWidth, imgHeight);
-      gambarHeaderFooter(halaman);
-      heightLeft -= usableHeight;
+      if (i > 0) pdf.addPage();
+      pdf.addImage(sliceData, 'JPEG', sideMargin, headerH, imgWidth, sliceHmm);
+      gambarHeaderFooter(i + 1);
     }
 
     pdf.save(`Laporan_Mitra_${bulanYM}.pdf`);
