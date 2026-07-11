@@ -1130,7 +1130,7 @@ async function susunHtmlLaporanUntukMitra(rabId, bulanYM) {
 
   return `
   <div style="font-family:Arial,sans-serif;">
-    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #7ba7d4;padding-bottom:8px;margin-bottom:14px;">
+    <div id="pdf-letterhead-exclude" style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #7ba7d4;padding-bottom:8px;margin-bottom:14px;">
       <div><b style="color:#1a3a5c;">${info.nama}</b><br><span style="font-size:0.7rem;color:#555;">${info.alamat}</span></div>
     </div>
     <h2 style="color:#7ba7d4;font-weight:normal;">LAPORAN STATUS UPDATE ${(r.judul||'').toUpperCase()}</h2>
@@ -1207,6 +1207,13 @@ window.lihatCetakLaporan = async (rabId, bulanYM) => {
     container.innerHTML = await susunHtmlLaporanUntukMitra(rabId, bulanYM);
     document.body.appendChild(container);
 
+    // Kop surat bawaan di dalam konten dibuang khusus untuk versi PDF — PDF sekarang
+    // punya header sendiri yang seragam di tiap halaman (lihat gambarHeaderFooter di bawah),
+    // jadi tidak perlu dobel. Dicari di dalam `container` saja (bukan document) supaya tidak
+    // salah hapus kalau modal preview laporan kebetulan sedang terbuka juga.
+    const letterhead = container.querySelector('#pdf-letterhead-exclude');
+    if (letterhead) letterhead.remove();
+
     // Tunggu semua gambar (foto base64 + PNG grafik Kurva S) benar-benar selesai dimuat.
     const imgs = Array.from(container.querySelectorAll('img'));
     await Promise.all(imgs.map(img => {
@@ -1245,37 +1252,34 @@ window.lihatCetakLaporan = async (rabId, bulanYM) => {
     } catch(e) { /* header pakai default kalau gagal ambil ulang */ }
 
     const sideMargin = 10;
-    const headerH = 16;   // tinggi pita header di halaman 2+ (mm) — halaman 1 sudah punya
-                           // kop surat sendiri sebagai bagian dari gambar laporan.
-    const footerH = 12;   // tinggi pita footer di tiap halaman (mm)
+    const headerH = 16;   // tinggi pita header di SETIAP halaman (mm), termasuk halaman 1 —
+                           // kop surat bawaan konten sudah dibuang khusus untuk versi PDF.
+    const footerH = 12;   // tinggi pita footer di SETIAP halaman (mm)
     const imgWidth = pageWidth - sideMargin * 2;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const usableHeight = pageHeight - headerH - footerH;
+    const usableHeight = pageHeight - headerH - footerH; // area A4 (297mm) dikurangi header+footer
     const totalPages = Math.max(1, Math.ceil(imgHeight / usableHeight));
 
-    // PENTING: fungsi ini dipanggil SETELAH gambar laporan digambar di halaman itu (bukan
-    // sebelumnya) — supaya teks header/footer digambar DI ATAS gambar, bukan malah ketutup
-    // olehnya. Karena gambar laporan itu satu gambar panjang yang menyambung antar halaman,
-    // area header/footer di tiap halaman dilapis dulu dengan kotak putih polos supaya
-    // konten yang "numpang lewat" dari gambar tidak ikut kelihatan bercampur dengan teksnya.
+    // Dipanggil SETELAH gambar laporan digambar di halaman itu (bukan sebelumnya) — supaya
+    // teks header/footer digambar DI ATAS gambar, bukan malah ketutup olehnya. Area header
+    // & footer dilapis kotak putih polos dulu supaya konten yang "numpang lewat" dari gambar
+    // panjang itu tidak ikut kelihatan bercampur dengan teksnya.
     function gambarHeaderFooter(nomorHalaman) {
-      if (nomorHalaman > 1) {
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(0, 0, pageWidth, headerH, 'F');
-        pdf.setFontSize(9.5);
-        pdf.setTextColor(26, 58, 92);
-        pdf.setFont(undefined, 'bold');
-        pdf.text(namaYayasan, sideMargin, 10);
-        pdf.setFont(undefined, 'normal');
-        pdf.setFontSize(8);
-        pdf.setTextColor(110, 110, 110);
-        pdf.text(judulLaporan, sideMargin, 14);
-        pdf.setDrawColor(180, 195, 210);
-        pdf.line(sideMargin, headerH - 2, pageWidth - sideMargin, headerH - 2);
-      }
-      // Footer — dilapis kotak putih dulu di semua halaman (termasuk halaman 1), karena
-      // gambar laporan yang menyambung itu juga bisa menutupi area footer di halaman
-      // mana pun kecuali halaman terakhir.
+      // Header — tampil di SEMUA halaman
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(0, 0, pageWidth, headerH, 'F');
+      pdf.setFontSize(9.5);
+      pdf.setTextColor(26, 58, 92);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(namaYayasan, sideMargin, 10);
+      pdf.setFont(undefined, 'normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(110, 110, 110);
+      pdf.text(judulLaporan, sideMargin, 14);
+      pdf.setDrawColor(180, 195, 210);
+      pdf.line(sideMargin, headerH - 2, pageWidth - sideMargin, headerH - 2);
+
+      // Footer — tampil di SEMUA halaman
       pdf.setFillColor(255, 255, 255);
       pdf.rect(0, pageHeight - footerH, pageWidth, footerH, 'F');
       pdf.setDrawColor(220, 220, 220);
