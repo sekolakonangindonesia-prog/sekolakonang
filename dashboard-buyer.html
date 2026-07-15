@@ -10,6 +10,7 @@
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="pjlh-formula.js"></script>
 <style>
 :root {
   --bg:        #050505;
@@ -848,25 +849,29 @@ async function renderPJLHBuyerData() {
     document.getElementById('pjlh-pembuatan').textContent = totalPembuatan.toLocaleString('id-ID');
     document.getElementById('pjlh-perawatan').textContent = totalPerawatan.toLocaleString('id-ID');
 
-    // ── Analisis Infiltrasi Air — rumus sama persis dengan detail Konservasi ──
-    const VWB = 0.02495, TIME = 31.536, RAIN = 163;
-    const resP = (sumTanaman / 400) * VWB * TIME * 0.75;
-    const resR = (sumRorak   * 490 * 3 * RAIN) / 1000000;
-    const resS = (sumSumur   * 754 * 3 * RAIN) / 1000000;
-    const resB = (sumBiopori / 300) * 1.5;
-    const total = resP + resR + resS + resB;
+    // ── Analisis Infiltrasi Air ──
+    // PENTING: aktivitas di sini berasal dari submission Seller langsung (rorak/sumur
+    // per titik lapangan), BUKAN dari program konservasi historis AQUA — jadi dihitung
+    // pakai rumus Volumetrik (sama persis dengan yang Seller lihat sendiri saat submit
+    // titik di dashboard-seller.html), bukan rumus internal AQUA.
+    const { resP, resR, resS, resB, total } = window.hitungEstimasiInfiltrasi(
+      { trees: sumTanaman, rorak: sumRorak, sumur: sumSumur, biopori: sumBiopori },
+      'volumetrik_sni', null, null
+    );
 
     document.getElementById('pjlh-air').textContent = total.toFixed(1);
     document.getElementById('pjlh-total-water').textContent = total.toFixed(2);
 
     const rows = [
-      { item:'Pohon / Vegetasi (PJLH)', val:resP },
       { item:'Rorak (PJLH)',            val:resR },
       { item:'Sumur Resapan (PJLH)',    val:resS },
       { item:'Biopori (PJLH)',          val:resB }
     ].filter(r => r.val > 0);
     const tbody = document.getElementById('pjlhFormulaBody');
     tbody.innerHTML = rows.map(r => `<tr><td>${r.item}</td><td class="text-end">${r.val.toFixed(2)}</td></tr>`).join('');
+    if (sumTanaman > 0) {
+      tbody.innerHTML += `<tr><td colspan="2" style="font-size:0.68rem;color:var(--text-muted);">* ${sumTanaman.toLocaleString('id-ID')} pohon tercatat sebagai aktivitas tanam, belum dikonversi ke angka air (belum ada koefisien tervalidasi per rumus Volumetrik).</td></tr>`;
+    }
 
     if (rows.length) { infilCard.style.display = 'block'; infilEmpty.style.display = 'none'; }
 
