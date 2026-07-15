@@ -412,6 +412,7 @@ footer {
               <span class="total-num" id="total-water">—</span>
               <span class="total-label">Total Replenished Water</span>
               <span style="font-size:0.62rem;opacity:0.65;margin-top:2px;">(ML/Year Kumulatif)</span>
+              <span id="metodologiBadge" style="font-size:0.62rem;opacity:0.8;margin-top:6px;display:block;"></span>
             </div>
           </div>
         </div>
@@ -467,6 +468,7 @@ footer {
 <footer>© Yayasan Sekola Konang Indonesia — The Firefly Movement, Probolinggo</footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="pjlh-formula.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, getDocs, query, where, documentId } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -649,7 +651,7 @@ footer {
       }
 
       /* ANALISIS INFILTRASI */
-      renderAnalisis(d.year, s);
+      renderAnalisis(d.year, s, d.metodologi, d.sniParams);
 
       /* BERITA TERKAIT — fetch dari collection "news" berdasarkan relatedNewsIds */
       if (Array.isArray(d.relatedNewsIds) && d.relatedNewsIds.length > 0) {
@@ -698,28 +700,23 @@ footer {
   }
 
   /* ── ANALISIS INFILTRASI ── */
-  function renderAnalisis(year, s) {
-    const VWB = 0.02495, TIME = 31.536, RAIN = 163;
-    let resP, resR, resS, resB;
-    if (year === 2024) {
-      resP = (s.trees / 400) * 1.5;
-      resR = s.rorak * 0.17;
-      resS = 0; resB = 0;
-    } else {
-      resP = (s.trees / 400) * VWB * TIME * 0.75;
-      resR = (s.rorak * 490 * 3 * RAIN) / 1000000;
-      resS = (s.sumur * 754 * 3 * RAIN) / 1000000;
-      resB = (s.biopori / 300) * 1.5;
-    }
-    const total = resP + resR + resS + resB;
+  function renderAnalisis(year, s, metodologi, sniParams) {
+    const { resP, resR, resS, resB, total, metodologiPakai, legacyFallback } = window.hitungEstimasiInfiltrasi(s, metodologi, year, sniParams);
     document.getElementById('total-water').textContent = total.toFixed(2);
     document.getElementById('totalYear').textContent = year;
     document.getElementById('totalRowVal').textContent = total.toFixed(2);
 
+    const metaInfo = window.PJLH_METODOLOGI[metodologiPakai] || {};
+    const metaBadge = document.getElementById('metodologiBadge');
+    if (metaBadge) {
+      metaBadge.textContent = (legacyFallback ? '⚠ Belum ditandai — sementara pakai: ' : 'Metodologi: ') + (metaInfo.label || metodologiPakai || '-');
+      metaBadge.style.color = legacyFallback ? 'var(--orange, #ffa500)' : '';
+    }
+
     const rows = [
-      { item:'Pohon / Vegetasi', f: year===2024 ? `(${s.trees}/400)×1.5 ML/Ha` : `(${s.trees}/400)×${VWB}×${TIME}×75%`, val:resP },
-      { item:'Rorak (Trench)',   f: year===2024 ? `${s.rorak}×0.17 ML`         : `(${s.rorak}×490×3×${RAIN})/1jt`,     val:resR },
-      { item:'Sumur Resapan',    f:`(${s.sumur}×754×3×${RAIN})/1jt`,                                                     val:resS },
+      { item:'Pohon / Vegetasi', f: metodologiPakai==='aqua_wb_v1' ? (year===2024 ? `(${s.trees}/400)×1.5 ML/Ha` : `(${s.trees}/400)×0.02495×31.536×75%`) : `${s.trees} pohon (tidak dikonversi ke air)`, val:resP },
+      { item:'Rorak (Trench)',   f: metodologiPakai==='aqua_wb_v1' ? (year===2024 ? `${s.rorak}×0.17 ML` : `(${s.rorak}×490×3×163)/1jt`) : (metodologiPakai==='volumetrik_sni' ? `${s.rorak}× (2×0.4×0.4m ×120hr)` : `${s.rorak} unit`), val:resR },
+      { item:'Sumur Resapan',    f: metodologiPakai==='aqua_wb_v1' ? `(${s.sumur}×754×3×163)/1jt` : (metodologiPakai==='volumetrik_sni' ? `${s.sumur}× (π×0.4²×1.5m ×120hr)` : `${s.sumur} unit`), val:resS },
       { item:'Biopori',          f:`(${s.biopori}/300)×1.5`,                                                              val:resB }
     ];
     const tbody = document.getElementById('formulaBody');
