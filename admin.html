@@ -9,6 +9,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
+<script src="pjlh-formula.js"></script>
 <style>
 :root {
   --deep-forest:#050505; --canopy:#1a1b1a; --canopy2:#252625;
@@ -398,6 +399,27 @@ input,textarea,select{font-family:var(--body);}
           <div id="species-rows"></div>
         </div>
         <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="addSpeciesRow()"><i class="fas fa-plus"></i> Tambah Jenis</button>
+
+        <div class="section-divider"><i class="fas fa-calculator"></i> Metodologi Perhitungan Serapan Air</div>
+        <div class="form-group">
+          <label>Rumus yang Dipakai <span style="color:var(--orange)">*</span></label>
+          <select id="kons-metodologi" onchange="onMetodologiChange()">
+            <option value="">-- Pilih Metodologi --</option>
+            <option value="aqua_wb_v1">Rumus Internal AQUA (Water Balance)</option>
+            <option value="volumetrik_sni">Rumus Volumetrik (Per-Unit — Daya Tampung)</option>
+            <option value="sni_hidrologi">Rumus SNI / Hidrologi (Rasional — Daya Dukung)</option>
+            <option value="reforestasi_non_air">Reforestasi Saja (Tanpa Konversi ke Air)</option>
+          </select>
+          <div class="form-hint" id="kons-metodologi-hint">Pilih rumus dulu — form akan menyesuaikan field tambahan yang dibutuhkan. Wajib dipilih supaya data ini terhitung benar &amp; konsisten di homepage &amp; dashboard Buyer.</div>
+        </div>
+        <div class="row-3" id="kons-sni-fields" style="display:none;">
+          <div class="form-group"><label>Luas Program (Ha)</label><input type="number" id="kons-luas-ha" placeholder="0" min="0" step="0.01" oninput="hitungInfiltrasi()"></div>
+          <div class="form-group"><label>Koefisien Tutupan Lahan (C)</label><input type="number" id="kons-koef-c" placeholder="0.5" min="0" max="1" step="0.05" oninput="hitungInfiltrasi()"></div>
+          <div class="form-group"><label>Curah Hujan Tahunan (mm)</label>
+            <input type="number" id="kons-curah-hujan" placeholder="1700" min="0" oninput="hitungInfiltrasi()">
+            <div class="form-hint">Isi manual sesuai data terbaru — cek <a href="https://sih3.dpuair.jatimprov.go.id/main/sih3_ws/3/0" target="_blank" rel="noopener">Portal SIH3 Jatim</a>, <a href="https://sites.google.com/view/welangpekalen/hidrologi?authuser=0" target="_blank" rel="noopener">Hidrologi Welang Pekalen</a>, atau <a href="https://sites.google.com/view/tkpsda-weljos/kegiatan/sih3?authuser=0" target="_blank" rel="noopener">TKPSDA WELJOS</a>. Jangan dibiarkan kosong/default.</div>
+          </div>
+        </div>
 
         <div class="section-divider"><i class="fas fa-map-marked-alt"></i> Delineasi Area (KML/KMZ)</div>
         <div class="upload-zone" id="kml-drop-zone" onclick="document.getElementById('kml-file-input').click()">
@@ -1743,32 +1765,49 @@ function getSpeciesData() {
   return obj;
 }
 
+function onMetodologiChange() {
+  const m = document.getElementById('kons-metodologi').value;
+  const info = window.PJLH_METODOLOGI[m];
+  document.getElementById('kons-metodologi-hint').textContent = info ? info.hint : 'Pilih rumus dulu — form akan menyesuaikan field tambahan yang dibutuhkan. Wajib dipilih supaya data ini terhitung benar & konsisten di homepage & dashboard Buyer.';
+  document.getElementById('kons-sni-fields').style.display = (m === 'sni_hidrologi') ? 'grid' : 'none';
+  hitungInfiltrasi();
+}
+window.onMetodologiChange = onMetodologiChange;
+
 function hitungInfiltrasi() {
-  const year   = parseInt(document.getElementById('kons-year').value) || 0;
-  const trees  = parseInt(document.getElementById('kons-trees').value)  || 0;
-  const rorak  = parseInt(document.getElementById('kons-rorak').value)  || 0;
-  const sumur  = parseInt(document.getElementById('kons-sumur').value)  || 0;
-  const biopori= parseInt(document.getElementById('kons-biopori').value)|| 0;
-  const VWB=0.02495, TIME=31.536, RAIN=163;
-  let resP,resR,resS,resB;
-  if (year === 2024) {
-    resP=(trees/400)*1.5; resR=rorak*0.17; resS=0; resB=0;
-  } else {
-    resP=(trees/400)*VWB*TIME*0.75;
-    resR=(rorak*490*3*RAIN)/1e6;
-    resS=(sumur*754*3*RAIN)/1e6;
-    resB=(biopori/300)*1.5;
-  }
-  const total = resP+resR+resS+resB;
+  const year       = parseInt(document.getElementById('kons-year').value) || 0;
+  const metodologi = document.getElementById('kons-metodologi').value;
+  const stats = {
+    trees:   parseInt(document.getElementById('kons-trees').value)  || 0,
+    rorak:   parseInt(document.getElementById('kons-rorak').value)  || 0,
+    sumur:   parseInt(document.getElementById('kons-sumur').value)  || 0,
+    biopori: parseInt(document.getElementById('kons-biopori').value)|| 0
+  };
+  const sniParams = {
+    luasHa:     document.getElementById('kons-luas-ha').value,
+    koefC:      document.getElementById('kons-koef-c').value,
+    curahHujan: document.getElementById('kons-curah-hujan').value
+  };
+
+  const { resP, resR, resS, resB, total, metodologiPakai } = window.hitungEstimasiInfiltrasi(stats, metodologi, year, sniParams);
+
   const box = document.getElementById('analisis-result');
+  let warn = '';
+  if (!metodologi) {
+    warn = `<div style="font-size:0.68rem;color:var(--orange);margin-bottom:8px;"><i class="fas fa-exclamation-triangle"></i> Metodologi belum dipilih — data ini TIDAK akan tersimpan benar. Pilih salah satu rumus di atas dulu.</div>`;
+  }
+  if (metodologiPakai === 'reforestasi_non_air') {
+    box.innerHTML = warn + `<div style="font-size:0.72rem;color:var(--text-muted);text-align:center;padding:8px;">Program ini tercatat sebagai reforestasi (jumlah pohon &amp; luas tanam) dan sengaja <b>tidak</b> ditambahkan ke total Air Terserap karena belum ada koefisien konversi air yang tervalidasi untuk program ini.</div>`;
+    return;
+  }
   const rows = [
     {label:'Pohon / Vegetasi', val:resP, icon:'fa-tree', color:'var(--lime)'},
     {label:'Rorak',             val:resR, icon:'fa-inbox', color:'var(--orange)'},
     {label:'Sumur Resapan',     val:resS, icon:'fa-faucet', color:'var(--blue)'},
     {label:'Biopori',           val:resB, icon:'fa-fill-drip', color:'var(--cyan)'}
   ].filter(r=>r.val>0);
-  if (rows.length===0) { box.innerHTML='<div style="font-size:0.72rem;color:var(--text-muted);text-align:center;padding:8px;">Isi data statistik untuk melihat estimasi infiltrasi.</div>'; return; }
-  box.innerHTML = rows.map(r=>`
+  if (rows.length===0) { box.innerHTML = warn + '<div style="font-size:0.72rem;color:var(--text-muted);text-align:center;padding:8px;">Isi data statistik untuk melihat estimasi infiltrasi.</div>'; return; }
+  box.innerHTML = warn + rows.map(r=>`
     <div class="analisis-row">
       <span><i class="fas ${r.icon}" style="color:${r.color};margin-right:6px;"></i>${r.label}</span>
       <b style="color:${r.color};">${r.val.toFixed(2)} ML/Y</b>
@@ -2094,10 +2133,10 @@ async function loadKonservasiList() {
     wrap.innerHTML='';
     docs.forEach(({id, data:dat}) => {
       const s = dat.stats||{};
-      const VWB=0.02495,TIME=31.536,RAIN=163;
-      const y=dat.year, trees=s.trees||0, rorak=s.rorak||0, sumur=s.sumur||0, biopori=s.biopori||0;
-      const air = y===2024 ? ((trees/400)*1.5)+(rorak*0.17)
-        : ((trees/400)*VWB*TIME*0.75)+((rorak*490*3*RAIN)/1e6)+((sumur*754*3*RAIN)/1e6)+((biopori/300)*1.5);
+      const { total: air, legacyFallback } = window.hitungEstimasiInfiltrasi(s, dat.metodologi, dat.year, dat.sniParams);
+      const badgeMetodologi = !dat.metodologi
+        ? `<span class="list-badge" style="background:rgba(255,165,0,0.12);color:#ffa500;border:1px solid rgba(255,165,0,0.25);"><i class="fas fa-exclamation-triangle"></i> Belum ada metodologi</span>`
+        : `<span class="list-badge badge-lime">${(window.PJLH_METODOLOGI[dat.metodologi]||{}).label || dat.metodologi}</span>`;
       const spTags = dat.species ? Object.entries(dat.species).map(([k,v])=>`<span class="list-badge badge-lime">${k}: ${v}</span>`).join(' ') : '';
       const judul = dat.title ? dat.title : (dat.location || '—');
       wrap.innerHTML += `
@@ -2113,7 +2152,7 @@ async function loadKonservasiList() {
                 <span><i class="fas fa-inbox" style="color:var(--orange)"></i><b>${(s.rorak||0).toLocaleString('id-ID')}</b> rorak</span>
                 <span><i class="fas fa-tint" style="color:var(--blue)"></i><b>${air.toFixed(1)}</b> ML/Y</span>
               </div>
-              <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">${spTags}</div>
+              <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">${badgeMetodologi} ${spTags}</div>
               <div style="margin-top:6px;font-size:0.6rem;color:var(--text-muted);">ID: ${id}</div>
             </div>
             <div class="list-card-actions">
@@ -2132,6 +2171,10 @@ function newKonsForm() {
   document.getElementById('kons-title').value='';
   document.getElementById('kons-location').value='';
   ['kons-trees','kons-rorak','kons-sumur','kons-biopori'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('kons-metodologi').value='';
+  ['kons-luas-ha','kons-koef-c','kons-curah-hujan'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('kons-sni-fields').style.display='none';
+  document.getElementById('kons-metodologi-hint').textContent='Pilih rumus dulu — form akan menyesuaikan field tambahan yang dibutuhkan. Wajib dipilih supaya data ini terhitung benar & konsisten di homepage & dashboard Buyer.';
   document.getElementById('species-rows').innerHTML='';
   document.getElementById('kml-file-name').textContent='Belum ada file dipilih';
   document.getElementById('analisis-result').innerHTML='<div style="font-size:0.72rem;color:var(--text-muted);text-align:center;padding:8px;">Isi data statistik untuk melihat estimasi.</div>';
@@ -2157,6 +2200,15 @@ async function editKons(id) {
   document.getElementById('kons-rorak').value    = s.rorak||0;
   document.getElementById('kons-sumur').value    = s.sumur||0;
   document.getElementById('kons-biopori').value  = s.biopori||0;
+  document.getElementById('kons-metodologi').value = d.metodologi||'';
+  const sni = d.sniParams||{};
+  document.getElementById('kons-luas-ha').value     = sni.luasHa||'';
+  document.getElementById('kons-koef-c').value      = sni.koefC||'';
+  document.getElementById('kons-curah-hujan').value = sni.curahHujan||'';
+  document.getElementById('kons-sni-fields').style.display = (d.metodologi === 'sni_hidrologi') ? 'grid' : 'none';
+  document.getElementById('kons-metodologi-hint').textContent = d.metodologi
+    ? (window.PJLH_METODOLOGI[d.metodologi] ? window.PJLH_METODOLOGI[d.metodologi].hint : '')
+    : 'Data ini BELUM punya tag metodologi (kemungkinan data lama hasil migrasi 2021-2025). Pilih rumus yang sesuai lalu Simpan supaya data ini terhitung benar.';
   document.getElementById('species-rows').innerHTML='';
   if (d.species) Object.entries(d.species).forEach(([k,v]) => addSpeciesRow(k,v));
   else addSpeciesRow();
@@ -2175,11 +2227,13 @@ document.getElementById('saveKonsBtn').addEventListener('click', async () => {
   const year = parseInt(document.getElementById('kons-year').value);
   const title = document.getElementById('kons-title').value.trim();
   const location = document.getElementById('kons-location').value.trim();
+  const metodologi = document.getElementById('kons-metodologi').value;
   if (!year||!location) { alert('Tahun dan Lokasi wajib diisi.'); return; }
+  if (!metodologi) { alert('Metodologi perhitungan serapan air wajib dipilih dulu, supaya data ini terhitung benar & konsisten di homepage & dashboard Buyer.'); return; }
   const species = getSpeciesData();
   const relatedNewsIds = getSelectedNewsIds();
   const data = {
-    year, title, location, species, relatedNewsIds,
+    year, title, location, species, relatedNewsIds, metodologi,
     stats: {
       trees:   parseInt(document.getElementById('kons-trees').value)||0,
       rorak:   parseInt(document.getElementById('kons-rorak').value)||0,
@@ -2187,6 +2241,13 @@ document.getElementById('saveKonsBtn').addEventListener('click', async () => {
       biopori: parseInt(document.getElementById('kons-biopori').value)||0
     }
   };
+  if (metodologi === 'sni_hidrologi') {
+    data.sniParams = {
+      luasHa:     parseFloat(document.getElementById('kons-luas-ha').value)||0,
+      koefC:      parseFloat(document.getElementById('kons-koef-c').value)||0,
+      curahHujan: parseFloat(document.getElementById('kons-curah-hujan').value)||0
+    };
+  }
   if (kmlParsedPolygons) data.areaPolygon = kmlParsedPolygons;
   const btn = document.getElementById('saveKonsBtn');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
