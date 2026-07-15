@@ -598,6 +598,7 @@
   </div>
 </div>
 
+<script src="pjlh-formula.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, doc, getDoc, collection, getDocs, addDoc, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -699,20 +700,17 @@
     try {
       // Ambil semua data reboisasi (pohon + infiltrasi).
       // Catatan: field "infiltration" tidak pernah disimpan langsung — nilai ML/Y
-      // selalu DIHITUNG dari rumus yang sama dipakai di admin & konservasi.html,
-      // supaya angkanya selalu konsisten di semua halaman.
-      const VWB=0.02495, TIME=31.536, RAIN=163;
+      // selalu DIHITUNG lewat window.hitungEstimasiInfiltrasi() di pjlh-formula.js,
+      // modul TUNGGAL yang juga dipakai admin.html, konservasi.html, dan
+      // dashboard-buyer.html — supaya angkanya selalu konsisten di semua halaman.
       const reboisasiSnap = await getDocs(collection(db, "monitoring_reboisasi"));
       let totalPohon = 0, totalInfiltrasi = 0;
       reboisasiSnap.forEach(docu => {
         if (!docu.id.startsWith('tanam_')) return; // skema ID resmi, lihat catatan di konservasi.html
         const d = docu.data();
         const s = d.stats || {};
-        const trees = Number(s.trees||0), rorak = Number(s.rorak||0), sumur = Number(s.sumur||0), biopori = Number(s.biopori||0);
-        totalPohon += trees;
-        totalInfiltrasi += (d.year === 2024)
-          ? ((trees/400)*1.5)+(rorak*0.17)
-          : ((trees/400)*VWB*TIME*0.75)+((rorak*490*3*RAIN)/1e6)+((sumur*754*3*RAIN)/1e6)+((biopori/300)*1.5);
+        totalPohon += Number(s.trees||0);
+        totalInfiltrasi += window.hitungEstimasiInfiltrasi(s, d.metodologi, d.year, d.sniParams).total;
       });
 
       // Ambil data kehati (spesies flora + lokasi aktif)
