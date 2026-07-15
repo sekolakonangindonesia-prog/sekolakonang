@@ -543,6 +543,7 @@ footer {
 
 <!-- SCRIPTS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="pjlh-formula.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -656,12 +657,7 @@ footer {
         const trees = s.trees || 0, rorak = s.rorak || 0;
         const sumur = s.sumur || 0, biopori = s.biopori || 0;
 
-        let air = (year === 2024)
-          ? ((trees/400)*1.5) + (rorak*0.17)
-          : ((trees/400)*0.02495*31.536*0.75)
-            + ((rorak*490*3*163)/1000000)
-            + ((sumur*754*3*163)/1000000)
-            + ((biopori/300)*1.5);
+        let air = window.hitungEstimasiInfiltrasi(s, d.metodologi, year, d.sniParams).total;
 
         total.p += trees; total.r += rorak;
         total.s += sumur; total.b += biopori; total.a += air;
