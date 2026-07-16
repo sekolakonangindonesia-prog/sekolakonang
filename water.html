@@ -63,7 +63,7 @@
   @keyframes wff { 0%,100%{opacity:0;transform:translateY(0) scale(0.5)} 40%,60%{opacity:.7;transform:translateY(-28px) scale(1)} }
   .hero-ripple {
     position: absolute; inset: 0; z-index: 1; pointer-events: none;
-    background: radial-gradient(ellipse 80% 40% at 50% 60%, rgba(0,198,255,0.06) 0%, transparent 70%);
+    background: radial-gradient(ellipse 80% 40% at 50% 60%, rgba(198,255,0,0.04) 0%, transparent 70%);
     animation: pulse-glow 4s ease-in-out infinite;
   }
   @keyframes pulse-glow {
@@ -74,17 +74,46 @@
   .hero-eyebrow { display: flex; align-items: center; gap: 12px; font-size: 0.6rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--lime); margin-bottom: 24px; }
   .hero-eyebrow::before { content: ''; width: 36px; height: 2px; background: var(--lime); }
   .hero-title { font-family: var(--display); font-size: clamp(2.2rem, 5.5vw, 4.4rem); font-weight: 900; line-height: 1.05; color: #fff; letter-spacing: -1px; margin-bottom: 20px; max-width: 780px; }
-  .hero-title em { font-style: normal; color: #00c6ff; }
+  .hero-title em { font-style: normal; color: var(--lime); }
   .hero-desc { font-size: 0.95rem; line-height: 1.8; color: var(--muted); max-width: 560px; margin-bottom: 36px; }
   .btn-back { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(245,245,240,0.25); padding: 12px 22px; color: var(--parchment); border-radius: 50px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.5px; transition: 0.2s; margin-bottom: 40px; }
   .btn-back:hover { border-color: var(--lime); color: var(--lime); }
 
-  .hero-stats { display: flex; gap: 0; border-top: 1px solid var(--border); padding-top: 32px; flex-wrap: wrap; }
-  .stat-item { flex: 1; min-width: 160px; padding: 0 32px 0 0; border-right: 1px solid var(--border); }
-  .stat-item:last-child { border-right: none; padding-right: 0; padding-left: 32px; }
-  .stat-item:first-child { padding-left: 0; }
-  .stat-num { font-family: var(--display); font-size: 2.2rem; font-weight: 900; color: #00c6ff; line-height: 1; }
-  .stat-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-top: 6px; }
+  .hero-stats { display: none; }
+  /* ── Kartu statistik mengambang — sama persis Pjlh_index.html/konservasi.html ── */
+  .stats-row-wrap { padding: 0 5%; position: relative; z-index: 2; }
+  .stats-row {
+    max-width: 1000px; margin: -28px auto 0;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  .stat-card {
+    background: var(--canopy); border: 1px solid var(--border);
+    border-radius: var(--r-md); padding: 18px 12px; text-align: center;
+    position: relative; overflow: hidden; transition: 0.3s;
+  }
+  .stat-card:hover { transform: translateY(-5px); }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 2px; border-radius: var(--r-md) var(--r-md) 0 0;
+  }
+  .stat-card.c-blue::before   { background: linear-gradient(90deg,transparent,#00c6ff,transparent); }
+  .stat-card.c-lime::before   { background: linear-gradient(90deg,transparent,var(--lime),transparent); }
+  .stat-card.c-orange::before { background: linear-gradient(90deg,transparent,#ff8c00,transparent); }
+  .stat-card.c-blue:hover   { border-color: #00c6ff; }
+  .stat-card.c-lime:hover   { border-color: var(--lime); }
+  .stat-card.c-orange:hover { border-color: #ff8c00; }
+  .stat-card i { font-size: 1.4rem; margin-bottom: 10px; display: block; }
+  .stat-card.c-blue   i { color: #00c6ff; }
+  .stat-card.c-lime   i { color: var(--lime); }
+  .stat-card.c-orange i { color: #ff8c00; }
+  .stat-card .stat-num { font-family: var(--display); font-size: 1.6rem; font-weight: 900; color: #fff; line-height: 1; display: block; }
+  .stat-card .stat-label { font-size: 0.56rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 6px; display: block; }
+  @media (max-width: 720px) {
+    .stats-row { grid-template-columns: repeat(3,1fr); margin-top: -18px; gap: 8px; }
+    .stat-card { padding: 12px 6px; }
+    .stat-card i { font-size: 1.1rem; margin-bottom: 7px; }
+    .stat-card .stat-num { font-size: 1.1rem; }
+  }
 
   /* ── SECTION SHARED ── */
   .section { padding: 90px 5%; }
@@ -186,13 +215,40 @@
   .pi-inst { font-size: 0.76rem; color: var(--muted); }
 
   .badge-vol { display: inline-block; background: rgba(0,198,255,0.14); color: #00c6ff; border: 1px solid rgba(0,198,255,0.3); padding: 3px 10px; border-radius: 20px; font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-  .badge-report { display: inline-block; background: rgba(198,255,0,0.14); color: var(--lime); border: 1px solid rgba(198,255,0,0.3); padding: 3px 10px; border-radius: 20px; font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .badge-report { display: inline-flex; align-items: center; gap: 5px; background: rgba(198,255,0,0.14); color: var(--lime); border: 1px solid rgba(198,255,0,0.3); padding: 3px 10px; border-radius: 20px; font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+  .badge-report:hover { background: var(--lime); color: var(--black); border-color: var(--lime); }
 
   .info-list { list-style: none; padding: 0; font-size: 0.76rem; color: var(--muted); }
   .info-list li { margin-bottom: 4px; }
   .info-list strong { color: var(--parchment); }
 
   .table-state-row td { text-align: center; color: var(--muted); font-style: italic; padding: 36px 22px; font-size: 0.85rem; }
+
+  /* ── MODAL DETAIL PROGRAM CSR — mengikuti pola modal di Pjlh_index.html ── */
+  .modal-backdrop { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(6px); }
+  .modal-backdrop.show { display: flex; }
+  .modal-box { background: #111; border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; animation: modalIn 0.3s ease; }
+  @keyframes modalIn { from{opacity:0;transform:scale(0.95) translateY(10px)} to{opacity:1;transform:none} }
+  .modal-head { padding: 24px 28px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .modal-head h3 { font-family: var(--display); font-size: 1.2rem; color: #fff; margin-bottom: 6px; line-height: 1.2; }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; line-height: 1; padding: 4px; flex-shrink: 0; }
+  .modal-close:hover { color: #fff; }
+  .modal-body { padding: 24px 28px 28px; }
+  .detail-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.76rem; color: var(--muted); margin-bottom: 4px; }
+  .detail-section-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--lime); margin: 20px 0 10px; display: block; }
+  .detail-section-label:first-of-type { margin-top: 0; }
+  .detail-pendana { font-size: 0.85rem; color: var(--parchment); }
+  .detail-pendana strong { color: #fff; }
+  .detail-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .detail-chip { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 0.78rem; color: var(--parchment); }
+  .detail-big { background: linear-gradient(135deg, rgba(0,198,255,0.08), transparent); border: 1px solid rgba(0,198,255,0.25); border-radius: 16px; padding: 18px 20px; text-align: center; }
+  .detail-big-num { font-family: var(--display); font-size: 2rem; font-weight: 900; color: #00c6ff; line-height: 1; }
+  .detail-big-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 6px; }
+  .detail-equivalence { font-size: 0.78rem; color: var(--parchment); margin-top: 10px; line-height: 1.6; }
+  .detail-equivalence i { color: var(--lime); margin-right: 4px; }
+  .detail-methodology { font-size: 0.74rem; color: var(--muted); line-height: 1.7; background: rgba(255,255,255,0.02); border-left: 3px solid var(--lime); padding: 12px 16px; border-radius: 8px; margin-top: 8px; }
+  .detail-methodology a { color: var(--lime); font-weight: 700; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
 
   /* ── CALCULATOR ── */
   .calc-section { background: var(--deep-forest); border-top: 1px solid var(--border); }
@@ -299,22 +355,29 @@
     <h1 class="hero-title">Water <em>Conservation</em><br>Funds</h1>
     <p class="hero-desc">Implementasi teknologi sipil teknis (Sumur Resapan &amp; Rorak) untuk memulihkan keseimbangan neraca air di DAS Rejoso, sekaligus menghimpun Dana Konservasi melalui skema Imbal Jasa Lingkungan (PES).</p>
     <a href="Pjlh_index.html" class="btn-back"><i class="fas fa-arrow-left"></i> Kembali ke PJLH</a>
-    <div class="hero-stats">
-      <div class="stat-item">
-        <div class="stat-num">70 Unit</div>
-        <div class="stat-label">Sumur Resapan</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">3.000 M</div>
-        <div class="stat-label">Rorak Terbangun</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">118 Jt L</div>
-        <div class="stat-label">Estimasi Serapan/Thn</div>
-      </div>
-    </div>
   </div>
 </section>
+
+<!-- STAT CARDS — mengambang di bawah hero, sama persis Pjlh_index.html/konservasi.html -->
+<div class="stats-row-wrap">
+  <div class="stats-row reveal">
+    <div class="stat-card c-blue">
+      <i class="fas fa-water"></i>
+      <span class="stat-num">70 Unit</span>
+      <span class="stat-label">Sumur Resapan</span>
+    </div>
+    <div class="stat-card c-lime">
+      <i class="fas fa-road"></i>
+      <span class="stat-num">3.000 M</span>
+      <span class="stat-label">Rorak Terbangun</span>
+    </div>
+    <div class="stat-card c-orange">
+      <i class="fas fa-tint"></i>
+      <span class="stat-num">118 Jt L</span>
+      <span class="stat-label">Estimasi Serapan/Thn</span>
+    </div>
+  </div>
+</div>
 
 <!-- SINERGI KEBIJAKAN -->
 <section class="section policy-section">
@@ -501,7 +564,7 @@
 </section>
 
 <!-- KALKULATOR -->
-<section class="section calc-section">
+<section class="section calc-section" id="kalkulator">
   <div class="section-inner" style="max-width:1180px;">
     <div class="reveal" style="text-align:center; margin-bottom:0;">
       <span class="section-label">Estimasi Dampak</span>
@@ -754,10 +817,13 @@
         return;
       }
 
+      window.__csrReports = [];
       let html = '';
       let no = 1;
       snap.forEach(docSnap => {
         const d = docSnap.data();
+        const idx = window.__csrReports.length;
+        window.__csrReports.push(d);
         const reportLink = d.reportUrl
           ? `<a href="${d.reportUrl}" target="_blank" rel="noopener" class="btn-rispro"><i class="fas fa-file-alt"></i> Lihat Laporan</a>`
           : '';
@@ -774,7 +840,7 @@
               <span class="pi-inst">Didukung oleh: ${d.funder || '-'}</span>
             </td>
             <td>
-              <span class="badge-report">Reported</span>
+              <span class="badge-report" onclick="bukaCsrDetail(${idx})" title="Klik untuk lihat detail"><i class="fas fa-circle-info"></i> Reported</span>
               <ul class="info-list">
                 <li><strong>Infra:</strong> ${d.infraSummary || '-'}</li>
                 <li><strong>Infiltrasi:</strong> ${d.infiltrasiSummary || '-'}</li>
@@ -790,8 +856,102 @@
     }
   }
 
+  // Ubah teks seperti "28.8 Juta Liter/Thn" jadi angka liter murni, untuk hitung pembanding.
+  function parseAngkaLiter(text) {
+    if (!text) return null;
+    const m = String(text).match(/([\d.,]+)\s*(juta|ribu)?/i);
+    if (!m) return null;
+    const angka = parseFloat(m[1].replace(/\.(?=\d{3}(?:\D|$))/g, '').replace(',', '.'));
+    if (isNaN(angka)) return null;
+    const satuan = (m[2] || '').toLowerCase();
+    if (satuan === 'juta') return angka * 1_000_000;
+    if (satuan === 'ribu') return angka * 1_000;
+    return angka;
+  }
+
+  window.bukaCsrDetail = (idx) => {
+    const d = (window.__csrReports || [])[idx];
+    if (!d) return;
+    document.getElementById('csrModalTitle').textContent = d.title || 'Program CSR';
+    document.getElementById('csrModalMeta').innerHTML =
+      `<i class="fas fa-calendar-check"></i> Tahun ${d.year || '-'}` +
+      (d.location ? ` &middot; <i class="fas fa-map-marker-alt"></i> ${d.location}` : '') +
+      ` &middot; <span class="badge-report" style="cursor:default;margin-bottom:0;">Reported</span>`;
+    document.getElementById('csrModalPendana').innerHTML =
+      `<strong>${d.implementer || '-'}</strong><br>Didukung oleh: ${d.funder || '-'}`;
+
+    // Pecah infraSummary ("1.500m Rorak" / "500m Rorak, 5 Sumur") jadi beberapa chip terpisah
+    const chipsWrap = document.getElementById('csrModalChips');
+    const bagian = (d.infraSummary || '-').split(',').map(s => s.trim()).filter(Boolean);
+    chipsWrap.innerHTML = bagian.length
+      ? bagian.map(b => `<div class="detail-chip"><i class="fas fa-trowel" style="color:var(--lime);margin-right:6px;"></i>${b}</div>`).join('')
+      : '<div class="detail-chip">Data belum dilengkapi</div>';
+
+    document.getElementById('csrModalInfiltrasi').textContent = d.infiltrasiSummary || '-';
+
+    // Hitung pembanding yang relatable dari angka infiltrasi
+    const literAngka = parseAngkaLiter(d.infiltrasiSummary);
+    const eqBox = document.getElementById('csrModalEquivalence');
+    if (literAngka) {
+      const kolamRenang = literAngka / 2_500_000;        // volume kolam renang olimpiade ±2.5 juta liter
+      const kebutuhanWarga = literAngka / (150 * 365);   // ±150 liter/orang/hari kebutuhan air bersih
+      eqBox.innerHTML =
+        `<i class="fas fa-water"></i> Setara ±${kolamRenang.toLocaleString('id-ID', {maximumFractionDigits:1})} kolam renang ukuran Olimpiade per tahun<br>` +
+        `<i class="fas fa-people-group"></i> Atau cukup kebutuhan air bersih ±${Math.round(kebutuhanWarga).toLocaleString('id-ID')} warga selama setahun`;
+    } else {
+      eqBox.innerHTML = '';
+    }
+
+    const linkEl = document.getElementById('csrModalReportLink');
+    if (d.reportUrl) { linkEl.href = d.reportUrl; linkEl.style.display = 'inline-flex'; }
+    else { linkEl.style.display = 'none'; }
+
+    document.getElementById('csrModalBackdrop').classList.add('show');
+  };
+  window.closeCsrDetail = () => {
+    document.getElementById('csrModalBackdrop').classList.remove('show');
+  };
+  document.getElementById('csrModalBackdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'csrModalBackdrop') window.closeCsrDetail();
+  });
+
   muatRiwayatCSR();
 </script>
+
+<!-- MODAL DETAIL PROGRAM CSR -->
+<div class="modal-backdrop" id="csrModalBackdrop">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <h3 id="csrModalTitle">—</h3>
+        <div class="detail-meta" id="csrModalMeta"></div>
+      </div>
+      <button class="modal-close" onclick="closeCsrDetail()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <span class="detail-section-label">Pelaksana &amp; Pendana</span>
+      <p class="detail-pendana" id="csrModalPendana">—</p>
+
+      <span class="detail-section-label">Capaian Fisik (Verified)</span>
+      <div class="detail-chips" id="csrModalChips"></div>
+
+      <span class="detail-section-label">Estimasi Infiltrasi Air</span>
+      <div class="detail-big">
+        <div class="detail-big-num" id="csrModalInfiltrasi">—</div>
+        <div class="detail-big-label">Liter / Tahun</div>
+        <div class="detail-equivalence" id="csrModalEquivalence"></div>
+      </div>
+      <div class="detail-methodology">
+        <i class="fas fa-circle-info"></i> Estimasi dihitung dari kapasitas tampung infrastruktur (Rorak &amp; Sumur Resapan) dikali jumlah hari hujan efektif. Ingin lihat rumus lengkapnya? Coba <a href="#kalkulator" onclick="closeCsrDetail()">Kalkulator Potensi Serapan</a> di bawah halaman ini.
+      </div>
+
+      <div class="modal-actions">
+        <a href="#" id="csrModalReportLink" target="_blank" rel="noopener" class="btn-rispro" style="display:none;"><i class="fas fa-file-alt"></i> Lihat Laporan Resmi</a>
+        <button class="btn-rispro" onclick="closeCsrDetail()" style="border:none;background:rgba(255,255,255,0.06);cursor:pointer;">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- JAVASCRIPT UTAMA -->
 <script>
@@ -913,6 +1073,27 @@
     document.getElementById('res-m3-prog').innerText = Math.round(totalCapacityM3).toLocaleString('id-ID');
     document.getElementById('res-persen-prog').innerText = Math.round(efektivitas) + "%";
   }
+
+  /* ── Kunang-kunang di hero — sama persis index.html/konservasi.html ── */
+  (function(){
+    const ff = document.getElementById('wFireflies');
+    if (!ff) return;
+    for (let i = 0; i < 22; i++) {
+      const el = document.createElement('div');
+      el.className = 'wf-dot';
+      const s = 3 + Math.random() * 3.5;
+      el.style.cssText = [
+        `left:${Math.random()*100}%`,
+        `top:${Math.random()*85}%`,
+        `--dur:${5+Math.random()*6}s`,
+        `--delay:${Math.random()*9}s`,
+        `width:${s}px`,
+        `height:${s}px`,
+        `box-shadow:0 0 7px 2px rgba(198,255,0,0.5)`
+      ].join(';');
+      ff.appendChild(el);
+    }
+  })();
 </script>
 </body>
 </html>
