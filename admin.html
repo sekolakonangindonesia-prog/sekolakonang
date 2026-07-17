@@ -3258,8 +3258,10 @@ async function loadPublikasiList() {
       const totalRorak   = (ringkasan.stats.rorak||0);
       const totalSumur   = (ringkasan.stats.sumur||0);
       const totalBiopori = (ringkasan.stats.biopori||0);
-      const totalPembuatan = Object.values(ringkasan.aktivitas.pembuatan).reduce((a,b)=>a+b,0);
-      const totalPerawatan = Object.values(ringkasan.aktivitas.perawatan).reduce((a,b)=>a+b,0);
+      // Rincian per jenis infra (bukan cuma angka total gabungan) — format sama
+      // dengan yang dipakai di modal "Tinjau & Publikasikan" biar konsisten.
+      const rincianPembuatan = Object.entries(ringkasan.aktivitas.pembuatan).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') || 'Tidak ada';
+      const rincianPerawatan = Object.entries(ringkasan.aktivitas.perawatan).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') || 'Tidak ada';
       const infTotal = ringkasan.infiltrasi.total || 0;
 
       const statusBadge = pub && pub.published
@@ -3276,7 +3278,10 @@ async function loadPublikasiList() {
                 &middot; <i class="fas fa-tint"></i> ${infTotal.toLocaleString('id-ID',{maximumFractionDigits:0})} L/thn
               </div>
               <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">
-                <i class="fas fa-hammer"></i> Pembuatan: ${totalPembuatan} &middot; <i class="fas fa-broom"></i> Perawatan: ${totalPerawatan}
+                <i class="fas fa-hammer"></i> Pembuatan: ${rincianPembuatan}
+              </div>
+              <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">
+                <i class="fas fa-broom"></i> Perawatan: ${rincianPerawatan}
               </div>
               <div style="margin-top:8px;">${statusBadge}</div>
             </div>
