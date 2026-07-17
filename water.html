@@ -796,7 +796,7 @@
 <!-- FIREBASE: AMBIL DATA RIWAYAT CSR (REAL) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
@@ -810,48 +810,65 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  // Format angka liter jadi teks ringkas seperti "28.8 Juta Liter/Thn" (konsisten dengan gaya situs)
+  function formatLiterRingkas(liter) {
+    if (!liter) return '0 Liter/Thn';
+    if (liter >= 1_000_000) return (liter/1_000_000).toLocaleString('id-ID',{maximumFractionDigits:1}) + ' Juta Liter/Thn';
+    if (liter >= 1_000)     return (liter/1_000).toLocaleString('id-ID',{maximumFractionDigits:1}) + ' Ribu Liter/Thn';
+    return Math.round(liter).toLocaleString('id-ID') + ' Liter/Thn';
+  }
+
   async function muatRiwayatCSR() {
     const tbody = document.getElementById('csrTableBody');
     try {
-      const q = query(collection(db, "csr_reports"), orderBy("year", "desc"));
-      const snap = await getDocs(q);
+      // Sumber tunggal: laporan_pjlh_publikasi — ringkasan per tahun yang sudah
+      // ditinjau & dipublikasikan admin dari data Konservasi + Aktivitas PJLH.
+      // Tidak lagi pakai koleksi csr_reports (duplikat manual yang gampang basi).
+      const [pubSnap, buyerSnap] = await Promise.all([
+        getDocs(query(collection(db, "laporan_pjlh_publikasi"), where("published","==",true))),
+        getDocs(collection(db, "es_buyers"))
+      ]);
 
-      if (snap.empty) {
-        tbody.innerHTML = '<tr class="table-state-row"><td colspan="4"><i class="fas fa-info-circle"></i> Belum ada data laporan CSR di Firebase. Gunakan migrate-water-csr.html untuk memasukkan data awal.</td></tr>';
+      const buyerMap = {};
+      buyerSnap.forEach(d => buyerMap[d.id] = d.data().nama || '-');
+
+      let items = pubSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      items.forEach(d => { d.__funderName = buyerMap[d.linkedBuyerId] || '-'; });
+      items.sort((a,b) => (b.year||0) - (a.year||0));
+
+      if (!items.length) {
+        tbody.innerHTML = '<tr class="table-state-row"><td colspan="4"><i class="fas fa-info-circle"></i> Belum ada laporan PJLH yang dipublikasikan. Kelola di Admin &rarr; PJLH &rarr; Ringkasan &amp; Publikasi.</td></tr>';
         return;
       }
 
-      window.__csrReports = [];
+      window.__csrReports = items;
       let html = '';
-      let no = 1;
-      snap.forEach(docSnap => {
-        const d = docSnap.data();
-        const idx = window.__csrReports.length;
-        window.__csrReports.push(d);
-        const reportLink = d.reportUrl
-          ? `<a href="${d.reportUrl}" target="_blank" rel="noopener" class="btn-rispro"><i class="fas fa-file-alt"></i> Lihat Laporan</a>`
-          : '';
+      items.forEach((d, idx) => {
+        const s = d.stats || {};
+        const infraParts = [
+          s.rorak   ? `${s.rorak} Rorak`   : '',
+          s.sumur   ? `${s.sumur} Sumur`   : '',
+          s.biopori ? `${s.biopori} Biopori` : ''
+        ].filter(Boolean).join(', ') || '-';
         html += `
           <tr>
-            <td class="col-no">${no}</td>
+            <td class="col-no">${idx+1}</td>
             <td>
               <span class="proposal-title">${d.title || '-'}</span>
-              <span class="proposal-loc"><i class="fas fa-calendar-check"></i> Tahun ${d.year || '-'} - ${d.location || '-'}</span>
-              ${reportLink}
+              <span class="proposal-loc"><i class="fas fa-calendar-check"></i> Tahun ${d.year || '-'}${d.lokasi ? ' - '+d.lokasi : ''}</span>
             </td>
             <td>
-              <span class="pi-name">${d.implementer || '-'}</span>
-              <span class="pi-inst">Didukung oleh: ${d.funder || '-'}</span>
+              <span class="pi-name">Yayasan Sekola Konang Indonesia</span>
+              <span class="pi-inst">Didukung oleh: ${buyerMap[d.linkedBuyerId] || '-'}</span>
             </td>
             <td>
               <span class="badge-report" onclick="bukaCsrDetail(${idx})" title="Klik untuk lihat detail"><i class="fas fa-circle-info"></i> Reported</span>
               <ul class="info-list">
-                <li><strong>Infra:</strong> ${d.infraSummary || '-'}</li>
-                <li><strong>Infiltrasi:</strong> ${d.infiltrasiSummary || '-'}</li>
+                <li><strong>Infra:</strong> ${infraParts}</li>
+                <li><strong>Infiltrasi:</strong> ${formatLiterRingkas(d.totalInfiltrasiLiter)}</li>
               </ul>
             </td>
           </tr>`;
-        no++;
       });
       tbody.innerHTML = html;
     } catch (err) {
@@ -860,56 +877,52 @@
     }
   }
 
-  // Ubah teks seperti "28.8 Juta Liter/Thn" jadi angka liter murni, untuk hitung pembanding.
-  function parseAngkaLiter(text) {
-    if (!text) return null;
-    const m = String(text).match(/([\d.,]+)\s*(juta|ribu)?/i);
-    if (!m) return null;
-    const angka = parseFloat(m[1].replace(/\.(?=\d{3}(?:\D|$))/g, '').replace(',', '.'));
-    if (isNaN(angka)) return null;
-    const satuan = (m[2] || '').toLowerCase();
-    if (satuan === 'juta') return angka * 1_000_000;
-    if (satuan === 'ribu') return angka * 1_000;
-    return angka;
-  }
-
   window.bukaCsrDetail = (idx) => {
     const d = (window.__csrReports || [])[idx];
     if (!d) return;
+    const s = d.stats || {};
+    const a = d.aktivitasSummary || {};
+    const pembuatanTotal = Object.values(a.pembuatan || {}).reduce((x,y)=>x+(y||0),0);
+    const perawatanTotal = Object.values(a.perawatan || {}).reduce((x,y)=>x+(y||0),0);
+
     document.getElementById('csrModalTitle').textContent = d.title || 'Program CSR';
     document.getElementById('csrModalMeta').innerHTML =
       `<i class="fas fa-calendar-check"></i> Tahun ${d.year || '-'}` +
-      (d.location ? ` &middot; <i class="fas fa-map-marker-alt"></i> ${d.location}` : '') +
+      (d.lokasi ? ` &middot; <i class="fas fa-map-marker-alt"></i> ${d.lokasi}` : '') +
       ` &middot; <span class="badge-report" style="cursor:default;margin-bottom:0;">Reported</span>`;
     document.getElementById('csrModalPendana').innerHTML =
-      `<strong>${d.implementer || '-'}</strong><br>Didukung oleh: ${d.funder || '-'}`;
+      `<strong>Yayasan Sekola Konang Indonesia</strong><br>Didukung oleh: ${d.__funderName || '-'}`;
 
-    // Pecah infraSummary ("1.500m Rorak" / "500m Rorak, 5 Sumur") jadi beberapa chip terpisah
+    // Chip capaian fisik — sekarang termasuk Biopori & pemisahan Pembuatan/Perawatan
     const chipsWrap = document.getElementById('csrModalChips');
-    const bagian = (d.infraSummary || '-').split(',').map(s => s.trim()).filter(Boolean);
-    chipsWrap.innerHTML = bagian.length
-      ? bagian.map(b => `<div class="detail-chip"><i class="fas fa-trowel" style="color:var(--lime);margin-right:6px;"></i>${b}</div>`).join('')
+    const chips = [
+      s.rorak   ? `<i class="fas fa-trowel" style="color:var(--lime);margin-right:6px;"></i>${s.rorak} Rorak` : '',
+      s.sumur   ? `<i class="fas fa-trowel" style="color:var(--lime);margin-right:6px;"></i>${s.sumur} Sumur Resapan` : '',
+      s.biopori ? `<i class="fas fa-trowel" style="color:var(--lime);margin-right:6px;"></i>${s.biopori} Biopori` : '',
+      (pembuatanTotal||perawatanTotal) ? `<i class="fas fa-hammer" style="color:#00ff88;margin-right:6px;"></i>Pembuatan: ${pembuatanTotal} &middot; Perawatan: ${perawatanTotal}` : ''
+    ].filter(Boolean);
+    chipsWrap.innerHTML = chips.length
+      ? chips.map(c => `<div class="detail-chip">${c}</div>`).join('')
       : '<div class="detail-chip">Data belum dilengkapi</div>';
 
-    document.getElementById('csrModalInfiltrasi').textContent = d.infiltrasiSummary || '-';
+    const literAngka = d.totalInfiltrasiLiter || 0;
+    document.getElementById('csrModalInfiltrasi').textContent = formatLiterRingkas(literAngka);
 
-    // Hitung pembanding yang relatable dari angka infiltrasi
-    const literAngka = parseAngkaLiter(d.infiltrasiSummary);
     const eqBox = document.getElementById('csrModalEquivalence');
-    if (literAngka) {
-      const kolamRenang = literAngka / 2_500_000;        // volume kolam renang olimpiade ±2.5 juta liter
-      const kebutuhanWarga = literAngka / (150 * 365);   // ±150 liter/orang/hari kebutuhan air bersih
+    if (literAngka > 0) {
+      const kolamRenang = literAngka / 2_500_000;
+      const kebutuhanWarga = literAngka / (150 * 365);
       eqBox.innerHTML =
         `<i class="fas fa-water"></i> Setara ±${kolamRenang.toLocaleString('id-ID', {maximumFractionDigits:1})} kolam renang ukuran Olimpiade per tahun<br>` +
         `<i class="fas fa-people-group"></i> Atau cukup kebutuhan air bersih ±${Math.round(kebutuhanWarga).toLocaleString('id-ID')} warga selama setahun`;
     } else {
       eqBox.innerHTML = '';
     }
+    if (d.catatanAdmin) {
+      eqBox.innerHTML += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);color:var(--muted);"><i class="fas fa-comment-dots"></i> ${d.catatanAdmin}</div>`;
+    }
 
-    const linkEl = document.getElementById('csrModalReportLink');
-    if (d.reportUrl) { linkEl.href = d.reportUrl; linkEl.style.display = 'inline-flex'; }
-    else { linkEl.style.display = 'none'; }
-
+    document.getElementById('csrModalReportLink').style.display = 'none';
     document.getElementById('csrModalBackdrop').classList.add('show');
   };
   window.closeCsrDetail = () => {
