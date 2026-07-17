@@ -637,6 +637,7 @@ input,textarea,select{font-family:var(--body);}
         <button class="tab-btn" data-tab="pjlh-buyers">ES-Buyers</button>
         <button class="tab-btn" data-tab="pjlh-aktivitas">Aktivitas PJLH</button>
         <button class="tab-btn" data-tab="pjlh-pengajuan">Pengajuan PJLH</button>
+        <button class="tab-btn" data-tab="pjlh-publikasi">Ringkasan &amp; Publikasi</button>
       </div>
 
       <!-- SELLERS -->
@@ -681,6 +682,15 @@ input,textarea,select{font-family:var(--body);}
         </div>
         <div class="form-hint" style="margin-bottom:14px;">Pengajuan PJLH dari ES-Seller. Sesuai mekanisme PJLH: tidak ada nominal/tarif ditetapkan di sini — yang dicatat &amp; ditindaklanjuti adalah <strong>keluaran/output</strong> (titik rorak/sumur, estimasi serapan air) dan hasil kesepakatan/negosiasi dicatat sebagai catatan bebas.</div>
         <div id="pengajuan-pjlh-list"><p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p></div>
+      </div>
+
+      <!-- RINGKASAN & PUBLIKASI (satu sumber data → ringkasan bersih yang admin kontrol tayang-tidaknya ke Mitra) -->
+      <div class="tab-pane" id="tab-pjlh-publikasi">
+        <div class="form-hint" style="margin-bottom:14px;">Ringkasan dihitung otomatis dari data <strong>Konservasi</strong> (rorak/sumur/biopori per tahun) + <strong>Aktivitas PJLH</strong> (pembuatan/perawatan) yang tertaut ke mitra. Data mentah tidak berubah di sini — Anda hanya menentukan <strong>kapan ringkasannya layak tayang</strong> ke dashboard Mitra &amp; halaman publik water.html.</div>
+        <div class="toolbar">
+          <button class="btn btn-outline" id="refreshPublikasiBtn"><i class="fas fa-sync"></i> Refresh</button>
+        </div>
+        <div id="publikasi-list"><p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p></div>
       </div>
     </section>
 
@@ -1008,6 +1018,33 @@ input,textarea,select{font-family:var(--body);}
     </div>
   </div>
 </div>
+
+<!-- MODAL TINJAU & PUBLIKASI RINGKASAN -->
+<div class="modal-backdrop" id="modal-publikasi">
+  <div class="modal-box">
+    <button class="modal-close" data-close="modal-publikasi"><i class="fas fa-times"></i></button>
+    <h3 id="modal-publikasi-title">Tinjau Ringkasan</h3>
+    <div class="sub">Ini yang akan tampil ke dashboard Mitra &amp; halaman publik water.html — tinjau dulu sebelum dipublikasikan.</div>
+    <input type="hidden" id="publikasi-konservasi-id">
+
+    <div id="publikasi-preview-box" style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:var(--r-sm);padding:16px;font-size:0.8rem;color:var(--parchment);margin-bottom:16px;"></div>
+
+    <div class="form-group"><label>Publikasikan untuk Mitra (ES-Buyer)</label>
+      <select id="publikasi-buyer"><option value="">— Pilih Mitra —</option></select>
+      <div class="form-hint">Ini yang menentukan siapa yang melihat laporan ini di dashboardnya — bukan otomatis dari data Konservasi.</div>
+    </div>
+
+    <div class="form-group"><label>Catatan Tambahan untuk Mitra (opsional)</label>
+      <textarea id="publikasi-catatan" rows="3" placeholder="Contoh: Tahun ini fokus perawatan infrastruktur lama di Desa Galih..."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" data-close="modal-publikasi">Batal</button>
+      <button class="btn btn-danger" id="unpublishBtn" style="display:none;"><i class="fas fa-eye-slash"></i> Batalkan Publikasi</button>
+      <button class="btn btn-lime" id="publishBtn"><i class="fas fa-bullhorn"></i> Publikasikan ke Mitra</button>
+    </div>
+  </div>
+</div>
 <div class="modal-backdrop" id="modal-buyer">
   <div class="modal-box">
     <button class="modal-close" data-close="modal-buyer"><i class="fas fa-times"></i></button>
@@ -1277,7 +1314,7 @@ function switchPanel(name) {
     overview: loadOverview, mitra: loadMitra, laporan: loadLaporan,
     berita: () => { loadBeritaInternal(); loadBeritaExternal(); },
     konservasi: loadKonservasiList, biodiversitas: loadBioList,
-    pjlh: () => { loadSellers(); loadBuyers(); loadAktivitas(); loadPengajuanPjlh(); },
+    pjlh: () => { loadSellers(); loadBuyers(); loadAktivitas(); loadPengajuanPjlh(); loadPublikasiList(); },
     tim: loadTim, target: loadProgram, progress: loadProgress,
     rabkurva: loadRabKurva
   };
@@ -3162,6 +3199,173 @@ document.getElementById('saveKeputusanPengajuanBtn').addEventListener('click', a
     closeModal('modal-pengajuan-keputusan');
     loadPengajuanPjlh();
   } catch(e) { alert('Gagal menyimpan keputusan: '+e.message); } finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan Keputusan'; }
+});
+
+// ============================================================
+// RINGKASAN & PUBLIKASI
+// Satu sumber data (monitoring_reboisasi = Konservasi + pjlh_aktivitas),
+// ringkasan dihitung otomatis, tapi TAYANG ke Mitra hanya kalau admin
+// klik "Publikasikan". Tidak semua tahun Konservasi punya PJLH — jadi ini
+// opsional per-tahun, bukan otomatis semua tahun jadi laporan.
+// ============================================================
+async function hitungRingkasanKonservasi(konsDoc) {
+  const stats = konsDoc.stats || {};
+  // Agregat aktivitas PJLH (pembuatan/perawatan) yang tertaut ke tahun/program ini
+  const aktSnap = await getDocs(query(collection(db,'pjlh_aktivitas'), where('linkedKonservasiId','==',konsDoc.id)));
+  const agg = { pembuatan: {rorak:0,sumur:0,biopori:0,tanaman:0}, perawatan: {rorak:0,sumur:0,biopori:0,tanaman:0} };
+  aktSnap.forEach(a => {
+    const d = a.data();
+    const jenis = d.jenisAktivitas === 'perawatan' ? 'perawatan' : 'pembuatan';
+    const infra = ['rorak','sumur','biopori','tanaman'].includes(d.jenisInfra) ? d.jenisInfra : 'rorak';
+    agg[jenis][infra] += (parseFloat(d.jumlah) || 0);
+  });
+  let infiltrasi = { total: 0 };
+  try {
+    infiltrasi = window.hitungEstimasiInfiltrasi(stats, konsDoc.metodologi, konsDoc.year, konsDoc.sniParams || {});
+  } catch(e) { console.warn('Gagal hitung infiltrasi untuk', konsDoc.id, e); }
+  return { stats, aktivitas: agg, infiltrasi };
+}
+
+async function loadPublikasiList() {
+  const wrap = document.getElementById('publikasi-list');
+  wrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
+  try {
+    const konsSnap = await getDocs(collection(db,'monitoring_reboisasi'));
+    let konsList = konsSnap.docs.map(d=>({id:d.id, ...d.data()}));
+    konsList.sort((a,b) => (b.year||0) - (a.year||0));
+
+    const pubSnap = await getDocs(collection(db,'laporan_pjlh_publikasi'));
+    const pubMap = {};
+    pubSnap.forEach(d => pubMap[d.id] = d.data());
+
+    const buyerSnap = await getDocs(collection(db,'es_buyers'));
+    const buyerMap = {};
+    buyerSnap.forEach(d => buyerMap[d.id] = d.data().nama || '—');
+
+    if (!konsList.length) { wrap.innerHTML = '<p style="color:var(--text-muted);">Belum ada data Konservasi.</p>'; return; }
+
+    window.__konsRingkasanCache = {};
+    wrap.innerHTML = '';
+    for (const kons of konsList) {
+      const ringkasan = await hitungRingkasanKonservasi(kons);
+      window.__konsRingkasanCache[kons.id] = { kons, ringkasan };
+      const pub = pubMap[kons.id];
+      const totalRorak   = (ringkasan.stats.rorak||0);
+      const totalSumur   = (ringkasan.stats.sumur||0);
+      const totalBiopori = (ringkasan.stats.biopori||0);
+      const totalPembuatan = Object.values(ringkasan.aktivitas.pembuatan).reduce((a,b)=>a+b,0);
+      const totalPerawatan = Object.values(ringkasan.aktivitas.perawatan).reduce((a,b)=>a+b,0);
+      const infTotal = ringkasan.infiltrasi.total || 0;
+
+      const statusBadge = pub && pub.published
+        ? `<span class="list-badge badge-lime"><i class="fas fa-bullhorn"></i> Dipublikasikan untuk ${buyerMap[pub.linkedBuyerId] || 'Mitra'}</span>`
+        : `<span class="list-badge badge-orange"><i class="fas fa-eye-slash"></i> Belum Dipublikasikan</span>`;
+
+      wrap.innerHTML += `
+        <div class="list-card">
+          <div class="list-card-header">
+            <div>
+              <div style="font-weight:700;font-size:0.85rem;color:var(--white);">${kons.title || kons.namaProgram || 'Program Konservasi'} — ${kons.year || '-'}</div>
+              <div style="font-size:0.68rem;color:var(--text-muted);margin-top:4px;">
+                <i class="fas fa-water"></i> ${totalRorak} Rorak · ${totalSumur} Sumur · ${totalBiopori} Biopori
+                &middot; <i class="fas fa-tint"></i> ${infTotal.toLocaleString('id-ID',{maximumFractionDigits:0})} L/thn
+              </div>
+              <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">
+                <i class="fas fa-hammer"></i> Pembuatan: ${totalPembuatan} &middot; <i class="fas fa-broom"></i> Perawatan: ${totalPerawatan}
+              </div>
+              <div style="margin-top:8px;">${statusBadge}</div>
+            </div>
+            <div class="list-card-actions">
+              <button class="btn btn-lime btn-sm" onclick="bukaPublikasiModal('${kons.id}')"><i class="fas fa-bullhorn"></i> ${pub && pub.published ? 'Kelola Publikasi' : 'Tinjau & Publikasikan'}</button>
+            </div>
+          </div>
+        </div>`;
+    }
+  } catch(e) { console.error(e); wrap.innerHTML = '<p style="color:var(--danger);">Gagal memuat data. '+e.message+'</p>'; }
+}
+document.getElementById('refreshPublikasiBtn').addEventListener('click', loadPublikasiList);
+
+window.bukaPublikasiModal = async (konsId) => {
+  const cached = (window.__konsRingkasanCache || {})[konsId];
+  if (!cached) return;
+  const { kons, ringkasan } = cached;
+  document.getElementById('publikasi-konservasi-id').value = konsId;
+  document.getElementById('modal-publikasi-title').textContent = `Tinjau Ringkasan — ${kons.title || kons.namaProgram || ''} ${kons.year || ''}`;
+
+  const totalPembuatan = Object.entries(ringkasan.aktivitas.pembuatan).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') || 'Tidak ada';
+  const totalPerawatan = Object.entries(ringkasan.aktivitas.perawatan).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') || 'Tidak ada';
+
+  document.getElementById('publikasi-preview-box').innerHTML = `
+    <div style="margin-bottom:10px;"><strong style="color:var(--lime);">Capaian Fisik (dari data Konservasi tahun ${kons.year||'-'})</strong><br>
+      ${ringkasan.stats.rorak||0} Rorak · ${ringkasan.stats.sumur||0} Sumur Resapan · ${ringkasan.stats.biopori||0} Biopori</div>
+    <div style="margin-bottom:10px;"><strong style="color:var(--lime);">Aktivitas PJLH</strong><br>
+      Pembuatan: ${totalPembuatan}<br>Perawatan: ${totalPerawatan}</div>
+    <div><strong style="color:var(--lime);">Total Estimasi Infiltrasi</strong><br>
+      ${(ringkasan.infiltrasi.total||0).toLocaleString('id-ID',{maximumFractionDigits:0})} Liter/Tahun</div>`;
+
+  // Isi dropdown mitra
+  const sel = document.getElementById('publikasi-buyer');
+  sel.innerHTML = '<option value="">— Pilih Mitra —</option>';
+  try {
+    const buyerSnap = await getDocs(collection(db,'es_buyers'));
+    buyerSnap.forEach(d => sel.innerHTML += `<option value="${d.id}">${d.data().nama||'—'}</option>`);
+  } catch(e) { console.error(e); }
+
+  // Kalau sudah pernah dipublikasikan, muat statusnya
+  const unpubBtn = document.getElementById('unpublishBtn');
+  try {
+    const pubSnapDoc = await getDoc(doc(db,'laporan_pjlh_publikasi',konsId));
+    if (pubSnapDoc.exists() && pubSnapDoc.data().published) {
+      const p = pubSnapDoc.data();
+      sel.value = p.linkedBuyerId || '';
+      document.getElementById('publikasi-catatan').value = p.catatanAdmin || '';
+      unpubBtn.style.display = 'inline-flex';
+    } else {
+      document.getElementById('publikasi-catatan').value = '';
+      unpubBtn.style.display = 'none';
+    }
+  } catch(e) { console.error(e); unpubBtn.style.display = 'none'; }
+
+  openModal('modal-publikasi');
+};
+
+document.getElementById('publishBtn').addEventListener('click', async () => {
+  const konsId = document.getElementById('publikasi-konservasi-id').value;
+  const buyerId = document.getElementById('publikasi-buyer').value;
+  if (!buyerId) { alert('Pilih Mitra tujuan publikasi dulu.'); return; }
+  const cached = (window.__konsRingkasanCache || {})[konsId];
+  if (!cached) return;
+  const { kons, ringkasan } = cached;
+  const btn = document.getElementById('publishBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mempublikasikan...';
+  try {
+    await setDoc(doc(db,'laporan_pjlh_publikasi',konsId), {
+      konservasiId: konsId,
+      linkedBuyerId: buyerId,
+      title: kons.title || kons.namaProgram || 'Program Konservasi',
+      year: kons.year || null,
+      lokasi: kons.lokasi || '',
+      stats: ringkasan.stats,
+      aktivitasSummary: ringkasan.aktivitas,
+      totalInfiltrasiLiter: ringkasan.infiltrasi.total || 0,
+      catatanAdmin: document.getElementById('publikasi-catatan').value.trim(),
+      published: true,
+      publishedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    closeModal('modal-publikasi');
+    loadPublikasiList();
+  } catch(e) { alert('Gagal publikasi: '+e.message); } finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-bullhorn"></i> Publikasikan ke Mitra'; }
+});
+
+document.getElementById('unpublishBtn').addEventListener('click', async () => {
+  const konsId = document.getElementById('publikasi-konservasi-id').value;
+  if (!confirm('Batalkan publikasi laporan ini? Mitra tidak akan lagi melihatnya di dashboard.')) return;
+  try {
+    await setDoc(doc(db,'laporan_pjlh_publikasi',konsId), { published:false, updatedAt: serverTimestamp() }, { merge:true });
+    closeModal('modal-publikasi');
+    loadPublikasiList();
+  } catch(e) { alert('Gagal membatalkan publikasi: '+e.message); }
 });
 
 // ============================================================
