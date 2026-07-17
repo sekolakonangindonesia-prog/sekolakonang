@@ -263,6 +263,10 @@
   .form-label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--parchment); font-size: 0.85rem; }
   .form-control { width: 100%; padding: 11px 14px; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; background: rgba(255,255,255,0.03); color: #fff; font-size: 0.9rem; margin-bottom: 15px; }
   .form-control:focus { outline: none; border-color: var(--lime); }
+  /* Daftar pilihan (option) dropdown native selalu dirender browser dengan latar terang,
+     jadi teksnya perlu warna gelap eksplisit — kalau tidak, ikut warna putih dari .form-control
+     dan jadi tak terbaca (putih di atas putih). */
+  .form-control option { color: #111; background: #fff; }
   .form-row { display: flex; gap: 15px; }
   .badge-ref { display: inline-block; background: rgba(212,175,55,0.12); color: #d4af37; border: 1px solid rgba(212,175,55,0.25); padding: 4px 12px; border-radius: 20px; font-size: 0.66rem; font-weight: 700; margin-bottom: 16px; }
 
