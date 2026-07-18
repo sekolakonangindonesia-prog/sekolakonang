@@ -176,11 +176,17 @@ input, textarea, select { font-family: var(--body); }
 .pjlh-akt-item { background: var(--surface); border: 1px solid var(--border-s); border-radius: var(--r); padding: 12px 14px; margin-bottom: 8px; cursor: pointer; transition: 0.15s; }
 .pjlh-akt-item:hover { border-color: var(--lime); background: var(--surface2); }
 .pjlh-akt-item .pjlh-akt-hint { font-size: 0.56rem; color: var(--lime); margin-top: 6px; display: flex; align-items: center; gap: 4px; }
-.pjlh-detail-table { width: 100%; font-size: 0.72rem; border-collapse: collapse; margin: 10px 0; }
-.pjlh-detail-table th { text-align: left; color: var(--muted); font-weight: 700; font-size: 0.6rem; text-transform: uppercase; padding: 6px 4px; border-bottom: 1px solid var(--border-s); }
-.pjlh-detail-table td { padding: 7px 4px; border-bottom: 1px solid var(--border-s); color: var(--parchment); }
-.pjlh-detail-table .fcode { color: var(--muted); font-size: 0.66rem; }
-.pjlh-detail-table .text-end { text-align: right; color: var(--lime); font-weight: 700; }
+.pjlh-infil-group { background: var(--surface); border: 1px solid var(--border-s); border-radius: var(--r); padding: 12px 14px; margin: 8px 0; }
+.pjlh-infil-group-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
+.pjlh-infil-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 0.78rem; }
+.pjlh-infil-row + .pjlh-infil-row { border-top: 1px solid var(--border-s); }
+.pjlh-infil-row .lbl { display: flex; align-items: center; gap: 8px; color: #fff; }
+.pjlh-infil-row .lbl i { width: 18px; text-align: center; }
+.pjlh-infil-row .val { font-weight: 700; }
+.pjlh-infil-total { background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.25); border-radius: var(--r); padding: 12px 14px; margin: 10px 0; display: flex; align-items: center; justify-content: space-between; }
+.pjlh-infil-total .lbl { color: var(--cyan); font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.pjlh-infil-total .val { color: var(--cyan); font-weight: 900; font-size: 1rem; }
+.pjlh-infil-empty { font-size: 0.7rem; color: var(--muted); padding: 4px 0; }
 .pjlh-formula-hint { font-size: 0.68rem; color: var(--muted); line-height: 1.6; background: rgba(255,255,255,0.03); border: 1px solid var(--border-s); border-radius: var(--r); padding: 10px 12px; margin: 10px 0 16px; }
 .pjlh-doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px,1fr)); gap: 6px; margin-top: 8px; }
 .pjlh-doc-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-s); }
@@ -565,11 +571,7 @@ input, textarea, select { font-family: var(--body); }
     <p class="sub" id="pjlhDetailMeta"></p>
 
     <div class="section-head" style="margin-top:6px;"><h3 style="font-size:0.85rem;"><i class="fas fa-calculator"></i> Analisis Infiltrasi Air</h3></div>
-    <table class="pjlh-detail-table">
-      <thead><tr><th>Sumber</th><th>Rumus</th><th class="text-end">ML/Tahun</th></tr></thead>
-      <tbody id="pjlhDetailFormulaBody"></tbody>
-      <tfoot><tr><td colspan="2"><b style="color:#fff;">Total Estimasi Infiltrasi</b></td><td class="text-end" id="pjlhDetailTotal" style="font-size:0.9rem;">-</td></tr></tfoot>
-    </table>
+    <div id="pjlhDetailInfiltrasiWrap"></div>
     <div class="pjlh-formula-hint" id="pjlhDetailHint"></div>
 
     <div class="section-head"><h3 style="font-size:0.85rem;"><i class="fas fa-camera"></i> Dokumentasi &amp; Catatan Lapangan</h3></div>
@@ -898,15 +900,16 @@ async function renderPJLHBuyerData() {
     listWrap.innerHTML = laporan.map(l => {
       const s = l.stats || {};
       const a = l.aktivitasSummary || {};
-      const pembuatanTotal = Object.values(a.pembuatan || {}).reduce((x,y)=>x+(y||0),0);
-      const perawatanTotal = Object.values(a.perawatan || {}).reduce((x,y)=>x+(y||0),0);
+      const rincianPembuatan = Object.entries(a.pembuatan||{}).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') || 'Tidak ada';
+      const rincianPerawatan = Object.entries(a.perawatan||{}).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') || 'Tidak ada';
       return `
       <div class="pjlh-akt-item" onclick="openPjlhDetail('${l.id}')">
         <div class="pjlh-akt-top">
           <div>
             <div class="pjlh-akt-name">${l.title || 'Program Konservasi'} — ${l.year || '-'}</div>
-            <div class="pjlh-akt-meta">${s.rorak||0} Rorak &middot; ${s.sumur||0} Sumur &middot; ${s.biopori||0} Biopori</div>
-            <div class="pjlh-akt-meta">Pembuatan: ${pembuatanTotal} &middot; Perawatan: ${perawatanTotal} &middot; ${(l.totalInfiltrasiLiter||0).toLocaleString('id-ID',{maximumFractionDigits:0})} L/thn</div>
+            <div class="pjlh-akt-meta">${s.rorak||0} Rorak &middot; ${s.sumur||0} Sumur &middot; ${s.biopori||0} Biopori &middot; ${(l.totalInfiltrasiLiter||0).toLocaleString('id-ID',{maximumFractionDigits:0})} L/thn</div>
+            <div class="pjlh-akt-meta"><i class="fas fa-hammer"></i> Pembuatan: ${rincianPembuatan}</div>
+            <div class="pjlh-akt-meta"><i class="fas fa-broom"></i> Perawatan: ${rincianPerawatan}</div>
             ${l.catatanAdmin ? `<div class="pjlh-akt-meta" style="color:var(--lime);margin-top:4px;"><i class="fas fa-comment-dots"></i> ${l.catatanAdmin}</div>` : ''}
             <div class="pjlh-akt-hint"><i class="fas fa-magnifying-glass-chart"></i> Klik untuk lihat rincian & dokumentasi</div>
           </div>
@@ -933,28 +936,40 @@ window.openPjlhDetail = async (laporanId) => {
   const s = l.stats || {};
   document.getElementById('pjlhDetailMeta').textContent = `${s.rorak||0} Rorak · ${s.sumur||0} Sumur Resapan · ${s.biopori||0} Biopori`;
 
-  const formulaBody = document.getElementById('pjlhDetailFormulaBody');
-  const totalEl = document.getElementById('pjlhDetailTotal');
+  const infilWrap = document.getElementById('pjlhDetailInfiltrasiWrap');
   const hintEl = document.getElementById('pjlhDetailHint');
-  const det = l.infiltrasiDetail;
+  const split = l.infiltrasiSplit;
 
-  if (det) {
-    const metaKey = (l.metodologiInfo && l.metodologiInfo.key) || '';
-    const rows = [
-      { item:'Pohon / Vegetasi', val: det.resP||0 },
-      { item:'Rorak (Trench)',   val: det.resR||0 },
-      { item:'Sumur Resapan',    val: det.resS||0 },
-      { item:'Biopori',          val: det.resB||0 }
-    ].filter(r => r.val > 0);
-    formulaBody.innerHTML = rows.map(r => `<tr><td><b style="color:#fff;">${r.item}</b></td><td class="fcode">dihitung dari data lapangan</td><td class="text-end">${r.val.toFixed(2)}</td></tr>`).join('')
-      || '<tr><td colspan="3" class="fcode">Tidak ada rincian di atas nol.</td></tr>';
-    totalEl.textContent = (det.total||0).toFixed(2) + ' ML';
-    hintEl.innerHTML = `<i class="fas fa-circle-info"></i> ${(l.metodologiInfo && l.metodologiInfo.hint) || 'Estimasi dihitung berdasarkan data infrastruktur yang terverifikasi admin.'}`;
+  const SUMBER = [
+    { key:'resP', item:'Pohon / Vegetasi', icon:'fa-tree',        color:'#8bc34a' },
+    { key:'resR', item:'Rorak',            icon:'fa-water',       color:'#ff9800' },
+    { key:'resS', item:'Sumur Resapan',    icon:'fa-circle-dot',  color:'#2196f3' },
+    { key:'resB', item:'Biopori',          icon:'fa-asterisk',    color:'#e91e63' }
+  ];
+  function renderGrup(label, data) {
+    const rows = SUMBER.filter(x => (data[x.key]||0) > 0);
+    if (!rows.length) return `<div class="pjlh-infil-group"><div class="pjlh-infil-group-label">${label}</div><div class="pjlh-infil-empty">Tidak ada data.</div></div>`;
+    return `<div class="pjlh-infil-group"><div class="pjlh-infil-group-label">${label}</div>` +
+      rows.map(x => `<div class="pjlh-infil-row"><span class="lbl"><i class="fas ${x.icon}" style="color:${x.color};"></i> ${x.item}</span><span class="val" style="color:${x.color};">${(data[x.key]||0).toFixed(2)} ML/thn</span></div>`).join('') +
+      `</div>`;
+  }
+
+  if (split && (split.pembuatan || split.perawatan)) {
+    const totalGab = (split.pembuatan?.total||0) + (split.perawatan?.total||0);
+    infilWrap.innerHTML = renderGrup('Dari Pembuatan', split.pembuatan||{}) + renderGrup('Dari Perawatan', split.perawatan||{}) +
+      `<div class="pjlh-infil-total"><span class="lbl"><i class="fas fa-tint"></i> Total Estimasi Infiltrasi</span><span class="val">${totalGab.toFixed(2)} ML/thn</span></div>`;
+    hintEl.innerHTML = `<i class="fas fa-circle-info"></i> ${(l.metodologiInfo && l.metodologiInfo.hint) || 'Estimasi dihitung terpisah dari aktivitas Pembuatan dan Perawatan, lalu dijumlahkan jadi total.'}`;
+  } else if (l.infiltrasiDetail) {
+    // Laporan lama: sudah ada rincian per sumber, tapi belum dipecah Pembuatan/Perawatan.
+    infilWrap.innerHTML = renderGrup('Gabungan (belum dipecah Pembuatan/Perawatan)', l.infiltrasiDetail) +
+      `<div class="pjlh-infil-total"><span class="lbl"><i class="fas fa-tint"></i> Total Estimasi Infiltrasi</span><span class="val">${(l.infiltrasiDetail.total||0).toFixed(2)} ML/thn</span></div>`;
+    hintEl.innerHTML = '<i class="fas fa-circle-info"></i> Laporan ini dipublikasikan sebelum rincian Pembuatan/Perawatan tersedia. Publikasikan ulang dari admin untuk memperbaruinya.';
   } else {
     // Laporan lama (dipublikasikan sebelum fitur rincian ditambahkan) —
     // tampilkan total saja, tanpa rincian per sumber.
-    formulaBody.innerHTML = '<tr><td colspan="3" class="fcode">Rincian per sumber belum tersedia untuk laporan ini.</td></tr>';
-    totalEl.textContent = (l.totalInfiltrasiLiter ? (l.totalInfiltrasiLiter/1000).toFixed(2) : '0') + ' ML';
+    const totalLama = l.totalInfiltrasiLiter ? (l.totalInfiltrasiLiter/1000) : 0;
+    infilWrap.innerHTML = `<div class="pjlh-infil-empty">Rincian per sumber belum tersedia untuk laporan ini.</div>` +
+      `<div class="pjlh-infil-total"><span class="lbl"><i class="fas fa-tint"></i> Total Estimasi Infiltrasi</span><span class="val">${totalLama.toFixed(2)} ML/thn</span></div>`;
     hintEl.innerHTML = '<i class="fas fa-circle-info"></i> Laporan ini dipublikasikan sebelum fitur rincian per sumber tersedia. Admin bisa publikasikan ulang dari panel PJLH untuk menambahkan rincian.';
   }
 
