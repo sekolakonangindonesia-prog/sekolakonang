@@ -195,16 +195,11 @@
   .contact-row i { color: var(--lime); width: 20px; text-align: center; }
   a.contact-row:hover { background: rgba(255,255,255,0.04); color: var(--lime); }
   a.contact-row:hover i { color: var(--lime); }
-  /* ── SOSIAL MEDIA KONTAK ── */
+  /* ── SOSIAL MEDIA KONTAK — ikon flat, samakan gaya dgn contact-row ── */
   .contact-social { display: flex; flex-direction: column; gap: 12px; margin-top: 2px; }
   .contact-social-item { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: var(--parchment); padding: 3px 8px 3px 0; border-radius: var(--r-sm); transition: 0.2s; margin: -3px 0; }
   .contact-social-item:hover { background: rgba(255,255,255,0.04); color: var(--lime); }
-  .soc-ico { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.62rem; flex-shrink: 0; color: #fff; transition: 0.2s; }
-  .soc-instagram .soc-ico { background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
-  .soc-youtube .soc-ico { background: #FF0000; }
-  .soc-tiktok .soc-ico { background: #000000; }
-  .soc-facebook .soc-ico { background: #1877F2; }
-  .soc-website .soc-ico { background: linear-gradient(135deg, var(--lime), #7fbf00); color: var(--deep-forest); }
+  .contact-social-item i { color: var(--lime); width: 20px; text-align: center; font-size: 0.95rem; flex-shrink: 0; }
   .soc-name { font-weight: 500; }
   .contact-social-empty { font-size: 0.78rem; color: var(--text-muted); }
   .contact-form { display: flex; flex-direction: column; gap: 14px; }
@@ -861,7 +856,7 @@
         a.href = d.url;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
-        a.innerHTML = `<span class="soc-ico"><i class="${meta.icon}"></i></span><span class="soc-name">${esc(d.name||meta.label)}</span>`;
+        a.innerHTML = `<i class="${meta.icon}"></i><span class="soc-name">${esc(d.name||meta.label)}</span>`;
         wrap.appendChild(a);
       });
       if (!wrap.children.length) wrap.innerHTML = '';
