@@ -273,9 +273,9 @@ input, textarea, select { font-family: var(--body); }
 .lap-actions button.warn { background: rgba(255,171,0,0.10); border-color: rgba(255,171,0,0.25); color: var(--orange); }
 
 /* ─── MODAL (Minta Revisi) ─── */
-.modal-backdrop { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.65); display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.65); display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
 .modal-backdrop.show { display: flex; }
-.modal-box { background: var(--surface); border: 1px solid var(--border-s); border-radius: var(--r); padding: 20px; width: 100%; max-width: 380px; position: relative; }
+.modal-box { background: var(--surface); border: 1px solid var(--border-s); border-radius: var(--r); padding: 20px; width: 100%; max-width: 380px; position: relative; max-height: calc(100vh - 40px); overflow-y: auto; margin: auto; }
 .modal-box.wide { max-width: 760px; }
 .modal-box .lap-preview-scroll { background:#fff; color:#111; padding:20px; border-radius:8px; max-height:60vh; overflow-y:auto; font-size:0.8rem; margin:14px 0; }
 .modal-box h3 { font-family: var(--display); font-size: 1.05rem; color: #fff; margin-bottom: 6px; }
@@ -574,7 +574,10 @@ input, textarea, select { font-family: var(--body); }
     <div id="pjlhDetailInfiltrasiWrap"></div>
     <div class="pjlh-formula-hint" id="pjlhDetailHint"></div>
 
-    <div class="section-head"><h3 style="font-size:0.85rem;"><i class="fas fa-camera"></i> Dokumentasi &amp; Catatan Lapangan</h3></div>
+    <div class="section-head">
+      <h3 style="font-size:0.85rem;"><i class="fas fa-camera"></i> Dokumentasi &amp; Catatan Lapangan</h3>
+      <button id="pjlhDocToggleBtn" onclick="togglePjlhDocs()" style="display:none;background:none;border:none;color:var(--lime);cursor:pointer;font-size:0.9rem;padding:4px 8px;" title="Tampilkan semua foto"><i class="fas fa-caret-down"></i></button>
+    </div>
     <div id="pjlhDetailDocWrap"><p class="sub">Memuat dokumentasi...</p></div>
 
     <div class="modal-actions">
@@ -977,6 +980,8 @@ window.openPjlhDetail = async (laporanId) => {
 
   // Ambil dokumentasi foto & catatan secara live dari pjlh_aktivitas
   const docWrap = document.getElementById('pjlhDetailDocWrap');
+  const toggleBtn = document.getElementById('pjlhDocToggleBtn');
+  toggleBtn.style.display = 'none';
   const refs = l.aktivitasRefs || [];
   if (!refs.length) {
     docWrap.innerHTML = '<p class="sub">Belum ada dokumentasi tertaut untuk laporan ini.</p>';
@@ -989,12 +994,40 @@ window.openPjlhDetail = async (laporanId) => {
     if (!items.length) { docWrap.innerHTML = '<p class="sub">Dokumentasi tidak ditemukan.</p>'; return; }
     const allFotos = items.flatMap(d => d.foto || []);
     const catatanList = items.filter(d => d.catatan).map(d => `<div class="pjlh-doc-note"><b style="color:var(--lime);">${d.sellerName||'Seller'}</b> &middot; ${d.tanggal||'-'} &middot; ${d.jenisAktivitas==='perawatan'?'Perawatan':'Pembuatan'} ${d.jenisInfra||''}<br>${d.catatan}</div>`);
-    docWrap.innerHTML = (allFotos.length ? `<div class="pjlh-doc-grid">${allFotos.map(f=>`<img src="${f}">`).join('')}</div>` : '<p class="sub">Belum ada foto dokumentasi.</p>')
+
+    const BATAS_AWAL = 4;
+    const fotoUtama = allFotos.slice(0, BATAS_AWAL);
+    const fotoSisa = allFotos.slice(BATAS_AWAL);
+    const gridUtama = fotoUtama.map(f=>`<img src="${f}">`).join('');
+    const gridSisa = fotoSisa.map(f=>`<img src="${f}">`).join('');
+
+    docWrap.innerHTML = (allFotos.length
+        ? `<div class="pjlh-doc-grid">${gridUtama}</div>` +
+          (fotoSisa.length ? `<div class="pjlh-doc-grid" id="pjlhDocExtra" style="display:none;margin-top:6px;">${gridSisa}</div>` : '')
+        : '<p class="sub">Belum ada foto dokumentasi.</p>')
       + catatanList.join('');
+
+    if (fotoSisa.length) {
+      toggleBtn.style.display = 'inline-flex';
+      toggleBtn.title = `Tampilkan ${fotoSisa.length} foto lainnya`;
+      toggleBtn.dataset.expanded = 'false';
+    }
   } catch(e) {
     console.error('Gagal ambil dokumentasi', e);
     docWrap.innerHTML = '<p class="sub">Gagal memuat dokumentasi.</p>';
   }
+};
+
+// Toggle tampilkan/sembunyikan foto dokumentasi selebihnya (di luar 4 foto awal)
+window.togglePjlhDocs = () => {
+  const extra = document.getElementById('pjlhDocExtra');
+  const btn = document.getElementById('pjlhDocToggleBtn');
+  if (!extra || !btn) return;
+  const expanded = btn.dataset.expanded === 'true';
+  extra.style.display = expanded ? 'none' : 'grid';
+  btn.dataset.expanded = expanded ? 'false' : 'true';
+  btn.innerHTML = expanded ? '<i class="fas fa-caret-down"></i>' : '<i class="fas fa-caret-up"></i>';
+  btn.title = expanded ? 'Tampilkan semua foto' : 'Sembunyikan foto';
 };
 
 // ============================================================
