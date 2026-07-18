@@ -903,6 +903,19 @@ input,textarea,select{font-family:var(--body);}
   </div>
 </div>
 
+<!-- MODAL KONFIRMASI HAPUS (dipakai semua tombol sampah/delete) -->
+<div class="modal-backdrop" id="modal-confirm-delete">
+  <div class="modal-box">
+    <button class="modal-close" data-close="modal-confirm-delete"><i class="fas fa-times"></i></button>
+    <h3>Konfirmasi Hapus</h3>
+    <p>Yakin hapus data ini? Tindakan ini tidak bisa dibatalkan.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" data-close="modal-confirm-delete">Batal</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn"><i class="fas fa-trash"></i> Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL LAPORAN -->
 <div class="modal-backdrop" id="modal-laporan">
   <div class="modal-box">
@@ -4661,16 +4674,28 @@ document.getElementById('pd-save-btn').addEventListener('click', async () => {
 // ============================================================
 // UTIL: DELETE DOC
 // ============================================================
-async function delDoc(col, id, reload) {
-  if (!confirm('Yakin hapus data ini? Tindakan ini tidak bisa dibatalkan.')) return;
+let _pendingDelete = null;
+function delDoc(col, id, reload) {
+  _pendingDelete = { col, id, reload };
+  openModal('modal-confirm-delete');
+}
+document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+  if (!_pendingDelete) return;
+  const { col, id, reload } = _pendingDelete;
+  const btn = document.getElementById('confirmDeleteBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
   try {
     await deleteDoc(doc(db, col, id));
+    closeModal('modal-confirm-delete');
     if (reload) reload();
   } catch(e) {
     console.error('Gagal hapus dokumen', col, id, e);
     alert('Gagal hapus data.\n\nPenyebab: ' + e.message + '\n\nKemungkinan: Firestore Security Rules menolak akses delete, atau koneksi internet bermasalah. Cek console browser (F12) untuk detail.');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-trash"></i> Ya, Hapus';
+    _pendingDelete = null;
   }
-}
+});
 window.delDoc = delDoc;
 window.editBeritaInternal = editBeritaInternal;
 window.editBeritaExternal = editBeritaExternal;
