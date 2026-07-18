@@ -193,6 +193,19 @@
   .contact-info { display: flex; flex-direction: column; gap: 14px; }
   .contact-row { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: var(--parchment); }
   .contact-row i { color: var(--lime); width: 20px; text-align: center; }
+  /* ── SOSIAL MEDIA KONTAK ── */
+  .contact-social { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .contact-social-item { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: var(--parchment); padding: 8px 10px 8px 0; border-radius: var(--r-sm); transition: 0.2s; }
+  .contact-social-item:hover { transform: translateX(4px); background: rgba(255,255,255,0.04); }
+  .soc-ico { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.35); transition: 0.2s; }
+  .contact-social-item:hover .soc-ico { transform: scale(1.1) rotate(-6deg); }
+  .soc-instagram .soc-ico { background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+  .soc-youtube .soc-ico { background: #FF0000; }
+  .soc-tiktok .soc-ico { background: #000000; }
+  .soc-facebook .soc-ico { background: #1877F2; }
+  .soc-website .soc-ico { background: linear-gradient(135deg, var(--lime), #7fbf00); color: var(--deep-forest); }
+  .soc-name { font-weight: 600; }
+  .contact-social-empty { font-size: 0.78rem; color: var(--text-muted); }
   .contact-form { display: flex; flex-direction: column; gap: 14px; }
   .form-group label { display: block; font-size: 0.65rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--lime); margin-bottom: 6px; }
   .form-group input, .form-group textarea, .form-group select { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--parchment); font-family: var(--body); font-size: 0.85rem; padding: 14px 16px; outline: none; transition: border-color 0.2s; }
@@ -511,8 +524,9 @@
         <div class="contact-info">
           <div class="contact-row"><i class="fas fa-map-marker-alt"></i><span>Probolinggo, Jawa Timur, Indonesia</span></div>
           <div class="contact-row"><i class="fas fa-envelope"></i><span>sekolakonang@gmail.com</span></div>
-          <div class="contact-row"><i class="fab fa-instagram"></i><span>@sekolakonangindonesia</span></div>
-          <div class="contact-row"><i class="fab fa-youtube"></i><span>Sekola Konang</span></div>
+        </div>
+        <div class="contact-social" id="contactSocial">
+          <div class="contact-social-empty">Memuat sosial media...</div>
         </div>
       </div>
       <div class="contact-form reveal reveal-delay-1">
@@ -821,6 +835,38 @@
     } catch(e) { wrap.innerHTML='<div class="mitra-empty-msg">Gagal memuat data mitra</div>'; }
   }
 
+  // ── loadKontakSosial — render ikon sosial media (IG, YouTube, TikTok, FB, Web) dari admin ──
+  const SOC_META = {
+    instagram: { icon: 'fab fa-instagram', label: 'Instagram' },
+    youtube:   { icon: 'fab fa-youtube',   label: 'YouTube' },
+    tiktok:    { icon: 'fab fa-tiktok',    label: 'TikTok' },
+    facebook:  { icon: 'fab fa-facebook-f',label: 'Facebook' },
+    website:   { icon: 'fas fa-globe',     label: 'Website' },
+    lainnya:   { icon: 'fas fa-link',      label: 'Tautan' }
+  };
+  async function loadKontakSosial() {
+    const wrap = document.getElementById('contactSocial');
+    if (!wrap) return;
+    try {
+      const qs = await getDocs(query(collection(db,"kontak_sosial"), orderBy("order","asc")));
+      if (qs.empty) { wrap.innerHTML=''; return; }
+      wrap.innerHTML='';
+      qs.forEach(docu => {
+        const d = docu.data();
+        const meta = SOC_META[d.platform] || SOC_META.lainnya;
+        if (!d.url) return;
+        const a = document.createElement('a');
+        a.className = 'contact-social-item soc-'+esc(d.platform||'lainnya');
+        a.href = d.url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.innerHTML = `<span class="soc-ico"><i class="${meta.icon}"></i></span><span class="soc-name">${esc(d.name||meta.label)}</span>`;
+        wrap.appendChild(a);
+      });
+      if (!wrap.children.length) wrap.innerHTML = '';
+    } catch(e) { console.error("Kontak sosial error", e); wrap.innerHTML=''; }
+  }
+
   // ── loadNews — ambil 3 berita TERBARU, sort di client agar tetap akurat ──
   // walau ada data lama yang tanggalnya bukan format ISO (misal "8 Agustus 2022"
   // atau "23 aGUSTUS 2021" — campur besar/kecil, hasil input manual sebelumnya).
@@ -917,7 +963,7 @@
   }
 
   // Panggil semua loader
-  loadProfil(); loadHero(); loadImpactStats(); loadPrograms(); loadMitra(); loadNews();
+  loadProfil(); loadHero(); loadImpactStats(); loadPrograms(); loadMitra(); loadKontakSosial(); loadNews();
 
   // ── Admin modal ──
   let logoClicks=0, logoTimer=null;
