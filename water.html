@@ -893,8 +893,6 @@
     if (!d) return;
     const s = d.stats || {};
     const a = d.aktivitasSummary || {};
-    const rincianPembuatan = Object.entries(a.pembuatan||{}).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') || 'Tidak ada';
-    const rincianPerawatan = Object.entries(a.perawatan||{}).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') || 'Tidak ada';
 
     document.getElementById('csrModalTitle').textContent = d.title || 'Program CSR';
     document.getElementById('csrModalMeta').innerHTML =
@@ -904,19 +902,23 @@
     document.getElementById('csrModalPendana').innerHTML =
       `<strong>Yayasan Sekola Konang Indonesia</strong><br>Didukung oleh: ${d.__funderName || '-'}`;
 
-    // Chip Capaian — sekarang rinci per jenis infra utk Pembuatan & Perawatan
-    // (sama format dgn admin & dashboard Mitra), bukan cuma angka gabungan.
+    // Capaian — list per jenis infra dgn ikon, dipecah Pembuatan/Perawatan
+    // (bukan chip satu baris) supaya konsisten dgn tampilan Analisis Infiltrasi di bawahnya.
+    const INFRA = [
+      { key:'rorak',   label:'Rorak',           icon:'fa-water',      color:'#ff9800' },
+      { key:'sumur',   label:'Sumur Resapan',   icon:'fa-circle-dot', color:'#2196f3' },
+      { key:'biopori', label:'Biopori',         icon:'fa-asterisk',   color:'#e91e63' },
+      { key:'tanaman', label:'Tanaman',         icon:'fa-seedling',   color:'#8bc34a' }
+    ];
+    function renderCapaianGrup(label, data) {
+      const rows = INFRA.filter(x => (data[x.key]||0) > 0);
+      if (!rows.length) return `<div class="infil-group" style="width:100%;"><div class="infil-group-label">${label}</div><div class="infil-empty">Tidak ada data.</div></div>`;
+      return `<div class="infil-group" style="width:100%;"><div class="infil-group-label">${label}</div>` +
+        rows.map(x => `<div class="infil-row"><span class="lbl"><i class="fas ${x.icon}" style="color:${x.color};"></i> ${x.label}</span><span class="val" style="color:${x.color};">${data[x.key]}</span></div>`).join('') +
+        `</div>`;
+    }
     const chipsWrap = document.getElementById('csrModalChips');
-    const chips = [
-      s.rorak   ? `<i class="fas fa-trowel" style="color:var(--lime);margin-right:6px;"></i>${s.rorak} Rorak` : '',
-      s.sumur   ? `<i class="fas fa-trowel" style="color:var(--lime);margin-right:6px;"></i>${s.sumur} Sumur Resapan` : '',
-      s.biopori ? `<i class="fas fa-trowel" style="color:var(--lime);margin-right:6px;"></i>${s.biopori} Biopori` : '',
-      `<i class="fas fa-hammer" style="color:#00ff88;margin-right:6px;"></i>Pembuatan: ${rincianPembuatan}`,
-      `<i class="fas fa-broom" style="color:#00c6ff;margin-right:6px;"></i>Perawatan: ${rincianPerawatan}`
-    ].filter(Boolean);
-    chipsWrap.innerHTML = chips.length
-      ? chips.map(c => `<div class="detail-chip">${c}</div>`).join('')
-      : '<div class="detail-chip">Data belum dilengkapi</div>';
+    chipsWrap.innerHTML = renderCapaianGrup('Pembuatan', a.pembuatan||{}) + renderCapaianGrup('Perawatan', a.perawatan||{});
 
     const literAngka = d.totalInfiltrasiLiter || 0;
     document.getElementById('csrModalInfiltrasi').textContent = formatLiterRingkas(literAngka);
@@ -951,6 +953,7 @@
       if (!rows.length) return `<div class="infil-group"><div class="infil-group-label">${label}</div><div class="infil-empty">Tidak ada data.</div></div>`;
       return `<div class="infil-group"><div class="infil-group-label">${label}</div>` +
         rows.map(x => `<div class="infil-row"><span class="lbl"><i class="fas ${x.icon}" style="color:${x.color};"></i> ${x.item}</span><span class="val" style="color:${x.color};">${(data[x.key]||0).toFixed(2)} ML/thn</span></div>`).join('') +
+        `<div class="infil-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px;"><span class="lbl" style="color:var(--muted);">Subtotal ${label}</span><span class="val" style="color:var(--parchment);">${(data.total||0).toFixed(2)} ML/thn</span></div>` +
         `</div>`;
     }
     const split = d.infiltrasiSplit;
