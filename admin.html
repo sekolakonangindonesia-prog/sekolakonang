@@ -886,6 +886,8 @@ input,textarea,select{font-family:var(--body);}
     <div class="form-group">
       <label>Platform</label>
       <select id="kontaksosial-platform">
+        <option value="lokasi">Lokasi / Alamat</option>
+        <option value="email">Email</option>
         <option value="instagram">Instagram</option>
         <option value="youtube">YouTube</option>
         <option value="tiktok">TikTok</option>
@@ -895,7 +897,12 @@ input,textarea,select{font-family:var(--body);}
       </select>
     </div>
     <div class="form-group"><label>Nama Akun / Label</label><input type="text" id="kontaksosial-name" placeholder="@sekolakonangindonesia"></div>
-    <div class="form-group"><label>Link URL</label><input type="text" id="kontaksosial-url" placeholder="https://instagram.com/sekolakonangindonesia"></div>
+    <div class="form-group">
+      <label>Link URL</label>
+      <input type="text" id="kontaksosial-url" placeholder="https://instagram.com/sekolakonangindonesia">
+      <div class="form-hint" id="kontaksosial-url-hint"></div>
+      <button type="button" class="btn btn-outline btn-sm" id="autoGenEmailLinkBtn" style="margin-top:8px;display:none;"><i class="fas fa-magic"></i> Buat Link Gmail Otomatis dari Nama Akun</button>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-kontak-sosial">Batal</button>
       <button class="btn btn-lime" id="saveKontakSosialBtn"><i class="fas fa-save"></i> Simpan</button>
@@ -1817,6 +1824,8 @@ document.getElementById('saveMitraBtn').addEventListener('click', async () => {
 // KONTAK & SOSIAL MEDIA
 // ============================================================
 const KONTAKSOSIAL_META = {
+  lokasi:    { icon: 'fas fa-map-marker-alt', label: 'Lokasi/Alamat', color: 'var(--lime)' },
+  email:     { icon: 'fas fa-envelope',   label: 'Email',      color: 'var(--lime)' },
   instagram: { icon: 'fab fa-instagram', label: 'Instagram', color: '#d6249f' },
   youtube:   { icon: 'fab fa-youtube',   label: 'YouTube',   color: '#FF0000' },
   tiktok:    { icon: 'fab fa-tiktok',    label: 'TikTok',    color: '#000000' },
@@ -1824,12 +1833,37 @@ const KONTAKSOSIAL_META = {
   website:   { icon: 'fas fa-globe',     label: 'Website',   color: 'var(--lime)' },
   lainnya:   { icon: 'fas fa-link',      label: 'Lainnya',   color: 'var(--text-muted)' }
 };
+const KONTAKSOSIAL_HINT = {
+  lokasi: 'Buka Google Maps → cari lokasi kantor → klik "Bagikan" → salin link, lalu tempel di sini. Nama Akun diisi teks alamat yang tampil di website (cth: "Probolinggo, Jawa Timur, Indonesia").',
+  email: 'Supaya saat diklik langsung membuka Gmail (tanpa perlu app email di HP), isi Nama Akun dengan alamat email, lalu klik tombol "Buat Link Gmail Otomatis" di bawah ini.',
+  instagram: 'Contoh: https://instagram.com/namaakun',
+  youtube: 'Contoh: https://youtube.com/@namaakun',
+  tiktok: 'Contoh: https://tiktok.com/@namaakun',
+  facebook: 'Contoh: https://facebook.com/namaakun atau link share profil/halaman.',
+  website: 'Contoh: https://namawebsite.com',
+  lainnya: 'Masukkan link tujuan apa saja (WhatsApp, Linktree, dokumen, dll).'
+};
+function updateKontakSosialHint() {
+  const platform = document.getElementById('kontaksosial-platform').value;
+  document.getElementById('kontaksosial-url-hint').textContent = KONTAKSOSIAL_HINT[platform] || '';
+  document.getElementById('autoGenEmailLinkBtn').style.display = (platform === 'email') ? 'inline-flex' : 'none';
+  const nameInput = document.getElementById('kontaksosial-name');
+  if (platform === 'email') nameInput.placeholder = 'sekolakonang@gmail.com';
+  else if (platform === 'lokasi') nameInput.placeholder = 'Probolinggo, Jawa Timur, Indonesia';
+  else nameInput.placeholder = '@namaakun';
+}
+document.getElementById('kontaksosial-platform').addEventListener('change', updateKontakSosialHint);
+document.getElementById('autoGenEmailLinkBtn').addEventListener('click', () => {
+  const email = document.getElementById('kontaksosial-name').value.trim();
+  if (!email || !email.includes('@')) { alert('Isi dulu Nama Akun dengan alamat email yang valid, contoh: sekolakonang@gmail.com'); return; }
+  document.getElementById('kontaksosial-url').value = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(email);
+});
 async function loadKontakSosial() {
   const wrap = document.getElementById('kontak-sosial-list');
   wrap.innerHTML='<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
   try {
     const snap = await getDocs(query(collection(db,'kontak_sosial'), orderBy('order','asc')));
-    if (snap.empty) { wrap.innerHTML='<p style="color:var(--text-muted);">Belum ada akun sosial media ditambahkan.</p>'; return; }
+    if (snap.empty) { wrap.innerHTML='<p style="color:var(--text-muted);">Belum ada data kontak/sosial media ditambahkan.</p>'; return; }
     wrap.innerHTML='';
     snap.forEach(d => {
       const k = d.data();
@@ -1861,12 +1895,14 @@ async function editKontakSosial(id) {
   document.getElementById('kontaksosial-platform').value = k.platform||'instagram';
   document.getElementById('kontaksosial-name').value = k.name||'';
   document.getElementById('kontaksosial-url').value = k.url||'';
+  updateKontakSosialHint();
   document.getElementById('modal-kontak-sosial-title').textContent='Edit Akun Sosial';
   openModal('modal-kontak-sosial');
 }
 document.getElementById('addKontakSosialBtn').addEventListener('click', () => {
   ['kontaksosial-id','kontaksosial-name','kontaksosial-url'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('kontaksosial-platform').value='instagram';
+  document.getElementById('kontaksosial-platform').value='lokasi';
+  updateKontakSosialHint();
   document.getElementById('modal-kontak-sosial-title').textContent='Tambah Akun Sosial';
   openModal('modal-kontak-sosial');
 });
