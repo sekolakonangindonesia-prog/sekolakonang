@@ -249,6 +249,7 @@ input,textarea,select{font-family:var(--body);}
     <div class="menu-item active" data-panel="overview"><i class="fas fa-th-large"></i> Overview</div>
     <div class="menu-item" data-panel="hero"><i class="fas fa-image"></i> Hero & Tentang</div>
     <div class="menu-item" data-panel="mitra"><i class="fas fa-handshake"></i> Mitra</div>
+    <div class="menu-item" data-panel="kontak"><i class="fas fa-share-alt"></i> Kontak & Sosial</div>
     <div class="menu-item" data-panel="laporan"><i class="fas fa-file-contract"></i> Dok. Laporan</div>
     <div class="menu-item" data-panel="berita"><i class="fas fa-newspaper"></i> Berita</div>
 
@@ -341,6 +342,13 @@ input,textarea,select{font-family:var(--body);}
       <div class="main-header"><h1>Mitra Strategis</h1><p>Kelola logo mitra yang tampil di website.</p></div>
       <div class="toolbar"><button class="btn btn-lime" id="addMitraBtn"><i class="fas fa-plus"></i> Tambah Mitra</button></div>
       <div id="mitra-list"><p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p></div>
+    </section>
+
+    <!-- ===== KONTAK & SOSIAL MEDIA ===== -->
+    <section class="panel" id="panel-kontak">
+      <div class="main-header"><h1>Kontak & Sosial Media</h1><p>Kelola link akun sosial media (Instagram, YouTube, TikTok, Facebook, Website) yang tampil di bagian Kontak website. Klik ikon/nama akun di website akan langsung mengarah ke link ini.</p></div>
+      <div class="toolbar"><button class="btn btn-lime" id="addKontakSosialBtn"><i class="fas fa-plus"></i> Tambah Akun Sosial</button></div>
+      <div id="kontak-sosial-list"><p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p></div>
     </section>
 
     <!-- ===== LAPORAN ===== -->
@@ -869,6 +877,32 @@ input,textarea,select{font-family:var(--body);}
   </div>
 </div>
 
+<!-- MODAL KONTAK SOSIAL -->
+<div class="modal-backdrop" id="modal-kontak-sosial">
+  <div class="modal-box">
+    <button class="modal-close" data-close="modal-kontak-sosial"><i class="fas fa-times"></i></button>
+    <h3 id="modal-kontak-sosial-title">Tambah Akun Sosial</h3>
+    <input type="hidden" id="kontaksosial-id">
+    <div class="form-group">
+      <label>Platform</label>
+      <select id="kontaksosial-platform">
+        <option value="instagram">Instagram</option>
+        <option value="youtube">YouTube</option>
+        <option value="tiktok">TikTok</option>
+        <option value="facebook">Facebook</option>
+        <option value="website">Website</option>
+        <option value="lainnya">Lainnya</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Nama Akun / Label</label><input type="text" id="kontaksosial-name" placeholder="@sekolakonangindonesia"></div>
+    <div class="form-group"><label>Link URL</label><input type="text" id="kontaksosial-url" placeholder="https://instagram.com/sekolakonangindonesia"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" data-close="modal-kontak-sosial">Batal</button>
+      <button class="btn btn-lime" id="saveKontakSosialBtn"><i class="fas fa-save"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL LAPORAN -->
 <div class="modal-backdrop" id="modal-laporan">
   <div class="modal-box">
@@ -1311,7 +1345,7 @@ function switchPanel(name) {
   document.querySelectorAll(`.menu-item[data-panel="${name}"]`).forEach(m => m.classList.add('active'));
   // Auto-load
   const loaders = {
-    overview: loadOverview, mitra: loadMitra, laporan: loadLaporan,
+    overview: loadOverview, mitra: loadMitra, kontak: loadKontakSosial, laporan: loadLaporan,
     berita: () => { loadBeritaInternal(); loadBeritaExternal(); },
     konservasi: loadKonservasiList, biodiversitas: loadBioList,
     pjlh: () => { loadSellers(); loadBuyers(); loadAktivitas(); loadPengajuanPjlh(); loadPublikasiList(); },
@@ -1762,6 +1796,79 @@ document.getElementById('saveMitraBtn').addEventListener('click', async () => {
     if (id) await setDoc(doc(db,'mitra',id), data, {merge:true});
     else await addDoc(collection(db,'mitra'), data);
     closeModal('modal-mitra'); loadMitra();
+  } catch(e) { alert('Gagal: '+e.message); }
+  finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan'; }
+});
+
+// ============================================================
+// KONTAK & SOSIAL MEDIA
+// ============================================================
+const KONTAKSOSIAL_META = {
+  instagram: { icon: 'fab fa-instagram', label: 'Instagram', color: '#d6249f' },
+  youtube:   { icon: 'fab fa-youtube',   label: 'YouTube',   color: '#FF0000' },
+  tiktok:    { icon: 'fab fa-tiktok',    label: 'TikTok',    color: '#000000' },
+  facebook:  { icon: 'fab fa-facebook-f',label: 'Facebook',  color: '#1877F2' },
+  website:   { icon: 'fas fa-globe',     label: 'Website',   color: 'var(--lime)' },
+  lainnya:   { icon: 'fas fa-link',      label: 'Lainnya',   color: 'var(--text-muted)' }
+};
+async function loadKontakSosial() {
+  const wrap = document.getElementById('kontak-sosial-list');
+  wrap.innerHTML='<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
+  try {
+    const snap = await getDocs(query(collection(db,'kontak_sosial'), orderBy('order','asc')));
+    if (snap.empty) { wrap.innerHTML='<p style="color:var(--text-muted);">Belum ada akun sosial media ditambahkan.</p>'; return; }
+    wrap.innerHTML='';
+    snap.forEach(d => {
+      const k = d.data();
+      const meta = KONTAKSOSIAL_META[k.platform] || KONTAKSOSIAL_META.lainnya;
+      wrap.innerHTML += `
+        <div class="list-card">
+          <div class="list-card-header">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:34px;height:34px;border-radius:50%;background:${meta.color};display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;"><i class="${meta.icon}"></i></div>
+              <div>
+                <div style="font-weight:700;font-size:0.85rem;color:var(--white);">${k.name||'—'}</div>
+                <div style="font-size:0.68rem;color:var(--text-muted);">${meta.label} · <a href="${k.url||'#'}" target="_blank" style="color:var(--blue);">${k.url||''}</a></div>
+              </div>
+            </div>
+            <div class="list-card-actions">
+              <button class="btn btn-outline btn-sm" onclick="editKontakSosial('${d.id}')"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm" onclick="delDoc('kontak_sosial','${d.id}',loadKontakSosial)"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        </div>`;
+    });
+  } catch(e) { wrap.innerHTML='<p style="color:var(--danger);">Gagal memuat.</p>'; console.error(e); }
+}
+async function editKontakSosial(id) {
+  const snap = await getDoc(doc(db,'kontak_sosial',id));
+  if (!snap.exists()) return;
+  const k = snap.data();
+  document.getElementById('kontaksosial-id').value = id;
+  document.getElementById('kontaksosial-platform').value = k.platform||'instagram';
+  document.getElementById('kontaksosial-name').value = k.name||'';
+  document.getElementById('kontaksosial-url').value = k.url||'';
+  document.getElementById('modal-kontak-sosial-title').textContent='Edit Akun Sosial';
+  openModal('modal-kontak-sosial');
+}
+document.getElementById('addKontakSosialBtn').addEventListener('click', () => {
+  ['kontaksosial-id','kontaksosial-name','kontaksosial-url'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('kontaksosial-platform').value='instagram';
+  document.getElementById('modal-kontak-sosial-title').textContent='Tambah Akun Sosial';
+  openModal('modal-kontak-sosial');
+});
+document.getElementById('saveKontakSosialBtn').addEventListener('click', async () => {
+  const id = document.getElementById('kontaksosial-id').value;
+  const platform = document.getElementById('kontaksosial-platform').value;
+  const name = document.getElementById('kontaksosial-name').value.trim();
+  const url = document.getElementById('kontaksosial-url').value.trim();
+  if (!name || !url) { alert('Nama akun dan Link URL wajib diisi.'); return; }
+  const btn = document.getElementById('saveKontakSosialBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+  try {
+    const data = { platform, name, url, order: id ? undefined : Date.now() };
+    if (id) { delete data.order; await setDoc(doc(db,'kontak_sosial',id), data, {merge:true}); }
+    else await addDoc(collection(db,'kontak_sosial'), data);
+    closeModal('modal-kontak-sosial'); loadKontakSosial();
   } catch(e) { alert('Gagal: '+e.message); }
   finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan'; }
 });
@@ -4568,6 +4675,7 @@ window.delDoc = delDoc;
 window.editBeritaInternal = editBeritaInternal;
 window.editBeritaExternal = editBeritaExternal;
 window.editMitra = editMitra;
+window.editKontakSosial = editKontakSosial;
 window.editLaporan = editLaporan;
 window.loadBioList = loadBioList;  
 </script>
