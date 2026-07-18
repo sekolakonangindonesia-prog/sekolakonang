@@ -3213,17 +3213,39 @@ async function hitungRingkasanKonservasi(konsDoc) {
   // Agregat aktivitas PJLH (pembuatan/perawatan) yang tertaut ke tahun/program ini
   const aktSnap = await getDocs(query(collection(db,'pjlh_aktivitas'), where('linkedKonservasiId','==',konsDoc.id)));
   const agg = { pembuatan: {rorak:0,sumur:0,biopori:0,tanaman:0}, perawatan: {rorak:0,sumur:0,biopori:0,tanaman:0} };
+  // Referensi ID aktivitas saja (BUKAN foto langsung) — foto disimpan sebagai base64
+  // di tiap dokumen pjlh_aktivitas, jadi kalau disalin ke laporan_pjlh_publikasi bisa
+  // gampang kelebihan batas 1MB/dokumen Firestore. Dashboard Mitra & water.html nanti
+  // ambil foto+catatan on-demand pakai ID ini pas modal detail dibuka.
+  const aktivitasRefs = [];
   aktSnap.forEach(a => {
     const d = a.data();
     const jenis = d.jenisAktivitas === 'perawatan' ? 'perawatan' : 'pembuatan';
     const infra = ['rorak','sumur','biopori','tanaman'].includes(d.jenisInfra) ? d.jenisInfra : 'rorak';
     agg[jenis][infra] += (parseFloat(d.jumlah) || 0);
+    aktivitasRefs.push(a.id);
   });
   let infiltrasi = { total: 0 };
   try {
     infiltrasi = window.hitungEstimasiInfiltrasi(stats, konsDoc.metodologi, konsDoc.year, konsDoc.sniParams || {});
   } catch(e) { console.warn('Gagal hitung infiltrasi untuk', konsDoc.id, e); }
-  return { stats, aktivitas: agg, infiltrasi };
+
+  // Rincian infiltrasi terpisah Pembuatan vs Perawatan (dihitung dari agregat
+  // pjlh_aktivitas, BUKAN dari konsDoc.stats) — dipakai utk breakdown di dashboard
+  // Mitra & water.html (Fase B/C). Ini TIDAK menggantikan 'infiltrasi' di atas
+  // (yang tetap jadi angka total resmi/backward-compatible), cuma tambahan rincian.
+  const statsDariAgg = (a) => ({ trees: a.tanaman||0, rorak: a.rorak||0, sumur: a.sumur||0, biopori: a.biopori||0 });
+  let infiltrasiPembuatan = { total: 0 }, infiltrasiPerawatan = { total: 0 };
+  try {
+    infiltrasiPembuatan = window.hitungEstimasiInfiltrasi(statsDariAgg(agg.pembuatan), konsDoc.metodologi, konsDoc.year, konsDoc.sniParams || {});
+    infiltrasiPerawatan = window.hitungEstimasiInfiltrasi(statsDariAgg(agg.perawatan), konsDoc.metodologi, konsDoc.year, konsDoc.sniParams || {});
+  } catch(e) { console.warn('Gagal hitung infiltrasi split untuk', konsDoc.id, e); }
+
+  return {
+    stats, aktivitas: agg, infiltrasi,
+    infiltrasiSplit: { pembuatan: infiltrasiPembuatan, perawatan: infiltrasiPerawatan },
+    aktivitasRefs
+  };
 }
 
 async function loadPublikasiList() {
@@ -3349,6 +3371,8 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
   const btn = document.getElementById('publishBtn');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mempublikasikan...';
   try {
+    const metPakai = ringkasan.infiltrasi.metodologiPakai || kons.metodologi || '';
+    const metInfo = (window.PJLH_METODOLOGI && window.PJLH_METODOLOGI[metPakai]) || null;
     await setDoc(doc(db,'laporan_pjlh_publikasi',konsId), {
       konservasiId: konsId,
       linkedBuyerId: buyerId,
@@ -3358,6 +3382,22 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
       stats: ringkasan.stats,
       aktivitasSummary: ringkasan.aktivitas,
       totalInfiltrasiLiter: ringkasan.infiltrasi.total || 0,
+      // -- field baru (aditif, tidak dipakai halaman lama) --
+      // Rincian infiltrasi per sumber (Pohon/Rorak/Sumur/Biopori) utk gabungan & terpisah
+      // Pembuatan/Perawatan. Dipakai Fase B (dashboard-buyer.html) & Fase C (water.html)
+      // supaya tidak perlu hitung ulang rumus di halaman lain.
+      infiltrasiDetail: {
+        resP: ringkasan.infiltrasi.resP || 0, resR: ringkasan.infiltrasi.resR || 0,
+        resS: ringkasan.infiltrasi.resS || 0, resB: ringkasan.infiltrasi.resB || 0,
+        total: ringkasan.infiltrasi.total || 0
+      },
+      infiltrasiSplit: {
+        pembuatan: { ...ringkasan.infiltrasiSplit.pembuatan },
+        perawatan: { ...ringkasan.infiltrasiSplit.perawatan }
+      },
+      aktivitasRefs: ringkasan.aktivitasRefs || [],
+      metodologiInfo: metInfo ? { key: metPakai, label: metInfo.label, hint: metInfo.hint } : null,
+      // -- akhir field baru --
       catatanAdmin: document.getElementById('publikasi-catatan').value.trim(),
       published: true,
       publishedAt: serverTimestamp(),
