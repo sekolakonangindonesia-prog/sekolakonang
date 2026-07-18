@@ -190,21 +190,22 @@
   .contact-inner { background:  var(--deep-forest); border-radius: var(--r-lg); border: 1px solid var(--border); padding: 60px 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
   .contact-text h2 { font-family: var(--display); font-size: clamp(1.8rem,4vw,2.5rem); font-weight: 900; color: var(--white); margin-bottom: 14px; }
   .contact-text p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 28px; }
-  .contact-info { display: flex; flex-direction: column; gap: 14px; }
-  .contact-row { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: var(--parchment); }
+  .contact-info { display: flex; flex-direction: column; gap: 12px; }
+  .contact-row { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: var(--parchment); padding: 3px 8px 3px 0; border-radius: var(--r-sm); transition: 0.2s; margin: -3px 0; }
   .contact-row i { color: var(--lime); width: 20px; text-align: center; }
+  a.contact-row:hover { background: rgba(255,255,255,0.04); color: var(--lime); }
+  a.contact-row:hover i { color: var(--lime); }
   /* ── SOSIAL MEDIA KONTAK ── */
-  .contact-social { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-  .contact-social-item { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: var(--parchment); padding: 8px 10px 8px 0; border-radius: var(--r-sm); transition: 0.2s; }
-  .contact-social-item:hover { transform: translateX(4px); background: rgba(255,255,255,0.04); }
-  .soc-ico { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.35); transition: 0.2s; }
-  .contact-social-item:hover .soc-ico { transform: scale(1.1) rotate(-6deg); }
+  .contact-social { display: flex; flex-direction: column; gap: 12px; margin-top: 2px; }
+  .contact-social-item { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: var(--parchment); padding: 3px 8px 3px 0; border-radius: var(--r-sm); transition: 0.2s; margin: -3px 0; }
+  .contact-social-item:hover { background: rgba(255,255,255,0.04); color: var(--lime); }
+  .soc-ico { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.62rem; flex-shrink: 0; color: #fff; transition: 0.2s; }
   .soc-instagram .soc-ico { background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
   .soc-youtube .soc-ico { background: #FF0000; }
   .soc-tiktok .soc-ico { background: #000000; }
   .soc-facebook .soc-ico { background: #1877F2; }
   .soc-website .soc-ico { background: linear-gradient(135deg, var(--lime), #7fbf00); color: var(--deep-forest); }
-  .soc-name { font-weight: 600; }
+  .soc-name { font-weight: 500; }
   .contact-social-empty { font-size: 0.78rem; color: var(--text-muted); }
   .contact-form { display: flex; flex-direction: column; gap: 14px; }
   .form-group label { display: block; font-size: 0.65rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--lime); margin-bottom: 6px; }
@@ -522,8 +523,8 @@
         <h2>Mari Berkolaborasi untuk Alam</h2>
         <p>Kami terbuka untuk kemitraan CSR, program kementerian, riset ilmiah, maupun kolaborasi komunitas.</p>
         <div class="contact-info">
-          <div class="contact-row"><i class="fas fa-map-marker-alt"></i><span>Probolinggo, Jawa Timur, Indonesia</span></div>
-          <div class="contact-row"><i class="fas fa-envelope"></i><span>sekolakonang@gmail.com</span></div>
+          <a class="contact-row" href="https://www.google.com/maps/search/?api=1&query=Probolinggo,+Jawa+Timur,+Indonesia" target="_blank" rel="noopener noreferrer"><i class="fas fa-map-marker-alt"></i><span>Probolinggo, Jawa Timur, Indonesia</span></a>
+          <a class="contact-row" href="mailto:sekolakonang@gmail.com"><i class="fas fa-envelope"></i><span>sekolakonang@gmail.com</span></a>
         </div>
         <div class="contact-social" id="contactSocial">
           <div class="contact-social-empty">Memuat sosial media...</div>
