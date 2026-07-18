@@ -248,6 +248,17 @@
   .detail-equivalence i { color: var(--lime); margin-right: 4px; }
   .detail-methodology { font-size: 0.74rem; color: var(--muted); line-height: 1.7; background: rgba(255,255,255,0.02); border-left: 3px solid var(--lime); padding: 12px 16px; border-radius: 8px; margin-top: 8px; }
   .detail-methodology a { color: var(--lime); font-weight: 700; }
+  .infil-group { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px; margin: 8px 0; }
+  .infil-group-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
+  .infil-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 0.78rem; }
+  .infil-row + .infil-row { border-top: 1px solid var(--border); }
+  .infil-row .lbl { display: flex; align-items: center; gap: 8px; color: var(--parchment); }
+  .infil-row .lbl i { width: 18px; text-align: center; }
+  .infil-row .val { font-weight: 700; }
+  .infil-total { background: rgba(0,198,255,0.08); border: 1px solid rgba(0,198,255,0.3); border-radius: var(--r-sm); padding: 12px 14px; margin: 10px 0; display: flex; align-items: center; justify-content: space-between; }
+  .infil-total .lbl { color: #00c6ff; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  .infil-total .val { color: #00c6ff; font-weight: 900; font-size: 1rem; }
+  .infil-empty { font-size: 0.7rem; color: var(--muted); padding: 4px 0; }
   .modal-actions { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
 
   /* ── CALCULATOR ── */
@@ -882,8 +893,8 @@
     if (!d) return;
     const s = d.stats || {};
     const a = d.aktivitasSummary || {};
-    const pembuatanTotal = Object.values(a.pembuatan || {}).reduce((x,y)=>x+(y||0),0);
-    const perawatanTotal = Object.values(a.perawatan || {}).reduce((x,y)=>x+(y||0),0);
+    const rincianPembuatan = Object.entries(a.pembuatan||{}).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') || 'Tidak ada';
+    const rincianPerawatan = Object.entries(a.perawatan||{}).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') || 'Tidak ada';
 
     document.getElementById('csrModalTitle').textContent = d.title || 'Program CSR';
     document.getElementById('csrModalMeta').innerHTML =
@@ -893,13 +904,15 @@
     document.getElementById('csrModalPendana').innerHTML =
       `<strong>Yayasan Sekola Konang Indonesia</strong><br>Didukung oleh: ${d.__funderName || '-'}`;
 
-    // Chip capaian fisik — sekarang termasuk Biopori & pemisahan Pembuatan/Perawatan
+    // Chip Capaian — sekarang rinci per jenis infra utk Pembuatan & Perawatan
+    // (sama format dgn admin & dashboard Mitra), bukan cuma angka gabungan.
     const chipsWrap = document.getElementById('csrModalChips');
     const chips = [
       s.rorak   ? `<i class="fas fa-trowel" style="color:var(--lime);margin-right:6px;"></i>${s.rorak} Rorak` : '',
       s.sumur   ? `<i class="fas fa-trowel" style="color:var(--lime);margin-right:6px;"></i>${s.sumur} Sumur Resapan` : '',
       s.biopori ? `<i class="fas fa-trowel" style="color:var(--lime);margin-right:6px;"></i>${s.biopori} Biopori` : '',
-      (pembuatanTotal||perawatanTotal) ? `<i class="fas fa-hammer" style="color:#00ff88;margin-right:6px;"></i>Pembuatan: ${pembuatanTotal} &middot; Perawatan: ${perawatanTotal}` : ''
+      `<i class="fas fa-hammer" style="color:#00ff88;margin-right:6px;"></i>Pembuatan: ${rincianPembuatan}`,
+      `<i class="fas fa-broom" style="color:#00c6ff;margin-right:6px;"></i>Perawatan: ${rincianPerawatan}`
     ].filter(Boolean);
     chipsWrap.innerHTML = chips.length
       ? chips.map(c => `<div class="detail-chip">${c}</div>`).join('')
@@ -920,6 +933,39 @@
     }
     if (d.catatanAdmin) {
       eqBox.innerHTML += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);color:var(--muted);"><i class="fas fa-comment-dots"></i> ${d.catatanAdmin}</div>`;
+    }
+
+    // Rincian infiltrasi Pembuatan/Perawatan/Total — dihitung terpisah (bukan dari
+    // total gabungan infrastruktur), pakai data 'infiltrasiSplit' dari admin.html.
+    const infilWrap = document.getElementById('csrModalInfiltrasiWrap');
+    const hintEl = document.getElementById('csrModalHint');
+    const defaultHint = `<i class="fas fa-circle-info"></i> Estimasi dihitung dari kapasitas tampung infrastruktur (Rorak &amp; Sumur Resapan) dikali jumlah hari hujan efektif. Ingin lihat rumus lengkapnya? Coba <a href="#kalkulator" onclick="closeCsrDetail()">Kalkulator Potensi Serapan</a> di bawah halaman ini.`;
+    const SUMBER = [
+      { key:'resP', item:'Pohon / Vegetasi', icon:'fa-tree',       color:'#8bc34a' },
+      { key:'resR', item:'Rorak',            icon:'fa-water',      color:'#ff9800' },
+      { key:'resS', item:'Sumur Resapan',    icon:'fa-circle-dot', color:'#2196f3' },
+      { key:'resB', item:'Biopori',          icon:'fa-asterisk',   color:'#e91e63' }
+    ];
+    function renderGrup(label, data) {
+      const rows = SUMBER.filter(x => (data[x.key]||0) > 0);
+      if (!rows.length) return `<div class="infil-group"><div class="infil-group-label">${label}</div><div class="infil-empty">Tidak ada data.</div></div>`;
+      return `<div class="infil-group"><div class="infil-group-label">${label}</div>` +
+        rows.map(x => `<div class="infil-row"><span class="lbl"><i class="fas ${x.icon}" style="color:${x.color};"></i> ${x.item}</span><span class="val" style="color:${x.color};">${(data[x.key]||0).toFixed(2)} ML/thn</span></div>`).join('') +
+        `</div>`;
+    }
+    const split = d.infiltrasiSplit;
+    if (split && (split.pembuatan || split.perawatan)) {
+      const totalGab = (split.pembuatan?.total||0) + (split.perawatan?.total||0);
+      infilWrap.innerHTML = renderGrup('Dari Pembuatan', split.pembuatan||{}) + renderGrup('Dari Perawatan', split.perawatan||{}) +
+        `<div class="infil-total"><span class="lbl"><i class="fas fa-tint"></i> Total Estimasi Infiltrasi</span><span class="val">${totalGab.toFixed(2)} ML/thn</span></div>`;
+      hintEl.innerHTML = d.metodologiInfo?.hint ? `<i class="fas fa-circle-info"></i> ${d.metodologiInfo.hint}` : defaultHint;
+    } else if (d.infiltrasiDetail) {
+      infilWrap.innerHTML = renderGrup('Gabungan (belum dipecah Pembuatan/Perawatan)', d.infiltrasiDetail) +
+        `<div class="infil-total"><span class="lbl"><i class="fas fa-tint"></i> Total Estimasi Infiltrasi</span><span class="val">${(d.infiltrasiDetail.total||0).toFixed(2)} ML/thn</span></div>`;
+      hintEl.innerHTML = defaultHint;
+    } else {
+      infilWrap.innerHTML = '<div class="infil-empty">Rincian per sumber belum tersedia untuk laporan ini.</div>';
+      hintEl.innerHTML = defaultHint;
     }
 
     document.getElementById('csrModalReportLink').style.display = 'none';
@@ -949,7 +995,7 @@
       <span class="detail-section-label">Pelaksana &amp; Pendana</span>
       <p class="detail-pendana" id="csrModalPendana">—</p>
 
-      <span class="detail-section-label">Capaian Fisik (Verified)</span>
+      <span class="detail-section-label">Capaian</span>
       <div class="detail-chips" id="csrModalChips"></div>
 
       <span class="detail-section-label">Estimasi Infiltrasi Air</span>
@@ -958,7 +1004,10 @@
         <div class="detail-big-label">Liter / Tahun</div>
         <div class="detail-equivalence" id="csrModalEquivalence"></div>
       </div>
-      <div class="detail-methodology">
+
+      <span class="detail-section-label">Analisis Infiltrasi Air (Rinci)</span>
+      <div id="csrModalInfiltrasiWrap"></div>
+      <div class="detail-methodology" id="csrModalHint">
         <i class="fas fa-circle-info"></i> Estimasi dihitung dari kapasitas tampung infrastruktur (Rorak &amp; Sumur Resapan) dikali jumlah hari hujan efektif. Ingin lihat rumus lengkapnya? Coba <a href="#kalkulator" onclick="closeCsrDetail()">Kalkulator Potensi Serapan</a> di bawah halaman ini.
       </div>
 
