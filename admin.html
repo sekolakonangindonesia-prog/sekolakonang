@@ -1115,6 +1115,25 @@ input,textarea,select{font-family:var(--body);}
     <div class="form-group"><label>Status Kerjasama</label>
       <select id="buyer-status"><option>Aktif</option><option>Negosiasi</option><option>Selesai</option></select>
     </div>
+    <div class="row-2">
+      <div class="form-group">
+        <label>Status Kepatuhan Lingkungan</label>
+        <select id="buyer-status-kepatuhan">
+          <option value="Wajib_PROPER">Wajib PROPER</option>
+          <option value="Wajib_ESG">Wajib ESG/OJK</option>
+          <option value="Sukarela">Sukarela / Tidak Terikat Kewajiban Formal</option>
+        </select>
+        <div class="form-hint">Menentukan basis hukum yang tepat untuk kontribusi ini.</div>
+      </div>
+      <div class="form-group">
+        <label>Dasar Hukum Kontribusi</label>
+        <select id="buyer-dasar-hukum">
+          <option value="PJLH">PJLH — Perjanjian Kerja Sama (Pasal 47 PP 46/2017)</option>
+          <option value="TJSL">TJSL — Kewajiban Perseroan (Pasal 74 UU 40/2007)</option>
+          <option value="Kombinasi">Kombinasi PJLH &amp; TJSL</option>
+        </select>
+      </div>
+    </div>
     <div class="form-group"><label>Catatan MOU / Perjanjian</label><textarea id="buyer-catatan" rows="2"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-outline" data-close="modal-buyer">Batal</button>
@@ -2989,6 +3008,8 @@ async function loadBuyers() {
               <div style="font-weight:700;font-size:0.85rem;color:var(--white);">${b.nama||'—'}</div>
               <div style="font-size:0.68rem;color:var(--text-muted);">${b.sektor||''} · Rp ${(b.kontribusi||0).toLocaleString('id-ID')}/tahun</div>
               <span class="list-badge badge-blue" style="margin-top:6px;">${b.status||'—'}</span>
+              <span class="list-badge" style="margin-top:6px;margin-left:6px;background:${b.statusKepatuhan==='Sukarela'?'rgba(0,255,136,0.12)':'rgba(255,152,0,0.15)'};color:${b.statusKepatuhan==='Sukarela'?'var(--green)':'#ff9800'};">${(b.statusKepatuhan||'Sukarela').replace('_',' ')}</span>
+              <span class="list-badge badge-blue" style="margin-top:6px;margin-left:6px;">${b.dasarHukumKontribusi||'PJLH'}</span>
             </div>
             <div class="list-card-actions">
               <button class="btn btn-outline btn-sm" onclick="editBuyer('${d.id}')"><i class="fas fa-edit"></i></button>
@@ -3008,6 +3029,8 @@ async function editBuyer(id) {
   document.getElementById('buyer-sektor').value   = b.sektor||'';
   document.getElementById('buyer-kontribusi').value = b.kontribusi||'';
   document.getElementById('buyer-status').value   = b.status||'Aktif';
+  document.getElementById('buyer-status-kepatuhan').value = b.statusKepatuhan||'Sukarela';
+  document.getElementById('buyer-dasar-hukum').value      = b.dasarHukumKontribusi||'PJLH';
   document.getElementById('buyer-catatan').value  = b.catatan||'';
   document.getElementById('modal-buyer-title').textContent='Edit ES-Buyer';
   openModal('modal-buyer');
@@ -3015,12 +3038,14 @@ async function editBuyer(id) {
 window.editBuyer = editBuyer;
 document.getElementById('addBuyerBtn').addEventListener('click', () => {
   ['buyer-id','buyer-nama','buyer-sektor','buyer-kontribusi','buyer-catatan'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('buyer-status-kepatuhan').value = 'Sukarela';
+  document.getElementById('buyer-dasar-hukum').value      = 'PJLH';
   document.getElementById('modal-buyer-title').textContent='Tambah ES-Buyer';
   openModal('modal-buyer');
 });
 document.getElementById('saveBuyerBtn').addEventListener('click', async () => {
   const id = document.getElementById('buyer-id').value;
-  const data = { nama:document.getElementById('buyer-nama').value.trim(), sektor:document.getElementById('buyer-sektor').value.trim(), kontribusi:parseInt(document.getElementById('buyer-kontribusi').value)||0, status:document.getElementById('buyer-status').value, catatan:document.getElementById('buyer-catatan').value.trim() };
+  const data = { nama:document.getElementById('buyer-nama').value.trim(), sektor:document.getElementById('buyer-sektor').value.trim(), kontribusi:parseInt(document.getElementById('buyer-kontribusi').value)||0, status:document.getElementById('buyer-status').value, statusKepatuhan:document.getElementById('buyer-status-kepatuhan').value, dasarHukumKontribusi:document.getElementById('buyer-dasar-hukum').value, catatan:document.getElementById('buyer-catatan').value.trim() };
   if (!data.nama) { alert('Nama wajib diisi.'); return; }
   const btn=document.getElementById('saveBuyerBtn'); btn.disabled=true;
   try {
