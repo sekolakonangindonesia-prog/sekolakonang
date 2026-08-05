@@ -192,7 +192,7 @@
   .table-container { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 56px; background: var(--canopy); }
   .table-header-box { padding: 16px 22px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 700; color: #fff; font-size: 0.85rem; display: flex; align-items: center; gap: 10px; }
   .table-header-box i { color: var(--lime); }
-  .table-header-box.csr i { color: #00c6ff; }
+  .table-header-box.kontribusi i { color: #00c6ff; }
 
   .rispro-table { width: 100%; border-collapse: collapse; }
   .rispro-table th { text-align: left; padding: 14px 22px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); }
@@ -224,7 +224,7 @@
 
   .table-state-row td { text-align: center; color: var(--muted); font-style: italic; padding: 36px 22px; font-size: 0.85rem; }
 
-  /* ── MODAL DETAIL PROGRAM CSR — mengikuti pola modal di Pjlh_index.html ── */
+  /* ── MODAL DETAIL PROGRAM KONTRIBUSI MITRA — mengikuti pola modal di Pjlh_index.html ── */
   .modal-backdrop { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(6px); }
   .modal-backdrop.show { display: flex; }
   .modal-box { background: #111; border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; animation: modalIn 0.3s ease; }
@@ -554,12 +554,12 @@
 
     <!-- RIWAYAT / LAPORAN (REAL, FIREBASE) -->
     <div class="table-block-head reveal" style="margin-top:60px;">
-      <h3>Riwayat Program &amp; Laporan (CSR)</h3>
+      <h3>Riwayat Program &amp; Laporan (Kontribusi Mitra)</h3>
       <p>Database transparansi kontribusi yang telah terlaksana — data real, tersimpan di Firebase.</p>
     </div>
 
     <div class="table-container reveal">
-      <div class="table-header-box csr"><i class="fas fa-history"></i> Log Aktivitas Terlaksana</div>
+      <div class="table-header-box kontribusi"><i class="fas fa-history"></i> Log Aktivitas Terlaksana</div>
       <table class="rispro-table">
         <thead>
           <tr>
@@ -569,7 +569,7 @@
             <th class="col-info">Capaian (Verified)</th>
           </tr>
         </thead>
-        <tbody id="csrTableBody">
+        <tbody id="kontribusiTableBody">
           <tr class="table-state-row"><td colspan="4"><i class="fas fa-spinner fa-spin"></i> Memuat data laporan dari Firebase...</td></tr>
         </tbody>
       </table>
@@ -804,7 +804,7 @@
   </div>
 </footer>
 
-<!-- FIREBASE: AMBIL DATA RIWAYAT CSR (REAL) -->
+<!-- FIREBASE: AMBIL DATA RIWAYAT KONTRIBUSI MITRA (REAL) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -829,12 +829,12 @@
     return Math.round(liter).toLocaleString('id-ID') + ' Liter/Thn';
   }
 
-  async function muatRiwayatCSR() {
-    const tbody = document.getElementById('csrTableBody');
+  async function muatRiwayatKontribusi() {
+    const tbody = document.getElementById('kontribusiTableBody');
     try {
       // Sumber tunggal: laporan_pjlh_publikasi — ringkasan per tahun yang sudah
       // ditinjau & dipublikasikan admin dari data Konservasi + Aktivitas PJLH.
-      // Tidak lagi pakai koleksi csr_reports (duplikat manual yang gampang basi).
+      // Tidak lagi pakai koleksi kontribusi_pemanfaat (duplikat manual yang gampang basi).
       const [pubSnap, buyerSnap] = await Promise.all([
         getDocs(query(collection(db, "laporan_pjlh_publikasi"), where("published","==",true))),
         getDocs(collection(db, "es_buyers"))
@@ -852,7 +852,7 @@
         return;
       }
 
-      window.__csrReports = items;
+      window.__kontribusiReports = items;
       let html = '';
       items.forEach((d, idx) => {
         const s = d.stats || {};
@@ -873,7 +873,7 @@
               <span class="pi-inst">Didukung oleh: ${buyerMap[d.linkedBuyerId] || '-'}</span>
             </td>
             <td>
-              <span class="badge-report" onclick="bukaCsrDetail(${idx})" title="Klik untuk lihat detail"><i class="fas fa-circle-info"></i> Reported</span>
+              <span class="badge-report" onclick="bukaKontribusiDetail(${idx})" title="Klik untuk lihat detail"><i class="fas fa-circle-info"></i> Reported</span>
               <ul class="info-list">
                 <li><strong>Infra:</strong> ${infraParts}</li>
                 <li><strong>Infiltrasi:</strong> ${formatLiterRingkas(d.totalInfiltrasiLiter)}</li>
@@ -883,23 +883,23 @@
       });
       tbody.innerHTML = html;
     } catch (err) {
-      console.error("Gagal memuat data CSR:", err);
+      console.error("Gagal memuat data kontribusi:", err);
       tbody.innerHTML = '<tr class="table-state-row"><td colspan="4"><i class="fas fa-exclamation-triangle"></i> Gagal memuat data dari Firebase. Coba refresh halaman.</td></tr>';
     }
   }
 
-  window.bukaCsrDetail = (idx) => {
-    const d = (window.__csrReports || [])[idx];
+  window.bukaKontribusiDetail = (idx) => {
+    const d = (window.__kontribusiReports || [])[idx];
     if (!d) return;
     const s = d.stats || {};
     const a = d.aktivitasSummary || {};
 
-    document.getElementById('csrModalTitle').textContent = d.title || 'Program CSR';
-    document.getElementById('csrModalMeta').innerHTML =
+    document.getElementById('kontribusiModalTitle').textContent = d.title || 'Program Kontribusi Mitra';
+    document.getElementById('kontribusiModalMeta').innerHTML =
       `<i class="fas fa-calendar-check"></i> Tahun ${d.year || '-'}` +
       (d.lokasi ? ` &middot; <i class="fas fa-map-marker-alt"></i> ${d.lokasi}` : '') +
       ` &middot; <span class="badge-report" style="cursor:default;margin-bottom:0;">Reported</span>`;
-    document.getElementById('csrModalPendana').innerHTML =
+    document.getElementById('kontribusiModalPendana').innerHTML =
       `<strong>Yayasan Sekola Konang Indonesia</strong><br>Didukung oleh: ${d.__funderName || '-'}`;
 
     // Capaian — list per jenis infra dgn ikon, dipecah Pembuatan/Perawatan
@@ -917,13 +917,13 @@
         rows.map(x => `<div class="infil-row"><span class="lbl"><i class="fas ${x.icon}" style="color:${x.color};"></i> ${x.label}</span><span class="val" style="color:${x.color};">${data[x.key]}</span></div>`).join('') +
         `</div>`;
     }
-    const chipsWrap = document.getElementById('csrModalChips');
+    const chipsWrap = document.getElementById('kontribusiModalChips');
     chipsWrap.innerHTML = renderCapaianGrup('Pembuatan', a.pembuatan||{}) + renderCapaianGrup('Perawatan', a.perawatan||{});
 
     const literAngka = d.totalInfiltrasiLiter || 0;
-    document.getElementById('csrModalInfiltrasi').textContent = formatLiterRingkas(literAngka);
+    document.getElementById('kontribusiModalInfiltrasi').textContent = formatLiterRingkas(literAngka);
 
-    const eqBox = document.getElementById('csrModalEquivalence');
+    const eqBox = document.getElementById('kontribusiModalEquivalence');
     if (literAngka > 0) {
       const kolamRenang = literAngka / 2_500_000;
       const kebutuhanWarga = literAngka / (150 * 365);
@@ -939,9 +939,9 @@
 
     // Rincian infiltrasi Pembuatan/Perawatan/Total — dihitung terpisah (bukan dari
     // total gabungan infrastruktur), pakai data 'infiltrasiSplit' dari admin.html.
-    const infilWrap = document.getElementById('csrModalInfiltrasiWrap');
-    const hintEl = document.getElementById('csrModalHint');
-    const defaultHint = `<i class="fas fa-circle-info"></i> Estimasi dihitung dari kapasitas tampung infrastruktur (Rorak &amp; Sumur Resapan) dikali jumlah hari hujan efektif. Ingin lihat rumus lengkapnya? Coba <a href="#kalkulator" onclick="closeCsrDetail()">Kalkulator Potensi Serapan</a> di bawah halaman ini.`;
+    const infilWrap = document.getElementById('kontribusiModalInfiltrasiWrap');
+    const hintEl = document.getElementById('kontribusiModalHint');
+    const defaultHint = `<i class="fas fa-circle-info"></i> Estimasi dihitung dari kapasitas tampung infrastruktur (Rorak &amp; Sumur Resapan) dikali jumlah hari hujan efektif. Ingin lihat rumus lengkapnya? Coba <a href="#kalkulator" onclick="closeKontribusiDetail()">Kalkulator Potensi Serapan</a> di bawah halaman ini.`;
     const SUMBER = [
       { key:'resP', item:'Pohon / Vegetasi', icon:'fa-tree',       color:'#8bc34a' },
       { key:'resR', item:'Rorak',            icon:'fa-water',      color:'#ff9800' },
@@ -971,52 +971,52 @@
       hintEl.innerHTML = defaultHint;
     }
 
-    document.getElementById('csrModalReportLink').style.display = 'none';
-    document.getElementById('csrModalBackdrop').classList.add('show');
+    document.getElementById('kontribusiModalReportLink').style.display = 'none';
+    document.getElementById('kontribusiModalBackdrop').classList.add('show');
   };
-  window.closeCsrDetail = () => {
-    document.getElementById('csrModalBackdrop').classList.remove('show');
+  window.closeKontribusiDetail = () => {
+    document.getElementById('kontribusiModalBackdrop').classList.remove('show');
   };
-  document.getElementById('csrModalBackdrop').addEventListener('click', (e) => {
-    if (e.target.id === 'csrModalBackdrop') window.closeCsrDetail();
+  document.getElementById('kontribusiModalBackdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'kontribusiModalBackdrop') window.closeKontribusiDetail();
   });
 
-  muatRiwayatCSR();
+  muatRiwayatKontribusi();
 </script>
 
-<!-- MODAL DETAIL PROGRAM CSR -->
-<div class="modal-backdrop" id="csrModalBackdrop">
+<!-- MODAL DETAIL PROGRAM KONTRIBUSI MITRA -->
+<div class="modal-backdrop" id="kontribusiModalBackdrop">
   <div class="modal-box">
     <div class="modal-head">
       <div>
-        <h3 id="csrModalTitle">—</h3>
-        <div class="detail-meta" id="csrModalMeta"></div>
+        <h3 id="kontribusiModalTitle">—</h3>
+        <div class="detail-meta" id="kontribusiModalMeta"></div>
       </div>
-      <button class="modal-close" onclick="closeCsrDetail()"><i class="fas fa-times"></i></button>
+      <button class="modal-close" onclick="closeKontribusiDetail()"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body">
       <span class="detail-section-label">Pelaksana &amp; Pendana</span>
-      <p class="detail-pendana" id="csrModalPendana">—</p>
+      <p class="detail-pendana" id="kontribusiModalPendana">—</p>
 
       <span class="detail-section-label">Capaian</span>
-      <div class="detail-chips" id="csrModalChips"></div>
+      <div class="detail-chips" id="kontribusiModalChips"></div>
 
       <span class="detail-section-label">Estimasi Infiltrasi Air</span>
       <div class="detail-big">
-        <div class="detail-big-num" id="csrModalInfiltrasi">—</div>
+        <div class="detail-big-num" id="kontribusiModalInfiltrasi">—</div>
         <div class="detail-big-label">Liter / Tahun</div>
-        <div class="detail-equivalence" id="csrModalEquivalence"></div>
+        <div class="detail-equivalence" id="kontribusiModalEquivalence"></div>
       </div>
 
       <span class="detail-section-label">Analisis Infiltrasi Air (Rinci)</span>
-      <div id="csrModalInfiltrasiWrap"></div>
-      <div class="detail-methodology" id="csrModalHint">
-        <i class="fas fa-circle-info"></i> Estimasi dihitung dari kapasitas tampung infrastruktur (Rorak &amp; Sumur Resapan) dikali jumlah hari hujan efektif. Ingin lihat rumus lengkapnya? Coba <a href="#kalkulator" onclick="closeCsrDetail()">Kalkulator Potensi Serapan</a> di bawah halaman ini.
+      <div id="kontribusiModalInfiltrasiWrap"></div>
+      <div class="detail-methodology" id="kontribusiModalHint">
+        <i class="fas fa-circle-info"></i> Estimasi dihitung dari kapasitas tampung infrastruktur (Rorak &amp; Sumur Resapan) dikali jumlah hari hujan efektif. Ingin lihat rumus lengkapnya? Coba <a href="#kalkulator" onclick="closeKontribusiDetail()">Kalkulator Potensi Serapan</a> di bawah halaman ini.
       </div>
 
       <div class="modal-actions">
-        <a href="#" id="csrModalReportLink" target="_blank" rel="noopener" class="btn-rispro" style="display:none;"><i class="fas fa-file-alt"></i> Lihat Laporan Resmi</a>
-        <button class="btn-rispro" onclick="closeCsrDetail()" style="border:none;background:rgba(255,255,255,0.06);cursor:pointer;">Tutup</button>
+        <a href="#" id="kontribusiModalReportLink" target="_blank" rel="noopener" class="btn-rispro" style="display:none;"><i class="fas fa-file-alt"></i> Lihat Laporan Resmi</a>
+        <button class="btn-rispro" onclick="closeKontribusiDetail()" style="border:none;background:rgba(255,255,255,0.06);cursor:pointer;">Tutup</button>
       </div>
     </div>
   </div>
