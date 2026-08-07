@@ -488,6 +488,57 @@ input, textarea, select { font-family: var(--body); }
       </div>
     </div>
 
+    <!-- LEGALITAS LAHAN (syarat Pasal 12 PP 46/2017 & Permen LHK 4/2023) -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-file-signature"></i> Legalitas Lahan</div>
+      <div class="form-group">
+        <label>Status Kawasan</label>
+        <select id="proj-status-kawasan" onchange="onStatusKawasanChange()">
+          <option value="APL">APL (Areal Penggunaan Lain)</option>
+          <option value="KHDPK_Produksi">KHDPK — Hutan Produksi</option>
+          <option value="KHDPK_Lindung">KHDPK — Hutan Lindung</option>
+          <option value="Hutan_Adat">Hutan Adat</option>
+          <option value="Lainnya">Lainnya</option>
+        </select>
+        <div class="form-hint">Menentukan apakah lahan ini terikat kuota pola tanam Permen LHK No. 4/2023.</div>
+      </div>
+      <div class="row-2">
+        <div class="form-group">
+          <label>Jenis Bukti Lahan</label>
+          <select id="proj-jenis-bukti-lahan" onchange="autoSaveProjek()">
+            <option value="SHM">SHM / Sertifikat</option>
+            <option value="SK_PS">SK Perhutanan Sosial</option>
+            <option value="SKT_Desa">Surat Keterangan Desa</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nomor Dokumen</label>
+          <input type="text" id="proj-nomor-dokumen-lahan" placeholder="Nomor SHM / SK / Surat" oninput="autoSaveProjek()">
+        </div>
+      </div>
+
+      <!-- Muncul otomatis hanya jika Status Kawasan = KHDPK (Produksi/Lindung) -->
+      <div id="komposisiTanamBox" style="display:none;">
+        <div class="form-hint" id="komposisiTanamHint" style="margin-bottom:8px;"></div>
+        <div class="row-2">
+          <div class="form-group">
+            <label>% Tanaman Pokok Kehutanan</label>
+            <input type="number" id="proj-persen-pokok" min="0" max="100" placeholder="0" oninput="hitungKepatuhanKuota()">
+          </div>
+          <div class="form-group">
+            <label>% Tanaman MPTS</label>
+            <input type="number" id="proj-persen-mpts" min="0" max="100" placeholder="0" oninput="hitungKepatuhanKuota()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>% Tanaman Semusim</label>
+          <input type="number" id="proj-persen-semusim" min="0" max="100" placeholder="0" oninput="hitungKepatuhanKuota()">
+        </div>
+        <div id="kepatuhanKuotaResult" class="form-hint" style="font-weight:700;"></div>
+      </div>
+    </div>
+
     <!-- TOTAL OTOMATIS -->
     <div class="calc-result" style="margin-bottom:14px;">
       <div class="calc-result-label"><i class="fas fa-tint"></i> Total Estimasi Serapan Air</div>
@@ -1116,6 +1167,10 @@ async function pastikanDraftPengajuan() {
     sellerEmail: currentUser.email, sellerPhone: userData.phone||'',
     lokasi: document.getElementById('proj-nama').value.trim() || 'Tanpa nama',
     deskripsi: document.getElementById('proj-deskripsi').value.trim() || '',
+    statusKawasan: document.getElementById('proj-status-kawasan').value,
+    jenisBuktiLahan: document.getElementById('proj-jenis-bukti-lahan').value,
+    nomorDokumenLahan: document.getElementById('proj-nomor-dokumen-lahan').value.trim() || '',
+    komposisiTanam: ambilKomposisiTanam(),
     jumlahRorak: 0, jumlahSumur: 0, serapanM3: 0,
     status: 'draft',
     createdAt: serverTimestamp()
@@ -1128,8 +1183,63 @@ window.autoSaveProjek = async () => {
   if (!pengajuanAktifId) return; // belum ada titik, belum perlu draft
   await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), {
     lokasi: document.getElementById('proj-nama').value.trim() || 'Tanpa nama',
-    deskripsi: document.getElementById('proj-deskripsi').value.trim() || ''
+    deskripsi: document.getElementById('proj-deskripsi').value.trim() || '',
+    statusKawasan: document.getElementById('proj-status-kawasan').value,
+    jenisBuktiLahan: document.getElementById('proj-jenis-bukti-lahan').value,
+    nomorDokumenLahan: document.getElementById('proj-nomor-dokumen-lahan').value.trim() || '',
+    komposisiTanam: ambilKomposisiTanam()
   });
+};
+
+// ── LEGALITAS LAHAN & KUOTA ZONASI KHDPK (Permen LHK No. 4/2023) ──
+// Kuota berlaku HANYA untuk lahan berstatus KHDPK. Di luar itu (APL, Hutan Adat,
+// Lainnya) kuota tidak relevan dan kotak komposisi tanam disembunyikan.
+window.onStatusKawasanChange = () => {
+  const status = document.getElementById('proj-status-kawasan').value;
+  const box = document.getElementById('komposisiTanamBox');
+  const hint = document.getElementById('komposisiTanamHint');
+  const isKHDPK = status === 'KHDPK_Produksi' || status === 'KHDPK_Lindung';
+  box.style.display = isKHDPK ? 'block' : 'none';
+  if (status === 'KHDPK_Produksi') {
+    hint.textContent = 'Kuota Hutan Produksi: min. 50% pokok, min. 30% MPTS, maks. 20% semusim.';
+  } else if (status === 'KHDPK_Lindung') {
+    hint.textContent = 'Kuota Hutan Lindung: min. 80% pokok+MPTS (berkayu), tanaman semusim sangat dibatasi.';
+  }
+  hitungKepatuhanKuota();
+  autoSaveProjek();
+};
+
+function ambilKomposisiTanam() {
+  return {
+    pokok: parseFloat(document.getElementById('proj-persen-pokok').value) || 0,
+    mpts: parseFloat(document.getElementById('proj-persen-mpts').value) || 0,
+    semusim: parseFloat(document.getElementById('proj-persen-semusim').value) || 0
+  };
+}
+
+// Validasi ringan di sisi Seller (bukan pengganti verifikasi lapangan Tim/Admin,
+// hanya membantu Seller mengecek kelengkapan sebelum submit).
+window.hitungKepatuhanKuota = () => {
+  const status = document.getElementById('proj-status-kawasan').value;
+  const resultEl = document.getElementById('kepatuhanKuotaResult');
+  const k = ambilKomposisiTanam();
+  let msg = '', color = '';
+  if (status === 'KHDPK_Produksi') {
+    const ok = k.pokok >= 50 && k.mpts >= 30 && k.semusim <= 20;
+    msg = ok ? '✓ Memenuhi kuota Hutan Produksi.' : '⚠ Belum memenuhi kuota (min. 50% pokok / 30% MPTS / maks. 20% semusim). Tim akan meninjau ulang saat verifikasi lapangan.';
+    color = ok ? 'var(--green)' : '#ff9800';
+  } else if (status === 'KHDPK_Lindung') {
+    const ok = (k.pokok + k.mpts) >= 80;
+    msg = ok ? '✓ Memenuhi kuota Hutan Lindung.' : '⚠ Belum memenuhi kuota (min. 80% tanaman berkayu/MPTS). Tim akan meninjau ulang saat verifikasi lapangan.';
+    color = ok ? 'var(--green)' : '#ff9800';
+  } else {
+    resultEl.textContent = '';
+    autoSaveProjek();
+    return;
+  }
+  resultEl.textContent = msg;
+  resultEl.style.color = color;
+  autoSaveProjek();
 };
 
 // Hitung serapan SATU titik berdasarkan jenis & dimensi di modal
@@ -1374,7 +1484,9 @@ async function deleteDocTitik(id) {
 
 window.submitPengajuanFinal = async () => {
   const lokasi = document.getElementById('proj-nama').value.trim();
+  const nomorDokumen = document.getElementById('proj-nomor-dokumen-lahan').value.trim();
   if (!lokasi)            { showToast('Isi nama lokasi / desa terlebih dahulu.','error'); return; }
+  if (!nomorDokumen)      { showToast('Isi nomor dokumen bukti lahan terlebih dahulu (syarat Pasal 12 PP 46/2017).','error'); return; }
   if (!titikList.length)  { showToast('Tambahkan minimal 1 titik rorak/sumur.','error'); return; }
   if (!pengajuanAktifId)  { showToast('Belum ada draft tersimpan.','error'); return; }
 
@@ -1394,6 +1506,14 @@ window.submitPengajuanFinal = async () => {
     titikList = [];
     document.getElementById('proj-nama').value = '';
     document.getElementById('proj-deskripsi').value = '';
+    document.getElementById('proj-status-kawasan').value = 'APL';
+    document.getElementById('proj-jenis-bukti-lahan').value = 'SHM';
+    document.getElementById('proj-nomor-dokumen-lahan').value = '';
+    document.getElementById('proj-persen-pokok').value = '';
+    document.getElementById('proj-persen-mpts').value = '';
+    document.getElementById('proj-persen-semusim').value = '';
+    document.getElementById('komposisiTanamBox').style.display = 'none';
+    document.getElementById('kepatuhanKuotaResult').textContent = '';
     renderTitikList();
   } catch(e) { showToast('Gagal kirim: '+e.message,'error'); }
   finally    { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Selesai &amp; Kirim ke Admin'; }
