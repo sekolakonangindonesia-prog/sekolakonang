@@ -3292,6 +3292,30 @@ const PENGAJUAN_STATUS_LABEL = {
   rejected: { label:'Ditolak', badge:'badge-danger' }
 };
 
+// Legalitas lahan & kepatuhan kuota KHDPK (Pasal 12 PP 46/2017, Permen LHK 4/2023).
+// Pengajuan LAMA (sebelum field ini ada) tidak punya statusKawasan sama sekali —
+// ditandai "Perlu Dilengkapi" (bukan error/kosong) supaya Tim tahu harus follow-up
+// ke Seller yang bersangkutan, bukan menganggap datanya sudah lengkap.
+function renderLegalitasBadge(p) {
+  if (!p.statusKawasan) {
+    return `<span style="color:#ff9800;"><i class="fas fa-exclamation-triangle"></i> Legalitas lahan: Perlu Dilengkapi (data lama)</span>`;
+  }
+  const labelKawasan = { APL:'APL', KHDPK_Produksi:'KHDPK-Produksi', KHDPK_Lindung:'KHDPK-Lindung', Hutan_Adat:'Hutan Adat', Lainnya:'Lainnya' }[p.statusKawasan] || p.statusKawasan;
+  let out = `<span style="color:var(--text-muted);"><i class="fas fa-file-signature"></i> ${labelKawasan}`;
+  out += p.nomorDokumenLahan ? ` · Dok: ${p.nomorDokumenLahan}` : ` · <span style="color:#ff9800;">Nomor dokumen belum diisi</span>`;
+  out += `</span>`;
+  const isKHDPK = p.statusKawasan === 'KHDPK_Produksi' || p.statusKawasan === 'KHDPK_Lindung';
+  if (isKHDPK) {
+    const k = p.komposisiTanam || {};
+    const ok = p.statusKawasan === 'KHDPK_Produksi'
+      ? (k.pokok>=50 && k.mpts>=30 && k.semusim<=20)
+      : ((k.pokok||0)+(k.mpts||0)) >= 80;
+    out += `<br><span style="color:${ok?'var(--green)':'#ff9800'};"><i class="fas fa-seedling"></i> Kuota tanam: ${ok?'Memenuhi':'Belum memenuhi / belum diverifikasi'} (pokok ${k.pokok||0}% · MPTS ${k.mpts||0}% · semusim ${k.semusim||0}%)</span>`;
+  }
+  return out;
+}
+
+
 async function loadPengajuanPjlh() {
   const wrap = document.getElementById('pengajuan-pjlh-list');
   wrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p>';
@@ -3330,6 +3354,7 @@ async function loadPengajuanPjlh() {
                 ${p.serapanM3 ? ` · <i class="fas fa-tint"></i> Est. ${p.serapanM3} m³/thn` : ''}
               </div>
               ${p.catatanKeputusan ? `<div style="font-size:0.68rem;color:var(--lime);margin-top:6px;"><i class="fas fa-comment-dots"></i> ${p.catatanKeputusan}</div>` : ''}
+              <div style="font-size:0.68rem;margin-top:6px;">${renderLegalitasBadge(p)}</div>
               <div style="margin-top:8px;"><span class="list-badge ${st.badge}">${st.label}</span></div>
             </div>
             <div class="list-card-actions" style="flex-direction:column;align-items:flex-end;gap:6px;">${aksi}</div>
