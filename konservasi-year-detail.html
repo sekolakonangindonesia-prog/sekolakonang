@@ -517,9 +517,11 @@ footer {
 
   /* ── PETA ── */
   const map = L.map('map-detail', { zoomControl: true }).setView([-7.810, 112.908], 13);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; CartoDB'
-  }).addTo(map);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri',
+  maxNativeZoom: 16,
+  maxZoom: 19
+}).addTo(map);
 
   // Pane khusus marker supaya selalu di atas polygon
   map.createPane('markersPane');
