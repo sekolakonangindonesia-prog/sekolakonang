@@ -189,6 +189,7 @@ input,textarea,select,button{font-family:var(--body);}
       <div><strong>Monitoring Gaharu</strong><small id="navRole">Tim Monitoring</small></div>
     </div>
     <div class="nav-right">
+      <a href="admin.html" class="nav-btn" id="navAdmin" style="display:none;"><i class="fas fa-user-shield"></i> Admin</a>
       <a href="gaharu.html" class="nav-btn"><i class="fas fa-home"></i></a>
       <button class="nav-btn" id="btnLogout"><i class="fas fa-sign-out-alt"></i> Keluar</button>
     </div>
@@ -328,13 +329,24 @@ onAuthStateChanged(auth, async user => {
     const role = u.exists() ? u.data().role : null;
     if (role === 'admin') {
       me = { uid: user.uid, name: u.data().fullName || user.email, admin: true };
-    } else if (role === 'tim') {
-      me = { uid: user.uid, name: u.data().fullName || user.email, admin: false };
     } else {
+      // Tim YSKI (Akun Tim) atau monitor yang didaftarkan admin
       const t = await getDoc(doc(db, 'tim_accounts', user.uid));
       if (t.exists()) {
         const d = t.data();
         me = { uid: user.uid, name: d.nama || d.fullName || user.email, admin: false };
+      } else {
+        const m = await getDoc(doc(db, 'gaharu_monitors', user.uid));
+        if (m.exists()) {
+          if (m.data().active === false) {
+            authErr('Akun ini dinonaktifkan oleh admin.');
+            await signOut(auth);
+            return;
+          }
+          me = { uid: user.uid, name: m.data().nama || user.email, admin: false };
+        } else if (role === 'tim') {
+          me = { uid: user.uid, name: u.data().fullName || user.email, admin: false };
+        }
       }
     }
     if (!me) {
@@ -355,6 +367,7 @@ function masuk() {
   $('greet').textContent = 'Halo, ' + (me.name || '').split(' ')[0];
   $('navRole').textContent = me.admin ? 'Admin' : 'Tim Monitoring';
   $('tabKunci').style.display = me.admin ? 'flex' : 'none';
+  $('navAdmin').style.display = me.admin ? 'inline-flex' : 'none';
   muatSemua();
 }
 
@@ -483,7 +496,7 @@ const WARNA = { hidup: '#4caf50', sakit: '#ffab00', mati: '#ff5252', belum: '#C6
 function tampilPeta() {
   if (!map) {
     map = L.map('map').setView([-7.81, 112.91], 11);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri' }).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 19 }).addTo(map);
     mapReady = true;
     renderMap(true);
   }
