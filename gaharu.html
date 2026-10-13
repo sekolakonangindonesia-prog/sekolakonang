@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerakan Penanaman Gaharu — Sekola Konang Indonesia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root {
+  --deep-forest:#050505; --canopy:#353736; --surface:#1a1b1a; --lime:#C6FF00;
+  --lime-dim:rgba(198,255,0,0.12); --parchment:#F5F5F0; --white:#FFFFFF;
+  --text-muted:rgba(245,245,240,0.55); --border:rgba(198,255,0,0.15);
+  --border-subtle:rgba(255,255,255,0.07); --orange:#ffab00; --danger:#ff6b6b; --green:#4caf50;
+  --display:'Playfair Display',Georgia,serif; --body:'Inter',system-ui,sans-serif;
+  --r-sm:12px; --r-md:20px; --r-lg:32px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--body);background:var(--deep-forest);color:var(--parchment);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+a{text-decoration:none;color:inherit;}
+.container-page{width:100%;max-width:1100px;margin:0 auto;padding:0 20px;}
+.lime{color:var(--lime);}
+
+/* NAV */
+nav#mainNav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 20px;height:64px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,5,5,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.nav-brand{display:flex;align-items:center;gap:12px;}
+.nav-brand img{height:36px;}
+.nav-brand-text strong{display:block;font-family:var(--display);font-size:0.9rem;color:var(--white);letter-spacing:0.5px;}
+.nav-brand-text small{font-size:0.55rem;letter-spacing:3px;color:var(--lime);text-transform:uppercase;font-weight:600;}
+.nav-back{display:inline-flex;align-items:center;gap:8px;color:var(--parchment);font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;border-radius:50px;border:1px solid rgba(245,245,240,0.25);transition:.2s;}
+.nav-back:hover{border-color:var(--lime);color:var(--lime);}
+
+/* HERO */
+.page-hero{position:relative;min-height:50svh;display:flex;flex-direction:column;justify-content:flex-end;padding:90px 0 44px;overflow:hidden;}
+.page-hero-bg{position:absolute;inset:0;z-index:0;background:linear-gradient(to bottom,rgba(5,5,5,0.45) 0%,rgba(5,5,5,0.85) 60%,var(--deep-forest) 100%),url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1350&q=80') center/cover no-repeat;}
+.fireflies{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+.firefly{position:absolute;border-radius:50%;background:var(--lime);opacity:0;animation:float var(--dur,6s) ease-in-out infinite var(--delay,0s);}
+@keyframes float{0%,100%{opacity:0;transform:translateY(0) scale(0.5)}40%,60%{opacity:.7;transform:translateY(-30px) scale(1)}}
+.hero-content{position:relative;z-index:2;}
+.hero-eyebrow{font-size:0.6rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--lime);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.hero-eyebrow::before{content:'';width:30px;height:2px;background:var(--lime);display:inline-block;}
+.page-hero h1{font-family:var(--display);font-size:clamp(1.9rem,5vw,3.2rem);font-weight:900;color:var(--white);line-height:1.12;letter-spacing:-0.5px;margin-bottom:16px;max-width:720px;}
+.page-hero h1 em{font-style:normal;color:var(--lime);}
+.page-hero p{font-size:0.92rem;color:var(--text-muted);line-height:1.7;max-width:540px;margin-bottom:20px;}
+.status-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:50px;font-size:0.68rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;border:1px solid;}
+.status-pill.open{background:rgba(76,175,80,0.14);color:#81c784;border-color:rgba(76,175,80,0.4);}
+.status-pill.closed{background:rgba(255,171,0,0.12);color:var(--orange);border-color:rgba(255,171,0,0.35);}
+.status-pill.loading{background:rgba(255,255,255,0.05);color:var(--text-muted);border-color:var(--border-subtle);}
+.status-msg{font-size:0.78rem;color:var(--text-muted);margin-top:10px;max-width:520px;line-height:1.6;}
+
+/* ACTIONS */
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:-10px;position:relative;z-index:3;}
+.action-card{background:var(--canopy);border:1px solid var(--border);border-radius:var(--r-lg);padding:26px 22px;text-align:left;cursor:pointer;transition:.25s;position:relative;overflow:hidden;color:var(--parchment);font-family:var(--body);display:block;width:100%;}
+.action-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--lime),transparent);}
+.action-card:hover{border-color:var(--lime);transform:translateY(-4px);}
+.action-card .a-icon{width:48px;height:48px;border-radius:14px;background:var(--lime-dim);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:14px;color:var(--lime);font-size:1.2rem;}
+.action-card h3{font-family:var(--display);font-size:1.25rem;color:var(--white);margin-bottom:6px;}
+.action-card p{font-size:0.78rem;color:var(--text-muted);line-height:1.6;}
+.action-card .a-tag{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:0.62rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--lime);}
+.action-card.is-locked .a-icon{background:rgba(255,171,0,0.12);border-color:rgba(255,171,0,0.3);color:var(--orange);}
+.action-card.is-locked .a-tag{color:var(--orange);}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 28px;}
+.stat-card{background:var(--canopy);border:1px solid var(--border);border-radius:var(--r-md);padding:18px 10px;text-align:center;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--lime),transparent);}
+.stat-card i{font-size:1.3rem;color:var(--lime);margin-bottom:8px;display:block;}
+.stat-num{display:block;font-family:var(--display);font-size:1.7rem;font-weight:900;color:var(--white);line-height:1;}
+.stat-label{display:block;font-size:0.55rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-top:8px;}
+
+/* CARD */
+.ui-card{background:var(--canopy);border-radius:var(--r-lg);border:1px solid var(--border-subtle);overflow:hidden;margin-bottom:24px;}
+.ui-card-header{display:flex;align-items:center;gap:10px;padding:14px 22px;background:rgba(255,171,0,0.12);border-bottom:1px solid rgba(255,171,0,0.2);font-size:0.7rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--orange);}
+.ui-card-body{padding:22px;}
+#map{height:420px;width:100%;background:#111;}
+.legend{display:flex;flex-wrap:wrap;gap:14px;padding:12px 22px;font-size:0.68rem;color:var(--text-muted);border-top:1px solid var(--border-subtle);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.step{background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:var(--r-sm);padding:16px;}
+.step b{display:block;color:var(--lime);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.step p{font-size:0.78rem;color:var(--text-muted);line-height:1.6;}
+
+footer{background:#050e08;border-top:1px solid var(--border);padding:32px 24px;text-align:center;font-size:0.62rem;font-weight:600;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-top:20px;}
+
+/* SHEET */
+.sheet-backdrop{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.78);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;}
+.sheet-backdrop.open{display:flex;}
+.sheet{background:var(--surface);border-radius:22px 22px 0 0;width:100%;max-width:560px;max-height:94vh;overflow-y:auto;padding:18px 18px 40px;position:relative;border:1px solid var(--border);border-bottom:none;}
+.sheet-handle{width:38px;height:4px;background:var(--border-subtle);border-radius:2px;margin:0 auto 16px;}
+.sheet-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid var(--border-subtle);color:var(--parchment);cursor:pointer;}
+.sheet-title{font-family:var(--display);font-size:1.3rem;font-weight:900;color:var(--white);margin-bottom:4px;}
+.sheet-sub{font-size:0.75rem;color:var(--text-muted);margin-bottom:18px;line-height:1.6;}
+.gps-box{background:rgba(198,255,0,0.06);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;margin-bottom:16px;}
+.gps-box .gps-text{font-size:0.78rem;line-height:1.6;color:var(--parchment);margin-bottom:10px;}
+.gps-box .gps-text small{display:block;color:var(--text-muted);font-size:0.68rem;}
+.gps-box.ok{border-color:rgba(76,175,80,0.5);background:rgba(76,175,80,0.08);}
+.gps-box.warn{border-color:rgba(255,171,0,0.5);background:rgba(255,171,0,0.07);}
+.gps-box.err{border-color:rgba(255,107,107,0.5);background:rgba(255,107,107,0.07);}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:var(--body);font-size:0.8rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s;}
+.btn-lime{background:var(--lime);color:var(--deep-forest);}
+.btn-lime:hover{background:#d4ff33;}
+.btn-lime:disabled{opacity:.5;cursor:not-allowed;}
+.btn-ghost{background:transparent;color:var(--parchment);border:1px solid var(--border-subtle);}
+.btn-ghost:hover{border-color:var(--lime);color:var(--lime);}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:0.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--lime);margin-bottom:6px;}
+.form-group input{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:10px;color:var(--parchment);font-family:var(--body);font-size:0.88rem;padding:12px 14px;outline:none;}
+.form-group input:focus{border-color:var(--lime);}
+.foto-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.foto-box{border:1px dashed var(--border-subtle);border-radius:12px;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--text-muted);font-size:0.68rem;text-align:center;padding:8px;cursor:pointer;background:rgba(255,255,255,0.02);overflow:hidden;position:relative;transition:.2s;}
+.foto-box:hover{border-color:var(--lime);color:var(--lime);}
+.foto-box i{font-size:1.4rem;}
+.foto-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.foto-box input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.hp{position:absolute;left:-9999px;top:-9999px;height:0;width:0;opacity:0;}
+.note{font-size:0.68rem;color:var(--text-muted);line-height:1.6;margin-top:10px;text-align:center;}
+.lock-box{text-align:center;padding:26px 8px;}
+.lock-box i{font-size:2.4rem;color:var(--orange);margin-bottom:14px;display:block;}
+.lock-box h3{font-family:var(--display);color:var(--white);font-size:1.2rem;margin-bottom:8px;}
+.lock-box p{font-size:0.82rem;color:var(--text-muted);line-height:1.7;margin-bottom:18px;}
+.done-code{display:inline-block;font-family:var(--display);font-size:1.6rem;font-weight:900;color:var(--lime);letter-spacing:3px;background:var(--lime-dim);border:1px solid var(--border);padding:10px 22px;border-radius:14px;margin:12px 0;}
+.toast{position:fixed;bottom:18px;left:14px;right:14px;max-width:520px;margin:0 auto;z-index:600;padding:13px 16px;border-radius:12px;font-size:0.8rem;font-weight:600;display:none;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.5);}
+.toast.show{display:flex;}
+.toast.success{background:#14210a;border:1px solid rgba(198,255,0,0.4);color:var(--lime);}
+.toast.error{background:#2a1212;border:1px solid rgba(255,107,107,0.4);color:var(--danger);}
+.toast.info{background:#0d2024;border:1px solid rgba(0,229,255,0.35);color:#4dd0e1;}
+.leaflet-popup-content-wrapper{border-radius:12px;}
+.pop{font-family:var(--body);min-width:170px;}
+.pop img{width:100%;height:110px;object-fit:cover;border-radius:8px;margin-bottom:8px;}
+.pop b{color:#111;font-size:0.85rem;}
+.pop div{color:#555;font-size:0.72rem;margin-top:3px;}
+
+@media(max-width:768px){
+  nav#mainNav{height:58px;}
+  .nav-back span{display:none;}
+  .action-grid{grid-template-columns:1fr;}
+  .steps{grid-template-columns:1fr;}
+  #map{height:320px;}
+  .page-hero{padding:80px 0 36px;}
+}
+@media(prefers-reduced-motion:reduce){.firefly{animation:none;opacity:0;}}
+</style>
+</head>
+<body>
+
+<nav id="mainNav">
+  <div class="nav-brand">
+    <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
+    <div class="nav-brand-text"><strong>Sekola Konang</strong><small>Indonesia</small></div>
+  </div>
+  <a href="index.html" class="nav-back"><i class="fas fa-arrow-left"></i><span>Kembali ke Menu</span></a>
+</nav>
+
+<section class="page-hero">
+  <div class="page-hero-bg" role="img" aria-label="Hutan"></div>
+  <div class="fireflies" id="fireflies" aria-hidden="true"></div>
+  <div class="container-page hero-content">
+    <div class="hero-eyebrow">Gerakan Penanaman</div>
+    <h1>Tanam <em>Gaharu</em>,<br>Tandai Jejakmu</h1>
+    <p>Setiap pohon gaharu yang ditanam dicatat lewat titik GPS, lalu dipantau tim kami sampai tumbuh besar. Tanam, tandai, dan lihat pohonmu di peta.</p>
+    <div id="statusPill" class="status-pill loading"><i class="fas fa-circle-notch fa-spin"></i> Memeriksa status...</div>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+</section>
+
+<div class="container-page">
+
+  <div class="action-grid">
+    <button type="button" class="action-card" id="cardTandai" onclick="bukaTandai()">
+      <div class="a-icon"><i class="fas fa-map-pin" id="iconTandai"></i></div>
+      <h3>Tandai Pohon</h3>
+      <p>Catat titik GPS pohon gaharu yang baru kamu tanam, lengkap dengan foto. Tanpa daftar, tanpa login.</p>
+      <span class="a-tag" id="tagTandai"><i class="fas fa-circle-notch fa-spin"></i> Memeriksa...</span>
+    </button>
+    <a class="action-card" href="gaharu-monitor.html">
+      <div class="a-icon"><i class="fas fa-clipboard-check"></i></div>
+      <h3>Monitoring</h3>
+      <p>Khusus tim monitoring. Akun didaftarkan oleh admin, jadi kamu perlu login untuk masuk.</p>
+      <span class="a-tag"><i class="fas fa-sign-in-alt"></i> Masuk Tim</span>
+    </a>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><i class="fas fa-tree"></i><span class="stat-num" id="sTotal">—</span><span class="stat-label">Pohon Tercatat</span></div>
+    <div class="stat-card"><i class="fas fa-clipboard-check"></i><span class="stat-num" id="sPantau">—</span><span class="stat-label">Sudah Dipantau</span></div>
+    <div class="stat-card"><i class="fas fa-heart"></i><span class="stat-num" id="sHidup">—</span><span class="stat-label">Kondisi Hidup</span></div>
+  </div>
+
+  <div class="ui-card">
+    <div class="ui-card-header"><i class="fas fa-map-marked-alt"></i> Peta Sebaran Pohon Gaharu</div>
+    <div id="map"></div>
+    <div class="legend">
+      <span><i style="background:#C6FF00"></i> Belum dipantau</span>
+      <span><i style="background:#4caf50"></i> Hidup</span>
+      <span><i style="background:#ffab00"></i> Sakit</span>
+      <span><i style="background:#ff5252"></i> Mati</span>
+    </div>
+  </div>
+
+  <div class="ui-card">
+    <div class="ui-card-header"><i class="fas fa-seedling"></i> Cara Ikut Serta</div>
+    <div class="ui-card-body">
+      <div class="steps">
+        <div class="step"><b>1. Tanam</b><p>Tanam bibit gaharu di lahanmu. Tunggu admin membuka penandaan kalau statusnya masih terkunci.</p></div>
+        <div class="step"><b>2. Tandai</b><p>Berdiri di dekat pohon, tekan Tandai Pohon, ambil titik GPS, isi nama, lalu foto pohon dan selfie bersamanya.</p></div>
+        <div class="step"><b>3. Dipantau</b><p>Tim memverifikasi datamu. Setelah disetujui, pohonmu muncul di peta dan dipantau berkala.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>© Yayasan Sekola Konang Indonesia — The Firefly Movement, Probolinggo</footer>
+
+<!-- SHEET TANDAI -->
+<div class="sheet-backdrop" id="sheet" onclick="if(event.target===this) tutupTandai()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" type="button" onclick="tutupTandai()" aria-label="Tutup"><i class="fas fa-times"></i></button>
+
+    <!-- TERKUNCI -->
+    <div id="viewLocked" style="display:none;">
+      <div class="lock-box">
+        <i class="fas fa-lock"></i>
+        <h3>Penandaan Masih Terkunci</h3>
+        <p id="lockText">Penandaan pohon belum dibuka. Silakan tunggu konfirmasi admin Sekola Konang.</p>
+        <button class="btn btn-ghost" type="button" onclick="tutupTandai()">Mengerti</button>
+      </div>
+    </div>
+
+    <!-- FORM -->
+    <div id="viewForm" style="display:none;">
+      <div class="sheet-title">Tandai Pohon Gaharu</div>
+      <div class="sheet-sub">Berdirilah di dekat pohon yang baru kamu tanam, lalu ikuti langkah di bawah.</div>
+
+      <div class="gps-box" id="gpsBox">
+        <div class="gps-text" id="gpsText">Belum ada titik. Tekan tombol di bawah untuk mengambil lokasi.</div>
+        <button class="btn btn-ghost" type="button" id="btnGps"><i class="fas fa-crosshairs"></i> Ambil Titik GPS</button>
+      </div>
+
+      <div class="form-group"><label for="fNama">Nama Penanam</label><input type="text" id="fNama" maxlength="60" placeholder="Nama lengkap" autocomplete="name"></div>
+      <div class="form-group"><label for="fTanggal">Tanggal Tanam</label><input type="date" id="fTanggal"></div>
+
+      <div class="foto-grid">
+        <label class="foto-box" id="boxTanaman"><i class="fas fa-seedling"></i>Foto Tanaman<input type="file" id="fTanaman" accept="image/*"></label>
+        <label class="foto-box" id="boxSelfie"><i class="fas fa-user-circle"></i>Selfie Bersama Tanaman<input type="file" id="fSelfie" accept="image/*"></label>
+      </div>
+
+      <input type="text" class="hp" id="fWebsite" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+      <button class="btn btn-lime" type="button" id="btnKirim"><i class="fas fa-paper-plane"></i> Simpan Titik Pohon</button>
+      <div class="note">Nama depan akan tampil di peta. Foto selfie dan nama lengkap hanya bisa dilihat tim monitoring.</div>
+    </div>
+
+    <!-- SELESAI -->
+    <div id="viewDone" style="display:none;text-align:center;">
+      <div class="lock-box">
+        <i class="fas fa-check-circle" style="color:var(--lime);"></i>
+        <h3>Terima Kasih, Pohonmu Tercatat!</h3>
+        <p>Kode pohonmu:</p>
+        <div class="done-code" id="doneCode">GH-XXXXXX</div>
+        <p>Simpan kode ini. Data kamu akan diverifikasi tim, lalu pohonmu tampil di peta.</p>
+        <button class="btn btn-lime" type="button" onclick="tandaiLagi()">Tandai Pohon Lain</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-info-circle"></i><span id="toastMsg"></span></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, getDocs, query, where, limit, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0",
+  authDomain: "sekola-konang.firebaseapp.com",
+  projectId: "sekola-konang",
+  storageBucket: "sekola-konang.firebasestorage.app",
+  messagingSenderId: "9338352073",
+  appId: "1:9338352073:web:b56481b836888b1a8bf818"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ---- KONFIGURASI ---- */
+// Batas wilayah (Jawa Timur). Harus sama dengan batas di aturan Firestore.
+const BATAS = { latMin: -8.9, latMax: -6.8, lngMin: 111.0, lngMax: 114.7 };
+const MAKS_PER_HARI = 5; // batas kiriman per perangkat per 24 jam
+const LOG_KEY = 'gaharu_submit_log';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const safeImg = s => (typeof s === 'string' && s.startsWith('data:image/')) ? s : '';
+
+let toastTimer = null;
+function toast(msg, type = 'info') {
+  const el = $('toast');
+  el.className = 'toast show ' + type;
+  $('toastMsg').textContent = msg;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 4200);
+}
+
+/* ---- FIREFLIES ---- */
+(function () {
+  const ff = $('fireflies');
+  for (let i = 0; i < 16; i++) {
+    const el = document.createElement('div');
+    el.className = 'firefly';
+    el.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*80}%;--dur:${5+Math.random()*6}s;--delay:${Math.random()*8}s;width:${3+Math.random()*3}px;height:${3+Math.random()*3}px;box-shadow:0 0 6px 2px rgba(198,255,0,.5);`;
+    ff.appendChild(el);
+  }
+})();
+
+/* ================= STATUS KUNCI ================= */
+let isOpen = false;
+let lockMsg = '';
+let statusLoaded = false;
+
+async function loadStatus() {
+  try {
+    const s = await getDoc(doc(db, 'gaharu_settings', 'status'));
+    const d = s.exists() ? s.data() : {};
+    isOpen = d.open === true;
+    lockMsg = d.message || '';
+  } catch (e) {
+    console.error('Status gagal dimuat', e);
+    isOpen = false;
+  }
+  statusLoaded = true;
+  renderStatus();
+}
+
+function renderStatus() {
+  const pill = $('statusPill');
+  const msg = $('statusMsg');
+  const card = $('cardTandai');
+  if (isOpen) {
+    pill.className = 'status-pill open';
+    pill.innerHTML = '<i class="fas fa-lock-open"></i> Penandaan Dibuka';
+    msg.textContent = lockMsg || 'Silakan tandai pohon gaharu yang sudah kamu tanam.';
+    card.classList.remove('is-locked');
+    $('iconTandai').className = 'fas fa-map-pin';
+    $('tagTandai').innerHTML = '<i class="fas fa-arrow-right"></i> Mulai Tandai';
+  } else {
+    pill.className = 'status-pill closed';
+    pill.innerHTML = '<i class="fas fa-lock"></i> Penandaan Terkunci';
+    msg.textContent = lockMsg || 'Penandaan pohon belum dibuka. Menunggu konfirmasi admin.';
+    card.classList.add('is-locked');
+    $('iconTandai').className = 'fas fa-lock';
+    $('tagTandai').innerHTML = '<i class="fas fa-hourglass-half"></i> Menunggu Admin';
+  }
+}
+
+/* ================= PETA & STATISTIK ================= */
+const map = L.map('map', { zoomControl: true }).setView([-7.81, 112.91], 11);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CartoDB' }).addTo(map);
+setTimeout(() => map.invalidateSize(), 400);
+
+const WARNA = { hidup: '#4caf50', sakit: '#ffab00', mati: '#ff5252', belum: '#C6FF00' };
+const LABEL = { hidup: 'Hidup', sakit: 'Sakit', mati: 'Mati' };
+let markers = [];
+
+async function loadTrees() {
+  try {
+    const snap = await getDocs(query(collection(db, 'gaharu_trees'), where('status', '==', 'verified'), limit(500)));
+    const trees = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTrees(trees);
+  } catch (e) {
+    console.error('Pohon gagal dimuat', e);
+    $('sTotal').textContent = '0'; $('sPantau').textContent = '0'; $('sHidup').textContent = '0';
+  }
+}
+
+function renderTrees(trees) {
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  const pts = [];
+  trees.forEach(t => {
+    if (typeof t.lat !== 'number' || typeof t.lng !== 'number') return;
+    const kond = t.lastKondisi && WARNA[t.lastKondisi] ? t.lastKondisi : 'belum';
+    const m = L.circleMarker([t.lat, t.lng], {
+      radius: 7, fillColor: WARNA[kond], color: 'rgba(0,0,0,0.6)', weight: 1.5, fillOpacity: 1
+    });
+    const img = safeImg(t.fotoThumb);
+    m.bindPopup(
+      `<div class="pop">${img ? `<img src="${img}" alt="Pohon">` : ''}<b>${esc(t.kode || t.id)}</b>` +
+      `<div>Penanam: ${esc(t.planterFirst || '-')}</div>` +
+      `<div>Tanam: ${esc(t.tanggal || '-')}</div>` +
+      `<div>Kondisi: ${kond === 'belum' ? 'Belum dipantau' : LABEL[kond]}</div></div>`,
+      { maxWidth: 220 }
+    );
+    m.addTo(map);
+    markers.push(m);
+    pts.push([t.lat, t.lng]);
+  });
+  if (pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 16 });
+  $('sTotal').textContent = trees.length.toLocaleString('id-ID');
+  $('sPantau').textContent = trees.filter(t => t.lastKondisi).length.toLocaleString('id-ID');
+  $('sHidup').textContent = trees.filter(t => t.lastKondisi === 'hidup').length.toLocaleString('id-ID');
+}
+
+/* ================= FORM TANDAI ================= */
+let gps = null;
+let watchId = null;
+let gpsTimer = null;
+let fileTanaman = null;
+let fileSelfie = null;
+let sending = false;
+
+function showView(name) {
+  $('viewLocked').style.display = name === 'locked' ? 'block' : 'none';
+  $('viewForm').style.display = name === 'form' ? 'block' : 'none';
+  $('viewDone').style.display = name === 'done' ? 'block' : 'none';
+}
+
+window.bukaTandai = async function () {
+  $('sheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // cek ulang status supaya selalu terbaru
+  await loadStatus();
+  if (!isOpen) {
+    $('lockText').textContent = lockMsg || 'Penandaan pohon belum dibuka. Silakan tunggu konfirmasi admin Sekola Konang.';
+    showView('locked');
+    return;
+  }
+  resetForm();
+  showView('form');
+};
+
+window.tutupTandai = function () {
+  stopGps();
+  $('sheet').classList.remove('open');
+  document.body.style.overflow = '';
+};
+
+window.tandaiLagi = function () {
+  resetForm();
+  showView('form');
+};
+
+function resetForm() {
+  stopGps();
+  gps = null; fileTanaman = null; fileSelfie = null;
+  $('fNama').value = '';
+  $('fWebsite').value = '';
+  $('fTanggal').value = hariIni();
+  $('fTanggal').max = hariIni();
+  $('fTanaman').value = ''; $('fSelfie').value = '';
+  resetBox('boxTanaman', 'fas fa-seedling', 'Foto Tanaman', 'fTanaman');
+  resetBox('boxSelfie', 'fas fa-user-circle', 'Selfie Bersama Tanaman', 'fSelfie');
+  setGpsUI('idle');
+  $('btnKirim').disabled = false;
+  $('btnKirim').innerHTML = '<i class="fas fa-paper-plane"></i> Simpan Titik Pohon';
+}
+
+function resetBox(boxId, icon, label, inputId) {
+  const box = $(boxId);
+  const input = $(inputId);
+  box.innerHTML = `<i class="${icon}"></i>${label}`;
+  box.appendChild(input);
+}
+
+function hariIni() {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const t = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${t}`;
+}
+
+/* ---- GPS ---- */
+function setGpsUI(state, extra) {
+  const box = $('gpsBox'), text = $('gpsText'), btn = $('btnGps');
+  box.className = 'gps-box';
+  btn.disabled = false;
+  if (state === 'idle') {
+    text.innerHTML = 'Belum ada titik. Tekan tombol di bawah untuk mengambil lokasi.';
+    btn.innerHTML = '<i class="fas fa-crosshairs"></i> Ambil Titik GPS';
+  } else if (state === 'searching') {
+    text.innerHTML = 'Mencari sinyal GPS... tunggu beberapa detik.' + (gps ? `<small>Akurasi sementara ±${Math.round(gps.acc)} m</small>` : '');
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Mencari...';
+    btn.disabled = true;
+  } else if (state === 'ok' || state === 'warn') {
+    const koor = `${gps.lat.toFixed(6)}, ${gps.lng.toFixed(6)}`;
+    box.classList.add(state);
+    text.innerHTML = `<b>${koor}</b><small>Akurasi ±${Math.round(gps.acc)} m` +
+      (state === 'warn' ? ' — kurang akurat, coba di area terbuka lalu ambil ulang.' : ' — titik tersimpan.') + '</small>';
+    btn.innerHTML = '<i class="fas fa-redo"></i> Ambil Ulang';
+  } else if (state === 'err') {
+    box.classList.add('err');
+    text.innerHTML = esc(extra || 'Gagal mengambil lokasi.');
+    btn.innerHTML = '<i class="fas fa-redo"></i> Coba Lagi';
+  }
+}
+
+function stopGps() {
+  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  if (gpsTimer) { clearTimeout(gpsTimer); gpsTimer = null; }
+}
+
+function selesaiGps() {
+  stopGps();
+  if (!gps) { setGpsUI('err', 'Sinyal GPS tidak ditemukan. Pastikan lokasi aktif dan kamu berada di area terbuka.'); return; }
+  setGpsUI(gps.acc > 30 ? 'warn' : 'ok');
+}
+
+$('btnGps').addEventListener('click', () => {
+  if (!navigator.geolocation) { setGpsUI('err', 'Perangkat atau browser ini tidak mendukung GPS.'); return; }
+  stopGps();
+  gps = null;
+  setGpsUI('searching');
+  const mulai = Date.now();
+  watchId = navigator.geolocation.watchPosition(pos => {
+    const { latitude, longitude, accuracy } = pos.coords;
+    if (!gps || accuracy < gps.acc) gps = { lat: latitude, lng: longitude, acc: accuracy };
+    setGpsUI('searching');
+    if (accuracy <= 8 || Date.now() - mulai > 20000) selesaiGps();
+  }, err => {
+    stopGps();
+    const pesan = err.code === 1
+      ? 'Izin lokasi ditolak. Aktifkan izin lokasi untuk situs ini di pengaturan browser.'
+      : err.code === 3 ? 'Waktu pencarian GPS habis. Coba lagi di area terbuka.'
+      : 'Gagal mengambil lokasi. Pastikan GPS aktif.';
+    setGpsUI('err', pesan);
+  }, { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 });
+  gpsTimer = setTimeout(selesaiGps, 24000);
+});
+
+/* ---- FOTO ---- */
+function pasangPreview(inputId, boxId, setter) {
+  $(inputId).addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    if (!f.type.startsWith('image/')) { toast('File harus berupa gambar.', 'error'); e.target.value = ''; return; }
+    setter(f);
+    const box = $(boxId);
+    const old = box.querySelector('img');
+    if (old) old.remove();
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    box.appendChild(img);
+  });
+}
+pasangPreview('fTanaman', 'boxTanaman', f => { fileTanaman = f; });
+pasangPreview('fSelfie', 'boxSelfie', f => { fileSelfie = f; });
+
+async function muatGambar(file) {
+  try {
+    return await createImageBitmap(file, { imageOrientation: 'from-image' });
+  } catch (e) {
+    return await new Promise((res, rej) => {
+      const img = new Image();
+      img.onload = () => res(img);
+      img.onerror = rej;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+}
+
+// Kompres sampai panjang string <= maksLen (turunkan kualitas lalu dimensi)
+async function kompres(file, maxDim, maksLen) {
+  const bmp = await muatGambar(file);
+  const w0 = bmp.width || bmp.naturalWidth;
+  const h0 = bmp.height || bmp.naturalHeight;
+  let dim = maxDim;
+  for (let putaran = 0; putaran < 4; putaran++) {
+    const sc = Math.min(1, dim / Math.max(w0, h0));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w0 * sc));
+    c.height = Math.max(1, Math.round(h0 * sc));
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    for (const q of [0.65, 0.55, 0.45, 0.35]) {
+      const out = c.toDataURL('image/jpeg', q);
+      if (out.length <= maksLen) return out;
+    }
+    dim = Math.round(dim * 0.75);
+  }
+  throw new Error('Foto terlalu besar untuk dikompres.');
+}
+
+/* ---- KIRIM ---- */
+function buatKode() {
+  const huruf = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const r = crypto.getRandomValues(new Uint8Array(6));
+  let s = '';
+  r.forEach(x => { s += huruf[x % huruf.length]; });
+  return 'GH-' + s;
+}
+
+function bacaLog() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+    const batas = Date.now() - 24 * 3600 * 1000;
+    return arr.filter(t => typeof t === 'number' && t > batas);
+  } catch (e) { return []; }
+}
+function catatLog() {
+  try {
+    const arr = bacaLog(); arr.push(Date.now());
+    localStorage.setItem(LOG_KEY, JSON.stringify(arr));
+  } catch (e) { /* abaikan */ }
+}
+
+$('btnKirim').addEventListener('click', async () => {
+  if (sending) return;
+  const nama = $('fNama').value.trim().replace(/\s+/g, ' ');
+  const tanggal = $('fTanggal').value;
+
+  // honeypot: bot mengisi kolom tersembunyi → pura-pura sukses
+  if ($('fWebsite').value) { $('doneCode').textContent = buatKode(); showView('done'); return; }
+
+  if (!gps) { toast('Ambil titik GPS dulu.', 'error'); return; }
+  if (gps.lat < BATAS.latMin || gps.lat > BATAS.latMax || gps.lng < BATAS.lngMin || gps.lng > BATAS.lngMax) {
+    toast('Lokasi di luar wilayah yang didukung (Jawa Timur).', 'error'); return;
+  }
+  if (nama.length < 2) { toast('Isi nama penanam.', 'error'); return; }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(tanggal)) { toast('Pilih tanggal tanam.', 'error'); return; }
+  if (tanggal > hariIni()) { toast('Tanggal tanam tidak boleh di masa depan.', 'error'); return; }
+  if (!fileTanaman) { toast('Pilih foto tanaman.', 'error'); return; }
+  if (!fileSelfie) { toast('Pilih foto selfie bersama tanaman.', 'error'); return; }
+  if (bacaLog().length >= MAKS_PER_HARI) { toast('Batas kiriman hari ini tercapai. Coba lagi besok.', 'error'); return; }
+
+  sending = true;
+  const btn = $('btnKirim');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memproses foto...';
+
+  try {
+    const [thumb, tanaman, selfie] = await Promise.all([
+      kompres(fileTanaman, 360, 55000),
+      kompres(fileTanaman, 1024, 380000),
+      kompres(fileSelfie, 800, 280000)
+    ]);
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Menyimpan...';
+
+    const kode = buatKode();
+    const depan = nama.split(' ')[0].slice(0, 40);
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'gaharu_trees', kode), {
+      kode,
+      planterFirst: depan,
+      tanggal,
+      lat: Math.round(gps.lat * 1e6) / 1e6,
+      lng: Math.round(gps.lng * 1e6) / 1e6,
+      accuracy: Math.round(gps.acc),
+      fotoThumb: thumb,
+      status: 'pending',
+      createdAt: serverTimestamp()
+    });
+    batch.set(doc(db, 'gaharu_private', kode), {
+      kode,
+      planterName: nama.slice(0, 80),
+      fotoTanaman: tanaman,
+      fotoSelfie: selfie,
+      createdAt: serverTimestamp()
+    });
+    await batch.commit();
+
+    catatLog();
+    $('doneCode').textContent = kode;
+    showView('done');
+  } catch (e) {
+    console.error(e);
+    if (e && e.code === 'permission-denied') {
+      toast('Penandaan baru saja dikunci admin atau data ditolak.', 'error');
+      await loadStatus();
+      if (!isOpen) {
+        $('lockText').textContent = lockMsg || 'Penandaan pohon sedang terkunci. Silakan tunggu konfirmasi admin.';
+        showView('locked');
+      }
+    } else {
+      toast('Gagal menyimpan: ' + (e.message || 'periksa koneksi internet.'), 'error');
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Simpan Titik Pohon';
+  } finally {
+    sending = false;
+  }
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') window.tutupTandai(); });
+
+loadStatus();
+loadTrees();
+</script>
+</body>
+</html>
