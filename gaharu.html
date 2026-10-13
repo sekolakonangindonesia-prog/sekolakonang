@@ -359,7 +359,7 @@ function renderStatus() {
 
 /* ================= PETA & STATISTIK ================= */
 const map = L.map('map', { zoomControl: true }).setView([-7.81, 112.91], 11);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CartoDB' }).addTo(map);
+   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 19 }).addTo(map);
 setTimeout(() => map.invalidateSize(), 400);
 
 const WARNA = { hidup: '#4caf50', sakit: '#ffab00', mati: '#ff5252', belum: '#C6FF00' };
