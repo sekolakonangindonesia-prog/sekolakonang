@@ -213,6 +213,15 @@ input,textarea,select{font-family:var(--body);}
   .row-2,.row-3,.row-4{grid-template-columns:1fr;}
   .index-grid{grid-template-columns:1fr 1fr 1fr;}
 }
+.gh-state{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;font-size:0.6rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;border:1px solid;}
+.gh-state.open{background:rgba(76,175,80,0.14);color:#81c784;border-color:rgba(76,175,80,0.4);}
+.gh-state.closed{background:rgba(255,171,0,0.12);color:#ffab00;border-color:rgba(255,171,0,0.35);}
+.gh-switch{position:relative;width:56px;height:30px;flex-shrink:0;}
+.gh-switch input{opacity:0;width:0;height:0;}
+.gh-slider{position:absolute;inset:0;background:#3a3b3a;border-radius:30px;cursor:pointer;transition:.25s;border:1px solid rgba(255,255,255,0.1);}
+.gh-slider::before{content:'';position:absolute;height:22px;width:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.25s;}
+.gh-switch input:checked + .gh-slider{background:#4caf50;}
+.gh-switch input:checked + .gh-slider::before{transform:translateX(26px);}
 </style>
 </head>
 <body>
@@ -267,6 +276,7 @@ input,textarea,select{font-family:var(--body);}
 
     <div class="sidebar-section-label">Manajemen</div>
     <div class="menu-item" data-panel="tim"><i class="fas fa-users-cog"></i> Akun Tim</div>
+    <div class="menu-item" data-panel="gaharu"><i class="fas fa-seedling"></i> Gerakan Gaharu</div>
     <div class="menu-item" data-panel="target"><i class="fas fa-bullseye"></i> Target Capaian</div>
     <div class="menu-item" data-panel="progress"><i class="fas fa-tasks"></i> Progress Report</div>
 
@@ -717,6 +727,27 @@ input,textarea,select{font-family:var(--body);}
       <div id="tim-list"><p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p></div>
     </section>
 
+    <!-- ===== GERAKAN GAHARU ===== -->
+    <section class="panel" id="panel-gaharu">
+      <div class="main-header"><h1>Gerakan Gaharu</h1><p>Buka/tutup penandaan pohon untuk umum dan kelola akun monitor. Tim YSKI (Akun Tim) otomatis bisa memonitor.</p></div>
+
+      <div class="list-card" style="margin-bottom:16px;">
+        <div style="font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--lime);margin-bottom:12px;"><i class="fas fa-key"></i> Buka / Tutup Penandaan</div>
+        <div id="gh-state" class="gh-state closed">Memuat...</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin:10px 0 14px;">
+          <div><div id="gh-swlabel" style="font-weight:700;color:var(--white);font-size:0.9rem;">Terkunci</div><div style="font-size:0.7rem;color:var(--text-muted);">Saat dibuka, siapa saja bisa menandai pohon tanpa login.</div></div>
+          <label class="gh-switch"><input type="checkbox" id="gh-open"><span class="gh-slider"></span></label>
+        </div>
+        <div class="form-group"><label>Pesan untuk penanam (opsional)</label><textarea id="gh-message" maxlength="300" placeholder="Contoh: Penandaan dibuka untuk tanam bersama 20 Oktober."></textarea></div>
+        <button class="btn btn-lime" id="gh-save"><i class="fas fa-save"></i> Simpan Pengaturan</button>
+        <a href="gaharu-monitor.html" target="_blank" class="btn btn-outline" style="margin-left:8px;text-decoration:none;"><i class="fas fa-clipboard-check"></i> Buka Halaman Monitor</a>
+      </div>
+
+      <div class="toolbar"><button class="btn btn-lime" id="gh-add"><i class="fas fa-user-plus"></i> Daftarkan Akun Monitor</button></div>
+      <p style="font-size:0.7rem;color:var(--text-muted);margin:-4px 0 12px;">Akun monitor hanya bisa masuk ke halaman Monitoring Gaharu, tidak ke dashboard tim.</p>
+      <div id="gh-list"><p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p></div>
+    </section>
+
     <!-- ===== TARGET CAPAIAN ===== -->
     <section class="panel" id="panel-target">
       <div class="main-header"><h1>Target Capaian Program</h1><p>Kelola daftar target kegiatan yang akan dikerjakan tim. Tim memilih dari daftar ini saat membuat progress report.</p></div>
@@ -1161,6 +1192,24 @@ input,textarea,select{font-family:var(--body);}
   </div>
 </div>
 
+<!-- MODAL AKUN MONITOR GAHARU -->
+<div class="modal-backdrop" id="modal-gh">
+  <div class="modal-box">
+    <button class="modal-close" data-close="modal-gh"><i class="fas fa-times"></i></button>
+    <h3>Daftarkan Akun Monitor</h3>
+    <div class="sub">Akun ini hanya bisa masuk ke halaman Monitoring Gaharu.</div>
+    <div class="form-group"><label>Nama Lengkap</label><input type="text" id="gh-nama" placeholder="Nama monitor"></div>
+    <div class="row-2">
+      <div class="form-group"><label>Email</label><input type="email" id="gh-email" placeholder="nama@email.com" autocomplete="off"></div>
+      <div class="form-group"><label>Password Awal</label><input type="text" id="gh-pass" placeholder="Min. 6 karakter" autocomplete="off"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" data-close="modal-gh">Batal</button>
+      <button class="btn btn-lime" id="gh-create"><i class="fas fa-save"></i> Buat Akun</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL DETAIL PROGRESS REPORT -->
 <div class="modal-backdrop" id="modal-progress-detail">
   <div class="modal-box wide">
@@ -1328,7 +1377,7 @@ import {
   deleteDoc, addDoc, query, orderBy, limit, where, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
-  getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword
+  getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail
 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
@@ -1390,7 +1439,7 @@ function switchPanel(name) {
     berita: () => { loadBeritaInternal(); loadBeritaExternal(); },
     konservasi: loadKonservasiList, biodiversitas: loadBioList,
     pjlh: () => { loadSellers(); loadBuyers(); loadAktivitas(); loadPengajuanPjlh(); loadPublikasiList(); },
-    tim: loadTim, target: loadProgram, progress: loadProgress,
+    tim: loadTim, gaharu: loadGaharu, target: loadProgram, progress: loadProgress,
     rabkurva: loadRabKurva
   };
   if (loaders[name]) loaders[name]();
@@ -4474,6 +4523,107 @@ document.getElementById('saveTimBtn').addEventListener('click', async () => {
     closeModal('modal-tim'); loadTim();
   } catch(e) { alert('Gagal buat akun: '+e.message); }
   finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Buat Akun'; }
+});
+
+
+// ============================================================
+// GERAKAN GAHARU (buka/tutup + akun monitor)
+// ============================================================
+function ghRenderState(open) {
+  const c = document.getElementById('gh-state');
+  c.className = 'gh-state ' + (open ? 'open' : 'closed');
+  c.innerHTML = open ? '<i class="fas fa-lock-open"></i> Penandaan Dibuka' : '<i class="fas fa-lock"></i> Penandaan Terkunci';
+  document.getElementById('gh-swlabel').textContent = open ? 'Dibuka' : 'Terkunci';
+}
+async function loadGaharu() {
+  let open = false, message = '';
+  try {
+    const st = await getDoc(doc(db, 'gaharu_settings', 'status'));
+    if (st.exists()) { open = st.data().open === true; message = st.data().message || ''; }
+  } catch (e) { console.error(e); }
+  document.getElementById('gh-open').checked = open;
+  document.getElementById('gh-message').value = message;
+  ghRenderState(open);
+
+  const wrap = document.getElementById('gh-list');
+  try {
+    const snap = await getDocs(collection(db, 'gaharu_monitors'));
+    if (snap.empty) { wrap.innerHTML = '<p style="color:var(--text-muted);">Belum ada akun monitor.</p>'; return; }
+    wrap.innerHTML = '';
+    snap.forEach(d => {
+      const t = d.data(), aktif = t.active !== false;
+      wrap.innerHTML += `
+        <div class="list-card">
+          <div class="list-card-header">
+            <div>
+              <div style="font-weight:700;font-size:0.85rem;color:var(--white);">${t.nama || '—'} <span style="font-size:0.55rem;font-weight:800;letter-spacing:.5px;padding:2px 8px;border-radius:20px;margin-left:6px;background:${aktif ? 'rgba(76,175,80,0.14);color:#81c784' : 'rgba(255,107,107,0.12);color:#ff6b6b'};">${aktif ? 'AKTIF' : 'NONAKTIF'}</span></div>
+              <div style="font-size:0.68rem;color:var(--text-muted);">${t.email || ''}</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" onclick="ghReset('${t.email || ''}')">Reset Sandi</button>
+              <button class="btn btn-outline btn-sm" onclick="ghToggle('${d.id}', ${aktif})">${aktif ? 'Nonaktifkan' : 'Aktifkan'}</button>
+              <button class="btn btn-danger btn-sm" onclick="ghDelete('${d.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        </div>`;
+    });
+  } catch (e) { console.error(e); wrap.innerHTML = '<p style="color:var(--danger);">Gagal memuat. Periksa aturan Firestore.</p>'; }
+}
+window.loadGaharu = loadGaharu;
+window.ghToggle = async (id, aktif) => {
+  if (aktif && !confirm('Nonaktifkan akun monitor ini?')) return;
+  try { await updateDoc(doc(db, 'gaharu_monitors', id), { active: !aktif }); loadGaharu(); }
+  catch (e) { alert('Gagal: ' + e.message); }
+};
+window.ghDelete = async (id) => {
+  if (!confirm('Hapus akses monitor ini? (akun login-nya tidak lagi bisa memonitor)')) return;
+  try { await deleteDoc(doc(db, 'gaharu_monitors', id)); loadGaharu(); }
+  catch (e) { alert('Gagal: ' + e.message); }
+};
+window.ghReset = async (email) => {
+  if (!email) return;
+  try { await sendPasswordResetEmail(auth, email); alert('Tautan reset sandi dikirim ke ' + email); }
+  catch (e) { alert('Gagal: ' + e.message); }
+};
+document.getElementById('gh-open').addEventListener('change', e => {
+  document.getElementById('gh-swlabel').textContent = e.target.checked ? 'Dibuka' : 'Terkunci';
+});
+document.getElementById('gh-save').addEventListener('click', async () => {
+  const btn = document.getElementById('gh-save'); btn.disabled = true;
+  try {
+    const open = document.getElementById('gh-open').checked;
+    await setDoc(doc(db, 'gaharu_settings', 'status'), {
+      open, message: document.getElementById('gh-message').value.trim().slice(0, 300),
+      updatedAt: serverTimestamp(), updatedBy: auth.currentUser ? auth.currentUser.uid : null
+    });
+    ghRenderState(open);
+    alert(open ? 'Penandaan DIBUKA.' : 'Penandaan DIKUNCI.');
+  } catch (e) { alert('Gagal menyimpan: ' + e.message); }
+  finally { btn.disabled = false; }
+});
+document.getElementById('gh-add').addEventListener('click', () => {
+  ['gh-nama', 'gh-email', 'gh-pass'].forEach(id => document.getElementById(id).value = '');
+  openModal('modal-gh');
+});
+document.getElementById('gh-create').addEventListener('click', async () => {
+  const nama = document.getElementById('gh-nama').value.trim();
+  const email = document.getElementById('gh-email').value.trim();
+  const pw = document.getElementById('gh-pass').value;
+  if (!nama || !email || pw.length < 6) { alert('Nama, email, dan password (min. 6 karakter) wajib diisi.'); return; }
+  const btn = document.getElementById('gh-create'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  // Instance Firebase kedua supaya admin tidak ikut berpindah login saat akun baru dibuat.
+  const sec = initializeApp(firebaseConfig, 'sec-' + Date.now());
+  const secAuth = getAuth(sec);
+  try {
+    const cred = await createUserWithEmailAndPassword(secAuth, email, pw);
+    await signOut(secAuth);
+    await setDoc(doc(db, 'gaharu_monitors', cred.user.uid), {
+      nama, email, active: true, createdAt: serverTimestamp(),
+      createdBy: auth.currentUser ? auth.currentUser.uid : null
+    });
+    closeModal('modal-gh'); loadGaharu();
+  } catch (e) { alert('Gagal buat akun: ' + e.message); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Buat Akun'; }
 });
 
 
