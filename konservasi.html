@@ -576,9 +576,11 @@ footer {
 
   /* ---- PETA ---- */
   const map = L.map('map', { zoomControl: true }).setView([-7.810, 112.908], 12);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; CartoDB'
-  }).addTo(map);
+ L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri',
+  maxNativeZoom: 16,
+  maxZoom: 19
+}).addTo(map);
 
   // Pane khusus untuk marker — z-index lebih tinggi dari polygon
   // supaya titik di dalam polygon tetap bisa diklik
