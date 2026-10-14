@@ -277,6 +277,8 @@ const db = getFirestore(app);
 // Sesi per-tab, sama seperti dashboard-tim.html, supaya tidak menimpa login lain.
 await setPersistence(auth, browserSessionPersistence);
 
+// Email admin (harus sama dengan yang ada di aturan Firestore)
+const ADMIN_EMAILS = ['sekolakonang@gmail.com'];
 const INTERVAL_PANTAU_HARI = 90; // pohon dianggap "perlu dipantau" jika lebih lama dari ini
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -327,8 +329,8 @@ onAuthStateChanged(auth, async user => {
   try {
     const u = await getDoc(doc(db, 'users', user.uid));
     const role = u.exists() ? u.data().role : null;
-    if (role === 'admin') {
-      me = { uid: user.uid, name: u.data().fullName || user.email, admin: true };
+    if (role === 'admin' || ADMIN_EMAILS.includes((user.email || '').toLowerCase())) {
+      me = { uid: user.uid, name: (u.exists() && u.data().fullName) || user.email, admin: true };
     } else {
       // Tim YSKI (Akun Tim) atau monitor yang didaftarkan admin
       const t = await getDoc(doc(db, 'tim_accounts', user.uid));
