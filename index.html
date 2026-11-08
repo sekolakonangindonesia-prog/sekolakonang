@@ -107,6 +107,43 @@
   .btn-data { padding: 10px 25px; border-radius: 50px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; background: transparent; color: var(--neon-color); border: 2px solid var(--neon-color); margin-top: auto; }
   .kpi-card:hover .btn-data { background: var(--neon-color); color: #000; box-shadow: 0 0 15px var(--neon-color); }
 
+
+  /* ── PILAR (Mengapa Tiga Hal Ini Penting) ── */
+  .pillar-section { background: linear-gradient(rgba(0,51,102,0.8), rgba(0,51,102,0.6)), url('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat; color: white; padding: 60px 5%; text-align: center; }
+  .pillar-section h2 { font-size: 2rem; margin-bottom: 8px; }
+  .pillar-section > p { opacity: 0.95; }
+  .pillar-grid { display: flex; justify-content: center; gap: 30px; margin-top: 30px; flex-wrap: wrap; }
+  .pillar-box { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px; width: 300px; border: 1px solid rgba(255,255,255,0.2); transition: 0.3s; }
+  .pillar-box:hover { transform: translateY(-5px); background: rgba(255,255,255,0.2); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+  .pillar-box i { font-size: 2.5rem; margin-bottom: 15px; display: block; }
+  .pillar-box h3 { margin-bottom: 6px; }
+
+  /* ── SIH3 (3 kartu + link, dikelola dari admin) ── */
+  .sih3-wrap { padding: 60px 5%; background: white; }
+  .sih3-section { max-width: 1100px; margin: 0 auto; padding: 45px 30px; background: #f0f8ff; border-top: 5px solid #007bff; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.05); text-align: center; }
+  .sih3-section > i { font-size: 2.4rem; color: #007bff; margin-bottom: 12px; display: block; }
+  .sih3-section > h3 { color: #0056b3; font-size: 1.5rem; margin-bottom: 10px; }
+  .sih3-section > p { color: var(--text-soft); max-width: 700px; margin: 0 auto; }
+  .sih3-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 28px; text-align: left; }
+  .sih3-card { background: #fff; border: 1px solid #dbe7f3; border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 8px; transition: 0.3s; color: inherit; }
+  a.sih3-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,86,179,0.15); border-color: #007bff; }
+  .sih3-card .ic { width: 48px; height: 48px; border-radius: 12px; background: #e3f2fd; color: #0056b3; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 4px; }
+  .sih3-card h4 { color: #0056b3; font-size: 1.1rem; }
+  .sih3-card p { color: var(--text-soft); font-size: 0.88rem; }
+  .sih3-go { margin-top: auto; padding-top: 8px; font-size: 0.8rem; font-weight: 700; color: var(--btn-teal); text-transform: uppercase; letter-spacing: 1px; }
+  .sih3-card.soon .sih3-go { color: #9aa5b1; }
+  .btn-sih3 { background: #0056b3; border-color: #0056b3; margin-top: 26px; }
+  .btn-sih3:hover { background: #004494; transform: translateY(-2px); }
+
+  /* ── SDGs ── */
+  .sdg-section { padding: 50px 5%; background: white; text-align: center; border-top: 1px solid #eee; }
+  .sdg-section h2 { color: var(--portal-dark); font-size: 1.6rem; margin-bottom: 6px; }
+  .sdg-section > p { color: var(--text-soft); }
+  .sdg-container { display: flex; justify-content: center; align-items: center; gap: 25px; flex-wrap: wrap; margin-top: 30px; }
+  .sdg-img-wrapper { width: 140px; height: 140px; transition: 0.3s; display: inline-block; border-radius: 12px; overflow: hidden; }
+  .sdg-img-wrapper:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+  .sdg-img-wrapper img { width: 100%; height: 100%; object-fit: contain; }
+
   /* ── PROGRAM ── */
   .section-program { padding: 80px 5%; background: var(--bg-light); text-align: center; }
   .section-header { margin-bottom: 45px; }
@@ -238,6 +275,11 @@
     .impact-label { font-size: 0.75rem; margin-bottom: 14px; }
     .btn-data { padding: 8px 16px; font-size: 0.7rem; }
     .section-program, .section-news, .section-contact { padding: 50px 5%; }
+    .pillar-section h2 { font-size: 1.5rem; }
+    .sih3-wrap { padding: 40px 5%; }
+    .sih3-section { padding: 30px 18px; }
+    .sih3-cards { grid-template-columns: 1fr; }
+    .sdg-img-wrapper { width: 100px; height: 100px; }
     .news-grid { grid-template-columns: 1fr; }
     .contact-inner { grid-template-columns: 1fr; padding: 28px 20px; gap: 30px; }
     .program-card { width: 100%; }
@@ -272,6 +314,7 @@
         </div>
       </li>
       <li><a href="#impact" data-section="impact">Dampak</a></li>
+      <li><a href="#sih3" data-section="sih3">SIH3</a></li>
       <li><a href="#berita" data-section="berita">Berita</a></li>
       <li><a href="#kontak" data-section="kontak">Kontak</a></li>
       <li><a href="#mitra" data-section="mitra">Mitra</a></li>
@@ -358,6 +401,17 @@
   </div>
 </section>
 
+<!-- PILAR -->
+<section id="pilar" class="pillar-section">
+  <h2 id="pilarTitle">Mengapa Tiga Hal Ini Penting?</h2>
+  <p id="pilarSubtitle">Kontribusi Anda pada 3 pilar ini berdampak langsung pada mitigasi bencana alam.</p>
+  <div class="pillar-grid" id="pilarGrid">
+    <div class="pillar-box"><i class="fas fa-tree"></i><h3>Tutupan Lahan</h3><p>Menanam pohon di hulu untuk mencegah longsor dan sedimentasi.</p></div>
+    <div class="pillar-box"><i class="fas fa-water"></i><h3>Retensi Air</h3><p>Mencegah banjir saat hujan dan menabung air untuk kemarau.</p></div>
+    <div class="pillar-box"><i class="fas fa-paw"></i><h3>Biodiversitas</h3><p>Menjaga ekosistem yang menjamin kualitas air &amp; udara.</p></div>
+  </div>
+</section>
+
 <!-- PROGRAM -->
 <section class="section-program" id="program">
   <div class="section-header reveal">
@@ -423,6 +477,34 @@
         </div>
       </div>
     </a>
+  </div>
+</section>
+
+<!-- SIH3 -->
+<div class="sih3-wrap">
+  <section id="sih3" class="sih3-section reveal">
+    <i class="fas fa-cloud-rain"></i>
+    <h3 id="sih3Title">Informasi SIH3 (Sistem Informasi Hidrologi, Hidrometeorologi, dan Hidrogeologi)</h3>
+    <p id="sih3Desc">Pemantauan kondisi DAS untuk mendukung pengambilan keputusan berbasis data.</p>
+    <div class="sih3-cards" id="sih3Cards">
+      <div class="sih3-card soon"><div class="ic"><i class="fas fa-droplet"></i></div><h4>Hidrologi</h4><p>Aliran dan ketersediaan air permukaan untuk perencanaan sumber daya air.</p><span class="sih3-go">Segera tersedia</span></div>
+      <div class="sih3-card soon"><div class="ic"><i class="fas fa-cloud"></i></div><h4>Hidrometeorologi</h4><p>Hujan, iklim, dan fenomena atmosfer yang memengaruhi debit sungai dan ketersediaan air.</p><span class="sih3-go">Segera tersedia</span></div>
+      <div class="sih3-card soon"><div class="ic"><i class="fas fa-life-ring"></i></div><h4>Hidrogeologi</h4><p>Air tanah, akuifer, dan kaitannya dengan pemenuhan kebutuhan air bersih.</p><span class="sih3-go">Segera tersedia</span></div>
+    </div>
+    <a class="btn-ss5 btn-sih3" id="sih3Btn" href="#" target="_blank" rel="noopener noreferrer" style="display:none;"><i class="fas fa-external-link-alt"></i> <span id="sih3BtnText">Buka SIH3</span></a>
+  </section>
+</div>
+
+<!-- SDGs -->
+<section id="sdgs" class="sdg-section">
+  <h2 id="sdgsTitle">Dampak Sosio-Ekonomi &amp; Kontribusi SDGs</h2>
+  <p id="sdgsDesc">Inisiatif ini berkontribusi langsung pada Tujuan Pembangunan Berkelanjutan:</p>
+  <div class="sdg-container" id="sdgGrid">
+    <span class="sdg-img-wrapper"><img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/aqubisa-rejoso-/refs/heads/main/goll%206%20logo.png" alt="SDG 6 Air Bersih dan Sanitasi Layak"></span>
+    <span class="sdg-img-wrapper"><img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/aqubisa-rejoso-/refs/heads/main/goll%208%20logo.png" alt="SDG 8 Pekerjaan Layak dan Pertumbuhan Ekonomi"></span>
+    <span class="sdg-img-wrapper"><img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/aqubisa-rejoso-/refs/heads/main/goll%2013%20logo.png" alt="SDG 13 Penanganan Perubahan Iklim"></span>
+    <span class="sdg-img-wrapper"><img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/aqubisa-rejoso-/refs/heads/main/goll%2015%20logo.png" alt="SDG 15 Ekosistem Daratan"></span>
+    <span class="sdg-img-wrapper"><img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/aqubisa-rejoso-/refs/heads/main/goll%2017%20logo.png" alt="SDG 17 Kemitraan untuk Mencapai Tujuan"></span>
   </div>
 </section>
 
@@ -860,8 +942,101 @@
       </div>`;
   }
 
+
+  // ── Pilar / SIH3 / SDGs — dikelola dari admin (profil_yayasan/pilar | sih3 | sdgs) ──
+  // Tanpa dokumen di Firestore, teks bawaan di HTML tetap tampil.
+  const SDG_META = {
+    6:  { img: 'https://raw.githubusercontent.com/sekolakonangindonesia-prog/aqubisa-rejoso-/refs/heads/main/goll%206%20logo.png',  alt: 'SDG 6 Air Bersih dan Sanitasi Layak' },
+    8:  { img: 'https://raw.githubusercontent.com/sekolakonangindonesia-prog/aqubisa-rejoso-/refs/heads/main/goll%208%20logo.png',  alt: 'SDG 8 Pekerjaan Layak dan Pertumbuhan Ekonomi' },
+    13: { img: 'https://raw.githubusercontent.com/sekolakonangindonesia-prog/aqubisa-rejoso-/refs/heads/main/goll%2013%20logo.png', alt: 'SDG 13 Penanganan Perubahan Iklim' },
+    15: { img: 'https://raw.githubusercontent.com/sekolakonangindonesia-prog/aqubisa-rejoso-/refs/heads/main/goll%2015%20logo.png', alt: 'SDG 15 Ekosistem Daratan' },
+    17: { img: 'https://raw.githubusercontent.com/sekolakonangindonesia-prog/aqubisa-rejoso-/refs/heads/main/goll%2017%20logo.png', alt: 'SDG 17 Kemitraan untuk Mencapai Tujuan' }
+  };
+  function safeIconClass(s) { return String(s || '').replace(/[^a-z0-9\s\-]/gi, '').trim(); }
+  function safeHttpUrl(u) { u = String(u || '').trim(); return /^https?:\/\//i.test(u) ? u : ''; }
+
+  async function loadPilar() {
+    try {
+      const snap = await getDoc(doc(db, 'profil_yayasan', 'pilar'));
+      if (!snap.exists()) return;
+      const d = snap.data();
+      if (d.title)    document.getElementById('pilarTitle').textContent = d.title;
+      if (d.subtitle) document.getElementById('pilarSubtitle').textContent = d.subtitle;
+      if (Array.isArray(d.items) && d.items.length) {
+        const grid = document.getElementById('pilarGrid');
+        grid.innerHTML = '';
+        d.items.forEach(it => {
+          const box = document.createElement('div'); box.className = 'pillar-box';
+          const i = document.createElement('i'); i.className = safeIconClass(it.icon) || 'fas fa-leaf';
+          const h = document.createElement('h3'); h.textContent = it.title || '';
+          const p = document.createElement('p');  p.textContent = it.desc || '';
+          box.append(i, h, p); grid.appendChild(box);
+        });
+      }
+    } catch (e) { console.error('Pilar load error', e); }
+  }
+
+  const SIH3_DEFAULT = [
+    { icon: 'fas fa-droplet',   title: 'Hidrologi',        desc: 'Aliran dan ketersediaan air permukaan untuk perencanaan sumber daya air.' },
+    { icon: 'fas fa-cloud',     title: 'Hidrometeorologi', desc: 'Hujan, iklim, dan fenomena atmosfer yang memengaruhi debit sungai dan ketersediaan air.' },
+    { icon: 'fas fa-life-ring', title: 'Hidrogeologi',     desc: 'Air tanah, akuifer, dan kaitannya dengan pemenuhan kebutuhan air bersih.' }
+  ];
+  async function loadSih3() {
+    try {
+      const snap = await getDoc(doc(db, 'profil_yayasan', 'sih3'));
+      if (!snap.exists()) return;
+      const d = snap.data();
+      if (d.title) document.getElementById('sih3Title').textContent = d.title;
+      if (d.desc)  document.getElementById('sih3Desc').textContent = d.desc;
+      // 3 kartu: field kosong di admin -> pakai teks bawaan; link kosong -> kartu "Segera tersedia"
+      const items = Array.isArray(d.items) ? d.items : [];
+      const cards = document.getElementById('sih3Cards');
+      cards.innerHTML = '';
+      SIH3_DEFAULT.forEach((def, i) => {
+        const it = items[i] || {};
+        const url = safeHttpUrl(it.url);
+        const card = document.createElement(url ? 'a' : 'div');
+        card.className = 'sih3-card' + (url ? '' : ' soon');
+        if (url) { card.href = url; card.target = '_blank'; card.rel = 'noopener noreferrer'; }
+        const ic = document.createElement('div'); ic.className = 'ic';
+        const i2 = document.createElement('i'); i2.className = safeIconClass(it.icon) || def.icon; ic.appendChild(i2);
+        const h = document.createElement('h4'); h.textContent = it.title || def.title;
+        const p = document.createElement('p');  p.textContent = it.desc  || def.desc;
+        const go = document.createElement('span'); go.className = 'sih3-go';
+        go.textContent = url ? 'Buka data ' : 'Segera tersedia';
+        if (url) { const ar = document.createElement('i'); ar.className = 'fas fa-arrow-right'; go.appendChild(ar); }
+        card.append(ic, h, p, go); cards.appendChild(card);
+      });
+      // tombol portal utama (opsional)
+      const main = safeHttpUrl(d.url), btn = document.getElementById('sih3Btn');
+      if (main) { btn.href = main; document.getElementById('sih3BtnText').textContent = d.btn_label || 'Buka SIH3'; btn.style.display = ''; }
+      else btn.style.display = 'none';
+    } catch (e) { console.error('SIH3 load error', e); }
+  }
+
+  async function loadSdgs() {
+    try {
+      const snap = await getDoc(doc(db, 'profil_yayasan', 'sdgs'));
+      if (!snap.exists()) return;
+      const d = snap.data();
+      if (d.title) document.getElementById('sdgsTitle').textContent = d.title;
+      if (d.desc)  document.getElementById('sdgsDesc').textContent = d.desc;
+      if (Array.isArray(d.goals)) {
+        const goals = d.goals.map(Number).filter(n => SDG_META[n]);
+        if (!goals.length) { document.getElementById('sdgs').style.display = 'none'; return; }
+        const grid = document.getElementById('sdgGrid');
+        grid.innerHTML = '';
+        goals.forEach(n => {
+          const w = document.createElement('span'); w.className = 'sdg-img-wrapper';
+          const img = document.createElement('img'); img.src = SDG_META[n].img; img.alt = SDG_META[n].alt;
+          w.appendChild(img); grid.appendChild(w);
+        });
+      }
+    } catch (e) { console.error('SDGs load error', e); }
+  }
+
   // Panggil semua loader
-  loadProfil(); loadHero(); loadImpactStats(); loadPrograms(); loadMitra(); loadKontakSosial(); loadNews();
+  loadProfil(); loadHero(); loadImpactStats(); loadPrograms(); loadMitra(); loadKontakSosial(); loadNews(); loadPilar(); loadSih3(); loadSdgs();
 
   // ── Admin modal ──
   let logoClicks=0, logoTimer=null;
@@ -914,7 +1089,7 @@
   });
 
   // ── Tab bar active state ──
-  const sections=['tentang','program','impact','berita','kontak','mitra'];
+  const sections=['tentang','impact','program','sih3','berita','kontak','mitra'];
   const tabLinks=document.querySelectorAll('#nav-menu a[data-section]');
   const secEls=sections.map(id=>document.getElementById(id)).filter(Boolean);
   function updateTabs(){
