@@ -4,283 +4,200 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Yayasan Sekola Konang Indonesia</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
+  /* ── 1. SETTING VISUAL (palet mengikuti AqruBiSA) ── */
   :root {
-    --deep-forest: #050505;
-    --canopy: #353736;
-    --lime: #C6FF00;
-    --lime-dim: rgba(198,255,0,0.12);
-    --parchment: #F5F5F0;
-    --white: #FFFFFF;
-    --text-muted: rgba(245,245,240,0.55);
-    --border: rgba(198,255,0,0.15);
-    --nav-bg: rgba(5,5,5,0.92);
-    --display: 'Playfair Display', Georgia, serif;
-    --body: 'Inter', system-ui, sans-serif;
-    --r-sm: 12px; --r-md: 20px; --r-lg: 32px;
+    --ss-green: #28a745;
+    --ss-green-hover: #218838;
+    --btn-dark: #333333;
+    --btn-teal: #005f73;
+    --portal-dark: #002b50;
+    --text-main: #333;
+    --text-soft: #666;
+    --bg-light: #f9f9f9;
+    --gold: #d4af37;
+    --card-blue: #1c4668;
+    --gallery-dark: #2c3e50;
+    --deep-navy: #0b253a;
+    --kpi-bg: #0b1f30;
   }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-
-  /* Tambah padding bawah agar konten tidak tertutup tab bar */
-  body {
-    font-family: var(--body);
-    background: var(--deep-forest);
-    color: var(--parchment);
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    padding-bottom: 70px; /* tinggi tab bar */
-  }
-
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  html { scroll-behavior: smooth; scroll-padding-top: 90px; }
+  body { background: var(--bg-light); color: var(--text-main); line-height: 1.6; overflow-x: hidden; }
   img { display: block; max-width: 100%; }
-  a { text-decoration: none; color: inherit; }
-  .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
-  .lime { color: var(--lime); }
-  .section-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--lime); margin-bottom: 12px; display: block; }
-  .divider { width: 48px; height: 3px; background: var(--lime); margin: 18px 0 24px; border-radius: 2px; }
+  a { text-decoration: none; color: inherit; transition: 0.3s; }
+  .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 5%; }
+  .section-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--ss-green); margin-bottom: 8px; display: block; }
 
-  /* ── TOP NAV ── */
-  nav#mainNav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    padding: 0 20px; height: 64px; display: flex; align-items: center; justify-content: space-between;
-    background: var(--nav-bg);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border); transition: box-shadow 0.3s;
-  }
-  nav#mainNav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
-  .nav-brand { display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
-  .nav-brand img { height: 36px; }
-  .nav-brand-text { line-height: 1.1; }
-  .nav-brand-text strong { display: block; font-family: var(--display); font-size: 0.9rem; color: var(--white); letter-spacing: 0.5px; }
-  .nav-brand-text small { font-size: 0.55rem; letter-spacing: 3px; color: var(--lime); text-transform: uppercase; font-weight: 600; }
-  .nav-cta { display: flex; align-items: center; gap: 8px; background: var(--lime); color: var(--deep-forest); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 10px 20px; border-radius: 50px; transition: 0.2s; }
-  .nav-cta:hover { background: var(--white); }
+  /* ── TOP BAR ── */
+  .top-bar { background: var(--portal-dark); color: white; padding: 6px 5%; font-size: 0.8rem; font-weight: 500; }
+
+  /* ── HEADER ── */
+  header#mainNav { background: white; padding: 6px 5%; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; gap: 20px; transition: box-shadow 0.3s; }
+  header#mainNav.scrolled { box-shadow: 0 4px 18px rgba(0,0,0,0.15); }
+  .nav-brand { display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; flex-shrink: 0; }
+  .nav-brand img { height: 54px; width: auto; }
+  .nav-brand-text { line-height: 1.15; }
+  .nav-brand-text strong { display: block; font-size: 1.05rem; color: var(--portal-dark); font-weight: 700; }
+  .nav-brand-text small { font-size: 0.65rem; letter-spacing: 3px; color: var(--ss-green); text-transform: uppercase; font-weight: 700; }
+
+  nav#nav-menu { flex: 1; }
+  nav#nav-menu ul { list-style: none; display: flex; gap: 20px; justify-content: center; align-items: center; }
+  nav#nav-menu a { font-weight: 600; color: #444; font-size: 0.9rem; }
+  nav#nav-menu a:hover, nav#nav-menu a.active { color: var(--ss-green); }
+
+  .dropdown { position: relative; }
+  .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; background: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; min-width: 240px; padding: 10px 0; z-index: 1001; }
+  .dropdown:hover .dropdown-menu { display: block; }
+  .dropdown-menu a { display: block; padding: 10px 20px; font-size: 0.85rem; color: #555 !important; border-bottom: 1px solid #f1f1f1; text-align: left; }
+  .dropdown-menu a:last-child { border: none; }
+  .dropdown-menu a:hover { background: #f9f9f9; color: var(--ss-green) !important; }
+
+  .header-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .btn-header { background: var(--btn-teal); color: white; padding: 8px 25px; border-radius: 25px; font-weight: bold; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px; }
+  .btn-header:hover { background: #004555; transform: translateY(-2px); }
+  .btn-header.user { background: rgba(0,95,115,0.08); color: var(--btn-teal); border: 1px solid rgba(0,95,115,0.3); }
+  .hamburger { display: none; font-size: 1.6rem; color: var(--portal-dark); cursor: pointer; }
 
   /* ── HERO ── */
-  .hero { position: relative; min-height: 70svh; display: flex; flex-direction: column; justify-content: flex-end; padding: 70px 0 40px; overflow: hidden; }
-  .hero-bg {
-    position: absolute; inset: 0;
-    background: linear-gradient(to bottom, rgba(5,5,5,0.5) 0%, rgba(5,5,5,0.85) 60%, var(--deep-forest) 100%),
-      url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
-    z-index: 0;
-  }
-  .fireflies { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-  .firefly { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--lime); opacity: 0; animation: float var(--dur,6s) ease-in-out infinite var(--delay,0s); }
-  @keyframes float { 0%,100%{opacity:0;transform:translateY(0) scale(0.5)} 40%,60%{opacity:.7;transform:translateY(-30px) scale(1)} }
-  .hero-content { position: relative; z-index: 2; }
-  .hero-eyebrow { font-size: 0.6rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--lime); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-  .hero-eyebrow::before { content: ''; width: 30px; height: 2px; background: var(--lime); display: inline-block; }
-  .hero-title { font-family: var(--display); font-size: clamp(2.4rem,7vw,5rem); font-weight: 900; line-height: 1.05; color: var(--white); letter-spacing: -1px; margin-bottom: 20px; max-width: 720px; }
-  .hero-title em { font-style: normal; color: var(--lime); }
-  .hero-desc { font-size: 0.95rem; line-height: 1.7; color: var(--text-muted); max-width: 520px; margin-bottom: 36px; }
-  .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-  .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--lime); color: var(--deep-forest); font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 16px 28px; border-radius: 50px; transition: 0.2s; border: none; cursor: pointer; }
-  .btn-primary:hover { background: var(--white); transform: translateY(-2px); }
-  .btn-ghost { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--parchment); font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 16px 24px; border-radius: 50px; border: 1px solid rgba(245,245,240,0.25); transition: 0.2s; cursor: pointer; }
-  .btn-ghost:hover { border-color: var(--lime); color: var(--lime); }
+  .hero { position: relative; padding: 80px 5%; background: linear-gradient(rgba(0,51,102,0.8), rgba(0,51,102,0.6)), url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .hero-eyebrow { font-size: 0.75rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+  .hero-title { font-size: 2.5rem; font-weight: 700; line-height: 1.2; margin-bottom: 15px; max-width: 900px; }
+  .hero-title em { font-style: normal; color: var(--gold); }
+  .hero-desc { font-size: 1.15rem; margin: 0 auto 30px; opacity: 0.95; max-width: 900px; }
+  .hero-actions { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; }
+  .btn-ss5 { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 30px; border-radius: 50px; font-size: 0.95rem; font-weight: bold; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); min-width: 210px; cursor: pointer; border: 2px solid transparent; }
+  .btn-ss5-teal { background: var(--btn-teal); border-color: var(--btn-teal); }
+  .btn-ss5-teal:hover { background: #004555; transform: translateY(-2px); }
+  .btn-ss5-ghost { background: transparent; border-color: rgba(255,255,255,0.8); box-shadow: none; }
+  .btn-ss5-ghost:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+  .hero-badges { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+  .badge-box { border: 1px solid rgba(255,255,255,0.7); padding: 8px 20px; border-radius: 5px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
 
-  /* ── IMPACT STRIP ── */
-  .impact-section { padding: 30px 0; background: var(--deep-forest); }
-  .impact-grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;}
-  .impact-card { background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px 15px; text-align: center; transition: 0.3s; position: relative; overflow: hidden; }
-  .impact-card:hover { border-color: var(--lime); transform: translateY(-5px); }
-  .impact-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--lime), transparent); border-radius: var(--r-md) var(--r-md) 0 0; }
-  .impact-icon { font-size: 1.5rem; color: var(--lime); margin-bottom: 15px; display: block; }
-  .impact-num { font-family: var(--display); font-size: 2rem; font-weight: 900; color: var(--white); display: block; }
-  .impact-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 10px; display: block; }  
+  /* ── STORY / TENTANG ── */
+  .story-section { padding: 60px 5%; background: white; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 50px; align-items: start; max-width: none; }
+  .story-content h2 { font-size: 2rem; color: #155740; margin-bottom: 20px; border-left: 5px solid var(--ss-green); padding-left: 15px; line-height: 1.25; }
+  .story-content h2 em { font-style: normal; color: var(--ss-green); }
+  .story-content p { margin-bottom: 14px; }
+  .strategy-box { background: #fdfdfd; border: 1px solid #eee; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
+  .strategy-box h3 { color: #155740; margin-bottom: 15px; }
+  .strategy-list { list-style: none; padding: 0; }
+  .strategy-list li { display: flex; gap: 15px; margin-bottom: 15px; }
+  .strategy-list li:last-child { margin-bottom: 0; }
+  .strategy-list i { color: var(--ss-green); margin-top: 5px; width: 18px; text-align: center; }
+  .strategy-list strong { display: block; color: var(--portal-dark); }
+  .strategy-list span { font-size: 0.9rem; color: var(--text-soft); }
+  .about-badge { display: inline-block; margin-top: 6px; background: var(--portal-dark); color: white; padding: 6px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; }
 
-  
-
-  /* QUICK ACTIONS */
-  .quick-actions-section { padding: 20px 0; background: var(--deep-forest); }
-  .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-  .quick-item { background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px 10px; text-align: center; color: var(--white); transition: 0.3s; text-decoration: none; }
-
-/* Garis neon di atas card */
-  .quick-item::before { content: ''; position: absolute; top: 0; left: 30%; right: 30%; height: 2px; background: var(--lime); opacity: 0; transition: 0.3s; }
-  .quick-item:hover { border-color: var(--lime); transform: translateY(-5px); }
-  .quick-item:hover::before { opacity: 1; }
-  .quick-icon { font-size: 1.5rem; color: var(--lime); margin-bottom: 10px; }
-  .quick-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
-  /* ── ABOUT ── */
-  .section-about { padding: 90px 0; background: var(--deep-forest); }
-  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-  .about-visual { position: relative; border-radius: var(--r-lg); overflow: hidden; }
-  .about-visual img { width: 100%; height: 420px; object-fit: cover; border-radius: var(--r-lg); filter: brightness(0.9) saturate(1.1); }
-  .about-badge { position: absolute; bottom: 24px; left: 24px; background: var(--lime); color: var(--deep-forest); padding: 14px 20px; border-radius: var(--r-md); font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; }
-  .about-badge strong { display: block; font-size: 1.4rem; font-family: var(--display); }
-  .about-text h2 { font-family: var(--display); font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 900; line-height: 1.15; color: var(--white); margin-bottom: 20px; }
-  .about-text p { font-size: 0.9rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 16px; }
-  .about-pillars { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 28px; }
-  .pillar { background: var(--lime-dim); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
-  .pillar i { color: var(--lime); font-size: 1rem; margin-top: 2px; flex-shrink: 0; }
-  .pillar h6 { font-size: 0.7rem; font-weight: 700; color: var(--lime); text-transform: uppercase; letter-spacing: 1px; }
-  .pillar p { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; margin-top: 3px; }
+  /* ── IMPACT / KPI (neon gelap ala AqruBiSA) ── */
+  .kpi-section { padding: 55px 5%; background: var(--kpi-bg); text-align: center; border-top: 1px solid #1c3d52; }
+  .section-title { color: #fff; font-size: 2.4rem; margin-bottom: 35px; font-weight: 600; text-shadow: 0 0 10px rgba(0,150,255,0.5); }
+  .kpi-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; max-width: 1200px; margin: 0 auto; }
+  .kpi-card { background: #111; border: 2px solid #333; border-radius: 15px; padding: 30px 20px; transition: all 0.4s ease; width: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .card-pohon { --neon-color: #ccff00; }
+  .card-air { --neon-color: #00ffff; }
+  .card-spesies { --neon-color: #ffaa00; }
+  .card-lokasi { --neon-color: #ff6ec7; }
+  .kpi-card:hover { transform: translateY(-10px); border-color: var(--neon-color); box-shadow: 0 0 20px var(--neon-color); }
+  .kpi-icon { font-size: 2.5rem; margin-bottom: 8px; color: var(--neon-color); }
+  .impact-num { font-size: 2.1rem; font-weight: 700; color: #fff; margin: 5px 0 4px; display: block; }
+  .impact-label { font-size: 0.85rem; color: #aaa; margin-bottom: 22px; display: block; }
+  .btn-data { padding: 10px 25px; border-radius: 50px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; background: transparent; color: var(--neon-color); border: 2px solid var(--neon-color); margin-top: auto; }
+  .kpi-card:hover .btn-data { background: var(--neon-color); color: #000; box-shadow: 0 0 15px var(--neon-color); }
 
   /* ── PROGRAM ── */
-  .section-program { padding: 90px 0; background: var(--canopy); }
-  .section-header { text-align: center; margin-bottom: 50px; }
-  .section-header h2 { font-family: var(--display); font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 900; color: var(--white); }
-  .section-header p { font-size: 0.9rem; color: var(--text-muted); max-width: 480px; margin: 12px auto 0; line-height: 1.7; }
-  .program-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
-  .program-card { background: var(--deep-forest); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; display: block; }
-  .program-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px var(--lime); }
-  .program-card-img { width: 100%; height: 180px; object-fit: cover; opacity: 0.85; }
-  .program-card-body { padding: 24px 22px 28px; }
-  .program-icon { width: 44px; height: 44px; background: var(--lime-dim); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-  .program-icon i { color: var(--lime); font-size: 1.1rem; }
-  .program-card h3 { font-family: var(--display); font-size: 1.2rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
-  .program-card p { font-size: 0.8rem; line-height: 1.65; color: var(--text-muted); margin-bottom: 20px; min-height: 60px; }
-  .program-stats { display: flex; gap: 16px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--border); }
-  .pstat strong { display: block; font-size: 1.1rem; font-weight: 700; color: var(--lime); font-family: var(--display); }
-  .pstat span { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-  .badge-soon { display: inline-block; margin-top: 4px; font-size: 0.6rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); border: 1px dashed var(--border); padding: 4px 10px; border-radius: 50px; }
+  .section-program { padding: 80px 5%; background: var(--bg-light); text-align: center; }
+  .section-header { margin-bottom: 45px; }
+  .section-header h2 { color: var(--portal-dark); font-size: 2rem; margin-bottom: 10px; }
+  .section-header p { color: var(--text-soft); max-width: 640px; margin: 0 auto; }
+  .program-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; max-width: 1200px; margin: 0 auto; }
+  .program-card { background: #fff; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; transition: 0.3s; display: block; width: 360px; max-width: 100%; text-align: center; }
+  .program-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-bottom: 4px solid var(--portal-dark); }
+  .program-card-img { width: 100%; height: 160px; object-fit: cover; }
+  .program-card-body { padding: 0 20px 26px; }
+  .program-icon { width: 60px; height: 60px; background: var(--portal-dark); color: white; border-radius: 50%; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; margin: -30px auto 16px; position: relative; border: 4px solid #fff; }
+  .program-card h3 { color: var(--portal-dark); font-size: 1.1rem; margin-bottom: 8px; }
+  .program-card p { font-size: 0.85rem; color: var(--text-soft); margin-bottom: 18px; min-height: 60px; }
+  .program-stats { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid #eee; }
+  .pstat strong { display: block; font-size: 1.05rem; color: var(--btn-teal); }
+  .pstat span { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+  .badge-soon { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #888; border: 1px dashed #bbb; padding: 4px 12px; border-radius: 50px; }
 
-  /* ── PJLH (Konang Co-Investment) ── */
-  .section-pjlh { padding: 90px 0; background: var(--deep-forest); }
-  .konang-box { background: var(--canopy); border-left: 4px solid var(--lime); padding: 40px; border-radius: var(--r-sm); margin-bottom: 60px; }
-  .konang-box h3 { color: var(--lime); font-family: var(--display); margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase; font-size: 0.9rem; }
-  .konang-box p { color: var(--parchment); font-size: 0.95rem; line-height: 1.7; opacity: 0.9; }
-  .selection-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 24px; max-width: 800px; margin: 0 auto; }
-  .selection-card { background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-md); padding: 32px; text-align: center; transition: 0.3s; }
-  .selection-card:hover { border-color: var(--lime); transform: translateY(-5px); }
-  .selection-card .card-icon { font-size: 2rem; color: var(--lime); margin-bottom: 16px; }
-  .selection-card h3 { color: var(--white); font-family: var(--display); margin-bottom: 8px; }
-  .selection-card .card-num { font-size: 1.8rem; font-weight: 900; color: var(--lime); margin: 10px 0; }
-  .selection-card .card-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
-
-  /* ── MITRA ── */
-  .section-mitra { padding: 80px 0; background:  var(--deep-forest); border-top: 1px solid var(--border); }
-  .mitra-header { text-align: center; margin-bottom: 48px; }
-  .mitra-header h2 { font-family: var(--display); font-size: clamp(1.5rem,3.5vw,2.2rem); font-weight: 900; color: var(--white); }
-  .mitra-header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; }
-  .mitra-logos { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: center; }
-  .mitra-logo-card { width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.92); display: flex; align-items: center; justify-content: center; transition: 0.2s; overflow: hidden; }
-  .mitra-logo-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,0.3); }
-  .mitra-logo-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-  .mitra-logo-text { font-size: 0.6rem; font-weight: 700; color: var(--deep-forest); letter-spacing: 1px; text-transform: uppercase; text-align: center; padding: 4px; }
-  .mitra-empty-msg { color: var(--text-muted); font-size: 0.85rem; padding: 20px 0; }
-
-  /* ── BERITA ── */
-  .section-news { padding: 90px 0; background: var(--deep-forest); }
-  .news-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 20px; }
-  .news-card { background: var(--canopy); border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); transition: 0.25s; display: flex; flex-direction: column; }
-  .news-card:hover { transform: translateY(-4px); border-color: rgba(198,255,0,0.4); }
+  /* ── BERITA (gelap navy + kartu putih, ala galeri AqruBiSA) ── */
+  .section-news { padding: 70px 5%; background: var(--deep-navy); text-align: center; color: white; }
+  .section-news .section-label { color: var(--gold); }
+  .section-news .section-header h2 { color: white; }
+  .section-news .section-header p { color: #ccc; }
+  .news-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 20px; max-width: 1200px; margin: 0 auto; text-align: left; }
+  .news-card { background: white; color: var(--text-main); border-radius: 8px; overflow: hidden; transition: 0.3s; display: flex; flex-direction: column; }
+  .news-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(212,175,55,0.4); }
   .news-card img { width: 100%; object-fit: cover; }
   .news-card.featured img { height: 240px; }
   .news-card:not(.featured) img { height: 160px; }
-  .news-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
-  .news-type { font-size: 0.55rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 4px 10px; border-radius: 50px; display: inline-block; margin-bottom: 12px; width: fit-content; }
-  .news-type.internal { background: var(--lime-dim); color: var(--lime); border: 1px solid var(--border); }
-  .news-type.external { background: rgba(2,119,189,0.15); color: #64b5f6; border: 1px solid rgba(2,119,189,0.3); }
-  .news-date { font-size: 0.62rem; color: var(--text-muted); margin-bottom: 8px; }
-  .news-card h4 { font-family: var(--display); font-size: 1rem; font-weight: 700; line-height: 1.35; color: var(--white); margin-bottom: 10px; }
-  .news-card.featured h4 { font-size: 1.3rem; }
-  .news-card p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; flex: 1; }
-  .news-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 700; color: var(--lime); text-transform: uppercase; letter-spacing: 1px; margin-top: 16px; }
-  .news-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; grid-column: 1/-1; padding: 30px 0; }
+  .news-body { padding: 18px; flex: 1; display: flex; flex-direction: column; }
+  .news-type { font-size: 0.65rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 50px; display: inline-block; margin-bottom: 10px; width: fit-content; }
+  .news-type.internal { background: #e6f4ea; color: #155740; }
+  .news-type.external { background: #e3f2fd; color: #0d47a1; }
+  .news-date { font-size: 0.72rem; color: #888; margin-bottom: 6px; }
+  .news-card h4 { font-size: 1rem; font-weight: 700; line-height: 1.35; color: var(--portal-dark); margin-bottom: 8px; }
+  .news-card.featured h4 { font-size: 1.25rem; }
+  .news-card p { font-size: 0.82rem; color: var(--text-soft); line-height: 1.6; flex: 1; }
+  .news-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: var(--btn-teal); text-transform: uppercase; letter-spacing: 1px; margin-top: 14px; }
+  .news-link:hover { color: var(--ss-green); }
+  .news-empty { text-align: center; color: #ccc; font-size: 0.9rem; grid-column: 1/-1; padding: 30px 0; }
 
   /* ── KONTAK ── */
-  .section-contact { padding: 90px 0; background: var(--canopy); }
-  .contact-inner { background:  var(--deep-forest); border-radius: var(--r-lg); border: 1px solid var(--border); padding: 60px 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-  .contact-text h2 { font-family: var(--display); font-size: clamp(1.8rem,4vw,2.5rem); font-weight: 900; color: var(--white); margin-bottom: 14px; }
-  .contact-text p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 28px; }
-  .contact-info { display: flex; flex-direction: column; gap: 12px; }
-  .contact-row { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: var(--parchment); padding: 3px 8px 3px 0; border-radius: var(--r-sm); transition: 0.2s; margin: -3px 0; }
-  .contact-row i { color: var(--lime); width: 20px; text-align: center; }
-  a.contact-row:hover { background: rgba(255,255,255,0.04); color: var(--lime); }
-  a.contact-row:hover i { color: var(--lime); }
-  /* ── SOSIAL MEDIA KONTAK — ikon flat, samakan gaya dgn contact-row ── */
-  .contact-social { display: flex; flex-direction: column; gap: 12px; margin-top: 2px; }
-  .contact-social-item { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: var(--parchment); padding: 3px 8px 3px 0; border-radius: var(--r-sm); transition: 0.2s; margin: -3px 0; }
-  .contact-social-item:hover { background: rgba(255,255,255,0.04); color: var(--lime); }
-  .contact-social-item i { color: var(--lime); width: 20px; text-align: center; font-size: 0.95rem; flex-shrink: 0; }
-  .soc-name { font-weight: 500; }
-  .contact-social-empty { font-size: 0.78rem; color: var(--text-muted); }
+  .section-contact { padding: 70px 5%; background: white; }
+  .contact-inner { max-width: 1100px; margin: 0 auto; background: #fdfdfd; border: 1px solid #eee; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.04); padding: 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+  .contact-text h2 { font-size: 1.9rem; color: #155740; margin-bottom: 14px; border-left: 5px solid var(--ss-green); padding-left: 15px; line-height: 1.25; }
+  .contact-text p { color: var(--text-soft); margin-bottom: 24px; }
+  .contact-social { display: flex; flex-direction: column; gap: 10px; }
+  .contact-social-item { display: flex; align-items: center; gap: 14px; font-size: 0.9rem; color: var(--text-main); font-weight: 500; }
+  .contact-social-item:hover { color: var(--ss-green); }
+  .contact-social-item i { color: var(--btn-teal); width: 20px; text-align: center; }
+  .contact-social-empty { font-size: 0.8rem; color: #999; }
   .contact-form { display: flex; flex-direction: column; gap: 14px; }
-  .form-group label { display: block; font-size: 0.65rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--lime); margin-bottom: 6px; }
-  .form-group input, .form-group textarea, .form-group select { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--parchment); font-family: var(--body); font-size: 0.85rem; padding: 14px 16px; outline: none; transition: border-color 0.2s; }
-  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--lime); }
+  .form-group label { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--btn-teal); margin-bottom: 6px; }
+  .form-group input, .form-group textarea, .form-group select { width: 100%; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: var(--text-main); font-size: 0.9rem; padding: 12px 14px; outline: none; transition: border-color 0.2s; }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--btn-teal); }
   .form-group textarea { resize: vertical; min-height: 100px; }
-  .form-group select option { background: var(--canopy); }
-  .btn-submit { width: 100%; padding: 16px; background: var(--lime); color: var(--deep-forest); font-family: var(--body); font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border: none; border-radius: 50px; cursor: pointer; transition: 0.2s; }
-  .btn-submit:hover { background: var(--white); }
-  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-  .form-status { font-size: 0.78rem; text-align: center; padding: 10px; border-radius: var(--r-sm); display: none; }
-  .form-status.success { background: rgba(198,255,0,0.1); color: var(--lime); border: 1px solid var(--border); }
-  .form-status.error { background: rgba(255,107,107,0.1); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); }
+  .btn-submit { width: 100%; padding: 14px; background: var(--btn-teal); color: white; font-size: 0.9rem; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; transition: 0.3s; }
+  .btn-submit:hover { background: #004555; transform: translateY(-2px); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .form-status { font-size: 0.82rem; text-align: center; padding: 10px; border-radius: 8px; display: none; }
+  .form-status.success { background: #e6f4ea; color: #155740; border: 1px solid #b7dfc3; }
+  .form-status.error { background: #fdecea; color: #b3261e; border: 1px solid #f5c2c0; }
 
-  /* ── FOOTER (tipis, di atas tab bar) ── */
-  footer {
-    background: #020202;
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-  }
-  .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-  .footer-brand { display: flex; align-items: center; gap: 10px; }
-  .footer-brand img { height: 28px; opacity: 0.7; }
-  .footer-brand span { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 1px; }
-  .footer-copy { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 1px; }
+  /* ── MITRA ── */
+  .section-mitra { padding: 50px 5%; background: var(--bg-light); text-align: center; border-top: 5px solid var(--portal-dark); }
+  .mitra-header h2 { color: #333; font-size: 1.2rem; text-transform: uppercase; margin-bottom: 8px; }
+  .mitra-header p { color: #777; font-size: 0.9rem; max-width: 640px; margin: 0 auto; }
+  .mitra-logos { display: flex; justify-content: center; flex-wrap: wrap; gap: 30px; margin-top: 30px; }
+  .mitra-logo-card { width: 100px; height: 100px; background: #fff; border-radius: 50%; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; transition: 0.3s; overflow: hidden; }
+  .mitra-logo-card:hover { border-color: var(--ss-green); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+  .mitra-logo-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .mitra-logo-text { font-size: 0.65rem; font-weight: 700; color: #777; text-transform: uppercase; text-align: center; padding: 6px; }
+  .mitra-empty-msg { color: #999; font-size: 0.9rem; padding: 20px 0; }
 
-  /* ══════════════════════════════════════
-     BOTTOM TAB BAR — satu-satunya nav bawah
-     z-index: 300 — di atas semua konten
-  ══════════════════════════════════════ */
-  .bottom-tabbar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 64px;
-    background: rgba(5,5,5,0.97);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: stretch;
-    z-index: 300;   /* lebih tinggi dari nav atas (100) dan modal (999 dikurangi) */
-    padding: 0 4px;
-  }
-  .bottom-tabbar a {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    color: var(--text-muted);
-    font-size: 0.55rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    text-decoration: none;
-    transition: color 0.2s;
-    padding: 6px 2px;
-    border: none;
-    background: none;
-    cursor: pointer;
-  }
-  .bottom-tabbar a i { font-size: 1.15rem; transition: color 0.2s; }
-  .bottom-tabbar a:hover,
-  .bottom-tabbar a.active { color: var(--lime); }
-  .bottom-tabbar a span { line-height: 1; }
+  /* ── FOOTER ── */
+  footer { background: #111; color: #777; padding: 30px 5%; font-size: 0.85rem; text-align: center; border-top: 1px solid #333; }
+  footer p + p { margin-top: 5px; font-size: 0.75rem; }
 
-  /* ── ADMIN MODAL ── */
-  .admin-modal-backdrop { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; padding: 20px; }
+  /* ── ADMIN MODAL (login tersembunyi, 5x klik logo) ── */
+  .admin-modal-backdrop { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; padding: 20px; }
   .admin-modal-backdrop.show { display: flex; }
-  .admin-modal { background: var(--canopy); border: 1px solid var(--border); border-radius: var(--r-md); padding: 32px; width: 100%; max-width: 360px; position: relative; }
-  .admin-modal h3 { font-family: var(--display); color: var(--white); font-size: 1.2rem; margin-bottom: 6px; }
-  .admin-modal p { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 20px; }
+  .admin-modal { background: #fff; border-radius: 12px; padding: 32px 30px 36px; width: 100%; max-width: 400px; position: relative; animation: fadeIn 0.4s; }
+  .admin-modal h3 { color: var(--portal-dark); font-size: 1.2rem; margin-bottom: 4px; }
+  .admin-modal p { font-size: 0.85rem; color: var(--text-soft); margin-bottom: 20px; }
   .admin-modal .form-group { margin-bottom: 14px; }
-  .admin-modal-actions { display: flex; gap: 10px; margin-top: 6px; }
-  .admin-modal-actions button { flex: 1; }
-  .admin-error { font-size: 0.72rem; color: #ff6b6b; margin-top: 10px; display: none; }
-  .admin-close { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; }
+  .admin-modal-actions { margin-top: 20px; text-align: center; }
+  .admin-modal-actions .btn-submit { width: auto; min-width: 220px; padding: 12px 30px; }
+  .admin-error { font-size: 0.8rem; color: #b3261e; margin-top: 12px; text-align: center; display: none; }
+  .admin-close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: #aaa; font-size: 1.1rem; cursor: pointer; }
+  .admin-close:hover { color: #000; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
 
   /* ── REVEAL ── */
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
@@ -288,59 +205,52 @@
   .reveal-delay-1 { transition-delay: 0.1s; }
   .reveal-delay-2 { transition-delay: 0.2s; }
   .reveal-delay-3 { transition-delay: 0.3s; }
-
-  section[id] { scroll-margin-top: 64px; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
 
   /* ── RESPONSIVE ── */
-  @media (max-width: 768px) {
-    .impact-grid-container { grid-template-columns: repeat(4, 1fr); gap: 7px; }
-    .impact-card { padding: 10px 9px; }
-    .impact-num { font-size: 1.2rem; }
-    .impact-item { border-right: none; border-bottom: 1px solid rgba(5,5,5,0.2); padding: 18px 9px; }
-    .impact-item:nth-child(odd) { border-right: 1px solid rgba(5,5,5,0.2); }
-    .impact-item:nth-last-child(-n+2) { border-bottom: none; }
-    .impact-icon { font-size: 1rem; }
-    .impact-label { font-size: 0.45rem; }  
-    .about-grid { grid-template-columns: 1fr; gap: 36px; }
-    .about-visual { display: none; }
-    .about-pillars { grid-template-columns: 1fr; }
-    .program-grid { grid-template-columns: 1fr; }
-    .news-grid { grid-template-columns: 1fr; }
-    .contact-inner { grid-template-columns: 1fr; padding: 36px 24px; gap: 36px; }
-    .selection-grid { grid-template-columns: 1fr !important; }
-    .hero-title { font-size: 2.2rem; }
-    nav#mainNav { height: 58px; }
-    .nav-cta span { display: none; }
-    .bottom-tabbar { height: 58px; }
-    body { padding-bottom: 58px; }    
-    .bottom-tabbar a span { display: block; font-size: 0.48rem; letter-spacing: 0; }
-    .bottom-tabbar a i { font-size: 1.25rem; }
-    .section-about,
-    .section-program,
-    .section-pjlh,
-    .section-news,
-    .section-contact { padding: 50px 0; }
-    .impact-strip { padding: 28px 0; }
-    .konang-box { padding: 24px; }
-    .selection-card { padding: 22px; }
-    .section-header { margin-bottom: 32px; }
-    section[id] { scroll-margin-top: 58px; }
-}
+  @media (max-width: 900px) {
+    .top-bar { font-size: 0.65rem; padding: 5px 10px; }
+    header#mainNav { padding: 8px 15px; position: sticky; }
+    .nav-brand img { height: 42px; }
+    .nav-brand-text strong { font-size: 0.95rem; }
+    .hamburger { display: block; }
+    .btn-header { padding: 7px 14px; font-size: 0.8rem; }
+    .btn-header span { display: none; }
 
-  /* Hero: kurangi "ruang kosong" di atas teks */
-    .hero { min-height: 70svh; padding: 70px 0 30px; }
-    .hero-desc { margin-bottom: 20px; }
-    
-  @media (prefers-reduced-motion: reduce) {
-    .reveal { opacity: 1; transform: none; transition: none; }
-    .firefly { animation: none; opacity: 0; }
+    nav#nav-menu { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: #111; padding: 20px 0; box-shadow: 0 10px 20px rgba(0,0,0,0.3); flex: none; }
+    nav#nav-menu.active { display: block; }
+    nav#nav-menu ul { flex-direction: column; gap: 15px; }
+    nav#nav-menu a { color: white !important; font-size: 0.95rem; }
+    .dropdown-menu { display: block; position: static; background: transparent; box-shadow: none; padding: 0; text-align: center; min-width: 0; margin-top: 6px; }
+    .dropdown-menu a { color: #aaa !important; border: none; padding: 5px; text-align: center; }
+    .dropdown-menu a:hover { background: transparent; }
+
+    .hero { padding: 50px 5%; }
+    .hero-title { font-size: 1.6rem; }
+    .hero-desc { font-size: 0.9rem; }
+    .story-section { grid-template-columns: 1fr; padding: 30px 5%; gap: 25px; }
+    .story-content h2, .contact-text h2 { font-size: 1.5rem; }
+    .section-title { font-size: 1.7rem; }
+    .kpi-grid { gap: 12px; }
+    .kpi-card { width: calc(50% - 6px); padding: 20px 10px; }
+    .kpi-icon { font-size: 1.8rem; }
+    .impact-num { font-size: 1.5rem; }
+    .impact-label { font-size: 0.75rem; margin-bottom: 14px; }
+    .btn-data { padding: 8px 16px; font-size: 0.7rem; }
+    .section-program, .section-news, .section-contact { padding: 50px 5%; }
+    .news-grid { grid-template-columns: 1fr; }
+    .contact-inner { grid-template-columns: 1fr; padding: 28px 20px; gap: 30px; }
+    .program-card { width: 100%; }
   }
 </style>
 </head>
 <body>
 
-<!-- TOP NAV -->
-<nav id="mainNav">
+<!-- TOP BAR -->
+<div class="top-bar"><i class="fas fa-info-circle"></i> The Firefly Movement — Yayasan Sekola Konang Indonesia, Probolinggo</div>
+
+<!-- HEADER -->
+<header id="mainNav">
   <div class="nav-brand" id="logoTrigger">
     <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="Logo YSKI">
     <div class="nav-brand-text">
@@ -348,267 +258,239 @@
       <small>Indonesia</small>
     </div>
   </div>
-  <a href="auth.html" class="nav-cta" id="navCtaMitra">
-    <i class="fas fa-handshake"></i>
-    <span>Jadi Mitra</span>
-  </a>
-  <a href="#" class="nav-cta" id="navCtaUser" style="display:none;background:rgba(198,255,0,0.12);color:var(--lime);border:1px solid rgba(198,255,0,0.3);">
-    <i class="fas fa-user-circle"></i>
-    <span id="navUserName">Akun</span>
-  </a>
-</nav>
+
+  <nav id="nav-menu">
+    <ul>
+      <li><a href="#tentang" data-section="tentang">Tentang Kami</a></li>
+      <li class="dropdown">
+        <a href="#program" data-section="program">Program <i class="fas fa-chevron-down" style="font-size:0.7rem;"></i></a>
+        <div class="dropdown-menu">
+          <a href="konservasi.html">Konservasi Lahan &amp; Air</a>
+          <a href="biodiversity.html">Monitoring Kehati</a>
+          <a href="Pjlh_index.html">PJLH Water Co-Investment</a>
+          <a href="gaharu.html">Gerakan Gaharu</a>
+        </div>
+      </li>
+      <li><a href="#impact" data-section="impact">Dampak</a></li>
+      <li><a href="#berita" data-section="berita">Berita</a></li>
+      <li><a href="#kontak" data-section="kontak">Kontak</a></li>
+      <li><a href="#mitra" data-section="mitra">Mitra</a></li>
+      <li><a href="auth.html?role=tim"><i class="fas fa-lock" style="font-size:0.75rem;"></i> Tim</a></li>
+    </ul>
+  </nav>
+
+  <div class="header-right">
+    <a href="auth.html" class="btn-header" id="navCtaMitra"><i class="fas fa-handshake"></i> <span>Jadi Mitra</span></a>
+    <a href="#" class="btn-header user" id="navCtaUser" style="display:none;"><i class="fas fa-user-circle"></i> <span id="navUserName">Akun</span></a>
+    <div class="hamburger" onclick="toggleMenu()" aria-label="Menu"><i class="fas fa-bars"></i></div>
+  </div>
+</header>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-bg" role="img" aria-label="Hutan konservasi"></div>
-  <div class="fireflies" id="fireflies" aria-hidden="true"></div>
-  <div class="container hero-content">
-    <div class="hero-eyebrow">The Firefly Movement</div>
-    <h1 class="hero-title" id="heroTitle">
-      Memulihkan Alam,<br><em>Memastikan Masa Depan.</em>
-    </h1>
-    <p class="hero-desc" id="heroDesc">
-      Yayasan Sekola Konang Indonesia menjalankan program konservasi lahan dan air berbasis sains di wilayah Probolinggo — bermitra dengan perusahaan dan pemerintah untuk dampak nyata.
-    </p>
-    <div class="hero-actions">
-      <a href="#program" class="btn-primary"><i class="fas fa-leaf"></i> Lihat Program</a>
-      <a href="#tentang" class="btn-ghost"><i class="fas fa-play-circle"></i> Tentang Kami</a>
-    </div>
+  <div class="hero-eyebrow">The Firefly Movement</div>
+  <h1 class="hero-title" id="heroTitle">
+    Memulihkan Alam,<br><em>Memastikan Masa Depan.</em>
+  </h1>
+  <p class="hero-desc" id="heroDesc">
+    Yayasan Sekola Konang Indonesia menjalankan program konservasi lahan dan air berbasis sains di wilayah Probolinggo — bermitra dengan perusahaan dan pemerintah untuk dampak nyata.
+  </p>
+  <div class="hero-actions">
+    <a href="#program" class="btn-ss5 btn-ss5-teal"><i class="fas fa-leaf"></i> Lihat Program</a>
+    <a href="#tentang" class="btn-ss5 btn-ss5-ghost"><i class="fas fa-info-circle"></i> Tentang Kami</a>
   </div>
-</section>
-
-<!-- IMPACT STRIP -->
-<section class="impact-section">   
-  <div class="container">
-    <div class="impact-grid-container">
-      <!-- Item 1 -->
-      <div class="impact-card">
-        <i class="fas fa-tree impact-icon"></i>
-        <span id="impactPohon" class="impact-num" data-target="22000">0</span>
-        <span class="impact-label">Pohon Ditanam</span>
-      </div>
-      <!-- Item 2 -->
-      <div class="impact-card">
-        <i class="fas fa-tint impact-icon"></i>
-        <span id="impactAir" class="impact-num" data-target="47" data-decimal="1">0</span>
-        <span class="impact-label">ML Air / Tahun</span>
-      </div>
-      <!-- Item 3 -->
-      <div class="impact-card">
-        <i class="fas fa-paw impact-icon"></i>
-       <span id="impactSpesies" class="impact-num" data-target="201">0</span>
-        <span class="impact-label">Spesies Flora</span>
-      </div>
-      <!-- Item 4 -->
-      <div class="impact-card">
-        <i class="fas fa-map-marked-alt impact-icon"></i>
-        <span id="impactLokasi" class="impact-num" data-target="6">0</span>
-        <span class="impact-label">Lokasi Monitoring</span>
-      </div>
-    </div>
+  <div class="hero-badges">
+    <div class="badge-box"><i class="fas fa-water"></i> Konservasi Lahan &amp; Air</div>
+    <div class="badge-box"><i class="fas fa-leaf"></i> Monitoring Kehati</div>
+    <div class="badge-box"><i class="fas fa-handshake"></i> Kemitraan Strategis</div>
   </div>
 </section>
 
 <!-- TENTANG -->
-<section class="section-about" id="tentang">
-  <div class="container">
-    <div class="about-grid">
-      <div class="about-visual reveal">
-        <img src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format&fit=crop" alt="Area konservasi Sekola Konang">
-        <div class="about-badge"><strong>Est. 2019</strong>Probolinggo, Jawa Timur</div>
-      </div>
-      <div class="about-text reveal reveal-delay-1">
-        <span class="section-label">Tentang Kami</span>
-        <h2>Kunang-kunang sebagai <em class="lime">bioindikator</em> kualitas lingkungan kita</h2>
-        <div class="divider"></div>
-        <p id="p-sejarah">Memuat data...</p>
-        <p id="p-visi"></p>
-        <ul id="p-misi" style="list-style:none;padding:0;margin:0 0 16px;"></ul>
-        <div class="about-pillars">
-          <div class="pillar"><i class="fas fa-balance-scale"></i><div><h6>Measurement</h6><p>Surplus air, serapan karbon, indeks biodiversity.</p></div></div>
-          <div class="pillar"><i class="fas fa-route"></i><div><h6>Approach</h6><p>Mitigasi, adaptasi, dan development plan terpadu.</p></div></div>
-          <div class="pillar"><i class="fas fa-history"></i><div><h6>Governance</h6><p>Good governance, time planning, dan pelaporan transparan.</p></div></div>
-          <div class="pillar"><i class="fas fa-users"></i><div><h6>Partnership</h6><p>Participatory development dan social enterprise.</p></div></div>
-        </div>
-      </div>
+<section class="story-section" id="tentang">
+  <div class="story-content reveal">
+    <span class="section-label">Tentang Kami</span>
+    <h2>Kunang-kunang sebagai <em>bioindikator</em> kualitas lingkungan kita</h2>
+    <p id="p-sejarah">Memuat data...</p>
+    <p id="p-visi"></p>
+    <ul id="p-misi" style="list-style:none;padding:0;margin:0 0 16px;"></ul>
+    <span class="about-badge"><i class="fas fa-map-marker-alt"></i> Est. 2019 · Probolinggo, Jawa Timur</span>
+  </div>
+  <div class="strategy-box reveal reveal-delay-1">
+    <h3><i class="fas fa-bullseye"></i> Pendekatan Kami</h3>
+    <ul class="strategy-list">
+      <li><i class="fas fa-balance-scale"></i><div><strong>Measurement</strong><span>Surplus air, serapan karbon, indeks biodiversity.</span></div></li>
+      <li><i class="fas fa-route"></i><div><strong>Approach</strong><span>Mitigasi, adaptasi, dan development plan terpadu.</span></div></li>
+      <li><i class="fas fa-history"></i><div><strong>Governance</strong><span>Good governance, time planning, dan pelaporan transparan.</span></div></li>
+      <li><i class="fas fa-users"></i><div><strong>Partnership</strong><span>Participatory development dan social enterprise.</span></div></li>
+    </ul>
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section class="kpi-section" id="impact">
+  <h2 class="section-title">Capaian Konservasi Kolektif</h2>
+  <div class="kpi-grid">
+    <div class="kpi-card card-pohon">
+      <i class="fas fa-tree kpi-icon"></i>
+      <span id="impactPohon" class="impact-num" data-target="22000">0</span>
+      <span class="impact-label">Pohon Ditanam</span>
+      <a href="konservasi.html" class="btn-data">Buka Data</a>
+    </div>
+    <div class="kpi-card card-air">
+      <i class="fas fa-tint kpi-icon"></i>
+      <span id="impactAir" class="impact-num" data-target="47" data-decimal="1">0</span>
+      <span class="impact-label">ML Air / Tahun</span>
+      <a href="konservasi.html" class="btn-data">Buka Data</a>
+    </div>
+    <div class="kpi-card card-spesies">
+      <i class="fas fa-paw kpi-icon"></i>
+      <span id="impactSpesies" class="impact-num" data-target="201">0</span>
+      <span class="impact-label">Spesies Flora</span>
+      <a href="biodiversity.html" class="btn-data">Buka Data</a>
+    </div>
+    <div class="kpi-card card-lokasi">
+      <i class="fas fa-map-marked-alt kpi-icon"></i>
+      <span id="impactLokasi" class="impact-num" data-target="6">0</span>
+      <span class="impact-label">Lokasi Monitoring</span>
+      <a href="biodiversity.html" class="btn-data">Buka Data</a>
     </div>
   </div>
 </section>
 
 <!-- PROGRAM -->
 <section class="section-program" id="program">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="section-label">Program Kami</span>
-      <h2>Tiga Pilar Kerja Lapangan</h2>
-      <p>Setiap program dirancang untuk saling mendukung — dari konservasi fisik hingga pemantauan hayati dan pemberdayaan masyarakat.</p>
-    </div>
-    <div class="program-grid" id="programGrid">
-      <a href="konservasi.html" class="program-card reveal">
-        <img class="program-card-img" src="https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=600&auto=format&fit=crop" alt="Konservasi Lahan dan Air">
-        <div class="program-card-body">
-          <div class="program-icon"><i class="fas fa-water" id="icon-konservasi"></i></div>
-          <h3>Konservasi Lahan &amp; Air</h3>
-          <p id="desc-konservasi">Memuat data...</p>
-          <div class="program-stats">
-            <div class="pstat"><strong id="stat-konservasi-pohon">—</strong><span>Pohon</span></div>
-            <div class="pstat"><strong id="stat-konservasi-sipil">—</strong><span>Rorak &amp; Sipil</span></div>
-          </div>
-        </div>
-      </a>
-      <a href="biodiversity.html" class="program-card reveal reveal-delay-1">
-        <img class="program-card-img" src="https://images.unsplash.com/photo-1446941611757-91d2c3bd3d45?q=80&w=600&auto=format&fit=crop" alt="Monitoring Keanekaragaman Hayati">
-        <div class="program-card-body">
-          <div class="program-icon"><i class="fas fa-leaf" id="icon-biodiversity"></i></div>
-          <h3>Monitoring Kehati</h3>
-          <p id="desc-biodiversity">Memuat data...</p>
-          <div class="program-stats">
-            <div class="pstat"><strong id="stat-biodiversity-flora">—</strong><span>Spesies Flora</span></div>
-            <div class="pstat"><strong id="stat-biodiversity-burung">—</strong><span>Spesies Burung</span></div>
-          </div>
-        </div>
-      </a>
-      <div class="program-card reveal reveal-delay-2" style="cursor:default;">
-        <img class="program-card-img" src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=600&auto=format&fit=crop" alt="Pemberdayaan Komunitas">
-        <div class="program-card-body">
-          <div class="program-icon"><i class="fas fa-users" id="icon-comdev"></i></div>
-          <h3>Pemberdayaan Komunitas</h3>
-          <p id="desc-comdev">Memuat data...</p>
-          <span class="badge-soon">Coming Soon</span>
+  <div class="section-header reveal">
+    <span class="section-label">Program Kami</span>
+    <h2>Pilar Kerja Lapangan</h2>
+    <p>Setiap program dirancang untuk saling mendukung — dari konservasi fisik hingga pemantauan hayati dan pemberdayaan masyarakat.</p>
+  </div>
+  <div class="program-grid" id="programGrid">
+    <a href="konservasi.html" class="program-card reveal">
+      <img class="program-card-img" src="https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=600&auto=format&fit=crop" alt="Konservasi Lahan dan Air">
+      <div class="program-card-body">
+        <div class="program-icon"><i class="fas fa-water" id="icon-konservasi"></i></div>
+        <h3>Konservasi Lahan &amp; Air</h3>
+        <p id="desc-konservasi">Memuat data...</p>
+        <div class="program-stats">
+          <div class="pstat"><strong id="stat-konservasi-pohon">—</strong><span>Pohon</span></div>
+          <div class="pstat"><strong id="stat-konservasi-sipil">—</strong><span>Rorak &amp; Sipil</span></div>
         </div>
       </div>
-      <a href="Pjlh_index.html" class="program-card reveal reveal-delay-3">
-        <img class="program-card-img" src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=600&auto=format&fit=crop" alt="PJLH Sustainability Water Co-Investment">
-        <div class="program-card-body">
-          <div class="program-icon"><i class="fas fa-tint"></i></div>
-          <h3>PJLH Sustainability Water Co-Investment</h3>
-          <p>Model inovatif konservasi sumberdaya air lestari berbasis kolaborasi investasi terukur — menghimpun Dana Konservasi melalui skema Imbal Jasa Lingkungan (PES) bersama mitra swasta.</p>
-          <div class="program-stats">
-            <div class="pstat"><strong>1,2 Jt m³</strong><span>Air Terserap</span></div>
-            <div class="pstat"><strong>55 Ha</strong><span>Rehabilitasi</span></div>
-          </div>
+    </a>
+    <a href="biodiversity.html" class="program-card reveal reveal-delay-1">
+      <img class="program-card-img" src="https://images.unsplash.com/photo-1446941611757-91d2c3bd3d45?q=80&w=600&auto=format&fit=crop" alt="Monitoring Keanekaragaman Hayati">
+      <div class="program-card-body">
+        <div class="program-icon"><i class="fas fa-leaf" id="icon-biodiversity"></i></div>
+        <h3>Monitoring Kehati</h3>
+        <p id="desc-biodiversity">Memuat data...</p>
+        <div class="program-stats">
+          <div class="pstat"><strong id="stat-biodiversity-flora">—</strong><span>Spesies Flora</span></div>
+          <div class="pstat"><strong id="stat-biodiversity-burung">—</strong><span>Spesies Burung</span></div>
         </div>
-      </a>
-      <!-- GERAKAN GAHARU (baru) -->
-      <a href="gaharu.html" class="program-card reveal">
-        <img class="program-card-img" src="https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=600&auto=format&fit=crop" alt="Gerakan Gaharu Sekolakonang">
-        <div class="program-card-body">
-          <div class="program-icon"><i class="fas fa-tree"></i></div>
-          <h3>Gerakan Gaharu Sekolakonang</h3>
-          <p>Ikut menanam gaharu? Tandai titik pohonmu lewat GPS, lalu pantau tumbuhnya bersama tim Sekola Konang.</p>
-          <div class="program-stats">
-            <div class="pstat"><strong>Tandai</strong><span>Terbuka untuk umum</span></div>
-            <div class="pstat"><strong>Monitoring</strong><span>Tim Sekola Konang</span></div>
-          </div>
-        </div>
-      </a>
+      </div>
+    </a>
+    <div class="program-card reveal reveal-delay-2" style="cursor:default;">
+      <img class="program-card-img" src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=600&auto=format&fit=crop" alt="Pemberdayaan Komunitas">
+      <div class="program-card-body">
+        <div class="program-icon"><i class="fas fa-users" id="icon-comdev"></i></div>
+        <h3>Pemberdayaan Komunitas</h3>
+        <p id="desc-comdev">Memuat data...</p>
+        <span class="badge-soon">Coming Soon</span>
+      </div>
     </div>
+    <a href="Pjlh_index.html" class="program-card reveal reveal-delay-3">
+      <img class="program-card-img" src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=600&auto=format&fit=crop" alt="PJLH Sustainability Water Co-Investment">
+      <div class="program-card-body">
+        <div class="program-icon"><i class="fas fa-tint"></i></div>
+        <h3>PJLH Sustainability Water Co-Investment</h3>
+        <p>Model inovatif konservasi sumberdaya air lestari berbasis kolaborasi investasi terukur — menghimpun Dana Konservasi melalui skema Imbal Jasa Lingkungan (PES) bersama mitra swasta.</p>
+        <div class="program-stats">
+          <div class="pstat"><strong>1,2 Jt m³</strong><span>Air Terserap</span></div>
+          <div class="pstat"><strong>55 Ha</strong><span>Rehabilitasi</span></div>
+        </div>
+      </div>
+    </a>
+    <a href="gaharu.html" class="program-card reveal">
+      <img class="program-card-img" src="https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=600&auto=format&fit=crop" alt="Gerakan Gaharu Sekolakonang">
+      <div class="program-card-body">
+        <div class="program-icon"><i class="fas fa-tree"></i></div>
+        <h3>Gerakan Gaharu Sekolakonang</h3>
+        <p>Ikut menanam gaharu? Tandai titik pohonmu lewat GPS, lalu pantau tumbuhnya bersama tim Sekola Konang.</p>
+        <div class="program-stats">
+          <div class="pstat"><strong>Tandai</strong><span>Terbuka untuk umum</span></div>
+          <div class="pstat"><strong>Monitoring</strong><span>Tim Sekola Konang</span></div>
+        </div>
+      </div>
+    </a>
   </div>
 </section>
 
-
-
 <!-- BERITA -->
 <section class="section-news" id="berita">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="section-label">Suara &amp; Sorot Media</span>
-      <h2>Konang News</h2>
-      <p>Cerita dari lapangan, liputan media, dan perkembangan terkini program kami.</p>
-    </div>
-    <div class="news-grid" id="newsGrid">
-      <div class="news-empty">Memuat berita...</div>
-    </div>
+  <div class="section-header reveal">
+    <span class="section-label">Suara &amp; Sorot Media</span>
+    <h2>Konang News</h2>
+    <p>Cerita dari lapangan, liputan media, dan perkembangan terkini program kami.</p>
+  </div>
+  <div class="news-grid" id="newsGrid">
+    <div class="news-empty">Memuat berita...</div>
   </div>
 </section>
 
 <!-- KONTAK -->
 <section class="section-contact" id="kontak">
-  <div class="container">
-    <div class="contact-inner reveal">
-      <div class="contact-text">
-        <span class="section-label">Hubungi Kami</span>
-        <h2>Mari Berkolaborasi untuk Alam</h2>
-        <p>Kami terbuka untuk kemitraan CSR, program kementerian, riset ilmiah, maupun kolaborasi komunitas.</p>
-        <div class="contact-social" id="contactSocial">
-          <div class="contact-social-empty">Memuat kontak...</div>
-        </div>
+  <div class="contact-inner reveal">
+    <div class="contact-text">
+      <span class="section-label">Hubungi Kami</span>
+      <h2>Mari Berkolaborasi untuk Alam</h2>
+      <p>Kami terbuka untuk kemitraan CSR, program kementerian, riset ilmiah, maupun kolaborasi komunitas.</p>
+      <div class="contact-social" id="contactSocial">
+        <div class="contact-social-empty">Memuat kontak...</div>
       </div>
-      <div class="contact-form reveal reveal-delay-1">
-        <div class="form-group"><label for="cName">Nama / Institusi</label><input type="text" id="cName" placeholder="PT. Contoh / Kementerian XYZ" maxlength="200"></div>
-        <div class="form-group"><label for="cEmail">Email</label><input type="email" id="cEmail" placeholder="nama@email.com" maxlength="200"></div>
-        <div class="form-group">
-          <label for="cJenis">Jenis Kemitraan</label>
-          <select id="cJenis">
-            <option>Konservasi &amp; Keragaman hayati</option>
-            <option>Pengembangan Budaya &amp; Perikehidupan Berkelanjutan</option>
-            <option>Community development</option>
-            <option>Pengembangan Ekowisata &amp; Ekonomi Kreatif</option>
-            <option>Leadership Training</option>
-            <option>Informed and Social reset</option>
-            <option>Kolaborasi lainnya</option>
-          </select>
-        </div>
-        <div class="form-group"><label for="cPesan">Pesan</label><textarea id="cPesan" placeholder="Ceritakan program atau kebutuhan Anda..." maxlength="2000"></textarea></div>
-        <div class="form-status" id="formStatus"></div>
-        <button class="btn-submit" id="contactSubmitBtn" type="button">Kirim Pesan <i class="fas fa-paper-plane"></i></button>
+    </div>
+    <div class="contact-form reveal reveal-delay-1">
+      <div class="form-group"><label for="cName">Nama / Institusi</label><input type="text" id="cName" placeholder="PT. Contoh / Kementerian XYZ" maxlength="200"></div>
+      <div class="form-group"><label for="cEmail">Email</label><input type="email" id="cEmail" placeholder="nama@email.com" maxlength="200"></div>
+      <div class="form-group">
+        <label for="cJenis">Jenis Kemitraan</label>
+        <select id="cJenis">
+          <option>Konservasi &amp; Keragaman hayati</option>
+          <option>Pengembangan Budaya &amp; Perikehidupan Berkelanjutan</option>
+          <option>Community development</option>
+          <option>Pengembangan Ekowisata &amp; Ekonomi Kreatif</option>
+          <option>Leadership Training</option>
+          <option>Informed and Social reset</option>
+          <option>Kolaborasi lainnya</option>
+        </select>
       </div>
+      <div class="form-group"><label for="cPesan">Pesan</label><textarea id="cPesan" placeholder="Ceritakan program atau kebutuhan Anda..." maxlength="2000"></textarea></div>
+      <div class="form-status" id="formStatus"></div>
+      <button class="btn-submit" id="contactSubmitBtn" type="button">Kirim Pesan <i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
 </section>
 
-  <!-- MITRA -->
+<!-- MITRA -->
 <section class="section-mitra" id="mitra">
-  <div class="container">
-    <div class="mitra-header reveal">
-      <span class="section-label">Kemitraan</span>
-      <h2>Bersama Mitra Strategis</h2>
-      <p>Kami bermitra dengan korporat, BUMN, lembaga pemerintah, dan akademisi untuk memperluas dampak konservasi.</p>
-    </div>
-    <div class="mitra-logos reveal" id="mitraLogos"></div>
+  <div class="mitra-header reveal">
+    <h2>Bersama Mitra Strategis</h2>
+    <p>Kami bermitra dengan korporat, BUMN, lembaga pemerintah, dan akademisi untuk memperluas dampak konservasi.</p>
   </div>
+  <div class="mitra-logos reveal" id="mitraLogos"></div>
 </section>
 
-<!-- FOOTER tipis -->
+<!-- FOOTER -->
 <footer>
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <img src="https://raw.githubusercontent.com/sekolakonangindonesia-prog/sekolakonang/refs/heads/main/LOGO%20YSKI.png" alt="YSKI">
-      <span>© 2025 Yayasan Sekola Konang Indonesia</span>
-    </div>
-    <div class="footer-copy">The Firefly Movement — Probolinggo</div>
-  </div>
+  <p>© 2025 Yayasan Sekola Konang Indonesia. All Rights Reserved.</p>
+  <p>The Firefly Movement — Probolinggo</p>
 </footer>
-
-<!-- IKON KUNCI MELAYANG — akses Tim (tersembunyi, tidak mencolok) -->
-<a href="auth.html?role=tim" id="timLockBtn" title="Akses Tim" style="
-  position:fixed; bottom:80px; right:16px; z-index:100;
-  width:36px; height:36px; border-radius:50%;
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.08);
-  display:flex; align-items:center; justify-content:center;
-  color:rgba(245,245,240,0.25); font-size:0.75rem;
-  text-decoration:none; transition:0.3s;
-" onmouseover="this.style.color='rgba(198,255,0,0.6)';this.style.borderColor='rgba(198,255,0,0.2)';"
-   onmouseout="this.style.color='rgba(245,245,240,0.25)';this.style.borderColor='rgba(255,255,255,0.08)';">
-  <i class="fas fa-lock"></i>
-</a>
-
-<!-- ══ BOTTOM TAB BAR ══ -->
-<nav class="bottom-tabbar" aria-label="Navigasi utama">
-  <a href="#tentang" data-section="tentang"><i class="fas fa-info-circle"></i><span>Tentang</span></a>
-  <a href="#program" data-section="program"><i class="fas fa-leaf"></i><span>Program</span></a>
-  <a href="#berita" data-section="berita"><i class="fas fa-newspaper"></i><span>Berita</span></a>
-  <a href="#kontak" data-section="kontak"><i class="fas fa-envelope"></i><span>Kontak</span></a>
-   <a href="#mitra" data-section="mitra"><i class="fas fa-handshake"></i><span>Mitra</span></a>
-  <a href="auth.html?role=tim"><i class="fas fa-lock"></i><span>Tim</span></a>
-</nav>
 
 <!-- ADMIN MODAL -->
 <div class="admin-modal-backdrop" id="adminModalBackdrop">
   <div class="admin-modal">
     <button class="admin-close" id="adminModalClose"><i class="fas fa-times"></i></button>
-    <h3>Login Admin</h3>
+    <h3><i class="fas fa-lock" style="color:var(--btn-teal);margin-right:8px;"></i>Login Admin</h3>
     <p>Khusus pengurus Yayasan Sekola Konang Indonesia.</p>
     <div class="form-group"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@sekolakonang.id"></div>
     <div class="form-group"><label>Password</label><input type="password" id="adminPassword" placeholder="••••••••"></div>
@@ -616,6 +498,15 @@
     <div class="admin-error" id="adminError">Email atau password salah.</div>
   </div>
 </div>
+
+<!-- Hamburger menu (non-module agar bisa dipanggil lewat onclick) -->
+<script>
+  function toggleMenu() { document.getElementById('nav-menu').classList.toggle('active'); }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('#nav-menu a');
+    if (a && !a.parentElement.classList.contains('dropdown')) document.getElementById('nav-menu').classList.remove('active');
+  });
+</script>
 
 <script src="pjlh-formula.js"></script>
 <script type="module">
@@ -685,7 +576,7 @@
           d.misi.forEach(m => {
             const li = document.createElement('li');
             li.style.marginBottom = '6px';
-            li.innerHTML = `<i class="fas fa-circle" style="font-size:5px;color:var(--lime);margin-right:8px;vertical-align:middle;" aria-hidden="true"></i>`;
+            li.innerHTML = `<i class="fas fa-circle" style="font-size:5px;color:var(--ss-green);margin-right:8px;vertical-align:middle;" aria-hidden="true"></i>`;
             li.appendChild(document.createTextNode(m));
             ul.appendChild(li);
           });
@@ -932,7 +823,7 @@
       // Tombol lihat semua berita
       const seeAll = document.createElement('div');
       seeAll.style.cssText = 'grid-column:1/-1;text-align:center;margin-top:8px;';
-      seeAll.innerHTML = `<a href="news.html" style="display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border:1.5px solid var(--lime);border-radius:50px;color:var(--lime);font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">Lihat Semua Berita <i class="fas fa-arrow-right"></i></a>`;
+      seeAll.innerHTML = `<a href="news.html" style="display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border:1.5px solid var(--gold);border-radius:50px;color:var(--gold);font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">Lihat Semua Berita <i class="fas fa-arrow-right"></i></a>`;
       grid.appendChild(seeAll);
   }
   function renderFallbackNews(grid) {
@@ -998,14 +889,6 @@
   // ── Scroll nav ──
   window.addEventListener('scroll',()=>document.getElementById('mainNav').classList.toggle('scrolled',scrollY>40),{passive:true});
 
-  // ── Fireflies ──
-  const ff=document.getElementById('fireflies');
-  for(let i=0;i<18;i++){
-    const el=document.createElement('div'); el.className='firefly'; el.setAttribute('aria-hidden','true');
-    el.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*80}%;--dur:${5+Math.random()*6}s;--delay:${Math.random()*8}s;width:${3+Math.random()*3}px;height:${3+Math.random()*3}px;box-shadow:0 0 6px 2px rgba(198,255,0,.5);`;
-    ff.appendChild(el);
-  }
-
   // ── Reveal ──
   const revObs=new IntersectionObserver(entries=>entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); }),{threshold:0.12});
   document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
@@ -1031,8 +914,8 @@
   });
 
   // ── Tab bar active state ──
-  const sections=['tentang','program','mitra','berita','kontak'];
-  const tabLinks=document.querySelectorAll('.bottom-tabbar a[data-section]');
+  const sections=['tentang','program','impact','berita','kontak','mitra'];
+  const tabLinks=document.querySelectorAll('#nav-menu a[data-section]');
   const secEls=sections.map(id=>document.getElementById(id)).filter(Boolean);
   function updateTabs(){
     let cur='';
