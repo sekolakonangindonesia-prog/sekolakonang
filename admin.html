@@ -281,6 +281,7 @@ input,textarea,select{font-family:var(--body);}
     <div class="menu-item" data-panel="progress"><i class="fas fa-tasks"></i> Progress Report</div>
 
     <div class="sidebar-footer">
+      <a class="menu-item" id="homeBtn" href="index.html" style="text-decoration:none;"><i class="fas fa-home"></i> Lihat Beranda</a>
       <div class="menu-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Keluar</div>
     </div>
   </aside>
@@ -320,6 +321,42 @@ input,textarea,select{font-family:var(--body);}
       <div class="form-group"><label>Sejarah / Deskripsi</label><textarea id="tentang-sejarah" rows="5"></textarea></div>
       <div class="form-group"><label>Visi</label><textarea id="tentang-visi" rows="2"></textarea></div>
       <div class="form-group"><label>Misi (satu per baris)</label><textarea id="tentang-misi" rows="4" placeholder="Misi 1&#10;Misi 2&#10;Misi 3"></textarea></div>
+      <div class="section-divider"><i class="fas fa-layer-group"></i> Mengapa Tiga Hal Ini Penting?</div>
+      <div class="form-group"><label>Judul Bagian</label><input type="text" id="pilar-title" placeholder="Mengapa Tiga Hal Ini Penting?"></div>
+      <div class="form-group"><label>Kalimat Pembuka</label><input type="text" id="pilar-subtitle" placeholder="Kontribusi Anda pada 3 pilar ini berdampak langsung pada mitigasi bencana alam."></div>
+      <div class="form-group"><label>Kartu 1 — Ikon (kelas Font Awesome) &amp; Judul</label>
+        <div class="row-2"><input type="text" id="pilar-1-icon" placeholder="fas fa-tree"><input type="text" id="pilar-1-title" placeholder="Tutupan Lahan"></div></div>
+      <div class="form-group"><label>Kartu 1 — Deskripsi</label><textarea id="pilar-1-desc" rows="2" placeholder="Menanam pohon di hulu untuk mencegah longsor dan sedimentasi."></textarea></div>
+      <div class="form-group"><label>Kartu 2 — Ikon (kelas Font Awesome) &amp; Judul</label>
+        <div class="row-2"><input type="text" id="pilar-2-icon" placeholder="fas fa-water"><input type="text" id="pilar-2-title" placeholder="Retensi Air"></div></div>
+      <div class="form-group"><label>Kartu 2 — Deskripsi</label><textarea id="pilar-2-desc" rows="2" placeholder="Mencegah banjir saat hujan dan menabung air untuk kemarau."></textarea></div>
+      <div class="form-group"><label>Kartu 3 — Ikon (kelas Font Awesome) &amp; Judul</label>
+        <div class="row-2"><input type="text" id="pilar-3-icon" placeholder="fas fa-paw"><input type="text" id="pilar-3-title" placeholder="Biodiversitas"></div></div>
+      <div class="form-group"><label>Kartu 3 — Deskripsi</label><textarea id="pilar-3-desc" rows="2" placeholder="Menjaga ekosistem yang menjamin kualitas air & udara."></textarea></div>
+      <div class="section-divider"><i class="fas fa-cloud-rain"></i> Informasi SIH3</div>
+      <div class="form-group"><label>Judul Bagian</label><input type="text" id="sih3-title" placeholder="Informasi SIH3 (Sistem Informasi Hidrologi, Hidrometeorologi, dan Hidrogeologi)"></div>
+      <div class="form-group"><label>Deskripsi</label><textarea id="sih3-desc" rows="2" placeholder="Pemantauan kondisi DAS untuk mendukung pengambilan keputusan berbasis data."></textarea></div>
+      <div class="form-group"><label>Kartu SIH3 1 — Ikon (kelas Font Awesome) &amp; Judul</label>
+        <div class="row-2"><input type="text" id="sih3-1-icon" placeholder="fas fa-droplet"><input type="text" id="sih3-1-title" placeholder="Hidrologi"></div></div>
+      <div class="form-group"><label>Kartu SIH3 1 — Deskripsi</label><textarea id="sih3-1-desc" rows="2" placeholder="Aliran dan ketersediaan air permukaan untuk perencanaan sumber daya air."></textarea></div>
+      <div class="form-group"><label>Kartu SIH3 1 — Link (https://...)</label><input type="url" id="sih3-1-url" placeholder="https://sih3.dpuair.jatimprov.go.id/..."></div>
+      <div class="form-group"><label>Kartu SIH3 2 — Ikon (kelas Font Awesome) &amp; Judul</label>
+        <div class="row-2"><input type="text" id="sih3-2-icon" placeholder="fas fa-cloud"><input type="text" id="sih3-2-title" placeholder="Hidrometeorologi"></div></div>
+      <div class="form-group"><label>Kartu SIH3 2 — Deskripsi</label><textarea id="sih3-2-desc" rows="2" placeholder="Hujan, iklim, dan fenomena atmosfer yang memengaruhi debit sungai dan ketersediaan air."></textarea></div>
+      <div class="form-group"><label>Kartu SIH3 2 — Link (https://...)</label><input type="url" id="sih3-2-url" placeholder="https://sih3.dpuair.jatimprov.go.id/..."></div>
+      <div class="form-group"><label>Kartu SIH3 3 — Ikon (kelas Font Awesome) &amp; Judul</label>
+        <div class="row-2"><input type="text" id="sih3-3-icon" placeholder="fas fa-life-ring"><input type="text" id="sih3-3-title" placeholder="Hidrogeologi"></div></div>
+      <div class="form-group"><label>Kartu SIH3 3 — Deskripsi</label><textarea id="sih3-3-desc" rows="2" placeholder="Air tanah, akuifer, dan kaitannya dengan pemenuhan kebutuhan air bersih."></textarea></div>
+      <div class="form-group"><label>Kartu SIH3 3 — Link (https://...)</label><input type="url" id="sih3-3-url" placeholder="https://sih3.dpuair.jatimprov.go.id/..."></div>
+      <div class="row-2">
+        <div class="form-group"><label>Link Portal Utama SIH3 (opsional)</label><input type="url" id="sih3-url" placeholder="https://sih3.dpuair.jatimprov.go.id/"></div>
+        <div class="form-group"><label>Teks Tombol Portal</label><input type="text" id="sih3-btn" placeholder="Buka SIH3"></div>
+      </div>
+      <p style="font-size:0.72rem;color:var(--text-muted);margin:-6px 0 14px;">Kartu yang link-nya dikosongkan tampil "Segera tersedia" di beranda. Judul/deskripsi/ikon yang dikosongkan memakai teks bawaan. Tombol portal utama hanya muncul jika link diisi.</p>
+      <div class="section-divider"><i class="fas fa-globe"></i> Kontribusi SDGs</div>
+      <div class="form-group"><label>Judul Bagian</label><input type="text" id="sdgs-title" placeholder="Dampak Sosio-Ekonomi &amp; Kontribusi SDGs"></div>
+      <div class="form-group"><label>Kalimat Pembuka</label><input type="text" id="sdgs-desc" placeholder="Inisiatif ini berkontribusi langsung pada Tujuan Pembangunan Berkelanjutan:"></div>
+      <div class="form-group"><label>Goal yang ditampilkan</label><div><label style="display:inline-flex;align-items:center;gap:6px;margin-right:16px;text-transform:none;letter-spacing:0;font-size:0.8rem;"><input type="checkbox" class="sdg-chk" value="6" checked style="width:auto;"> Goal 6</label><label style="display:inline-flex;align-items:center;gap:6px;margin-right:16px;text-transform:none;letter-spacing:0;font-size:0.8rem;"><input type="checkbox" class="sdg-chk" value="8" checked style="width:auto;"> Goal 8</label><label style="display:inline-flex;align-items:center;gap:6px;margin-right:16px;text-transform:none;letter-spacing:0;font-size:0.8rem;"><input type="checkbox" class="sdg-chk" value="13" checked style="width:auto;"> Goal 13</label><label style="display:inline-flex;align-items:center;gap:6px;margin-right:16px;text-transform:none;letter-spacing:0;font-size:0.8rem;"><input type="checkbox" class="sdg-chk" value="15" checked style="width:auto;"> Goal 15</label><label style="display:inline-flex;align-items:center;gap:6px;margin-right:16px;text-transform:none;letter-spacing:0;font-size:0.8rem;"><input type="checkbox" class="sdg-chk" value="17" checked style="width:auto;"> Goal 17</label></div></div>
       <button class="btn btn-lime" id="saveHeroBtn"><i class="fas fa-save"></i> Simpan Semua</button>
     </section>
 
@@ -1377,7 +1414,7 @@ import {
   deleteDoc, addDoc, query, orderBy, limit, where, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
-  getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail
 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
@@ -1479,6 +1516,15 @@ document.getElementById('mobileToggle').addEventListener('click', () => {
 // ============================================================
 // AUTH
 // ============================================================
+// Masuk ke panel (dipakai oleh tombol Masuk DAN oleh sesi yang sudah ada). Aman dipanggil berulang.
+let adminAppStarted = false;
+function enterAdminApp() {
+  if (adminAppStarted) return;
+  adminAppStarted = true;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'flex';
+  loadOverview();
+}
 document.getElementById('loginBtn').addEventListener('click', async () => {
   const email = document.getElementById('loginEmail').value.trim();
   const pw    = document.getElementById('loginPassword').value;
@@ -1487,10 +1533,9 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
   try {
-    await signInWithEmailAndPassword(auth, email, pw);
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appShell').style.display = 'flex';
-    loadOverview();
+    const cred = await signInWithEmailAndPassword(auth, email, pw);
+    try { localStorage.setItem('yski_admin_uid', cred.user.uid); } catch (e) {}   // penanda "admin" untuk lompat login & tombol Admin di beranda
+    enterAdminApp();
   } catch(e) {
     err.style.display = 'block';
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
@@ -1500,8 +1545,23 @@ document.getElementById('loginPassword').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('loginBtn').click();
 });
 document.getElementById('logoutBtn').addEventListener('click', async () => {
+  try { localStorage.removeItem('yski_admin_uid'); } catch (e) {}
   await signOut(auth);
   location.reload();
+});
+// Sesi Firebase tersimpan (habis login lewat 5x klik logo di beranda atau login admin sebelumnya):
+// langsung masuk tanpa login kedua — jika akun itu tadi login lewat jalur admin (penanda di browser)
+// ATAU berperan 'admin' di users/{uid}. Akun lain tetap melihat layar login. Ini hanya soal tampilan;
+// hak menulis data tetap ditentukan aturan Firestore.
+onAuthStateChanged(auth, async (user) => {
+  if (!user || adminAppStarted) return;
+  let hint = false;
+  try { hint = localStorage.getItem('yski_admin_uid') === user.uid; } catch (e) {}
+  if (hint) { enterAdminApp(); return; }   // akun ini tadi masuk lewat login admin
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    if (snap.exists() && snap.data().role === 'admin') enterAdminApp();
+  } catch (e) { console.error('Cek sesi admin gagal', e); }
 });
 
 // Modal helpers
@@ -1554,9 +1614,12 @@ async function loadOverview() {
 // ============================================================
 async function loadHero() {
   try {
-    const [hSnap, tSnap] = await Promise.all([
+    const [hSnap, tSnap, pSnap, sSnap, gSnap] = await Promise.all([
       getDoc(doc(db,'profil_yayasan','hero')),
-      getDoc(doc(db,'profil_yayasan','tentang_kami'))
+      getDoc(doc(db,'profil_yayasan','tentang_kami')),
+      getDoc(doc(db,'profil_yayasan','pilar')),
+      getDoc(doc(db,'profil_yayasan','sih3')),
+      getDoc(doc(db,'profil_yayasan','sdgs'))
     ]);
     if (hSnap.exists()) {
       const d = hSnap.data();
@@ -1570,12 +1633,48 @@ async function loadHero() {
       document.getElementById('tentang-visi').value    = d.visi||'';
       document.getElementById('tentang-misi').value    = (d.misi||[]).join('\n');
     }
+    if (pSnap.exists()) {
+      const d = pSnap.data(), it = d.items||[];
+      document.getElementById('pilar-title').value    = d.title||'';
+      document.getElementById('pilar-subtitle').value = d.subtitle||'';
+      [1,2,3].forEach(n => {
+        const x = it[n-1]||{};
+        document.getElementById('pilar-'+n+'-icon').value  = x.icon||'';
+        document.getElementById('pilar-'+n+'-title').value = x.title||'';
+        document.getElementById('pilar-'+n+'-desc').value  = x.desc||'';
+      });
+    }
+    if (sSnap.exists()) {
+      const d = sSnap.data(), it = d.items||[];
+      document.getElementById('sih3-title').value = d.title||'';
+      document.getElementById('sih3-desc').value  = d.desc||'';
+      document.getElementById('sih3-url').value   = d.url||'';
+      document.getElementById('sih3-btn').value   = d.btn_label||'';
+      [1,2,3].forEach(n => {
+        const x = it[n-1]||{};
+        document.getElementById('sih3-'+n+'-icon').value  = x.icon||'';
+        document.getElementById('sih3-'+n+'-title').value = x.title||'';
+        document.getElementById('sih3-'+n+'-desc').value  = x.desc||'';
+        document.getElementById('sih3-'+n+'-url').value   = x.url||'';
+      });
+    }
+    if (gSnap.exists()) {
+      const d = gSnap.data();
+      document.getElementById('sdgs-title').value = d.title||'';
+      document.getElementById('sdgs-desc').value  = d.desc||'';
+      if (Array.isArray(d.goals)) document.querySelectorAll('.sdg-chk').forEach(c => { c.checked = d.goals.map(Number).includes(Number(c.value)); });
+    }
   } catch(e) { console.error(e); }
 }
 document.getElementById('saveHeroBtn').addEventListener('click', async () => {
   const btn = document.getElementById('saveHeroBtn');
   btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
   try {
+    const v = id => document.getElementById(id).value.trim();
+    const sih3Urls = ['sih3-url','sih3-1-url','sih3-2-url','sih3-3-url'];
+    for (const id of sih3Urls) {
+      if (v(id) && !/^https?:\/\//i.test(v(id))) throw new Error('Link SIH3 harus diawali http:// atau https:// (' + id + ')');
+    }
     await setDoc(doc(db,'profil_yayasan','hero'), {
       title_main: document.getElementById('hero-title-main').value.trim(),
       title_em:   document.getElementById('hero-title-em').value.trim(),
@@ -1586,6 +1685,14 @@ document.getElementById('saveHeroBtn').addEventListener('click', async () => {
       visi:    document.getElementById('tentang-visi').value.trim(),
       misi:    document.getElementById('tentang-misi').value.split('\n').map(s=>s.trim()).filter(Boolean)
     });
+    const items = [1,2,3].map(n => ({ icon: v('pilar-'+n+'-icon'), title: v('pilar-'+n+'-title'), desc: v('pilar-'+n+'-desc') }))
+                         .filter(x => x.title || x.desc);
+    await setDoc(doc(db,'profil_yayasan','pilar'), { title: v('pilar-title'), subtitle: v('pilar-subtitle'), items });
+    // 3 kartu SIH3 disimpan per posisi (tanpa filter) agar urutan Hidrologi/Hidrometeorologi/Hidrogeologi tetap
+    const sihItems = [1,2,3].map(n => ({ icon: v('sih3-'+n+'-icon'), title: v('sih3-'+n+'-title'), desc: v('sih3-'+n+'-desc'), url: v('sih3-'+n+'-url') }));
+    await setDoc(doc(db,'profil_yayasan','sih3'), { title: v('sih3-title'), desc: v('sih3-desc'), url: v('sih3-url'), btn_label: v('sih3-btn'), items: sihItems });
+    await setDoc(doc(db,'profil_yayasan','sdgs'), { title: v('sdgs-title'), desc: v('sdgs-desc'),
+      goals: [...document.querySelectorAll('.sdg-chk')].filter(c => c.checked).map(c => Number(c.value)) });
     btn.innerHTML='<i class="fas fa-check"></i> Tersimpan!';
     setTimeout(()=>{ btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan Semua'; },2000);
   } catch(e) { alert('Gagal: '+e.message); btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan Semua'; }
