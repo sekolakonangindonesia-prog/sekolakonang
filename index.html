@@ -623,10 +623,14 @@
     if (user) {
       try {
         const snap = await getDoc(doc(db,'users',user.uid));
-        if (snap.exists()) {
-          const d = snap.data();
-          document.getElementById('navUserName').textContent = (d.fullName||'Akun').split(' ')[0];
-          ctaUser.href = dashboardUrl(d.role);
+        // Penanda dari login admin (5x klik logo / login di admin.html): tombol langsung ke panel admin,
+        // meskipun akun admin tidak punya dokumen users. Hanya soal tampilan; izin tulis tetap dari aturan Firestore.
+        let isAdminHint = false;
+        try { isAdminHint = localStorage.getItem('yski_admin_uid') === user.uid; } catch(_) {}
+        if (snap.exists() || isAdminHint) {
+          const d = snap.exists() ? snap.data() : {};
+          document.getElementById('navUserName').textContent = isAdminHint ? 'Admin' : (d.fullName||'Akun').split(' ')[0];
+          ctaUser.href = isAdminHint ? 'admin.html' : dashboardUrl(d.role);
           ctaMitra.style.display = 'none';
           ctaUser.style.display  = 'flex';
         }
@@ -1057,7 +1061,11 @@
     if(!email||!pw) return;
     const btn=document.getElementById('adminLoginBtn');
     btn.disabled=true; btn.textContent='Memproses...';
-    try { await signInWithEmailAndPassword(auth,email,pw); window.location.href='admin.html'; }
+    try {
+      const cred = await signInWithEmailAndPassword(auth,email,pw);
+      try { localStorage.setItem('yski_admin_uid', cred.user.uid); } catch(_) {}
+      window.location.href='admin.html';
+    }
     catch(e){ errEl.style.display='block'; btn.disabled=false; btn.textContent='Masuk'; }
   });
 
