@@ -4622,10 +4622,15 @@ document.getElementById('saveTimBtn').addEventListener('click', async () => {
   const email=document.getElementById('tim-email').value.trim();
   const pw=document.getElementById('tim-password').value;
   const jabatan=document.getElementById('tim-jabatan').value.trim();
-  if (!nama||!email||!pw) { alert('Nama, email, dan password wajib diisi.'); return; }
+  if (!nama||!email||pw.length<6) { alert('Nama, email, dan password (min. 6 karakter) wajib diisi.'); return; }
   const btn=document.getElementById('saveTimBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+  // Instance Firebase kedua supaya admin tidak ikut berpindah login saat akun baru dibuat.
+  // Dokumen tim_accounts ditulis oleh ADMIN (db utama), karena aturan Firestore hanya mengizinkan admin.
+  const sec = initializeApp(firebaseConfig, 'sec-tim-' + Date.now());
+  const secAuth = getAuth(sec);
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, pw);
+    const cred = await createUserWithEmailAndPassword(secAuth, email, pw);
+    await signOut(secAuth);
     await setDoc(doc(db,'tim_accounts',cred.user.uid), { nama, email, jabatan, createdAt: new Date().toISOString() });
     closeModal('modal-tim'); loadTim();
   } catch(e) { alert('Gagal buat akun: '+e.message); }
