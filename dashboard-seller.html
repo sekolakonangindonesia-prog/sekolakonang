@@ -544,7 +544,7 @@ input, textarea, select { font-family: var(--body); }
       <div class="calc-result-label"><i class="fas fa-tint"></i> Total Estimasi Serapan Air</div>
       <div><span class="calc-result-val" id="totalSerapan">0</span><span class="calc-result-unit">m³ / tahun</span></div>
       <div style="font-size:0.62rem;color:var(--muted);margin-top:6px;">
-        Dari <span id="totalTitik">0</span> titik · <span id="totalRorakCount">0</span> Rorak, <span id="totalSumurCount">0</span> Sumur
+        Dari <span id="totalTitik">0</span> titik · <span id="totalRorakCount">0</span> Rorak, <span id="totalSumurCount">0</span> Sumur, <span id="totalPohonCount">0</span> Pohon
       </div>
     </div>
 
@@ -568,6 +568,9 @@ input, textarea, select { font-family: var(--body); }
         <i class="fas fa-plus"></i> Titik Sumur
       </button>
     </div>
+    <button class="btn-submit-full" style="background:var(--green);color:var(--bg);margin:0 0 14px 0;" onclick="bukaModalTitik('pohon')">
+      <i class="fas fa-plus"></i> Titik Pohon
+    </button>
 
     <button class="btn-submit-full" id="btnSubmitProyek" onclick="submitPengajuanFinal()">
       <i class="fas fa-paper-plane"></i> Selesai &amp; Kirim ke Admin
@@ -728,8 +731,25 @@ input, textarea, select { font-family: var(--body); }
       </div>
     </div>
 
+    <!-- DATA POHON -->
+    <div id="dimensiPohonBox" style="display:none;">
+      <div class="form-group">
+        <label>Jenis / Nama Pohon</label>
+        <input type="text" id="t-nama-pohon" placeholder="contoh: Mahoni, Trembesi, Durian" maxlength="80">
+      </div>
+      <div class="row-3">
+        <div class="form-group"><label>Jumlah (batang)</label><input type="number" id="t-jumlah-pohon" value="1" step="1" min="1"></div>
+        <div class="form-group"><label>Diameter (cm)</label><input type="number" id="t-diameter-pohon" step="1" min="0" placeholder="opsional"></div>
+        <div class="form-group"><label>Tinggi (m)</label><input type="number" id="t-tinggi-pohon" step="0.1" min="0" placeholder="opsional"></div>
+      </div>
+      <div class="form-group">
+        <label>Kondisi Pohon</label>
+        <select id="t-kondisi-pohon"><option value="sehat">Sehat</option><option value="sedang">Sedang</option><option value="kurang">Perlu Perawatan</option></select>
+      </div>
+    </div>
+
     <!-- JENIS TANAH -->
-    <div class="form-group">
+    <div class="form-group" id="tanahBox">
       <label>Jenis Tanah di Titik Ini</label>
       <select id="t-tanah" onchange="hitungTitikOtomatis()">
         <option value="normal">Latosol / Normal (K=1.0)</option>
@@ -739,7 +759,7 @@ input, textarea, select { font-family: var(--body); }
     </div>
 
     <!-- KALKULASI PER TITIK -->
-    <div class="calc-result">
+    <div class="calc-result" id="calcTitikBox">
       <div class="calc-result-label"><i class="fas fa-tint"></i> Estimasi Serapan Titik Ini</div>
       <div><span class="calc-result-val" id="t-calc-m3">0</span><span class="calc-result-unit">m³ / tahun</span></div>
     </div>
@@ -1030,10 +1050,10 @@ window.renderPengajuanList = (filter) => {
   }).join('');
 };
 
-window.bukaDetail = (id) => {
+window.bukaDetail = async (id) => {
   const p = allPengajuan.find(x=>x.id===id); if (!p) return;
   document.getElementById('modalDetailTitle').textContent = p.lokasi||'Detail Pengajuan';
-  document.getElementById('modalDetailSub').textContent   = `${p.jumlahRorak||0} Rorak · ${p.jumlahSumur||0} Sumur`;
+  document.getElementById('modalDetailSub').textContent   = `${p.jumlahRorak||0} Rorak · ${p.jumlahSumur||0} Sumur · ${p.jumlahPohon||0} Pohon`;
   const steps  = ['pending','review','lapangan','approved','mou'];
   const curIdx = steps.indexOf(p.status);
   for (let i=1;i<=5;i++) {
@@ -1041,22 +1061,49 @@ window.bukaDetail = (id) => {
     el.className = 'step-item'+(i-1<curIdx?' done':i-1===curIdx?' active':'');
   }
   const tgl = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) : '—';
+  const labelTgl = p.status==='draft' ? 'Dibuat (draft, belum dikirim)' : 'Diajukan';
   document.getElementById('modalDetailBody').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
       <div class="stat-card" style="padding:12px;"><div class="stat-lbl">Rorak</div><div class="stat-val" style="font-size:1.2rem;">${p.jumlahRorak||0}</div></div>
       <div class="stat-card cyan" style="padding:12px;"><div class="stat-lbl">Sumur</div><div class="stat-val" style="font-size:1.2rem;">${p.jumlahSumur||0}</div></div>
+      <div class="stat-card green" style="padding:12px;"><div class="stat-lbl">Pohon</div><div class="stat-val" style="font-size:1.2rem;">${p.jumlahPohon||0}</div></div>
     </div>
     <div class="calc-result" style="margin-bottom:14px;">
       <div class="calc-result-label">Potensi Serapan</div>
       <div><span class="calc-result-val">${Math.round(p.serapanM3||0).toLocaleString('id-ID')}</span><span class="calc-result-unit">m³/tahun</span></div>
     </div>
     <div style="font-size:0.72rem;color:var(--muted);line-height:2;">
-      <div><i class="fas fa-map-marker-alt" style="color:var(--lime);margin-right:6px;width:14px;"></i>${p.lokasi||'—'}</div>
-      <div><i class="fas fa-location-arrow" style="color:var(--lime);margin-right:6px;width:14px;"></i>GPS: ${p.lat||'—'}, ${p.lon||'—'}</div>
-      <div><i class="fas fa-calendar" style="color:var(--lime);margin-right:6px;width:14px;"></i>Diajukan: ${tgl}</div>
-      ${p.catatan?`<div style="margin-top:8px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;">${p.catatan}</div>`:''}
-    </div>`;
+      <div><i class="fas fa-map-marker-alt" style="color:var(--lime);margin-right:6px;width:14px;"></i>${escHtml(p.lokasi||'—')}</div>
+      ${p.nomorDokumenLahan?`<div><i class="fas fa-file-alt" style="color:var(--lime);margin-right:6px;width:14px;"></i>${escHtml(p.jenisBuktiLahan||'Bukti lahan')}: ${escHtml(p.nomorDokumenLahan)}</div>`:''}
+      <div><i class="fas fa-calendar" style="color:var(--lime);margin-right:6px;width:14px;"></i>${labelTgl}: ${tgl}</div>
+      ${p.catatan?`<div style="margin-top:8px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;">${escHtml(p.catatan)}</div>`:''}
+    </div>
+    <div class="section-head" style="margin-top:16px;"><h3>Titik Lapangan</h3></div>
+    <div id="detailTitikList" style="display:flex;flex-direction:column;gap:10px;"><div style="font-size:0.72rem;color:var(--muted);">Memuat titik...</div></div>`;
   openModal('modalDetail');
+
+  const box = document.getElementById('detailTitikList');
+  try {
+    const snap = await getDocs(collection(db,'pengajuan_pjlh',id,'titik'));
+    const list = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    if (!list.length) { box.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">Belum ada titik.</div>'; return; }
+    box.innerHTML = list.map((t,idx) => {
+      const m = JENIS_TITIK[t.jenis] || JENIS_TITIK.rorak;
+      return `<div class="pengajuan-card" style="padding:12px;">
+        <div class="pj-head">
+          <div>
+            <div class="pj-title"><i class="fas fa-${m.ico}" style="color:${m.c};margin-right:6px;"></i>${escHtml(t.label || m.nama+' #'+(idx+1))}</div>
+            <div class="pj-loc">${dimTitik(t)}${t.kondisi?` · ${escHtml(t.kondisi)}`:''}<br>${gpsLinkHTML(t)}</div>
+          </div>
+          <span class="badge" style="background:${m.bg};color:${m.c};border:1px solid ${m.bd};">${badgeTitikTeks(t)}</span>
+        </div>
+        ${fotoStripHTML(t)}
+        ${t.catatan?`<div style="font-size:0.7rem;color:var(--muted);margin-top:8px;">${escHtml(t.catatan)}</div>`:''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    box.innerHTML = `<div style="font-size:0.72rem;color:var(--danger);">Gagal memuat titik: ${escHtml(e.message)}</div>`;
+  }
 };
 
 // ── NOTIF ──
@@ -1263,6 +1310,7 @@ window.hitungTitikOtomatis = () => {
   const jenis = document.getElementById('titikJenis').value;
   const tanah = document.getElementById('t-tanah').value;
   let m3 = 0;
+  if (jenis === 'pohon') { const el = document.getElementById('t-calc-m3'); if (el) el.textContent = '0'; return 0; }
   if (jenis === 'rorak') {
     m3 = hitungSerapanTitik('rorak', {
       p: parseFloat(document.getElementById('t-p-rorak').value)||0,
@@ -1306,8 +1354,14 @@ window.bukaModalTitik = (jenis, editId=null) => {
 
   document.getElementById('dimensiRorakBox').style.display = jenis==='rorak' ? 'block' : 'none';
   document.getElementById('dimensiSumurBox').style.display = jenis==='sumur' ? 'block' : 'none';
-  document.getElementById('modalTitikTitle').textContent = (editId ? 'Edit ' : 'Tambah ') + (jenis==='rorak'?'Titik Rorak':'Titik Sumur');
-  document.getElementById('modalTitikSub').textContent = jenis==='rorak' ? 'Catat data rorak di titik ini' : 'Catat data sumur resapan di titik ini';
+  document.getElementById('dimensiPohonBox').style.display = jenis==='pohon' ? 'block' : 'none';
+  // Pohon tidak punya hitungan serapan air / jenis tanah.
+  document.getElementById('tanahBox').style.display    = jenis==='pohon' ? 'none' : 'block';
+  document.getElementById('calcTitikBox').style.display = jenis==='pohon' ? 'none' : 'block';
+  const namaJenis = {rorak:'Titik Rorak', sumur:'Titik Sumur', pohon:'Titik Pohon'}[jenis] || 'Titik';
+  const subJenis  = {rorak:'Catat data rorak di titik ini', sumur:'Catat data sumur resapan di titik ini', pohon:'Catat pohon yang ada atau ditanam di titik ini'}[jenis] || '';
+  document.getElementById('modalTitikTitle').textContent = (editId ? 'Edit ' : 'Tambah ') + namaJenis;
+  document.getElementById('modalTitikSub').textContent = subJenis;
 
   // Reset / isi ulang form
   if (editId) {
@@ -1323,6 +1377,12 @@ window.bukaModalTitik = (jenis, editId=null) => {
         document.getElementById('t-l-rorak').value = t.l||70;
         document.getElementById('t-d-rorak').value = t.d||70;
         document.getElementById('t-kondisi-rorak').value = t.kondisi||'baik';
+      } else if (jenis==='pohon') {
+        document.getElementById('t-nama-pohon').value = t.namaPohon||'';
+        document.getElementById('t-jumlah-pohon').value = t.jumlah||1;
+        document.getElementById('t-diameter-pohon').value = t.diameter||'';
+        document.getElementById('t-tinggi-pohon').value = t.tinggi||'';
+        document.getElementById('t-kondisi-pohon').value = t.kondisi||'sehat';
       } else {
         document.getElementById('t-d-sumur').value = t.dia||80;
         document.getElementById('t-h-sumur').value = t.depth||1.5;
@@ -1343,6 +1403,11 @@ window.bukaModalTitik = (jenis, editId=null) => {
     document.getElementById('t-d-sumur').value = 80;
     document.getElementById('t-h-sumur').value = 1.5;
     document.getElementById('t-wall-sumur').value = 'solid';
+    document.getElementById('t-nama-pohon').value = '';
+    document.getElementById('t-jumlah-pohon').value = 1;
+    document.getElementById('t-diameter-pohon').value = '';
+    document.getElementById('t-tinggi-pohon').value = '';
+    document.getElementById('t-kondisi-pohon').value = 'sehat';
     document.getElementById('gpsLabelTitik').textContent = 'Ambil Titik GPS Sekarang';
     ['titikFotoBox1','titikFotoBox2'].forEach(id=>{
       const b=document.getElementById(id); const img=b.querySelector('img'); if(img) img.remove();
@@ -1391,6 +1456,10 @@ window.simpanTitik = async () => {
   const lon = document.getElementById('t-lon').value;
   if (!lat || !lon) { showToast('Ambil titik GPS terlebih dahulu.','error'); return; }
 
+  if (jenis === 'pohon') {
+    if (!document.getElementById('t-nama-pohon').value.trim()) { showToast('Isi jenis / nama pohon terlebih dahulu.','error'); return; }
+    if ((parseInt(document.getElementById('t-jumlah-pohon').value)||0) < 1) { showToast('Jumlah pohon minimal 1.','error'); return; }
+  }
   const m3 = window.hitungTitikOtomatis();
   const data = {
     jenis, lat, lon,
@@ -1404,6 +1473,12 @@ window.simpanTitik = async () => {
     data.l = parseFloat(document.getElementById('t-l-rorak').value)||0;
     data.d = parseFloat(document.getElementById('t-d-rorak').value)||0;
     data.kondisi = document.getElementById('t-kondisi-rorak').value;
+  } else if (jenis === 'pohon') {
+    data.namaPohon = document.getElementById('t-nama-pohon').value.trim().slice(0,80);
+    data.jumlah    = parseInt(document.getElementById('t-jumlah-pohon').value)||1;
+    data.diameter  = parseFloat(document.getElementById('t-diameter-pohon').value)||0;
+    data.tinggi    = parseFloat(document.getElementById('t-tinggi-pohon').value)||0;
+    data.kondisi   = document.getElementById('t-kondisi-pohon').value;
   } else {
     data.dia = parseFloat(document.getElementById('t-d-sumur').value)||0;
     data.depth = parseFloat(document.getElementById('t-h-sumur').value)||0;
@@ -1450,7 +1525,8 @@ async function updateTotalPengajuan() {
   const jumlahSumur = titikList.filter(t=>t.jenis==='sumur').length;
   const serapanM3   = titikList.reduce((s,t)=>s+(t.serapanM3||0),0);
   await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), {
-    jumlahRorak, jumlahSumur, serapanM3: Math.round(serapanM3)
+    jumlahRorak, jumlahSumur, serapanM3: Math.round(serapanM3),
+    jumlahPohon: titikList.filter(t=>t.jenis==='pohon').reduce((s,t)=>s+(parseInt(t.jumlah)||0),0)
   });
   renderTotalOtomatis();
 }
@@ -1463,7 +1539,53 @@ function renderTotalOtomatis() {
   document.getElementById('totalTitik').textContent      = titikList.length;
   document.getElementById('totalRorakCount').textContent = jumlahRorak;
   document.getElementById('totalSumurCount').textContent = jumlahSumur;
+  const _tp = document.getElementById('totalPohonCount');
+  if (_tp) _tp.textContent = titikList.filter(t=>t.jenis==='pohon').reduce((s,t)=>s+(parseInt(t.jumlah)||0),0);
 }
+
+// ── HELPER TAMPILAN TITIK (dipakai daftar titik di form dan Detail pengajuan) ──
+const JENIS_TITIK = {
+  rorak: { ico:'water',        c:'var(--lime)',  bg:'rgba(198,255,0,0.12)', bd:'rgba(198,255,0,0.25)', nama:'Rorak' },
+  sumur: { ico:'circle-notch', c:'var(--cyan)',  bg:'rgba(0,229,255,0.12)', bd:'rgba(0,229,255,0.25)', nama:'Sumur' },
+  pohon: { ico:'tree',         c:'var(--green)', bg:'rgba(0,255,136,0.12)', bd:'rgba(0,255,136,0.25)', nama:'Pohon' }
+};
+function escHtml(v){ return String(v==null?'':v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fotoAman(u){ return typeof u==='string' && /^(data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+|https:\/\/[^\s"'<>]+)$/.test(u); }
+function dimTitik(t){
+  if (t.jenis==='pohon') {
+    let x = `${escHtml(t.namaPohon||'Pohon')} · ${parseInt(t.jumlah)||1} batang`;
+    if (t.diameter) x += ` · Ø${escHtml(t.diameter)}cm`;
+    if (t.tinggi)   x += ` · ${escHtml(t.tinggi)}m`;
+    return x;
+  }
+  return t.jenis==='sumur' ? `Ø${escHtml(t.dia||0)}cm × ${escHtml(t.depth||0)}m` : `${escHtml(t.p||0)}m × ${escHtml(t.l||0)}cm × ${escHtml(t.d||0)}cm`;
+}
+function badgeTitikTeks(t){
+  return t.jenis==='pohon' ? `${parseInt(t.jumlah)||1} pohon` : `${(t.serapanM3||0).toLocaleString('id-ID',{maximumFractionDigits:1})} m³`;
+}
+function gpsLinkHTML(t){
+  const la = parseFloat(t.lat), lo = parseFloat(t.lon);
+  if (isNaN(la) || isNaN(lo)) return '<span>GPS: —</span>';
+  return `<a href="https://www.google.com/maps?q=${la},${lo}" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:none;"><i class="fas fa-location-arrow"></i> ${la.toFixed(6)}, ${lo.toFixed(6)}</a>`;
+}
+function fotoStripHTML(t){
+  const f = (t.foto||[]).filter(fotoAman);
+  if (!f.length) return '';
+  return `<div style="display:flex;gap:8px;margin-top:10px;">${f.map(u=>`<img src="${u}" onclick="bukaFoto(this.src)" loading="lazy" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--border-s);cursor:pointer;">`).join('')}</div>`;
+}
+window.bukaFoto = (src) => {
+  if (!fotoAman(src)) return;
+  let box = document.getElementById('lightboxFoto');
+  if (!box) {
+    box = document.createElement('div'); box.id = 'lightboxFoto';
+    box.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px;cursor:zoom-out;';
+    box.innerHTML = '<img style="max-width:100%;max-height:100%;border-radius:8px;">';
+    box.onclick = () => { box.style.display = 'none'; };
+    document.body.appendChild(box);
+  }
+  box.querySelector('img').src = src;
+  box.style.display = 'flex';
+};
 
 function renderTitikList() {
   const container = document.getElementById('titikList');
@@ -1473,21 +1595,21 @@ function renderTitikList() {
     return;
   }
   container.innerHTML = titikList.map((t,idx) => {
-    const isRorak = t.jenis==='rorak';
-    const dim = isRorak ? `${t.p||0}m × ${t.l||0}cm × ${t.d||0}cm` : `Ø${t.dia||0}cm × ${t.depth||0}m`;
+    const m = JENIS_TITIK[t.jenis] || JENIS_TITIK.rorak;
     return `<div class="pengajuan-card">
       <div class="pj-head">
         <div>
-          <div class="pj-title"><i class="fas fa-${isRorak?'water':'circle-notch'}" style="color:${isRorak?'var(--lime)':'var(--cyan)'};margin-right:6px;"></i>${t.label || (isRorak?'Rorak':'Sumur')+' #'+(idx+1)}</div>
-          <div class="pj-loc">${dim} · GPS ${t.lat}, ${t.lon}</div>
+          <div class="pj-title"><i class="fas fa-${m.ico}" style="color:${m.c};margin-right:6px;"></i>${escHtml(t.label || m.nama+' #'+(idx+1))}</div>
+          <div class="pj-loc">${dimTitik(t)}<br>${gpsLinkHTML(t)}</div>
+          ${fotoStripHTML(t)}
         </div>
-        <span class="badge" style="background:${isRorak?'rgba(198,255,0,0.12)':'rgba(0,229,255,0.12)'};color:${isRorak?'var(--lime)':'var(--cyan)'};border:1px solid ${isRorak?'rgba(198,255,0,0.25)':'rgba(0,229,255,0.25)'};">${(t.serapanM3||0).toLocaleString('id-ID',{maximumFractionDigits:1})} m³</span>
+        <span class="badge" style="background:${m.bg};color:${m.c};border:1px solid ${m.bd};">${badgeTitikTeks(t)}</span>
       </div>
       <div class="pj-footer">
-        <span class="pj-date">${t.catatan ? t.catatan.slice(0,40)+(t.catatan.length>40?'...':'') : 'Tanpa catatan'}</span>
+        <span class="pj-date">${t.catatan ? escHtml(t.catatan.slice(0,40))+(t.catatan.length>40?'...':'') : 'Tanpa catatan'}</span>
         <div style="display:flex;gap:6px;">
-          <button class="btn-sm btn-outline-sm" onclick="bukaModalTitik('${t.jenis}','${t.id}')"><i class="fas fa-edit"></i></button>
-          <button class="btn-sm btn-outline-sm" style="color:var(--danger);" onclick="hapusTitik('${t.id}')"><i class="fas fa-trash"></i></button>
+          <button class="btn-sm btn-outline-sm" onclick="bukaModalTitik('${escHtml(t.jenis)}','${escHtml(t.id)}')"><i class="fas fa-edit"></i></button>
+          <button class="btn-sm btn-outline-sm" style="color:var(--danger);" onclick="hapusTitik('${escHtml(t.id)}')"><i class="fas fa-trash"></i></button>
         </div>
       </div>
     </div>`;
@@ -1515,7 +1637,7 @@ window.submitPengajuanFinal = async () => {
   const nomorDokumen = document.getElementById('proj-nomor-dokumen-lahan').value.trim();
   if (!lokasi)            { showToast('Isi nama lokasi / desa terlebih dahulu.','error'); return; }
   if (!nomorDokumen)      { showToast('Isi nomor dokumen bukti lahan terlebih dahulu (syarat Pasal 12 PP 46/2017).','error'); return; }
-  if (!titikList.length)  { showToast('Tambahkan minimal 1 titik rorak/sumur.','error'); return; }
+  if (!titikList.length)  { showToast('Tambahkan minimal 1 titik (rorak, sumur, atau pohon).','error'); return; }
   if (!pengajuanAktifId)  { showToast('Belum ada draft tersimpan.','error'); return; }
 
   const btn = document.getElementById('btnSubmitProyek');
