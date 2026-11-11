@@ -971,7 +971,7 @@ function loadBeranda() {
   const q = query(collection(db,'pengajuan_pjlh'), where('sellerId','==',targetUid));
   beranadaUnsub = onSnapshot(q, snap => {
     allPengajuan = snap.docs.map(d => ({id:d.id,...d.data()}));
-    const total    = allPengajuan.length;
+    const total    = allPengajuan.filter(p => p.status !== 'draft').length;
     const approved = allPengajuan.filter(p => ['approved','mou'].includes(p.status)).length;
     const mouAktif = allPengajuan.filter(p => p.status === 'mou').length;
     const serapan  = allPengajuan.filter(p => ['approved','mou'].includes(p.status)).reduce((s,p)=>s+(p.serapanM3||0),0);
@@ -1353,6 +1353,37 @@ window.bukaModalTitik = (jenis, editId=null) => {
   openModal('modalTitik');
 };
 
+// Kompres foto: sisi terpanjang maks 900px, kualitas diturunkan bertahap sampai <= ~170 KB.
+function kompresFotoTitik(file, maxSide = 900, targetKB = 170) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Gagal membaca file foto'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Gagal membuka file gambar: ' + file.name));
+      img.onload = () => {
+        let scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+        let q = 0.75;
+        const encode = () => {
+          const c = document.createElement('canvas');
+          c.width  = Math.max(1, Math.round(img.naturalWidth  * scale));
+          c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          return c.toDataURL('image/jpeg', q);
+        };
+        let out = encode();
+        while (out.length * 0.75 / 1024 > targetKB && (q > 0.35 || scale > 0.4)) {
+          if (q > 0.35) q -= 0.1; else scale *= 0.8;
+          out = encode();
+        }
+        resolve(out);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 window.simpanTitik = async () => {
   const jenis = document.getElementById('titikJenis').value;
   const editId = document.getElementById('titikEditId').value || null;
@@ -1383,15 +1414,12 @@ window.simpanTitik = async () => {
   try {
     await pastikanDraftPengajuan();
 
-    // Upload foto baru jika ada
+    // Foto dikompres di browser lalu disimpan LANGSUNG (base64) di dokumen titik di Firestore,
+    // tanpa Firebase Storage (pola yang sama dengan dashboard Tim dan Gaharu).
     const fotoUrls = [];
     for (let i=1;i<=2;i++) {
       const input = document.getElementById('titikFotoInput'+i);
-      if (input.files[0]) {
-        const fRef = ref(storage, `pjlh/${currentUser.uid}/${pengajuanAktifId}/titik_${Date.now()}_${i}`);
-        const snap = await uploadBytes(fRef, input.files[0]);
-        fotoUrls.push(await getDownloadURL(snap.ref));
-      }
+      if (input.files[0]) fotoUrls.push(await kompresFotoTitik(input.files[0]));
     }
     if (fotoUrls.length) data.foto = fotoUrls;
 
@@ -1521,7 +1549,7 @@ window.submitPengajuanFinal = async () => {
 
 // ── HELPERS ──
 function badgeHTML(status) {
-  const map = { pending:['badge-pending','Menunggu'], review:['badge-review','Ditinjau Admin'], lapangan:['badge-review','Cek Lapangan'], approved:['badge-approved','Disetujui'], mou:['badge-mou','MOU Aktif'], rejected:['badge-rejected','Ditolak'] };
+  const map = { draft:['badge-pending','Draft (belum dikirim)'], pending:['badge-pending','Menunggu'], review:['badge-review','Ditinjau Admin'], lapangan:['badge-review','Cek Lapangan'], approved:['badge-approved','Disetujui'], mou:['badge-mou','MOU Aktif'], rejected:['badge-rejected','Ditolak'] };
   const [cls,lbl] = map[status]||['badge-pending','—'];
   return `<span class="badge ${cls}">${lbl}</span>`;
 }
