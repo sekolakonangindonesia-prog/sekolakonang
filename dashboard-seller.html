@@ -187,7 +187,7 @@ input, textarea, select { font-family: var(--body); }
 }
 .pj-title { font-size: 0.82rem; font-weight: 700; color: #fff; }
 .pj-loc   { font-size: 0.65rem; color: var(--muted); margin-top: 3px; }
-.pj-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--border-s); }
+.pj-stats { display: grid; grid-template-columns: repeat(4,1fr); border-top: 1px solid var(--border-s); }
 .pj-stat  { padding: 10px 12px; text-align: center; border-right: 1px solid var(--border-s); }
 .pj-stat:last-child { border-right: none; }
 .pj-stat-val { font-size: 0.88rem; font-weight: 700; color: var(--lime); }
@@ -1040,6 +1040,7 @@ window.renderPengajuanList = (filter) => {
       <div class="pj-stats">
         <div class="pj-stat"><div class="pj-stat-val">${p.jumlahRorak||0}</div><div class="pj-stat-lbl">Rorak</div></div>
         <div class="pj-stat"><div class="pj-stat-val">${p.jumlahSumur||0}</div><div class="pj-stat-lbl">Sumur</div></div>
+        <div class="pj-stat"><div class="pj-stat-val" style="color:var(--green,#00ff88)">${p.jumlahPohon||0}</div><div class="pj-stat-lbl">Pohon</div></div>
         <div class="pj-stat"><div class="pj-stat-val" style="color:var(--cyan)">${Math.round(p.serapanM3||0)}</div><div class="pj-stat-lbl">m³/thn</div></div>
       </div>
       <div class="pj-footer">
@@ -1148,7 +1149,7 @@ function renderProgres() {
     <div class="progres-card">
       <div class="progres-card-head">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div><div style="font-size:0.82rem;font-weight:700;color:#fff;">${p.lokasi||'—'}</div><div style="font-size:0.62rem;color:var(--muted);margin-top:2px;">${p.jumlahRorak||0} Rorak · ${p.jumlahSumur||0} Sumur</div></div>
+          <div><div style="font-size:0.82rem;font-weight:700;color:#fff;">${p.lokasi||'—'}</div><div style="font-size:0.62rem;color:var(--muted);margin-top:2px;">${p.jumlahRorak||0} Rorak · ${p.jumlahSumur||0} Sumur · ${p.jumlahPohon||0} Pohon</div></div>
           ${badgeHTML(p.status)}
         </div>
         <button class="btn-sm btn-lime-sm" onclick="bukaModalProgres('${p.id}','${p.lokasi||''}')"><i class="fas fa-plus"></i> Update Kondisi</button>
