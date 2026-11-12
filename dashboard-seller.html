@@ -472,8 +472,11 @@ input, textarea, select { font-family: var(--body); }
     <div class="page-header">
       <div class="page-label">Form Baru</div>
       <div class="page-title">Pengajuan PJLH</div>
-      <div class="page-sub">Tambahkan setiap titik rorak/sumur satu per satu.</div>
+      <div class="page-sub">Isi target jumlah, lalu catat setiap rorak/pohon satu per satu (GPS + 2 foto).</div>
     </div>
+
+    <!-- BANNER DRAFT (muncul bila melanjutkan draft) -->
+    <div id="draftBanner" style="display:none;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;margin-bottom:14px;border:1px solid rgba(198,255,0,0.25);background:rgba(198,255,0,0.06);border-radius:14px;"></div>
 
     <!-- INFO PROYEK -->
     <div class="form-section">
@@ -539,12 +542,24 @@ input, textarea, select { font-family: var(--body); }
       </div>
     </div>
 
+    <!-- TARGET JUMLAH -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-bullseye"></i> Target Jumlah di Lahan Ini</div>
+      <div class="form-hint" style="margin-bottom:10px;">Isi jumlah total yang akan didaftarkan. Tombol kirim terbuka setelah semua titik tercatat sesuai target.</div>
+      <div class="row-3">
+        <div class="form-group"><label>Rorak</label><input type="number" id="proj-target-rorak" min="0" step="1" placeholder="0" oninput="onTargetChange()"></div>
+        <div class="form-group"><label>Sumur</label><input type="number" id="proj-target-sumur" min="0" step="1" placeholder="0" oninput="onTargetChange()"></div>
+        <div class="form-group"><label>Pohon (batang)</label><input type="number" id="proj-target-pohon" min="0" step="1" placeholder="0" oninput="onTargetChange()"></div>
+      </div>
+      <div id="progresTarget"></div>
+    </div>
+
     <!-- TOTAL OTOMATIS -->
     <div class="calc-result" style="margin-bottom:14px;">
       <div class="calc-result-label"><i class="fas fa-tint"></i> Total Estimasi Serapan Air</div>
       <div><span class="calc-result-val" id="totalSerapan">0</span><span class="calc-result-unit">m³ / tahun</span></div>
       <div style="font-size:0.62rem;color:var(--muted);margin-top:6px;">
-        Dari <span id="totalTitik">0</span> titik · <span id="totalRorakCount">0</span> Rorak, <span id="totalSumurCount">0</span> Sumur, <span id="totalPohonCount">0</span> Pohon
+        Terdata: <span id="totalRorakCount">0</span> Rorak, <span id="totalSumurCount">0</span> Sumur, <span id="totalPohonCount">0</span> Pohon
       </div>
     </div>
 
@@ -572,11 +587,11 @@ input, textarea, select { font-family: var(--body); }
       <i class="fas fa-plus"></i> Titik Pohon
     </button>
 
-    <button class="btn-submit-full" id="btnSubmitProyek" onclick="submitPengajuanFinal()">
+    <button class="btn-submit-full" id="btnSubmitProyek" onclick="submitPengajuanFinal()" disabled style="opacity:.45;">
       <i class="fas fa-paper-plane"></i> Selesai &amp; Kirim ke Admin
     </button>
-    <p style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;">
-      Setiap titik otomatis tersimpan saat ditambahkan. Tekan tombol ini setelah semua titik selesai disurvei.
+    <p id="kirimHint" style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;">
+      Setiap titik otomatis tersimpan saat ditambahkan. Tombol kirim terbuka setelah semua target terpenuhi.
     </p>
   </div>
 
@@ -766,7 +781,7 @@ input, textarea, select { font-family: var(--body); }
 
     <!-- FOTO -->
     <div class="form-group" style="margin-top:12px;">
-      <label>Foto Titik</label>
+      <label>Foto Titik <span style="color:var(--muted);font-weight:400;text-transform:none;">(wajib 2 foto)</span></label>
       <div class="foto-grid">
         <div class="foto-box" id="titikFotoBox1">
           <input type="file" id="titikFotoInput1" accept="image/*" capture="environment" onchange="previewFoto(this,'titikFotoBox1')">
@@ -784,8 +799,11 @@ input, textarea, select { font-family: var(--body); }
       <textarea id="t-catatan" placeholder="Kondisi sekitar titik, kendala, dll..."></textarea>
     </div>
 
-    <button class="btn-submit-full" onclick="simpanTitik()">
-      <i class="fas fa-check"></i> Simpan Titik Ini
+    <button class="btn-submit-full" id="btnSimpanLanjut" onclick="simpanTitik(true)">
+      <i class="fas fa-forward"></i> Simpan &amp; Tambah Berikutnya
+    </button>
+    <button class="btn-submit-full" id="btnSimpanTitik" onclick="simpanTitik(false)" style="margin-top:8px;">
+      <i class="fas fa-check"></i> <span id="btnSimpanTitikLbl">Simpan &amp; Selesai</span>
     </button>
     <button class="btn-submit-full" onclick="closeModal('modalTitik')" style="margin-top:8px;background:transparent;color:var(--muted);border:1px solid var(--border-s);">
       Batal
@@ -850,7 +868,8 @@ import { getAuth, updatePassword,
          setPersistence, browserSessionPersistence }         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
          collection, query, where, orderBy,
-         onSnapshot, serverTimestamp, getDocs }             from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+         onSnapshot, serverTimestamp, getDocs,
+         increment, limit, startAfter }             from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL }     from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -1045,7 +1064,10 @@ window.renderPengajuanList = (filter) => {
       </div>
       <div class="pj-footer">
         <span class="pj-date"><i class="fas fa-calendar-alt" style="margin-right:4px;"></i>${tgl}</span>
-        <button class="btn-sm btn-outline-sm" onclick="bukaDetail('${p.id}')">Detail →</button>
+        <div style="display:flex;gap:6px;">
+          ${p.status==='draft' ? `<button class="btn-sm btn-outline-sm" style="color:var(--lime);" onclick="lanjutkanDraft('${p.id}')">Lanjutkan</button><button class="btn-sm btn-outline-sm" style="color:var(--danger);" onclick="hapusDraftDariList('${p.id}')"><i class="fas fa-trash"></i></button>` : ''}
+          <button class="btn-sm btn-outline-sm" onclick="bukaDetail('${p.id}')">Detail →</button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -1079,21 +1101,35 @@ window.bukaDetail = async (id) => {
       <div><i class="fas fa-calendar" style="color:var(--lime);margin-right:6px;width:14px;"></i>${labelTgl}: ${tgl}</div>
       ${p.catatan?`<div style="margin-top:8px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;">${escHtml(p.catatan)}</div>`:''}
     </div>
+    ${(p.targetRorak||p.targetSumur||p.targetPohon)?`<div style="font-size:0.7rem;color:var(--muted);margin-top:8px;">Target: ${p.targetRorak||0} rorak · ${p.targetSumur||0} sumur · ${p.targetPohon||0} pohon</div>`:''}
     <div class="section-head" style="margin-top:16px;"><h3>Titik Lapangan</h3></div>
     <div id="detailTitikList" style="display:flex;flex-direction:column;gap:10px;"><div style="font-size:0.72rem;color:var(--muted);">Memuat titik...</div></div>`;
   openModal('modalDetail');
 
+  detailId = id;
+  await muatDetailHalaman(true);
+};
+
+let detailId = null, detailItems = [], detailCursor = null;
+async function muatDetailHalaman(reset) {
   const box = document.getElementById('detailTitikList');
+  if (reset) { detailItems = []; detailCursor = null; }
   try {
-    const snap = await getDocs(collection(db,'pengajuan_pjlh',id,'titik'));
-    const list = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
-    if (!list.length) { box.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">Belum ada titik.</div>'; return; }
-    box.innerHTML = list.map((t,idx) => {
+    const col = collection(db,'pengajuan_pjlh',detailId,'titik');
+    const q = detailCursor
+      ? query(col, orderBy('createdAt','asc'), startAfter(detailCursor), limit(HALAMAN_TITIK))
+      : query(col, orderBy('createdAt','asc'), limit(HALAMAN_TITIK));
+    const snap = await getDocs(q);
+    snap.docs.forEach(d => detailItems.push({ id:d.id, ...d.data() }));
+    if (snap.docs.length) detailCursor = snap.docs[snap.docs.length-1];
+    const lagi = snap.docs.length === HALAMAN_TITIK;
+    if (!detailItems.length) { box.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">Belum ada titik.</div>'; return; }
+    box.innerHTML = detailItems.map((t,idx) => {
       const m = JENIS_TITIK[t.jenis] || JENIS_TITIK.rorak;
       return `<div class="pengajuan-card" style="padding:12px;">
         <div class="pj-head">
           <div>
-            <div class="pj-title"><i class="fas fa-${m.ico}" style="color:${m.c};margin-right:6px;"></i>${escHtml(t.label || m.nama+' #'+(idx+1))}</div>
+            <div class="pj-title"><i class="fas fa-${m.ico}" style="color:${m.c};margin-right:6px;"></i>${escHtml(t.label || m.nama+' #'+(t.no||idx+1))}</div>
             <div class="pj-loc">${dimTitik(t)}${t.kondisi?` · ${escHtml(t.kondisi)}`:''}<br>${gpsLinkHTML(t)}</div>
           </div>
           <span class="badge" style="background:${m.bg};color:${m.c};border:1px solid ${m.bd};">${badgeTitikTeks(t)}</span>
@@ -1101,11 +1137,13 @@ window.bukaDetail = async (id) => {
         ${fotoStripHTML(t)}
         ${t.catatan?`<div style="font-size:0.7rem;color:var(--muted);margin-top:8px;">${escHtml(t.catatan)}</div>`:''}
       </div>`;
-    }).join('');
+    }).join('') + `<div style="text-align:center;font-size:0.65rem;color:var(--muted);">Menampilkan ${detailItems.length} titik${lagi?'':' (semua)'}</div>`
+      + (lagi ? `<button class="btn-sm btn-outline-sm" style="align-self:center;" onclick="muatDetailLagi()">Muat titik berikutnya</button>` : '');
   } catch(e) {
     box.innerHTML = `<div style="font-size:0.72rem;color:var(--danger);">Gagal memuat titik: ${escHtml(e.message)}</div>`;
   }
-};
+}
+window.muatDetailLagi = () => muatDetailHalaman(false);
 
 // ── NOTIF ──
 function loadNotif() {
@@ -1203,13 +1241,25 @@ window.kirimProgres = async () => {
 };
 
 // ── PENGAJUAN BARU (SISTEM TITIK) ──
+const HALAMAN_TITIK = 20;
 let pengajuanAktifId = null;   // id dokumen "pengajuan_pjlh" yang sedang diisi (draft)
-let titikList         = [];    // array titik yang sudah tersimpan untuk draft ini
+let titikList         = [];    // titik yang sudah dimuat (terbaru di atas), per halaman
 let titikEditTarget    = null; // id titik yang sedang diedit (null = mode tambah baru)
+let titikCursor = null, titikAdaLagi = false;
+let hitung = { rorak:0, sumur:0, pohon:0, serapan:0 };   // total di lahan (disimpan di dokumen induk)
+let seqTitik = 0;
+let muatDraftBusy = false;
+let saveTargetTimer = null;
+
+function ambilTarget() {
+  const n = id => Math.max(0, parseInt(document.getElementById(id).value) || 0);
+  return { rorak: n('proj-target-rorak'), sumur: n('proj-target-sumur'), pohon: n('proj-target-pohon') };
+}
 
 // Pastikan ada draft pengajuan aktif (dibuat sekali, dipakai untuk semua titik)
 async function pastikanDraftPengajuan() {
   if (pengajuanAktifId) return pengajuanAktifId;
+  const t = ambilTarget();
   const docRef = await addDoc(collection(db,'pengajuan_pjlh'), {
     sellerId: currentUser.uid, sellerName: userData.fullName,
     sellerEmail: currentUser.email, sellerPhone: userData.phone||'',
@@ -1219,24 +1269,171 @@ async function pastikanDraftPengajuan() {
     jenisBuktiLahan: document.getElementById('proj-jenis-bukti-lahan').value,
     nomorDokumenLahan: document.getElementById('proj-nomor-dokumen-lahan').value.trim() || '',
     komposisiTanam: ambilKomposisiTanam(),
-    jumlahRorak: 0, jumlahSumur: 0, serapanM3: 0,
+    targetRorak: t.rorak, targetSumur: t.sumur, targetPohon: t.pohon,
+    jumlahRorak: 0, jumlahSumur: 0, jumlahPohon: 0, serapanM3: 0, seqTitik: 0,
     status: 'draft',
     createdAt: serverTimestamp()
   });
   pengajuanAktifId = docRef.id;
+  hitung = { rorak:0, sumur:0, pohon:0, serapan:0 }; seqTitik = 0;
+  renderDraftBanner();
   return pengajuanAktifId;
 }
 
 window.autoSaveProjek = async () => {
-  if (!pengajuanAktifId) return; // belum ada titik, belum perlu draft
+  updateTombolKirim();
+  if (!pengajuanAktifId || muatDraftBusy) return; // belum ada titik, belum perlu draft
+  const t = ambilTarget();
   await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), {
     lokasi: document.getElementById('proj-nama').value.trim() || 'Tanpa nama',
     deskripsi: document.getElementById('proj-deskripsi').value.trim() || '',
     statusKawasan: document.getElementById('proj-status-kawasan').value,
     jenisBuktiLahan: document.getElementById('proj-jenis-bukti-lahan').value,
     nomorDokumenLahan: document.getElementById('proj-nomor-dokumen-lahan').value.trim() || '',
-    komposisiTanam: ambilKomposisiTanam()
+    komposisiTanam: ambilKomposisiTanam(),
+    targetRorak: t.rorak, targetSumur: t.sumur, targetPohon: t.pohon
   });
+};
+
+window.onTargetChange = () => {
+  renderProgresTarget(); updateTombolKirim();
+  clearTimeout(saveTargetTimer);
+  saveTargetTimer = setTimeout(() => { window.autoSaveProjek().catch(()=>{}); }, 700);
+};
+
+// ── PROGRES TARGET & KUNCI TOMBOL KIRIM ──
+function renderProgresTarget() {
+  const box = document.getElementById('progresTarget'); if (!box) return;
+  const t = ambilTarget();
+  const rows = [['rorak','Rorak','var(--lime)'],['sumur','Sumur','var(--cyan)'],['pohon','Pohon (batang)','var(--green)']].filter(r => t[r[0]] > 0);
+  if (!rows.length) { box.innerHTML = '<div class="form-hint" style="margin-top:6px;">Isi minimal satu target di atas.</div>'; return; }
+  box.innerHTML = rows.map(([k,nm,c]) => {
+    const now = hitung[k], tg = t[k], ok = now >= tg, pct = Math.min(100, Math.round(now/tg*100));
+    return `<div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:0.7rem;"><span style="color:#fff;font-weight:700;">${nm}</span><span style="color:${ok?'var(--green)':'var(--muted)'};">${now} / ${tg}${ok?' ✓':''}</span></div>
+      <div style="height:6px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:${pct}%;background:${c};"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function kekuranganKirim() {
+  const m = [], t = ambilTarget();
+  if (!document.getElementById('proj-nama').value.trim()) m.push('nama lokasi');
+  if (!document.getElementById('proj-nomor-dokumen-lahan').value.trim()) m.push('nomor dokumen');
+  if (!(t.rorak > 0 || t.sumur > 0 || t.pohon > 0)) m.push('target jumlah');
+  [['rorak','Rorak'],['sumur','Sumur'],['pohon','Pohon']].forEach(([k,n]) => { if (t[k] > 0 && hitung[k] < t[k]) m.push(`${n} ${hitung[k]}/${t[k]}`); });
+  return m;
+}
+
+function updateTombolKirim() {
+  const btn = document.getElementById('btnSubmitProyek'), hint = document.getElementById('kirimHint');
+  if (!btn || btn.dataset.busy) return;
+  const m = kekuranganKirim();
+  btn.disabled = m.length > 0; btn.style.opacity = m.length ? '.45' : '1';
+  if (hint) hint.textContent = m.length ? 'Belum bisa dikirim. Lengkapi: ' + m.join(' · ') : '✓ Semua target terpenuhi. Siap dikirim ke Admin.';
+}
+
+// ── DRAFT: lanjutkan, hapus, kosongkan ──
+function renderDraftBanner() {
+  const el = document.getElementById('draftBanner'); if (!el) return;
+  if (!pengajuanAktifId) { el.style.display = 'none'; return; }
+  const lain = Math.max(0, allPengajuan.filter(p => p.status === 'draft').length - 1);
+  el.style.display = 'flex';
+  el.innerHTML = `<div><div style="font-size:.72rem;font-weight:700;color:var(--lime);">Melanjutkan draft</div><div style="font-size:.64rem;color:var(--muted);margin-top:2px;">Isian dan titik tersimpan otomatis${lain?` · ${lain} draft lain ada di tab Pengajuan`:''}</div></div><button class="btn-sm btn-outline-sm" style="color:var(--danger);white-space:nowrap;" onclick="hapusDraftAktif()"><i class="fas fa-trash"></i> Hapus draft</button>`;
+}
+
+function kosongkanForm() {
+  pengajuanAktifId = null; titikList = []; titikCursor = null; titikAdaLagi = false;
+  hitung = { rorak:0, sumur:0, pohon:0, serapan:0 }; seqTitik = 0;
+  ['proj-nama','proj-deskripsi','proj-nomor-dokumen-lahan','proj-persen-pokok','proj-persen-mpts','proj-persen-semusim',
+   'proj-target-rorak','proj-target-sumur','proj-target-pohon'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('proj-status-kawasan').value = 'APL';
+  document.getElementById('proj-jenis-bukti-lahan').value = 'SHM';
+  document.getElementById('komposisiTanamBox').style.display = 'none';
+  document.getElementById('kepatuhanKuotaResult').textContent = '';
+  renderTitikList(); renderDraftBanner();
+}
+
+async function aktifkanDraft(id, d) {
+  muatDraftBusy = true;
+  try {
+    kosongkanForm();
+    pengajuanAktifId = id;
+    const v = (el, x) => { document.getElementById(el).value = (x === undefined || x === null) ? '' : x; };
+    v('proj-nama', d.lokasi === 'Tanpa nama' ? '' : d.lokasi);
+    v('proj-deskripsi', d.deskripsi);
+    v('proj-status-kawasan', d.statusKawasan || 'APL');
+    v('proj-jenis-bukti-lahan', d.jenisBuktiLahan || 'SHM');
+    v('proj-nomor-dokumen-lahan', d.nomorDokumenLahan);
+    const k = d.komposisiTanam || {};
+    v('proj-persen-pokok', k.pokok || ''); v('proj-persen-mpts', k.mpts || ''); v('proj-persen-semusim', k.semusim || '');
+    v('proj-target-rorak', d.targetRorak || ''); v('proj-target-sumur', d.targetSumur || ''); v('proj-target-pohon', d.targetPohon || '');
+    const st = document.getElementById('proj-status-kawasan').value;
+    document.getElementById('komposisiTanamBox').style.display = (st==='KHDPK_Produksi'||st==='KHDPK_Lindung') ? 'block' : 'none';
+    hitung = { rorak:d.jumlahRorak||0, sumur:d.jumlahSumur||0, pohon:d.jumlahPohon||0, serapan:d.serapanM3||0 };
+    seqTitik = d.seqTitik || ((d.jumlahRorak||0)+(d.jumlahSumur||0)+(d.jumlahPohon||0));
+    await muatTitikHalaman(true);
+    renderDraftBanner();
+  } finally { muatDraftBusy = false; }
+}
+
+// Dipanggil saat tab Ajukan dibuka: kalau ada draft, langsung dilanjutkan (tidak membuat draft baru).
+window.muatDraftAktif = async () => {
+  if (isAdminMode || !currentUser || pengajuanAktifId || muatDraftBusy) return;
+  muatDraftBusy = true;
+  try {
+    const snap = await getDocs(query(collection(db,'pengajuan_pjlh'), where('sellerId','==',currentUser.uid), where('status','==','draft')));
+    if (snap.empty) return;
+    const docs = [...snap.docs].sort((a,b)=>(b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
+    muatDraftBusy = false;
+    await aktifkanDraft(docs[0].id, docs[0].data());
+  } catch(e) { console.warn('Gagal memuat draft:', e); }
+  finally { muatDraftBusy = false; }
+};
+
+window.lanjutkanDraft = async (id) => {
+  try {
+    const d = await getDoc(doc(db,'pengajuan_pjlh',id));
+    if (!d.exists()) { showToast('Draft tidak ditemukan.','error'); return; }
+    await aktifkanDraft(id, d.data());
+    switchTab('ajukan');
+  } catch(e) { showToast('Gagal membuka draft: '+e.message,'error'); }
+};
+
+async function hapusDraftById(id) {
+  if (!confirm('Hapus draft ini beserta semua titiknya? Tindakan ini tidak bisa dibatalkan.')) return false;
+  try {
+    const col = collection(db,'pengajuan_pjlh',id,'titik');
+    for (let guard=0; guard<200; guard++) {
+      const s = await getDocs(query(col, limit(50)));
+      if (s.empty) break;
+      await Promise.all(s.docs.map(d => deleteDoc(doc(db,'pengajuan_pjlh',id,'titik',d.id))));
+    }
+    await deleteDoc(doc(db,'pengajuan_pjlh',id));
+    if (pengajuanAktifId === id) kosongkanForm();
+    showToast('Draft dihapus.','info');
+    return true;
+  } catch(e) { showToast('Gagal hapus draft: '+e.message,'error'); return false; }
+}
+window.hapusDraftAktif = async () => { if (pengajuanAktifId) await hapusDraftById(pengajuanAktifId); };
+window.hapusDraftDariList = async (id) => { await hapusDraftById(id); };
+
+// Muat titik per halaman (terbaru di atas) supaya 650 titik tidak dimuat sekaligus.
+async function muatTitikHalaman(reset) {
+  if (!pengajuanAktifId) return;
+  if (reset) { titikList = []; titikCursor = null; titikAdaLagi = false; }
+  const col = collection(db,'pengajuan_pjlh',pengajuanAktifId,'titik');
+  const q = titikCursor
+    ? query(col, orderBy('createdAt','desc'), startAfter(titikCursor), limit(HALAMAN_TITIK))
+    : query(col, orderBy('createdAt','desc'), limit(HALAMAN_TITIK));
+  const snap = await getDocs(q);
+  snap.docs.forEach(d => titikList.push({ id:d.id, ...d.data() }));
+  if (snap.docs.length) titikCursor = snap.docs[snap.docs.length-1];
+  titikAdaLagi = snap.docs.length === HALAMAN_TITIK;
+  renderTitikList();
+}
+window.muatTitikLagi = async () => {
+  try { await muatTitikHalaman(false); } catch(e) { showToast('Gagal memuat titik: '+e.message,'error'); }
 };
 
 // ── LEGALITAS LAHAN & KUOTA ZONASI KHDPK (Permen LHK No. 4/2023) ──
@@ -1331,22 +1528,37 @@ window.hitungTitikOtomatis = () => {
   return m3;
 };
 
-window.getGPSTitik = () => {
-  if (!navigator.geolocation) { showToast('GPS tidak didukung.','error'); return; }
+window.getGPSTitik = (silent) => {
+  silent = silent === true;
+  if (!navigator.geolocation) { if (!silent) showToast('GPS tidak didukung.','error'); return; }
   document.getElementById('gpsLabelTitik').textContent = 'Mengambil titik GPS...';
   navigator.geolocation.getCurrentPosition(
     pos => {
       document.getElementById('t-lat').value = pos.coords.latitude.toFixed(6);
       document.getElementById('t-lon').value = pos.coords.longitude.toFixed(6);
       document.getElementById('gpsLabelTitik').textContent = '✓ GPS berhasil direkam';
-      showToast('Titik GPS berhasil diambil!','success');
+      if (!silent) showToast('Titik GPS berhasil diambil!','success');
     },
     () => {
       document.getElementById('gpsLabelTitik').textContent = 'Ambil Titik GPS Sekarang';
-      showToast('Gagal ambil GPS. Aktifkan izin lokasi.','error');
-    }
+      if (!silent) showToast('Gagal ambil GPS. Aktifkan izin lokasi.','error');
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
   );
 };
+
+function resetFotoModal() {
+  ['titikFotoBox1','titikFotoBox2'].forEach(id => {
+    const b = document.getElementById(id); const img = b.querySelector('img'); if (img) img.remove();
+    document.getElementById(id.replace('Box','Input')).value = '';
+  });
+}
+function setFotoPreviewModal(boxId, src) {
+  if (!fotoAman(src)) return;
+  const b = document.getElementById(boxId); let img = b.querySelector('img');
+  if (!img) { img = document.createElement('img'); b.appendChild(img); }
+  img.src = src;
+}
 
 window.bukaModalTitik = (jenis, editId=null) => {
   document.getElementById('titikJenis').value = jenis;
@@ -1362,65 +1574,54 @@ window.bukaModalTitik = (jenis, editId=null) => {
   const namaJenis = {rorak:'Titik Rorak', sumur:'Titik Sumur', pohon:'Titik Pohon'}[jenis] || 'Titik';
   const subJenis  = {rorak:'Catat data rorak di titik ini', sumur:'Catat data sumur resapan di titik ini', pohon:'Catat pohon yang ada atau ditanam di titik ini'}[jenis] || '';
   document.getElementById('modalTitikTitle').textContent = (editId ? 'Edit ' : 'Tambah ') + namaJenis;
-  document.getElementById('modalTitikSub').textContent = subJenis;
+  const tg = ambilTarget()[jenis];
+  document.getElementById('modalTitikSub').textContent = (!editId && tg > 0)
+    ? `${namaJenis.replace('Titik ','')} ke-${hitung[jenis]+1} dari target ${tg}` : subJenis;
 
-  // Reset / isi ulang form
+  // Tombol: mode tambah punya "Simpan & Tambah Berikutnya"
+  const bLanjut = document.getElementById('btnSimpanLanjut'), bTutup = document.getElementById('btnSimpanTitik');
+  bLanjut.style.display = editId ? 'none' : 'block';
+  document.getElementById('btnSimpanTitikLbl').textContent = editId ? 'Simpan Perubahan' : 'Simpan & Selesai';
+  bTutup.style.background = editId ? '' : 'var(--surface2)';
+  bTutup.style.color = editId ? '' : 'var(--parchment)';
+
+  resetFotoModal();
+  const isi = (id, v) => { document.getElementById(id).value = v; };
   if (editId) {
     const t = titikList.find(x=>x.id===editId);
     if (t) {
-      document.getElementById('t-lat').value = t.lat||'';
-      document.getElementById('t-lon').value = t.lon||'';
-      document.getElementById('t-label').value = t.label||'';
-      document.getElementById('t-tanah').value = t.tanah||'normal';
-      document.getElementById('t-catatan').value = t.catatan||'';
+      isi('t-lat', t.lat||''); isi('t-lon', t.lon||''); isi('t-label', t.label||'');
+      isi('t-tanah', t.tanah||'normal'); isi('t-catatan', t.catatan||'');
       if (jenis==='rorak') {
-        document.getElementById('t-p-rorak').value = t.p||2;
-        document.getElementById('t-l-rorak').value = t.l||70;
-        document.getElementById('t-d-rorak').value = t.d||70;
-        document.getElementById('t-kondisi-rorak').value = t.kondisi||'baik';
+        isi('t-p-rorak', t.p||2); isi('t-l-rorak', t.l||70); isi('t-d-rorak', t.d||70); isi('t-kondisi-rorak', t.kondisi||'baik');
       } else if (jenis==='pohon') {
-        document.getElementById('t-nama-pohon').value = t.namaPohon||'';
-        document.getElementById('t-jumlah-pohon').value = t.jumlah||1;
-        document.getElementById('t-diameter-pohon').value = t.diameter||'';
-        document.getElementById('t-tinggi-pohon').value = t.tinggi||'';
-        document.getElementById('t-kondisi-pohon').value = t.kondisi||'sehat';
+        isi('t-nama-pohon', t.namaPohon||''); isi('t-jumlah-pohon', t.jumlah||1);
+        isi('t-diameter-pohon', t.diameter||''); isi('t-tinggi-pohon', t.tinggi||''); isi('t-kondisi-pohon', t.kondisi||'sehat');
       } else {
-        document.getElementById('t-d-sumur').value = t.dia||80;
-        document.getElementById('t-h-sumur').value = t.depth||1.5;
-        document.getElementById('t-wall-sumur').value = t.porous?'porous':'solid';
+        isi('t-d-sumur', t.dia||80); isi('t-h-sumur', t.depth||1.5); isi('t-wall-sumur', t.porous?'porous':'solid');
       }
       document.getElementById('gpsLabelTitik').textContent = t.lat ? '✓ GPS berhasil direkam' : 'Ambil Titik GPS Sekarang';
+      (t.foto||[]).slice(0,2).forEach((u,i) => setFotoPreviewModal('titikFotoBox'+(i+1), u));
     }
   } else {
-    document.getElementById('t-lat').value = '';
-    document.getElementById('t-lon').value = '';
-    document.getElementById('t-label').value = '';
-    document.getElementById('t-tanah').value = 'normal';
-    document.getElementById('t-catatan').value = '';
-    document.getElementById('t-p-rorak').value = 2;
-    document.getElementById('t-l-rorak').value = 70;
-    document.getElementById('t-d-rorak').value = 70;
-    document.getElementById('t-kondisi-rorak').value = 'baik';
-    document.getElementById('t-d-sumur').value = 80;
-    document.getElementById('t-h-sumur').value = 1.5;
-    document.getElementById('t-wall-sumur').value = 'solid';
-    document.getElementById('t-nama-pohon').value = '';
-    document.getElementById('t-jumlah-pohon').value = 1;
-    document.getElementById('t-diameter-pohon').value = '';
-    document.getElementById('t-tinggi-pohon').value = '';
-    document.getElementById('t-kondisi-pohon').value = 'sehat';
+    // Mode cepat: ukuran / jenis disalin dari titik sejenis terakhir; GPS diambil otomatis.
+    const prev = titikList.find(x=>x.jenis===jenis) || {};
+    isi('t-lat',''); isi('t-lon',''); isi('t-label','');
+    isi('t-tanah', prev.tanah||'normal'); isi('t-catatan','');
+    isi('t-p-rorak', prev.p||2); isi('t-l-rorak', prev.l||70); isi('t-d-rorak', prev.d||70); isi('t-kondisi-rorak', (jenis==='rorak'&&prev.kondisi)||'baik');
+    isi('t-d-sumur', prev.dia||80); isi('t-h-sumur', prev.depth||1.5); isi('t-wall-sumur', prev.porous?'porous':'solid');
+    isi('t-nama-pohon', prev.namaPohon||''); isi('t-jumlah-pohon', prev.jumlah||1);
+    isi('t-diameter-pohon', prev.diameter||''); isi('t-tinggi-pohon', prev.tinggi||''); isi('t-kondisi-pohon', (jenis==='pohon'&&prev.kondisi)||'sehat');
     document.getElementById('gpsLabelTitik').textContent = 'Ambil Titik GPS Sekarang';
-    ['titikFotoBox1','titikFotoBox2'].forEach(id=>{
-      const b=document.getElementById(id); const img=b.querySelector('img'); if(img) img.remove();
-      document.getElementById(id.replace('Box','Input')).value = '';
-    });
+    window.getGPSTitik(true);
   }
   hitungTitikOtomatis();
+  const sheet = document.querySelector('#modalTitik .modal-sheet'); if (sheet) sheet.scrollTop = 0;
   openModal('modalTitik');
 };
 
-// Kompres foto: sisi terpanjang maks 900px, kualitas diturunkan bertahap sampai <= ~170 KB.
-function kompresFotoTitik(file, maxSide = 900, targetKB = 170) {
+// Kompres foto: sisi terpanjang maks 640px, kualitas diturunkan bertahap sampai <= ~48 KB (hemat jatah Firestore Spark).
+function kompresFotoTitik(file, maxSide = 640, targetKB = 48) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('Gagal membaca file foto'));
@@ -1450,7 +1651,24 @@ function kompresFotoTitik(file, maxSide = 900, targetKB = 170) {
   });
 }
 
-window.simpanTitik = async () => {
+function kontribusi(t) {
+  return { rorak: t.jenis==='rorak'?1:0, sumur: t.jenis==='sumur'?1:0,
+           pohon: t.jenis==='pohon' ? (parseInt(t.jumlah)||1) : 0, m3: t.serapanM3||0 };
+}
+function selisihKontribusi(a, b) { return { rorak:a.rorak-b.rorak, sumur:a.sumur-b.sumur, pohon:a.pohon-b.pohon, m3:a.m3-b.m3 }; }
+
+// Total di dokumen induk diubah dengan increment (tidak perlu memuat ulang semua titik).
+async function terapkanDelta(d, tambahSeq=0) {
+  const m3 = Math.round(d.m3*10)/10;
+  hitung.rorak += d.rorak; hitung.sumur += d.sumur; hitung.pohon += d.pohon;
+  hitung.serapan = Math.round((hitung.serapan + m3)*10)/10;
+  const upd = { jumlahRorak: increment(d.rorak), jumlahSumur: increment(d.sumur), jumlahPohon: increment(d.pohon), serapanM3: increment(m3) };
+  if (tambahSeq) upd.seqTitik = increment(tambahSeq);
+  await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), upd);
+  renderTotalOtomatis();
+}
+
+window.simpanTitik = async (lanjut=false) => {
   const jenis = document.getElementById('titikJenis').value;
   const editId = document.getElementById('titikEditId').value || null;
   const lat = document.getElementById('t-lat').value;
@@ -1461,6 +1679,10 @@ window.simpanTitik = async () => {
     if (!document.getElementById('t-nama-pohon').value.trim()) { showToast('Isi jenis / nama pohon terlebih dahulu.','error'); return; }
     if ((parseInt(document.getElementById('t-jumlah-pohon').value)||0) < 1) { showToast('Jumlah pohon minimal 1.','error'); return; }
   }
+  const f1 = document.getElementById('titikFotoInput1').files[0];
+  const f2 = document.getElementById('titikFotoInput2').files[0];
+  if (!editId && !(f1 && f2)) { showToast('Ambil 2 foto (Foto Lahan dan Foto Close-up) terlebih dahulu.','error'); return; }
+
   const m3 = window.hitungTitikOtomatis();
   const data = {
     jenis, lat, lon,
@@ -1486,62 +1708,54 @@ window.simpanTitik = async () => {
     data.porous = document.getElementById('t-wall-sumur').value==='porous';
   }
 
-  const btn = event?.target;
+  const btns = [document.getElementById('btnSimpanLanjut'), document.getElementById('btnSimpanTitik')];
+  btns.forEach(b => b.disabled = true);
   try {
     await pastikanDraftPengajuan();
 
-    // Foto dikompres di browser lalu disimpan LANGSUNG (base64) di dokumen titik di Firestore,
+    // Foto dikompres di browser (~48 KB) lalu disimpan LANGSUNG (base64) di dokumen titik di Firestore,
     // tanpa Firebase Storage (pola yang sama dengan dashboard Tim dan Gaharu).
     const fotoUrls = [];
-    for (let i=1;i<=2;i++) {
-      const input = document.getElementById('titikFotoInput'+i);
-      if (input.files[0]) fotoUrls.push(await kompresFotoTitik(input.files[0]));
-    }
+    for (const f of [f1, f2]) if (f) fotoUrls.push(await kompresFotoTitik(f));
     if (fotoUrls.length) data.foto = fotoUrls;
 
     if (editId) {
-      // Update titik yang sudah ada
+      const lama = titikList.find(x=>x.id===editId);
       await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId,'titik',editId), data);
       const idx = titikList.findIndex(x=>x.id===editId);
-      if (idx>-1) titikList[idx] = {...titikList[idx], ...data};
+      const baru = { ...lama, ...data };
+      if (idx>-1) titikList[idx] = baru;
+      if (lama) await terapkanDelta(selisihKontribusi(kontribusi(baru), kontribusi(lama)));
     } else {
-      // Tambah titik baru
+      seqTitik += 1;
+      data.no = seqTitik;
       data.createdAt = serverTimestamp();
       const tRef = await addDoc(collection(db,'pengajuan_pjlh',pengajuanAktifId,'titik'), data);
-      titikList.push({id:tRef.id, ...data});
+      titikList.unshift({ id:tRef.id, ...data });
+      await terapkanDelta(kontribusi(data), 1);
     }
 
-    // Update total di dokumen induk
-    await updateTotalPengajuan();
-
-    closeModal('modalTitik');
     renderTitikList();
-    showToast(editId ? 'Titik berhasil diperbarui!' : 'Titik berhasil ditambahkan!','success');
+    const tg = ambilTarget()[jenis];
+    const tercapai = tg > 0 && hitung[jenis] >= tg;
+    if (lanjut && !editId && !tercapai) {
+      showToast(`Tersimpan (${hitung[jenis]}${tg?' / '+tg:''}). Lanjut titik berikutnya.`,'success');
+      bukaModalTitik(jenis);
+    } else {
+      closeModal('modalTitik');
+      showToast(editId ? 'Titik berhasil diperbarui!' : (tercapai ? `Target ${JENIS_TITIK[jenis].nama} tercapai ✓` : 'Titik berhasil ditambahkan!'),'success');
+    }
   } catch(e) { showToast('Gagal simpan titik: '+e.message,'error'); }
+  finally { btns.forEach(b => b.disabled = false); }
 };
 
-async function updateTotalPengajuan() {
-  if (!pengajuanAktifId) return;
-  const jumlahRorak = titikList.filter(t=>t.jenis==='rorak').length;
-  const jumlahSumur = titikList.filter(t=>t.jenis==='sumur').length;
-  const serapanM3   = titikList.reduce((s,t)=>s+(t.serapanM3||0),0);
-  await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), {
-    jumlahRorak, jumlahSumur, serapanM3: Math.round(serapanM3),
-    jumlahPohon: titikList.filter(t=>t.jenis==='pohon').reduce((s,t)=>s+(parseInt(t.jumlah)||0),0)
-  });
-  renderTotalOtomatis();
-}
-
 function renderTotalOtomatis() {
-  const jumlahRorak = titikList.filter(t=>t.jenis==='rorak').length;
-  const jumlahSumur = titikList.filter(t=>t.jenis==='sumur').length;
-  const serapanM3   = titikList.reduce((s,t)=>s+(t.serapanM3||0),0);
-  document.getElementById('totalSerapan').textContent    = serapanM3.toLocaleString('id-ID',{maximumFractionDigits:1});
-  document.getElementById('totalTitik').textContent      = titikList.length;
-  document.getElementById('totalRorakCount').textContent = jumlahRorak;
-  document.getElementById('totalSumurCount').textContent = jumlahSumur;
+  document.getElementById('totalSerapan').textContent    = hitung.serapan.toLocaleString('id-ID',{maximumFractionDigits:1});
+  document.getElementById('totalRorakCount').textContent = hitung.rorak;
+  document.getElementById('totalSumurCount').textContent = hitung.sumur;
   const _tp = document.getElementById('totalPohonCount');
-  if (_tp) _tp.textContent = titikList.filter(t=>t.jenis==='pohon').reduce((s,t)=>s+(parseInt(t.jumlah)||0),0);
+  if (_tp) _tp.textContent = hitung.pohon;
+  renderProgresTarget(); updateTombolKirim();
 }
 
 // ── HELPER TAMPILAN TITIK (dipakai daftar titik di form dan Detail pengajuan) ──
@@ -1591,16 +1805,16 @@ window.bukaFoto = (src) => {
 function renderTitikList() {
   const container = document.getElementById('titikList');
   if (!titikList.length) {
-    container.innerHTML = `<div class="empty-state" style="padding:32px 16px;"><i class="fas fa-map-pin"></i><p>Belum ada titik ditambahkan.<br>Tekan tombol di bawah untuk mulai survei.</p></div>`;
+    container.innerHTML = `<div class="empty-state" style="padding:32px 16px;"><i class="fas fa-map-pin"></i><p>Belum ada titik ditambahkan.<br>Isi target di atas, lalu tekan tombol di bawah untuk mulai survei.</p></div>`;
     renderTotalOtomatis();
     return;
   }
-  container.innerHTML = titikList.map((t,idx) => {
+  container.innerHTML = titikList.map(t => {
     const m = JENIS_TITIK[t.jenis] || JENIS_TITIK.rorak;
     return `<div class="pengajuan-card">
       <div class="pj-head">
         <div>
-          <div class="pj-title"><i class="fas fa-${m.ico}" style="color:${m.c};margin-right:6px;"></i>${escHtml(t.label || m.nama+' #'+(idx+1))}</div>
+          <div class="pj-title"><i class="fas fa-${m.ico}" style="color:${m.c};margin-right:6px;"></i>${escHtml(t.label || m.nama+(t.no?' #'+t.no:''))}</div>
           <div class="pj-loc">${dimTitik(t)}<br>${gpsLinkHTML(t)}</div>
           ${fotoStripHTML(t)}
         </div>
@@ -1614,16 +1828,20 @@ function renderTitikList() {
         </div>
       </div>
     </div>`;
-  }).join('');
+  }).join('') + `<div style="text-align:center;font-size:0.65rem;color:var(--muted);">Menampilkan ${titikList.length} titik terbaru${titikAdaLagi?'':' (semua)'}</div>`
+    + (titikAdaLagi ? `<button class="btn-sm btn-outline-sm" style="align-self:center;" onclick="muatTitikLagi()">Muat titik lebih lama</button>` : '');
   renderTotalOtomatis();
 }
 
 window.hapusTitik = async (id) => {
   if (!pengajuanAktifId) return;
+  const t = titikList.find(x=>x.id===id); if (!t) return;
+  if (!confirm('Hapus titik ini?')) return;
   try {
     await deleteDocTitik(id);
-    titikList = titikList.filter(t=>t.id!==id);
-    await updateTotalPengajuan();
+    titikList = titikList.filter(x=>x.id!==id);
+    const k = kontribusi(t);
+    await terapkanDelta({ rorak:-k.rorak, sumur:-k.sumur, pohon:-k.pohon, m3:-k.m3 });
     renderTitikList();
     showToast('Titik dihapus.','info');
   } catch(e) { showToast('Gagal hapus: '+e.message,'error'); }
@@ -1635,39 +1853,25 @@ async function deleteDocTitik(id) {
 
 window.submitPengajuanFinal = async () => {
   const lokasi = document.getElementById('proj-nama').value.trim();
-  const nomorDokumen = document.getElementById('proj-nomor-dokumen-lahan').value.trim();
-  if (!lokasi)            { showToast('Isi nama lokasi / desa terlebih dahulu.','error'); return; }
-  if (!nomorDokumen)      { showToast('Isi nomor dokumen bukti lahan terlebih dahulu (syarat Pasal 12 PP 46/2017).','error'); return; }
-  if (!titikList.length)  { showToast('Tambahkan minimal 1 titik (rorak, sumur, atau pohon).','error'); return; }
-  if (!pengajuanAktifId)  { showToast('Belum ada draft tersimpan.','error'); return; }
+  const kurang = kekuranganKirim();
+  if (kurang.length)     { showToast('Belum lengkap: '+kurang.join(' · '),'error'); return; }
+  if (!pengajuanAktifId) { showToast('Belum ada draft tersimpan.','error'); return; }
 
   const btn = document.getElementById('btnSubmitProyek');
-  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+  btn.dataset.busy = '1'; btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
   try {
+    await window.autoSaveProjek();   // pastikan isian & target terakhir ikut tersimpan
     await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), { status: 'pending', submittedAt: serverTimestamp() });
     await addDoc(collection(db,'notifikasi_admin'), {
       type:'new_pengajuan', sellerId:currentUser.uid, sellerName:userData.fullName, lokasi,
-      message:`Pengajuan baru dari ${userData.fullName} — ${lokasi} (${titikList.length} titik)`,
+      message:`Pengajuan baru dari ${userData.fullName} — ${lokasi} (${hitung.rorak} rorak, ${hitung.sumur} sumur, ${hitung.pohon} pohon)`,
       read:false, createdAt:serverTimestamp()
     });
     showToast('Pengajuan berhasil dikirim ke Admin!','success');
+    kosongkanForm();
     switchTab('pengajuan');
-    // Reset state untuk pengajuan baru berikutnya
-    pengajuanAktifId = null;
-    titikList = [];
-    document.getElementById('proj-nama').value = '';
-    document.getElementById('proj-deskripsi').value = '';
-    document.getElementById('proj-status-kawasan').value = 'APL';
-    document.getElementById('proj-jenis-bukti-lahan').value = 'SHM';
-    document.getElementById('proj-nomor-dokumen-lahan').value = '';
-    document.getElementById('proj-persen-pokok').value = '';
-    document.getElementById('proj-persen-mpts').value = '';
-    document.getElementById('proj-persen-semusim').value = '';
-    document.getElementById('komposisiTanamBox').style.display = 'none';
-    document.getElementById('kepatuhanKuotaResult').textContent = '';
-    renderTitikList();
   } catch(e) { showToast('Gagal kirim: '+e.message,'error'); }
-  finally    { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Selesai &amp; Kirim ke Admin'; }
+  finally    { delete btn.dataset.busy; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Selesai &amp; Kirim ke Admin'; updateTombolKirim(); }
 };
 
 // ── HELPERS ──
@@ -1691,6 +1895,7 @@ window.switchTab = (name) => {
   document.getElementById('panel-'+name)?.classList.add('active');
   document.getElementById('tab-'+name)?.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
+  if (name==='ajukan' && window.muatDraftAktif) window.muatDraftAktif();
 };
 
 window.openModal  = id => document.getElementById(id).classList.add('open');
