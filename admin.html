@@ -1116,6 +1116,26 @@ input,textarea,select{font-family:var(--body);}
 </div>
 
 <!-- MODAL KEPUTUSAN PENGAJUAN PJLH -->
+<!-- MODAL DETAIL PENGAJUAN PJLH (titik lapangan + foto + GPS) -->
+<div class="modal-backdrop" id="modal-pengajuan-detail">
+  <div class="modal-box wide" style="max-width:860px;">
+    <button class="modal-close" data-close="modal-pengajuan-detail"><i class="fas fa-times"></i></button>
+    <h3 id="pd-title">Detail Pengajuan</h3>
+    <div class="sub" id="pd-sub">—</div>
+    <div id="pd-ringkas"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 10px;">
+      <select id="pd-filter-jenis" style="background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:8px 12px;font-size:0.75rem;">
+        <option value="">Semua jenis</option><option value="rorak">Rorak</option><option value="sumur">Sumur</option><option value="pohon">Pohon</option>
+      </select>
+      <input type="number" id="pd-cari-no" min="1" placeholder="Cari nomor titik, mis. 87" style="background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:8px 12px;font-size:0.75rem;width:200px;">
+      <button class="btn btn-outline btn-sm" id="pd-cari-btn"><i class="fas fa-search"></i> Cari</button>
+      <span id="pd-etalase-info" style="font-size:0.68rem;color:var(--text-muted);margin-left:auto;"></span>
+    </div>
+    <div id="pd-titik-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <div class="modal-actions"><button class="btn btn-outline" data-close="modal-pengajuan-detail">Tutup</button></div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="modal-pengajuan-keputusan">
   <div class="modal-box">
     <button class="modal-close" data-close="modal-pengajuan-keputusan"><i class="fas fa-times"></i></button>
@@ -1411,7 +1431,7 @@ input,textarea,select{font-family:var(--body);}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
   getFirestore, doc, getDoc, setDoc, collection, getDocs,
-  deleteDoc, addDoc, query, orderBy, limit, where, updateDoc, serverTimestamp
+  deleteDoc, addDoc, query, orderBy, limit, where, updateDoc, serverTimestamp, startAfter
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail
@@ -3488,28 +3508,28 @@ async function loadPengajuanPjlh() {
     wrap.innerHTML = '';
     items.forEach(p => {
       const st = PENGAJUAN_STATUS_LABEL[p.status] || { label:p.status, badge:'badge-orange' };
-      const jumlahTitik = (p.jumlahRorak||0) + (p.jumlahSumur||0);
-      let aksi = '';
+      const jumlahTitik = (p.jumlahRorak||0) + (p.jumlahSumur||0) + (p.jumlahPohon||0);
+      let aksi = `<button class="btn btn-outline btn-sm" onclick="bukaDetailPengajuan('${esc(p.id)}')"><i class="fas fa-images"></i> Lihat Detail &amp; Foto</button>`;
       if (p.status === 'pending') {
-        aksi = `<button class="btn btn-lime btn-sm" onclick="teruskanKeTim('${p.id}')"><i class="fas fa-share"></i> Teruskan ke Tim untuk Verifikasi Lapangan</button>`;
+        aksi += `<button class="btn btn-lime btn-sm" onclick="teruskanKeTim('${p.id}')"><i class="fas fa-share"></i> Teruskan ke Tim untuk Verifikasi Lapangan</button>`;
       } else if (p.status === 'lapangan') {
-        aksi = `
+        aksi += `
           <button class="btn btn-lime btn-sm" onclick="bukaKeputusanPengajuan('${p.id}','approved')"><i class="fas fa-check"></i> Setujui</button>
           <button class="btn btn-outline btn-sm" onclick="bukaKeputusanPengajuan('${p.id}','mou')"><i class="fas fa-handshake"></i> Tetapkan MOU</button>
           <button class="btn btn-danger btn-sm" onclick="bukaKeputusanPengajuan('${p.id}','rejected')"><i class="fas fa-times"></i> Tolak</button>`;
       } else if (p.status === 'review') {
-        aksi = `<span style="font-size:0.7rem;color:var(--text-muted);"><i class="fas fa-hourglass-half"></i> Menunggu Tim melakukan verifikasi lapangan</span>`;
+        aksi += `<span style="font-size:0.7rem;color:var(--text-muted);"><i class="fas fa-hourglass-half"></i> Menunggu Tim melakukan verifikasi lapangan</span>`;
       }
       wrap.innerHTML += `
         <div class="list-card">
           <div class="list-card-header">
             <div>
-              <div style="font-weight:700;font-size:0.85rem;color:var(--white);">${p.lokasi||'Tanpa nama lokasi'} — ${p.sellerName||'—'}</div>
+              <div style="font-weight:700;font-size:0.85rem;color:var(--white);">${esc(p.lokasi||'Tanpa nama lokasi')} — ${esc(p.sellerName||'—')}</div>
               <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">
-                <i class="fas fa-water"></i> ${p.jumlahRorak||0} Rorak · ${p.jumlahSumur||0} Sumur (${jumlahTitik} titik keluaran)
-                ${p.serapanM3 ? ` · <i class="fas fa-tint"></i> Est. ${p.serapanM3} m³/thn` : ''}
+                <i class="fas fa-water"></i> ${p.jumlahRorak||0} Rorak · ${p.jumlahSumur||0} Sumur · ${p.jumlahPohon||0} Pohon
+                ${p.serapanM3 ? ` · <i class="fas fa-tint"></i> Est. ${Math.round(p.serapanM3).toLocaleString('id-ID')} m³/thn` : ''}
               </div>
-              ${p.catatanKeputusan ? `<div style="font-size:0.68rem;color:var(--lime);margin-top:6px;"><i class="fas fa-comment-dots"></i> ${p.catatanKeputusan}</div>` : ''}
+              ${p.catatanKeputusan ? `<div style="font-size:0.68rem;color:var(--lime);margin-top:6px;"><i class="fas fa-comment-dots"></i> ${esc(p.catatanKeputusan)}</div>` : ''}
               <div style="font-size:0.68rem;margin-top:6px;">${renderLegalitasBadge(p)}</div>
               <div style="margin-top:8px;"><span class="list-badge ${st.badge}">${st.label}</span></div>
             </div>
@@ -3519,6 +3539,150 @@ async function loadPengajuanPjlh() {
     });
   } catch(e) { console.error(e); wrap.innerHTML = '<p style="color:var(--danger);">Gagal memuat data.</p>'; }
 }
+// ── DETAIL PENGAJUAN: titik lapangan per halaman, foto, GPS, filter, cari nomor, etalase ──
+const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fotoOk = u => typeof u==='string' && /^(data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+|https:\/\/[^\s"'<>]+)$/.test(u);
+const PD_HAL = 20;
+const PD_JENIS = {
+  rorak: { ico:'water',        c:'var(--lime)',  nama:'Rorak' },
+  sumur: { ico:'circle-notch', c:'var(--cyan)',  nama:'Sumur' },
+  pohon: { ico:'tree',         c:'var(--green)', nama:'Pohon' }
+};
+let pdId = null, pdItems = [], pdCursor = null, pdAdaLagi = false, pdModeCari = false, pdData = null;
+
+window.lihatFotoAdmin = (src) => {
+  if (!fotoOk(src)) return;
+  let box = document.getElementById('lightboxAdmin');
+  if (!box) {
+    box = document.createElement('div'); box.id = 'lightboxAdmin';
+    box.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:none;align-items:center;justify-content:center;padding:16px;cursor:zoom-out;';
+    box.innerHTML = '<img style="max-width:100%;max-height:100%;border-radius:8px;">';
+    box.onclick = () => { box.style.display = 'none'; };
+    document.body.appendChild(box);
+  }
+  box.querySelector('img').src = src; box.style.display = 'flex';
+};
+
+function pdDim(t) {
+  if (t.jenis==='pohon') {
+    let x = `${esc(t.namaPohon||'Pohon')} · ${parseInt(t.jumlah)||1} batang`;
+    if (t.diameter) x += ` · Ø${esc(t.diameter)} cm`;
+    if (t.tinggi)   x += ` · ${esc(t.tinggi)} m`;
+    return x;
+  }
+  return t.jenis==='sumur' ? `Ø${esc(t.dia||0)} cm × ${esc(t.depth||0)} m${t.porous?' · dinding berpori':''}` : `${esc(t.p||0)} m × ${esc(t.l||0)} cm × ${esc(t.d||0)} cm`;
+}
+
+function pdKartu(t, idx) {
+  const m = PD_JENIS[t.jenis] || PD_JENIS.rorak;
+  const la = parseFloat(t.lat), lo = parseFloat(t.lon);
+  const gps = (isNaN(la)||isNaN(lo)) ? '<span>GPS: —</span>'
+    : `<a href="https://www.google.com/maps?q=${la},${lo}" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:none;"><i class="fas fa-location-arrow"></i> ${la.toFixed(6)}, ${lo.toFixed(6)}</a>`;
+  const fotos = (t.foto||[]).filter(fotoOk).map(u => `<img src="${u}" loading="lazy" onclick="lihatFotoAdmin(this.src)" style="width:88px;height:88px;object-fit:cover;border-radius:8px;border:1px solid var(--border-subtle);cursor:pointer;">`).join('');
+  const nilai = t.jenis==='pohon' ? `${parseInt(t.jumlah)||1} pohon` : `${(t.serapanM3||0).toLocaleString('id-ID',{maximumFractionDigits:1})} m³/thn`;
+  const on = !!t.etalase;
+  return `<div class="list-card" style="padding:12px;">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+      <div style="min-width:0;">
+        <div style="font-weight:700;font-size:0.82rem;color:var(--white);"><i class="fas fa-${m.ico}" style="color:${m.c};margin-right:6px;"></i>${esc(t.label || m.nama+' #'+(t.no||idx+1))}</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);margin-top:3px;line-height:1.7;">${pdDim(t)}${t.kondisi?` · ${esc(t.kondisi)}`:''} · <b style="color:${m.c};">${nilai}</b><br>${gps}</div>
+        ${fotos ? `<div style="display:flex;gap:8px;margin-top:8px;">${fotos}</div>` : '<div style="font-size:0.66rem;color:var(--danger);margin-top:6px;">Tanpa foto</div>'}
+        ${t.catatan ? `<div style="font-size:0.68rem;color:var(--text-muted);margin-top:6px;">${esc(t.catatan)}</div>` : ''}
+      </div>
+      <button class="btn ${on?'btn-lime':'btn-outline'} btn-sm" style="white-space:nowrap;" onclick="toggleEtalaseTitik('${esc(t.id)}')" title="Titik contoh yang ditampilkan di etalase dan laporan PDF"><i class="fas fa-star"></i> ${on?'Di etalase':'Tampilkan di etalase'}</button>
+    </div>
+  </div>`;
+}
+
+function pdRender() {
+  const box = document.getElementById('pd-titik-list');
+  if (!pdItems.length) { box.innerHTML = '<p style="color:var(--text-muted);font-size:0.78rem;">Tidak ada titik untuk filter ini.</p>'; return; }
+  box.innerHTML = pdItems.map(pdKartu).join('')
+    + `<div style="text-align:center;font-size:0.68rem;color:var(--text-muted);">Menampilkan ${pdItems.length} titik${pdAdaLagi?'':' (semua)'}</div>`
+    + (pdAdaLagi ? `<button class="btn btn-outline btn-sm" style="align-self:center;" onclick="pdMuatLagi()">Muat titik berikutnya</button>` : '');
+  const n = pdItems.filter(t=>t.etalase).length;
+  document.getElementById('pd-etalase-info').textContent = n ? `${n} titik contoh dipilih di halaman ini` : 'Belum ada titik contoh dipilih';
+}
+
+async function pdMuat(reset) {
+  const box = document.getElementById('pd-titik-list');
+  if (reset) { pdItems = []; pdCursor = null; pdAdaLagi = false; pdModeCari = false; box.innerHTML = '<p style="color:var(--text-muted);font-size:0.78rem;">Memuat titik...</p>'; }
+  try {
+    const col = collection(db,'pengajuan_pjlh',pdId,'titik');
+    const jenis = document.getElementById('pd-filter-jenis').value;
+    // Tanpa jenis: urut waktu. Dengan jenis: filter di server (urut id dokumen) supaya halaman tidak bolong.
+    const base = jenis ? [where('jenis','==',jenis)] : [orderBy('createdAt','asc')];
+    const q = pdCursor ? query(col, ...base, startAfter(pdCursor), limit(PD_HAL)) : query(col, ...base, limit(PD_HAL));
+    const snap = await getDocs(q);
+    snap.docs.forEach(d => pdItems.push({ id:d.id, ...d.data() }));
+    if (snap.docs.length) pdCursor = snap.docs[snap.docs.length-1];
+    pdAdaLagi = snap.docs.length === PD_HAL;
+    pdRender();
+  } catch(e) { box.innerHTML = `<p style="color:var(--danger);font-size:0.78rem;">Gagal memuat titik: ${esc(e.message)}</p>`; }
+}
+window.pdMuatLagi = () => { if (!pdModeCari) pdMuat(false); };
+
+async function pdCari() {
+  const n = parseInt(document.getElementById('pd-cari-no').value);
+  if (!n) { pdMuat(true); return; }
+  const box = document.getElementById('pd-titik-list');
+  try {
+    const jenis = document.getElementById('pd-filter-jenis').value;
+    const snap = await getDocs(query(collection(db,'pengajuan_pjlh',pdId,'titik'), where('no','==',n)));
+    pdItems = snap.docs.map(d=>({id:d.id,...d.data()})).filter(t => !jenis || t.jenis===jenis);
+    pdModeCari = true; pdAdaLagi = false; pdCursor = null;
+    if (!pdItems.length) { box.innerHTML = `<p style="color:var(--text-muted);font-size:0.78rem;">Titik nomor ${n} tidak ditemukan.</p>`; return; }
+    pdRender();
+  } catch(e) { box.innerHTML = `<p style="color:var(--danger);font-size:0.78rem;">Gagal mencari: ${esc(e.message)}</p>`; }
+}
+
+window.toggleEtalaseTitik = async (tid) => {
+  const t = pdItems.find(x=>x.id===tid); if (!t) return;
+  const baru = !t.etalase;
+  try {
+    await updateDoc(doc(db,'pengajuan_pjlh',pdId,'titik',tid), { etalase: baru });
+    t.etalase = baru; pdRender();
+  } catch(e) { alert('Gagal mengubah titik etalase: '+e.message); }
+};
+
+window.bukaDetailPengajuan = async (id) => {
+  pdId = id;
+  document.getElementById('pd-filter-jenis').value = '';
+  document.getElementById('pd-cari-no').value = '';
+  document.getElementById('pd-title').textContent = 'Detail Pengajuan';
+  document.getElementById('pd-sub').textContent = 'Memuat...';
+  document.getElementById('pd-ringkas').innerHTML = '';
+  document.getElementById('pd-titik-list').innerHTML = '';
+  openModal('modal-pengajuan-detail');
+  try {
+    const d = await getDoc(doc(db,'pengajuan_pjlh',id));
+    if (!d.exists()) { document.getElementById('pd-sub').textContent = 'Pengajuan tidak ditemukan.'; return; }
+    const p = { id, ...d.data() }; pdData = p;
+    const st = PENGAJUAN_STATUS_LABEL[p.status] || { label:p.status, badge:'badge-orange' };
+    document.getElementById('pd-title').textContent = p.lokasi || 'Detail Pengajuan';
+    document.getElementById('pd-sub').textContent = `${p.sellerName||'—'} · ${p.sellerPhone||''} ${p.sellerEmail?'· '+p.sellerEmail:''}`;
+    const kartu = (nm, now, tg, c) => `<div style="flex:1;min-width:120px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:var(--r-sm);padding:10px 12px;">
+      <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);">${nm}</div>
+      <div style="font-size:1.15rem;font-weight:700;color:${c};">${now||0}${tg?` <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400;">/ target ${tg}</span>`:''}</div></div>`;
+    document.getElementById('pd-ringkas').innerHTML = `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        ${kartu('Rorak', p.jumlahRorak, p.targetRorak, 'var(--lime)')}
+        ${kartu('Sumur', p.jumlahSumur, p.targetSumur, 'var(--cyan)')}
+        ${kartu('Pohon (batang)', p.jumlahPohon, p.targetPohon, 'var(--green)')}
+        ${kartu('Serapan m³/thn', Math.round(p.serapanM3||0).toLocaleString('id-ID'), 0, 'var(--white)')}
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-muted);line-height:1.8;">
+        ${p.deskripsi ? `<div>${esc(p.deskripsi)}</div>` : ''}
+        <div style="margin-top:4px;">${renderLegalitasBadge(p)}</div>
+        <div style="margin-top:6px;"><span class="list-badge ${st.badge}">${st.label}</span></div>
+      </div>`;
+    await pdMuat(true);
+  } catch(e) { document.getElementById('pd-sub').textContent = 'Gagal memuat: ' + e.message; }
+};
+document.getElementById('pd-filter-jenis').addEventListener('change', () => { document.getElementById('pd-cari-no').value=''; pdMuat(true); });
+document.getElementById('pd-cari-btn').addEventListener('click', pdCari);
+document.getElementById('pd-cari-no').addEventListener('keydown', e => { if (e.key==='Enter') pdCari(); });
+
 document.getElementById('filter-pengajuan').addEventListener('change', loadPengajuanPjlh);
 document.getElementById('refreshPengajuanBtn').addEventListener('click', loadPengajuanPjlh);
 
