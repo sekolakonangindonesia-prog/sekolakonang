@@ -602,11 +602,13 @@ input, textarea, select { font-family: var(--body); }
       <div class="page-title">Pengajuan Saya</div>
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;margin-bottom:8px;scrollbar-width:none;">
-      <button class="badge badge-mou" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" onclick="renderPengajuanList('semua')">Semua</button>
-      <button class="badge badge-pending" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" onclick="renderPengajuanList('pending')">Menunggu</button>
-      <button class="badge badge-review" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" onclick="renderPengajuanList('review')">Ditinjau</button>
-      <button class="badge badge-approved" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" onclick="renderPengajuanList('approved')">Disetujui</button>
-      <button class="badge" style="background:rgba(0,255,136,0.12);color:var(--green);border:1px solid rgba(0,255,136,0.25);white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" onclick="renderPengajuanList('mou')">MOU Aktif</button>
+      <button class="badge badge-mou" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" data-f="semua" onclick="renderPengajuanList('semua')">Semua</button>
+      <button class="badge badge-pending" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" data-f="pending" onclick="renderPengajuanList('pending')">Menunggu</button>
+      <button class="badge badge-review" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" data-f="review" onclick="renderPengajuanList('review')">Ditinjau</button>
+      <button class="badge badge-approved" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" data-f="approved" onclick="renderPengajuanList('approved')">Disetujui</button>
+      <button class="badge" style="background:rgba(0,255,136,0.12);color:var(--green);border:1px solid rgba(0,255,136,0.25);white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" data-f="mou" onclick="renderPengajuanList('mou')">MOU Aktif</button>
+      <button class="badge badge-rejected" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" data-f="rejected" onclick="renderPengajuanList('rejected')">Ditolak</button>
+      <button class="badge badge-pending" style="white-space:nowrap;cursor:pointer;padding:6px 14px;font-size:0.65rem;" data-f="draft" onclick="renderPengajuanList('draft')">Draft</button>
     </div>
     <div class="pengajuan-list" id="pengajuanList">
       <div class="loading-spinner"><div class="spinner"></div><span>Memuat data...</span></div>
@@ -1036,7 +1038,7 @@ function renderActivity() {
     const ico = p.status==='approved'?'lime':p.status==='mou'?'green':p.status==='review'?'cyan':'orange';
     const icn = p.status==='approved'?'check-circle':p.status==='mou'?'handshake':p.status==='review'?'search':'clock';
     const tgl = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'short'}) : '—';
-    return `<div class="activity-item"><div class="act-icon ${ico}"><i class="fas fa-${icn}"></i></div><div class="act-body"><div class="act-title">${p.lokasi||'Pengajuan'}</div><div class="act-meta">${badgeHTML(p.status)} · ${tgl}</div></div></div>`;
+    return `<div class="activity-item" style="cursor:pointer;" onclick="bukaDetail('${escHtml(p.id)}')"><div class="act-icon ${ico}"><i class="fas fa-${icn}"></i></div><div class="act-body"><div class="act-title">${escHtml(p.lokasi||'Pengajuan')}</div><div class="act-meta">${badgeHTML(p.status)} · ${tgl}</div></div></div>`;
   }).join('');
 }
 
@@ -1044,7 +1046,10 @@ function renderActivity() {
 window.renderPengajuanList = (filter) => {
   const list = document.getElementById('pengajuanList');
   let data = [...allPengajuan].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
-  if (filter !== 'semua') data = data.filter(p => p.status === filter);
+  // "Ditinjau" mencakup status review (diperiksa admin) dan lapangan (sudah dicek Tim)
+  const GRUP = { review: ['review','lapangan'] };
+  if (filter !== 'semua') data = data.filter(p => (GRUP[filter] || [filter]).includes(p.status));
+  document.querySelectorAll('#panel-pengajuan [data-f]').forEach(b => { b.style.outline = b.dataset.f === filter ? '2px solid currentColor' : 'none'; });
   if (!data.length) {
     list.innerHTML = `<div class="empty-state"><i class="fas fa-folder-open"></i><p>Tidak ada pengajuan${filter!=='semua'?' dengan status ini':''}.</p></div>`;
     return;
@@ -1053,7 +1058,7 @@ window.renderPengajuanList = (filter) => {
     const tgl = p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : '—';
     return `<div class="pengajuan-card">
       <div class="pj-head">
-        <div><div class="pj-title">${p.lokasi||'Lokasi tidak diketahui'}</div><div class="pj-loc"><i class="fas fa-map-marker-alt" style="margin-right:4px;"></i>${p.lokasi||'—'}</div></div>
+        <div><div class="pj-title">${escHtml(p.lokasi||'Lokasi tidak diketahui')}</div><div class="pj-loc"><i class="fas fa-map-marker-alt" style="margin-right:4px;"></i>${escHtml(p.lokasi||'—')}</div></div>
         ${badgeHTML(p.status)}
       </div>
       <div class="pj-stats">
@@ -1099,7 +1104,8 @@ window.bukaDetail = async (id) => {
       <div><i class="fas fa-map-marker-alt" style="color:var(--lime);margin-right:6px;width:14px;"></i>${escHtml(p.lokasi||'—')}</div>
       ${p.nomorDokumenLahan?`<div><i class="fas fa-file-alt" style="color:var(--lime);margin-right:6px;width:14px;"></i>${escHtml(p.jenisBuktiLahan||'Bukti lahan')}: ${escHtml(p.nomorDokumenLahan)}</div>`:''}
       <div><i class="fas fa-calendar" style="color:var(--lime);margin-right:6px;width:14px;"></i>${labelTgl}: ${tgl}</div>
-      ${p.catatan?`<div style="margin-top:8px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;">${escHtml(p.catatan)}</div>`:''}
+      ${p.catatanKeputusan?`<div style="margin-top:8px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;"><b style="color:var(--lime);">Catatan Admin:</b> ${escHtml(p.catatanKeputusan)}</div>`:''}
+      ${p.status==='rejected'?`<div style="margin-top:8px;color:var(--danger);">Pengajuan ini ditolak.</div>`:''}
     </div>
     ${(p.targetRorak||p.targetSumur||p.targetPohon)?`<div style="font-size:0.7rem;color:var(--muted);margin-top:8px;">Target: ${p.targetRorak||0} rorak · ${p.targetSumur||0} sumur · ${p.targetPohon||0} pohon</div>`:''}
     <div class="section-head" style="margin-top:16px;"><h3>Titik Lapangan</h3></div>
@@ -1896,6 +1902,7 @@ window.switchTab = (name) => {
   document.getElementById('tab-'+name)?.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
   if (name==='ajukan' && window.muatDraftAktif) window.muatDraftAktif();
+  if (name==='pengajuan' && window.renderPengajuanList) window.renderPengajuanList('semua');
 };
 
 window.openModal  = id => document.getElementById(id).classList.add('open');
