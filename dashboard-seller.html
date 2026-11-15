@@ -478,12 +478,58 @@ input, textarea, select { font-family: var(--body); }
     <!-- BANNER DRAFT (muncul bila melanjutkan draft) -->
     <div id="draftBanner" style="display:none;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;margin-bottom:14px;border:1px solid rgba(198,255,0,0.25);background:rgba(198,255,0,0.06);border-radius:14px;"></div>
 
-    <!-- INFO PROYEK -->
+    <!-- KELENGKAPAN -->
+    <div class="form-section" style="padding:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:0.72rem;margin-bottom:6px;"><b style="color:#fff;">Kelengkapan pengajuan</b><span id="kelengkapanTeks" style="color:var(--muted);">0 / 0</span></div>
+      <div style="height:6px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;"><div id="kelengkapanBar" style="height:100%;width:0%;background:var(--lime);transition:width .3s;"></div></div>
+      <div class="form-hint" style="margin-top:8px;">Lengkapi semua bagian di bawah. Isian dan dokumen tersimpan otomatis sebagai draft, jadi bisa dilanjutkan kapan saja.</div>
+    </div>
+
+    <!-- 1. DATA PEMILIK -->
     <div class="form-section">
-      <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> Info Lokasi Umum</div>
+      <div class="form-section-title"><i class="fas fa-id-card"></i> 1. Data Pemilik / Penyedia</div>
       <div class="form-group">
-        <label>Nama Lokasi / Desa</label>
-        <input type="text" id="proj-nama" placeholder="contoh: Desa Galih, Kec. Sukapura" oninput="autoSaveProjek()">
+        <label>Nama Lengkap (sesuai KTP)</label>
+        <input type="text" id="own-nama" maxlength="100" placeholder="Nama persis seperti di KTP" oninput="autoSaveProjek()">
+      </div>
+      <div class="form-group">
+        <label>NIK (16 digit)</label>
+        <input type="text" id="own-nik" inputmode="numeric" maxlength="16" placeholder="16 angka NIK" oninput="this.value=this.value.replace(/\D/g,'');autoSaveProjek()">
+      </div>
+      <div class="form-group">
+        <label>Alamat (sesuai KTP)</label>
+        <textarea id="own-alamat" maxlength="300" placeholder="Jalan, RT/RW, desa, kecamatan, kabupaten, provinsi" oninput="autoSaveProjek()"></textarea>
+      </div>
+      <div class="form-group">
+        <label>NPWP (opsional, disarankan)</label>
+        <input type="text" id="own-npwp" maxlength="25" placeholder="Untuk kebutuhan pembukuan pembayar" oninput="autoSaveProjek()">
+      </div>
+      <div id="slots-pemilik"></div>
+      <div class="form-hint">KTP dan NIK hanya bisa dilihat oleh Anda dan Admin. Tim lapangan dan publik tidak bisa melihatnya.</div>
+    </div>
+
+    <!-- 2. LOKASI LAHAN -->
+    <div class="form-section">
+      <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> 2. Lokasi Lahan</div>
+      <div class="form-group">
+        <label>Nama Lokasi / Lahan</label>
+        <input type="text" id="proj-nama" placeholder="contoh: Lahan Pak Ahmad, Blok Sumber" oninput="autoSaveProjek()">
+      </div>
+      <div class="form-group">
+        <label>Alamat / Patokan Lahan</label>
+        <input type="text" id="lok-detail" maxlength="200" placeholder="Dusun / jalan / patokan terdekat" oninput="autoSaveProjek()">
+      </div>
+      <div class="row-2">
+        <div class="form-group"><label>Desa / Kelurahan</label><input type="text" id="lok-desa" maxlength="80" oninput="autoSaveProjek()"></div>
+        <div class="form-group"><label>Kecamatan</label><input type="text" id="lok-kec" maxlength="80" oninput="autoSaveProjek()"></div>
+      </div>
+      <div class="row-2">
+        <div class="form-group"><label>Kabupaten / Kota</label><input type="text" id="lok-kab" maxlength="80" oninput="autoSaveProjek()"></div>
+        <div class="form-group"><label>Provinsi</label><input type="text" id="lok-prov" maxlength="80" value="Jawa Timur" oninput="autoSaveProjek()"></div>
+      </div>
+      <div class="form-group">
+        <label>Luas Lahan yang Diajukan (hektare)</label>
+        <input type="number" id="lok-luas" min="0" step="0.01" placeholder="contoh: 1" oninput="autoSaveProjek()">
       </div>
       <div class="form-group">
         <label>Deskripsi Area (opsional)</label>
@@ -493,7 +539,8 @@ input, textarea, select { font-family: var(--body); }
 
     <!-- LEGALITAS LAHAN (syarat Pasal 12 PP 46/2017 & Permen LHK 4/2023) -->
     <div class="form-section">
-      <div class="form-section-title"><i class="fas fa-file-signature"></i> Legalitas Lahan</div>
+      <div class="form-section-title"><i class="fas fa-file-signature"></i> 3. Legalitas Lahan</div>
+      <div class="form-hint" style="margin-bottom:10px;">Dasar: Permen LH/BPLH No. 2 Tahun 2025 Pasal 12 ayat (1) — bukti kepemilikan, penguasaan, atau pengelolaan lahan yang sah, dan kewenangan mengelolanya.</div>
       <div class="form-group">
         <label>Status Kawasan</label>
         <select id="proj-status-kawasan" onchange="onStatusKawasanChange()">
@@ -520,6 +567,21 @@ input, textarea, select { font-family: var(--body); }
           <input type="text" id="proj-nomor-dokumen-lahan" placeholder="Nomor SHM / SK / Surat" oninput="autoSaveProjek()">
         </div>
       </div>
+
+      <div class="row-2">
+        <div class="form-group"><label>Atas Nama (di bukti lahan)</label><input type="text" id="proj-atas-nama" maxlength="100" oninput="autoSaveProjek()"></div>
+        <div class="form-group"><label>Tanggal Terbit</label><input type="date" id="proj-tgl-bukti" onchange="autoSaveProjek()"></div>
+      </div>
+      <div class="form-group">
+        <label>Hubungan Anda dengan Lahan</label>
+        <select id="proj-kepemilikan" onchange="renderSlots();autoSaveProjek()">
+          <option value="sendiri">Pemilik / pemegang hak (atas nama sendiri)</option>
+          <option value="kuasa">Mengelola atas izin / kuasa pemilik lain</option>
+          <option value="kelompok">Mewakili kelompok / kelembagaan</option>
+        </select>
+      </div>
+      <div id="slots-bukti"></div>
+      <div id="slots-kondisional"></div>
 
       <!-- Muncul otomatis hanya jika Status Kawasan = KHDPK (Produksi/Lindung) -->
       <div id="komposisiTanamBox" style="display:none;">
@@ -586,6 +648,16 @@ input, textarea, select { font-family: var(--body); }
     <button class="btn-submit-full" style="background:var(--green);color:var(--bg);margin:0 0 14px 0;" onclick="bukaModalTitik('pohon')">
       <i class="fas fa-plus"></i> Titik Pohon
     </button>
+
+    <div class="form-section" style="margin-top:6px;">
+      <div class="form-section-title"><i class="fas fa-check-double"></i> Pernyataan & Kelengkapan</div>
+      <label style="display:flex;gap:10px;align-items:flex-start;font-size:0.72rem;line-height:1.6;color:var(--parchment);cursor:pointer;">
+        <input type="checkbox" id="pernyataan" style="margin-top:3px;" onchange="autoSaveProjek()">
+        <span>Saya menyatakan data dan dokumen yang saya unggah benar dan sah, saya berwenang mengelola lahan ini, dan saya menyetujui data pribadi saya diproses oleh YSKI untuk verifikasi PJLH sesuai UU Pelindungan Data Pribadi, serta salinan dokumen dilampirkan pada MoU dengan pihak pembeli.</span>
+      </label>
+      <div id="checklistBox" style="margin-top:12px;display:flex;flex-direction:column;gap:4px;font-size:0.7rem;"></div>
+      <button class="btn-submit-full" style="margin-top:12px;background:var(--surface2);color:var(--parchment);" onclick="simpanDraftManual()"><i class="fas fa-save"></i> Simpan Draft</button>
+    </div>
 
     <button class="btn-submit-full" id="btnSubmitProyek" onclick="submitPengajuanFinal()" disabled style="opacity:.45;">
       <i class="fas fa-paper-plane"></i> Selesai &amp; Kirim ke Admin
@@ -1047,7 +1119,7 @@ window.renderPengajuanList = (filter) => {
   const list = document.getElementById('pengajuanList');
   let data = [...allPengajuan].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
   // "Ditinjau" mencakup status review (diperiksa admin) dan lapangan (sudah dicek Tim)
-  const GRUP = { review: ['review','lapangan'] };
+  const GRUP = { review: ['review','lapangan'], draft: ['draft','perbaikan'] };
   if (filter !== 'semua') data = data.filter(p => (GRUP[filter] || [filter]).includes(p.status));
   document.querySelectorAll('#panel-pengajuan [data-f]').forEach(b => { b.style.outline = b.dataset.f === filter ? '2px solid currentColor' : 'none'; });
   if (!data.length) {
@@ -1070,7 +1142,7 @@ window.renderPengajuanList = (filter) => {
       <div class="pj-footer">
         <span class="pj-date"><i class="fas fa-calendar-alt" style="margin-right:4px;"></i>${tgl}</span>
         <div style="display:flex;gap:6px;">
-          ${p.status==='draft' ? `<button class="btn-sm btn-outline-sm" style="color:var(--lime);" onclick="lanjutkanDraft('${p.id}')">Lanjutkan</button><button class="btn-sm btn-outline-sm" style="color:var(--danger);" onclick="hapusDraftDariList('${p.id}')"><i class="fas fa-trash"></i></button>` : ''}
+          ${(p.status==='draft'||p.status==='perbaikan') ? `<button class="btn-sm btn-outline-sm" style="color:var(--lime);" onclick="lanjutkanDraft('${p.id}')">${p.status==='perbaikan'?'Perbaiki':'Lanjutkan'}</button>` : ''}${p.status==='draft' ? `<button class="btn-sm btn-outline-sm" style="color:var(--danger);" onclick="hapusDraftDariList('${p.id}')"><i class="fas fa-trash"></i></button>` : ''}
           <button class="btn-sm btn-outline-sm" onclick="bukaDetail('${p.id}')">Detail →</button>
         </div>
       </div>
@@ -1108,13 +1180,32 @@ window.bukaDetail = async (id) => {
       ${p.status==='rejected'?`<div style="margin-top:8px;color:var(--danger);">Pengajuan ini ditolak.</div>`:''}
     </div>
     ${(p.targetRorak||p.targetSumur||p.targetPohon)?`<div style="font-size:0.7rem;color:var(--muted);margin-top:8px;">Target: ${p.targetRorak||0} rorak · ${p.targetSumur||0} sumur · ${p.targetPohon||0} pohon</div>`:''}
+    <div class="section-head" style="margin-top:16px;"><h3>Dokumen Legalitas</h3></div>
+    <div id="detailDokList" style="display:flex;flex-direction:column;gap:8px;"><div style="font-size:0.72rem;color:var(--muted);">Memuat dokumen...</div></div>
     <div class="section-head" style="margin-top:16px;"><h3>Titik Lapangan</h3></div>
     <div id="detailTitikList" style="display:flex;flex-direction:column;gap:10px;"><div style="font-size:0.72rem;color:var(--muted);">Memuat titik...</div></div>`;
   openModal('modalDetail');
 
   detailId = id;
+  muatDetailDokumen(id);
   await muatDetailHalaman(true);
 };
+
+async function muatDetailDokumen(id) {
+  const box = document.getElementById('detailDokList'); if (!box) return;
+  try {
+    const snap = await getDocs(collection(db,'pengajuan_pjlh',id,'dokumen'));
+    const items = snap.docs.filter(d => d.id !== 'identitas').map(d => ({ id:d.id, ...d.data() }));
+    if (!items.length) { box.innerHTML = '<div style="font-size:0.72rem;color:var(--muted);">Belum ada dokumen diunggah.</div>'; return; }
+    box.innerHTML = items.map(x => {
+      const m = SLOT[x.id] || { label:x.id }, st = STATUS_DOK[x.status] || STATUS_DOK.menunggu;
+      return `<div style="display:flex;gap:10px;align-items:center;border:1px solid var(--border-s);border-radius:10px;padding:8px 10px;">
+        ${fotoAman(x.foto) ? `<img src="${x.foto}" onclick="bukaFoto(this.src)" style="width:44px;height:44px;object-fit:cover;border-radius:6px;cursor:pointer;">` : ''}
+        <div style="flex:1;font-size:0.72rem;color:#fff;">${escHtml(m.label)}${x.catatan && x.status==='perbaikan' ? `<div style="font-size:0.64rem;color:var(--danger);">${escHtml(x.catatan)}</div>` : ''}</div>
+        <span style="font-size:0.6rem;font-weight:700;color:${st[1]};">${st[0]}</span></div>`;
+    }).join('');
+  } catch(e) { box.innerHTML = '<div style="font-size:0.72rem;color:var(--danger);">Gagal memuat dokumen.</div>'; }
+}
 
 let detailId = null, detailItems = [], detailCursor = null;
 async function muatDetailHalaman(reset) {
@@ -1248,66 +1339,193 @@ window.kirimProgres = async () => {
 
 // ── PENGAJUAN BARU (SISTEM TITIK) ──
 const HALAMAN_TITIK = 20;
-let pengajuanAktifId = null;   // id dokumen "pengajuan_pjlh" yang sedang diisi (draft)
+let pengajuanAktifId = null;   // id dokumen "pengajuan_pjlh" yang sedang diisi (draft / perbaikan)
 let titikList         = [];    // titik yang sudah dimuat (terbaru di atas), per halaman
 let titikEditTarget    = null; // id titik yang sedang diedit (null = mode tambah baru)
 let titikCursor = null, titikAdaLagi = false;
 let hitung = { rorak:0, sumur:0, pohon:0, serapan:0 };   // total di lahan (disimpan di dokumen induk)
 let seqTitik = 0;
 let muatDraftBusy = false;
-let saveTargetTimer = null;
+let saveTimer = null;
+let dokState = {};             // dokumen legalitas yang sudah diunggah: {id:{foto,status,catatan}}
+const STATUS_EDITABLE = ['draft','perbaikan'];
 
+const SLOT = {
+  ktp:         { label:'Foto KTP',                          hint:'Foto KTP asli; seluruh bagian terlihat jelas dan terbaca.', grup:'pemilik' },
+  selfie:      { label:'Selfie memegang KTP',               hint:'Wajah dan KTP terlihat jelas dalam satu foto.',               grup:'pemilik' },
+  bukti_depan: { label:'Foto / scan sertifikat atau bukti lahan', hint:'Halaman yang memuat nomor, nama pemegang hak, dan luas.',  grup:'bukti' },
+  bukti_situasi:{label:'Gambar situasi / peta bidang',      hint:'Disarankan, membantu pengecekan batas lahan.',               grup:'bukti', opsional:true },
+  sppt:        { label:'SPPT PBB terbaru',                  hint:'Disarankan, memperkuat bukti penguasaan.',                    grup:'bukti', opsional:true },
+  surat_desa:  { label:'Surat keterangan desa (tidak sengketa)', hint:'Disarankan.',                                              grup:'bukti', opsional:true },
+  kuasa:       { label:'Surat kuasa / izin pengelolaan dari pemilik', hint:'Wajib jika lahan atas nama orang lain.',             grup:'kondisional', kondisi:'kuasa' },
+  ktp_pemilik: { label:'KTP pemilik lahan',                 hint:'Wajib jika lahan atas nama orang lain.',                      grup:'kondisional', kondisi:'kuasa' },
+  sk_kelompok: { label:'SK pendirian kelompok / kelembagaan', hint:'Wajib jika mewakili kelompok.',                              grup:'kondisional', kondisi:'kelompok' }
+};
+const STATUS_DOK = {
+  menunggu:  ['Tersimpan', 'var(--cyan)'],
+  sesuai:    ['Sesuai ✓', 'var(--green)'],
+  perbaikan: ['Perlu perbaikan', 'var(--danger)']
+};
+
+const $v = id => (document.getElementById(id)?.value || '').trim();
 function ambilTarget() {
   const n = id => Math.max(0, parseInt(document.getElementById(id).value) || 0);
   return { rorak: n('proj-target-rorak'), sumur: n('proj-target-sumur'), pohon: n('proj-target-pohon') };
 }
 
-// Pastikan ada draft pengajuan aktif (dibuat sekali, dipakai untuk semua titik)
+// Data publik (boleh dibaca Tim): disimpan di dokumen induk. NIK, alamat KTP, NPWP TIDAK ikut ke sini.
+function kumpulFieldPublik() {
+  const t = ambilTarget();
+  return {
+    lokasi: $v('proj-nama') || 'Tanpa nama',
+    deskripsi: $v('proj-deskripsi'),
+    namaPemilik: $v('own-nama'),
+    alamatLahan: { detail:$v('lok-detail'), desa:$v('lok-desa'), kecamatan:$v('lok-kec'), kabupaten:$v('lok-kab'), provinsi:$v('lok-prov') },
+    luasHa: parseFloat($v('lok-luas')) || 0,
+    statusKawasan: $v('proj-status-kawasan'),
+    jenisBuktiLahan: $v('proj-jenis-bukti-lahan'),
+    nomorDokumenLahan: $v('proj-nomor-dokumen-lahan'),
+    atasNamaBukti: $v('proj-atas-nama'),
+    tglTerbitBukti: $v('proj-tgl-bukti'),
+    kepemilikan: $v('proj-kepemilikan') || 'sendiri',
+    pernyataan: !!document.getElementById('pernyataan').checked,
+    komposisiTanam: ambilKomposisiTanam(),
+    targetRorak: t.rorak, targetSumur: t.sumur, targetPohon: t.pohon
+  };
+}
+function kumpulIdentitas() {
+  return { namaKtp:$v('own-nama'), nik:$v('own-nik'), alamatKtp:$v('own-alamat'), npwp:$v('own-npwp'), updatedAt: serverTimestamp() };
+}
+
+// Pastikan ada draft pengajuan aktif (dibuat sekali, dipakai untuk semua titik & dokumen)
 async function pastikanDraftPengajuan() {
   if (pengajuanAktifId) return pengajuanAktifId;
-  const t = ambilTarget();
   const docRef = await addDoc(collection(db,'pengajuan_pjlh'), {
     sellerId: currentUser.uid, sellerName: userData.fullName,
     sellerEmail: currentUser.email, sellerPhone: userData.phone||'',
-    lokasi: document.getElementById('proj-nama').value.trim() || 'Tanpa nama',
-    deskripsi: document.getElementById('proj-deskripsi').value.trim() || '',
-    statusKawasan: document.getElementById('proj-status-kawasan').value,
-    jenisBuktiLahan: document.getElementById('proj-jenis-bukti-lahan').value,
-    nomorDokumenLahan: document.getElementById('proj-nomor-dokumen-lahan').value.trim() || '',
-    komposisiTanam: ambilKomposisiTanam(),
-    targetRorak: t.rorak, targetSumur: t.sumur, targetPohon: t.pohon,
+    ...kumpulFieldPublik(),
     jumlahRorak: 0, jumlahSumur: 0, jumlahPohon: 0, serapanM3: 0, seqTitik: 0,
     status: 'draft',
     createdAt: serverTimestamp()
   });
   pengajuanAktifId = docRef.id;
   hitung = { rorak:0, sumur:0, pohon:0, serapan:0 }; seqTitik = 0;
+  await setDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId,'dokumen','identitas'), kumpulIdentitas());
   renderDraftBanner();
   return pengajuanAktifId;
 }
 
-window.autoSaveProjek = async () => {
+async function simpanSekarang() {
   updateTombolKirim();
-  if (!pengajuanAktifId || muatDraftBusy) return; // belum ada titik, belum perlu draft
-  const t = ambilTarget();
-  await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), {
-    lokasi: document.getElementById('proj-nama').value.trim() || 'Tanpa nama',
-    deskripsi: document.getElementById('proj-deskripsi').value.trim() || '',
-    statusKawasan: document.getElementById('proj-status-kawasan').value,
-    jenisBuktiLahan: document.getElementById('proj-jenis-bukti-lahan').value,
-    nomorDokumenLahan: document.getElementById('proj-nomor-dokumen-lahan').value.trim() || '',
-    komposisiTanam: ambilKomposisiTanam(),
-    targetRorak: t.rorak, targetSumur: t.sumur, targetPohon: t.pohon
-  });
+  if (!pengajuanAktifId || muatDraftBusy) return;
+  await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), kumpulFieldPublik());
+  await setDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId,'dokumen','identitas'), kumpulIdentitas(), { merge:true });
+}
+// Simpan otomatis dengan jeda (tidak menulis tiap ketikan, hemat kuota tulis)
+window.autoSaveProjek = () => {
+  updateTombolKirim();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { simpanSekarang().catch(e => console.warn('Simpan otomatis gagal:', e)); }, 800);
+  return Promise.resolve();
 };
+window.simpanDraftManual = async () => {
+  try { await pastikanDraftPengajuan(); await simpanSekarang(); showToast('Draft tersimpan.','success'); }
+  catch(e) { showToast('Gagal simpan draft: '+e.message,'error'); }
+};
+window.simpanSekarang = simpanSekarang;
+
+// ── DOKUMEN LEGALITAS (foto disimpan di subcollection privat "dokumen") ──
+function slotHTML(id) {
+  const m = SLOT[id], d = dokState[id];
+  const st = d ? (STATUS_DOK[d.status] || STATUS_DOK.menunggu) : null;
+  const tagWajib = m.opsional ? '<span style="color:var(--muted);">disarankan</span>' : '<span style="color:var(--lime);">wajib</span>';
+  const thumb = d && fotoAman(d.foto) ? `<img src="${d.foto}" onclick="bukaFoto(this.src)" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--border-s);cursor:pointer;">` : '';
+  return `<div style="border:1px solid var(--border-s);border-radius:12px;padding:12px;margin-top:10px;background:rgba(255,255,255,0.02);">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+      <div><div style="font-size:0.78rem;font-weight:700;color:#fff;">${m.label} · ${tagWajib}</div><div style="font-size:0.64rem;color:var(--muted);margin-top:2px;">${m.hint}</div></div>
+      ${st ? `<span style="font-size:0.6rem;font-weight:700;color:${st[1]};white-space:nowrap;">${st[0]}</span>` : ''}
+    </div>
+    ${d && d.status==='perbaikan' && d.catatan ? `<div style="font-size:0.66rem;color:var(--danger);margin-top:6px;">Catatan Admin: ${escHtml(d.catatan)}</div>` : ''}
+    <div style="display:flex;gap:10px;align-items:center;margin-top:10px;">
+      ${thumb}
+      <label class="btn-sm btn-outline-sm" style="cursor:pointer;"><i class="fas fa-camera"></i> ${d ? 'Ganti foto' : 'Ambil / pilih foto'}
+        <input type="file" accept="image/*" style="display:none;" onchange="unggahDokumen('${id}',this)"></label>
+      ${d ? `<button class="btn-sm btn-outline-sm" style="color:var(--danger);" onclick="hapusDokumen('${id}')"><i class="fas fa-trash"></i></button>` : ''}
+    </div>
+  </div>`;
+}
+window.renderSlots = () => {
+  const kep = $v('proj-kepemilikan') || 'sendiri';
+  const isi = (grup, filter) => Object.keys(SLOT).filter(k => SLOT[k].grup===grup && (!filter || filter(SLOT[k]))).map(slotHTML).join('');
+  const a = document.getElementById('slots-pemilik'), b = document.getElementById('slots-bukti'), c = document.getElementById('slots-kondisional');
+  if (a) a.innerHTML = isi('pemilik');
+  if (b) b.innerHTML = isi('bukti');
+  if (c) c.innerHTML = isi('kondisional', m => m.kondisi === kep);
+  updateTombolKirim();
+};
+window.unggahDokumen = async (id, input) => {
+  const f = input.files && input.files[0]; if (!f) return;
+  try {
+    showToast('Memproses foto...','info');
+    const dataUrl = await kompresFotoTitik(f, 1280, 150);   // dokumen harus terbaca: lebih besar dari foto titik
+    await pastikanDraftPengajuan();
+    const data = { foto:dataUrl, status:'menunggu', catatan:'', updatedAt: serverTimestamp() };
+    await setDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId,'dokumen',id), data);
+    dokState[id] = { foto:dataUrl, status:'menunggu', catatan:'' };
+    renderSlots();
+    showToast('Dokumen tersimpan.','success');
+  } catch(e) { showToast('Gagal simpan dokumen: '+e.message,'error'); }
+  finally { input.value = ''; }
+};
+window.hapusDokumen = async (id) => {
+  if (!pengajuanAktifId || !confirm('Hapus dokumen ini?')) return;
+  try { await deleteDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId,'dokumen',id)); delete dokState[id]; renderSlots(); }
+  catch(e) { showToast('Gagal hapus: '+e.message,'error'); }
+};
+
+// ── DAFTAR SYARAT & KUNCI TOMBOL KIRIM ──
+function daftarSyarat() {
+  const S = []; const add = (label, ok) => S.push({ label, ok: !!ok });
+  const kep = $v('proj-kepemilikan') || 'sendiri', t = ambilTarget();
+  add('Nama sesuai KTP', $v('own-nama'));
+  add('NIK 16 digit', /^\d{16}$/.test($v('own-nik')));
+  add('Alamat sesuai KTP', $v('own-alamat').length >= 10);
+  add('Foto KTP', dokState.ktp);
+  add('Selfie memegang KTP', dokState.selfie);
+  add('Nama lokasi lahan', $v('proj-nama'));
+  add('Alamat lahan (desa, kecamatan, kabupaten, provinsi)', $v('lok-desa') && $v('lok-kec') && $v('lok-kab') && $v('lok-prov'));
+  add('Luas lahan (hektare)', parseFloat($v('lok-luas')) > 0);
+  add('Nomor bukti lahan', $v('proj-nomor-dokumen-lahan'));
+  add('Nama pemegang hak di bukti lahan', $v('proj-atas-nama'));
+  add('Foto sertifikat / bukti lahan', dokState.bukti_depan);
+  if (kep === 'kuasa')    { add('Surat kuasa / izin pemilik', dokState.kuasa); add('KTP pemilik lahan', dokState.ktp_pemilik); }
+  if (kep === 'kelompok') add('SK kelompok / kelembagaan', dokState.sk_kelompok);
+  add('Target jumlah diisi', t.rorak > 0 || t.sumur > 0 || t.pohon > 0);
+  [['rorak','Rorak'],['sumur','Sumur'],['pohon','Pohon']].forEach(([k,n]) => { if (t[k] > 0) add(`Titik ${n}: ${hitung[k]} / ${t[k]}`, hitung[k] >= t[k]); });
+  add('Pernyataan disetujui', document.getElementById('pernyataan').checked);
+  return S;
+}
+function kekuranganKirim() { return daftarSyarat().filter(x => !x.ok).map(x => x.label); }
+
+function updateTombolKirim() {
+  const btn = document.getElementById('btnSubmitProyek'), hint = document.getElementById('kirimHint');
+  if (!btn) return;
+  const S = daftarSyarat(), ok = S.filter(x => x.ok).length, m = S.length - ok;
+  const bar = document.getElementById('kelengkapanBar'), tk = document.getElementById('kelengkapanTeks'), cl = document.getElementById('checklistBox');
+  if (bar) bar.style.width = Math.round(ok / S.length * 100) + '%';
+  if (tk) tk.textContent = `${ok} / ${S.length}`;
+  if (cl) cl.innerHTML = S.map(x => `<div style="color:${x.ok ? 'var(--green)' : 'var(--muted)'};"><i class="fas fa-${x.ok ? 'check-circle' : 'circle'}" style="width:16px;"></i> ${escHtml(x.label)}</div>`).join('');
+  if (btn.dataset.busy) return;
+  btn.disabled = m > 0; btn.style.opacity = m ? '.45' : '1';
+  if (hint) hint.textContent = m ? `Belum bisa dikirim. ${m} syarat belum lengkap (lihat daftar di atas).` : '✓ Semua syarat terpenuhi. Siap dikirim ke Admin.';
+}
 
 window.onTargetChange = () => {
   renderProgresTarget(); updateTombolKirim();
-  clearTimeout(saveTargetTimer);
-  saveTargetTimer = setTimeout(() => { window.autoSaveProjek().catch(()=>{}); }, 700);
+  window.autoSaveProjek();
 };
 
-// ── PROGRES TARGET & KUNCI TOMBOL KIRIM ──
+// ── PROGRES TARGET ──
 function renderProgresTarget() {
   const box = document.getElementById('progresTarget'); if (!box) return;
   const t = ambilTarget();
@@ -1322,42 +1540,32 @@ function renderProgresTarget() {
   }).join('');
 }
 
-function kekuranganKirim() {
-  const m = [], t = ambilTarget();
-  if (!document.getElementById('proj-nama').value.trim()) m.push('nama lokasi');
-  if (!document.getElementById('proj-nomor-dokumen-lahan').value.trim()) m.push('nomor dokumen');
-  if (!(t.rorak > 0 || t.sumur > 0 || t.pohon > 0)) m.push('target jumlah');
-  [['rorak','Rorak'],['sumur','Sumur'],['pohon','Pohon']].forEach(([k,n]) => { if (t[k] > 0 && hitung[k] < t[k]) m.push(`${n} ${hitung[k]}/${t[k]}`); });
-  return m;
-}
-
-function updateTombolKirim() {
-  const btn = document.getElementById('btnSubmitProyek'), hint = document.getElementById('kirimHint');
-  if (!btn || btn.dataset.busy) return;
-  const m = kekuranganKirim();
-  btn.disabled = m.length > 0; btn.style.opacity = m.length ? '.45' : '1';
-  if (hint) hint.textContent = m.length ? 'Belum bisa dikirim. Lengkapi: ' + m.join(' · ') : '✓ Semua target terpenuhi. Siap dikirim ke Admin.';
-}
-
 // ── DRAFT: lanjutkan, hapus, kosongkan ──
 function renderDraftBanner() {
   const el = document.getElementById('draftBanner'); if (!el) return;
   if (!pengajuanAktifId) { el.style.display = 'none'; return; }
-  const lain = Math.max(0, allPengajuan.filter(p => p.status === 'draft').length - 1);
+  const aktif = allPengajuan.find(p => p.id === pengajuanAktifId);
+  const perbaikan = aktif && aktif.status === 'perbaikan';
+  const lain = Math.max(0, allPengajuan.filter(p => p.status === 'draft').length - (aktif && aktif.status==='draft' ? 1 : 0));
   el.style.display = 'flex';
-  el.innerHTML = `<div><div style="font-size:.72rem;font-weight:700;color:var(--lime);">Melanjutkan draft</div><div style="font-size:.64rem;color:var(--muted);margin-top:2px;">Isian dan titik tersimpan otomatis${lain?` · ${lain} draft lain ada di tab Pengajuan`:''}</div></div><button class="btn-sm btn-outline-sm" style="color:var(--danger);white-space:nowrap;" onclick="hapusDraftAktif()"><i class="fas fa-trash"></i> Hapus draft</button>`;
+  el.innerHTML = `<div><div style="font-size:.72rem;font-weight:700;color:${perbaikan?'var(--danger)':'var(--lime)'};">${perbaikan ? 'Perlu perbaikan dari Admin' : 'Melanjutkan draft'}</div><div style="font-size:.64rem;color:var(--muted);margin-top:2px;">${perbaikan ? 'Periksa dokumen bertanda "Perlu perbaikan", lalu kirim ulang.' : 'Isian dan titik tersimpan otomatis'}${lain?` · ${lain} draft lain ada di tab Pengajuan`:''}</div></div>${perbaikan ? '' : `<button class="btn-sm btn-outline-sm" style="color:var(--danger);white-space:nowrap;" onclick="hapusDraftAktif()"><i class="fas fa-trash"></i> Hapus draft</button>`}`;
 }
 
+const SEMUA_INPUT = ['proj-nama','proj-deskripsi','proj-nomor-dokumen-lahan','proj-persen-pokok','proj-persen-mpts','proj-persen-semusim',
+  'proj-target-rorak','proj-target-sumur','proj-target-pohon','own-nama','own-nik','own-alamat','own-npwp',
+  'lok-detail','lok-desa','lok-kec','lok-kab','lok-luas','proj-atas-nama','proj-tgl-bukti'];
 function kosongkanForm() {
   pengajuanAktifId = null; titikList = []; titikCursor = null; titikAdaLagi = false;
-  hitung = { rorak:0, sumur:0, pohon:0, serapan:0 }; seqTitik = 0;
-  ['proj-nama','proj-deskripsi','proj-nomor-dokumen-lahan','proj-persen-pokok','proj-persen-mpts','proj-persen-semusim',
-   'proj-target-rorak','proj-target-sumur','proj-target-pohon'].forEach(id => { document.getElementById(id).value = ''; });
+  hitung = { rorak:0, sumur:0, pohon:0, serapan:0 }; seqTitik = 0; dokState = {};
+  SEMUA_INPUT.forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('lok-prov').value = 'Jawa Timur';
   document.getElementById('proj-status-kawasan').value = 'APL';
   document.getElementById('proj-jenis-bukti-lahan').value = 'SHM';
+  document.getElementById('proj-kepemilikan').value = 'sendiri';
+  document.getElementById('pernyataan').checked = false;
   document.getElementById('komposisiTanamBox').style.display = 'none';
   document.getElementById('kepatuhanKuotaResult').textContent = '';
-  renderTitikList(); renderDraftBanner();
+  renderSlots(); renderTitikList(); renderDraftBanner();
 }
 
 async function aktifkanDraft(id, d) {
@@ -1371,6 +1579,12 @@ async function aktifkanDraft(id, d) {
     v('proj-status-kawasan', d.statusKawasan || 'APL');
     v('proj-jenis-bukti-lahan', d.jenisBuktiLahan || 'SHM');
     v('proj-nomor-dokumen-lahan', d.nomorDokumenLahan);
+    v('proj-atas-nama', d.atasNamaBukti); v('proj-tgl-bukti', d.tglTerbitBukti);
+    v('proj-kepemilikan', d.kepemilikan || 'sendiri');
+    const al = d.alamatLahan || {};
+    v('lok-detail', al.detail); v('lok-desa', al.desa); v('lok-kec', al.kecamatan); v('lok-kab', al.kabupaten); v('lok-prov', al.provinsi || 'Jawa Timur');
+    v('lok-luas', d.luasHa || '');
+    document.getElementById('pernyataan').checked = !!d.pernyataan;
     const k = d.komposisiTanam || {};
     v('proj-persen-pokok', k.pokok || ''); v('proj-persen-mpts', k.mpts || ''); v('proj-persen-semusim', k.semusim || '');
     v('proj-target-rorak', d.targetRorak || ''); v('proj-target-sumur', d.targetSumur || ''); v('proj-target-pohon', d.targetPohon || '');
@@ -1378,19 +1592,28 @@ async function aktifkanDraft(id, d) {
     document.getElementById('komposisiTanamBox').style.display = (st==='KHDPK_Produksi'||st==='KHDPK_Lindung') ? 'block' : 'none';
     hitung = { rorak:d.jumlahRorak||0, sumur:d.jumlahSumur||0, pohon:d.jumlahPohon||0, serapan:d.serapanM3||0 };
     seqTitik = d.seqTitik || ((d.jumlahRorak||0)+(d.jumlahSumur||0)+(d.jumlahPohon||0));
+    // dokumen privat: identitas (teks) + foto dokumen
+    const dk = await getDocs(collection(db,'pengajuan_pjlh',id,'dokumen'));
+    dk.docs.forEach(x => {
+      const dd = x.data();
+      if (x.id === 'identitas') { v('own-nama', dd.namaKtp || d.namaPemilik || ''); v('own-nik', dd.nik); v('own-alamat', dd.alamatKtp); v('own-npwp', dd.npwp); }
+      else dokState[x.id] = { foto:dd.foto, status:dd.status||'menunggu', catatan:dd.catatan||'' };
+    });
+    renderSlots();
     await muatTitikHalaman(true);
     renderDraftBanner();
   } finally { muatDraftBusy = false; }
 }
 
-// Dipanggil saat tab Ajukan dibuka: kalau ada draft, langsung dilanjutkan (tidak membuat draft baru).
+// Dipanggil saat tab Ajukan dibuka: kalau ada draft / permintaan perbaikan, langsung dilanjutkan.
 window.muatDraftAktif = async () => {
   if (isAdminMode || !currentUser || pengajuanAktifId || muatDraftBusy) return;
   muatDraftBusy = true;
   try {
-    const snap = await getDocs(query(collection(db,'pengajuan_pjlh'), where('sellerId','==',currentUser.uid), where('status','==','draft')));
-    if (snap.empty) return;
-    const docs = [...snap.docs].sort((a,b)=>(b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
+    const snap = await getDocs(query(collection(db,'pengajuan_pjlh'), where('sellerId','==',currentUser.uid)));
+    const docs = [...snap.docs].filter(x => STATUS_EDITABLE.includes(x.data().status))
+      .sort((a,b) => (a.data().status==='perbaikan' ? -1 : 0) - (b.data().status==='perbaikan' ? -1 : 0) || (b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0));
+    if (!docs.length) return;
     muatDraftBusy = false;
     await aktifkanDraft(docs[0].id, docs[0].data());
   } catch(e) { console.warn('Gagal memuat draft:', e); }
@@ -1406,15 +1629,18 @@ window.lanjutkanDraft = async (id) => {
   } catch(e) { showToast('Gagal membuka draft: '+e.message,'error'); }
 };
 
+async function hapusSubkoleksi(id, nama) {
+  const col = collection(db,'pengajuan_pjlh',id,nama);
+  for (let guard=0; guard<200; guard++) {
+    const s = await getDocs(query(col, limit(50)));
+    if (s.empty) break;
+    await Promise.all(s.docs.map(d => deleteDoc(doc(db,'pengajuan_pjlh',id,nama,d.id))));
+  }
+}
 async function hapusDraftById(id) {
-  if (!confirm('Hapus draft ini beserta semua titiknya? Tindakan ini tidak bisa dibatalkan.')) return false;
+  if (!confirm('Hapus draft ini beserta semua titik dan dokumennya? Tindakan ini tidak bisa dibatalkan.')) return false;
   try {
-    const col = collection(db,'pengajuan_pjlh',id,'titik');
-    for (let guard=0; guard<200; guard++) {
-      const s = await getDocs(query(col, limit(50)));
-      if (s.empty) break;
-      await Promise.all(s.docs.map(d => deleteDoc(doc(db,'pengajuan_pjlh',id,'titik',d.id))));
-    }
+    await hapusSubkoleksi(id,'titik'); await hapusSubkoleksi(id,'dokumen');
     await deleteDoc(doc(db,'pengajuan_pjlh',id));
     if (pengajuanAktifId === id) kosongkanForm();
     showToast('Draft dihapus.','info');
@@ -1858,15 +2084,16 @@ async function deleteDocTitik(id) {
 }
 
 window.submitPengajuanFinal = async () => {
-  const lokasi = document.getElementById('proj-nama').value.trim();
+  const lokasi = $v('proj-nama');
   const kurang = kekuranganKirim();
-  if (kurang.length)     { showToast('Belum lengkap: '+kurang.join(' · '),'error'); return; }
+  if (kurang.length)     { showToast('Belum lengkap: '+kurang.slice(0,3).join(' · ')+(kurang.length>3?' …':''),'error'); return; }
   if (!pengajuanAktifId) { showToast('Belum ada draft tersimpan.','error'); return; }
 
   const btn = document.getElementById('btnSubmitProyek');
   btn.dataset.busy = '1'; btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
   try {
-    await window.autoSaveProjek();   // pastikan isian & target terakhir ikut tersimpan
+    clearTimeout(saveTimer);
+    await simpanSekarang();   // pastikan isian & target terakhir ikut tersimpan
     await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), { status: 'pending', submittedAt: serverTimestamp() });
     await addDoc(collection(db,'notifikasi_admin'), {
       type:'new_pengajuan', sellerId:currentUser.uid, sellerName:userData.fullName, lokasi,
@@ -1882,7 +2109,7 @@ window.submitPengajuanFinal = async () => {
 
 // ── HELPERS ──
 function badgeHTML(status) {
-  const map = { draft:['badge-pending','Draft (belum dikirim)'], pending:['badge-pending','Menunggu'], review:['badge-review','Ditinjau Admin'], lapangan:['badge-review','Cek Lapangan'], approved:['badge-approved','Disetujui'], mou:['badge-mou','MOU Aktif'], rejected:['badge-rejected','Ditolak'] };
+  const map = { draft:['badge-pending','Draft (belum dikirim)'], perbaikan:['badge-rejected','Perlu Perbaikan'], pending:['badge-pending','Menunggu'], review:['badge-review','Ditinjau Admin'], lapangan:['badge-review','Cek Lapangan'], approved:['badge-approved','Disetujui'], mou:['badge-mou','MOU Aktif'], rejected:['badge-rejected','Ditolak'] };
   const [cls,lbl] = map[status]||['badge-pending','—'];
   return `<span class="badge ${cls}">${lbl}</span>`;
 }
@@ -1906,6 +2133,7 @@ window.switchTab = (name) => {
 };
 
 window.openModal  = id => document.getElementById(id).classList.add('open');
+setTimeout(() => { try { renderSlots(); renderProgresTarget(); } catch(e) {} }, 0);
 window.closeModal = id => document.getElementById(id).classList.remove('open');
 document.querySelectorAll('.modal-backdrop').forEach(m =>
   m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); })
