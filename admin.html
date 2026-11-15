@@ -3740,7 +3740,7 @@ async function pdMuatDokumen() {
   const baris = (k,v) => `<div style="display:flex;gap:8px;font-size:0.72rem;line-height:1.7;"><span style="min-width:130px;color:var(--text-muted);">${k}</span><span style="color:var(--white);word-break:break-word;">${v?esc(v):'<i style="color:var(--danger);">belum diisi</i>'}</span></div>`;
   let html = `<div class="list-card" style="padding:12px;margin-bottom:10px;">
     <div style="font-weight:700;font-size:0.8rem;color:var(--white);margin-bottom:6px;"><i class="fas fa-id-card" style="color:var(--lime);margin-right:6px;"></i>Data Pemilik &amp; Lahan <span style="font-size:0.62rem;color:var(--text-muted);font-weight:400;">(hanya admin)</span></div>
-    ${baris('Nama (sesuai KTP)', idn.namaKtp||p.namaPemilik)}${baris('NIK', idn.nik)}${baris('Alamat KTP', idn.alamatKtp)}${baris('NPWP', idn.npwp)}
+    ${baris('Nama (sesuai KTP)', idn.namaKtp||p.namaPemilik)}${baris('NIK', idn.nik)}${baris('Alamat KTP', idn.alamatKtp)}${baris('Alamat domisili', idn.domisiliSama===false ? idn.alamatDomisili : '(sama dengan KTP)')}${baris('NPWP', idn.npwp)}
     <div style="height:6px;"></div>
     ${baris('Alamat lahan', [al.detail,al.desa,al.kecamatan,al.kabupaten,al.provinsi].filter(Boolean).join(', '))}${baris('Luas', p.luasHa?p.luasHa+' ha':'')}
     ${baris('Bukti lahan', [p.jenisBuktiLahan,p.nomorDokumenLahan].filter(Boolean).join(' · '))}${baris('Atas nama', p.atasNamaBukti)}${baris('Kepemilikan', p.kepemilikan)}
@@ -5360,7 +5360,6 @@ window.editKontakSosial = editKontakSosial;
 window.loadKontakSosial = loadKontakSosial;
 window.editLaporan = editLaporan;
 window.loadBioList = loadBioList;  
-  
 </script>
 </body>
 </html>
