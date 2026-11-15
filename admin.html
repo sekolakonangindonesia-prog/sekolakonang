@@ -730,6 +730,7 @@ input,textarea,select{font-family:var(--body);}
             <option value="pending">Baru Masuk (Pending)</option>
             <option value="review">Menunggu Verifikasi Tim</option>
             <option value="lapangan">Sudah Dicek Tim (Perlu Keputusan)</option>
+            <option value="perbaikan">Dikembalikan ke Seller</option>
             <option value="approved">Disetujui</option>
             <option value="mou">Kesepakatan/MOU</option>
             <option value="rejected">Ditolak</option>
@@ -1123,6 +1124,8 @@ input,textarea,select{font-family:var(--body);}
     <h3 id="pd-title">Detail Pengajuan</h3>
     <div class="sub" id="pd-sub">—</div>
     <div id="pd-ringkas"></div>
+    <div id="pd-dokumen"></div>
+    <div id="pd-aksi" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 10px;">
       <select id="pd-filter-jenis" style="background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:8px 12px;font-size:0.75rem;">
         <option value="">Semua jenis</option><option value="rorak">Rorak</option><option value="sumur">Sumur</option><option value="pohon">Pohon</option>
@@ -3465,7 +3468,8 @@ const PENGAJUAN_STATUS_LABEL = {
   lapangan: { label:'Sudah Dicek Tim — Perlu Keputusan Admin', badge:'badge-blue' },
   approved: { label:'Disetujui', badge:'badge-lime' },
   mou:      { label:'Kesepakatan / MOU', badge:'badge-lime' },
-  rejected: { label:'Ditolak', badge:'badge-danger' }
+  rejected: { label:'Ditolak', badge:'badge-danger' },
+  perbaikan:{ label:'Dikembalikan ke Seller (Perlu Perbaikan)', badge:'badge-orange' }
 };
 
 // Legalitas lahan & kepatuhan kuota KHDPK (Pasal 12 PP 46/2017, Permen LHK 4/2023).
@@ -3502,7 +3506,7 @@ async function loadPengajuanPjlh() {
     if (filterVal) items = items.filter(p => p.status === filterVal);
     if (!items.length) { wrap.innerHTML = '<p style="color:var(--text-muted);">Tidak ada pengajuan untuk filter ini.</p>'; return; }
     // Urutkan: yang butuh aksi admin (pending, lapangan) di atas
-    const prioritas = { pending:0, lapangan:1, review:2, approved:3, mou:3, rejected:4 };
+    const prioritas = { pending:0, lapangan:1, review:2, perbaikan:2, approved:3, mou:3, rejected:4 };
     items.sort((a,b) => (prioritas[a.status]??9) - (prioritas[b.status]??9));
 
     wrap.innerHTML = '';
@@ -3652,6 +3656,8 @@ window.bukaDetailPengajuan = async (id) => {
   document.getElementById('pd-title').textContent = 'Detail Pengajuan';
   document.getElementById('pd-sub').textContent = 'Memuat...';
   document.getElementById('pd-ringkas').innerHTML = '';
+  document.getElementById('pd-dokumen').innerHTML = '';
+  document.getElementById('pd-aksi').innerHTML = '';
   document.getElementById('pd-titik-list').innerHTML = '';
   openModal('modal-pengajuan-detail');
   try {
@@ -3676,9 +3682,139 @@ window.bukaDetailPengajuan = async (id) => {
         <div style="margin-top:4px;">${renderLegalitasBadge(p)}</div>
         <div style="margin-top:6px;"><span class="list-badge ${st.badge}">${st.label}</span></div>
       </div>`;
+    await pdMuatDokumen();
     await pdMuat(true);
   } catch(e) { document.getElementById('pd-sub').textContent = 'Gagal memuat: ' + e.message; }
 };
+
+// ── DOKUMEN LEGALITAS: hanya admin yang bisa membaca (Tim dikecualikan oleh rules) ──
+const DOK_SLOT = {
+  ktp:{l:'Foto KTP',w:1}, selfie:{l:'Selfie memegang KTP',w:1}, bukti_depan:{l:'Foto / scan sertifikat atau bukti lahan',w:1},
+  bukti_situasi:{l:'Gambar situasi / peta bidang'}, sppt:{l:'SPPT PBB terbaru'}, surat_desa:{l:'Surat keterangan desa'},
+  kuasa:{l:'Surat kuasa / izin pengelolaan',k:1}, ktp_pemilik:{l:'KTP pemilik lahan',k:1}, sk_kelompok:{l:'SK pendirian kelompok',k:1}
+};
+const DOK_URUT = ['ktp','selfie','bukti_depan','bukti_situasi','sppt','surat_desa','kuasa','ktp_pemilik','sk_kelompok'];
+const DOK_ST = { menunggu:['Belum diperiksa','var(--cyan)'], sesuai:['Sesuai ✓','var(--green)'], perbaikan:['Perlu perbaikan','var(--danger)'] };
+let pdDok = {};
+const PD_AKTIF = ['pending','review','lapangan'];
+
+async function ambilDokumen(id) {
+  const s = await getDocs(collection(db,'pengajuan_pjlh',id,'dokumen'));
+  const o = {}; s.docs.forEach(d => o[d.id] = d.data()); return o;
+}
+function hitungGate(dok) {
+  const alasan = [];
+  const idn = dok.identitas || {};
+  if (!/^\d{16}$/.test(String(idn.nik||'').replace(/\D/g,''))) alasan.push('NIK belum 16 digit');
+  if (String(idn.alamatKtp||'').trim().length < 10) alasan.push('Alamat KTP belum lengkap');
+  DOK_URUT.forEach(k => {
+    const m = DOK_SLOT[k], d = dok[k];
+    if (!d) { if (m.w) alasan.push(m.l + ' belum ada'); return; }
+    if (d.status === 'perbaikan') alasan.push(m.l + ' ditandai perlu perbaikan');
+    else if ((m.w || m.k) && d.status !== 'sesuai') alasan.push(m.l + ' belum ditandai Sesuai');
+  });
+  return { ok: !alasan.length, alasan };
+}
+async function cekGateDokumen(id) { try { return hitungGate(await ambilDokumen(id)); } catch(e) { return { ok:false, alasan:['Gagal membaca dokumen: '+e.message] }; } }
+
+function pdAksiRender() {
+  const p = pdData, box = document.getElementById('pd-aksi'); if (!p) return;
+  const g = hitungGate(pdDok), butuh = PD_AKTIF.includes(p.status);
+  let x = '';
+  if (butuh) {
+    x += `<button class="btn btn-outline btn-sm" onclick="kembalikanKeSeller()"><i class="fas fa-undo"></i> Kembalikan ke Seller</button>`;
+    if (p.status === 'pending') x += `<button class="btn btn-lime btn-sm" ${g.ok?'':'disabled style="opacity:.45;cursor:not-allowed;"'} onclick="teruskanDariDetail('${esc(p.id)}')"><i class="fas fa-share"></i> Teruskan ke Tim</button>`;
+    if (!g.ok) x += `<div style="flex-basis:100%;font-size:0.68rem;color:#ff9800;"><i class="fas fa-info-circle"></i> Syarat teruskan ke Tim: ${g.alasan.map(esc).join('; ')}.</div>`;
+  }
+  x += `<button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="hapusPengajuanAdmin()"><i class="fas fa-trash"></i> Hapus pengajuan</button>`;
+  box.innerHTML = x;
+}
+
+async function pdMuatDokumen() {
+  const box = document.getElementById('pd-dokumen');
+  box.innerHTML = '<p style="color:var(--text-muted);font-size:0.78rem;">Memuat dokumen...</p>';
+  try { pdDok = await ambilDokumen(pdId); }
+  catch(e) { box.innerHTML = `<p style="color:var(--danger);font-size:0.78rem;">Gagal memuat dokumen: ${esc(e.message)}</p>`; return; }
+  const p = pdData, idn = pdDok.identitas || {};
+  const al = p.alamatLahan || {};
+  const baris = (k,v) => `<div style="display:flex;gap:8px;font-size:0.72rem;line-height:1.7;"><span style="min-width:130px;color:var(--text-muted);">${k}</span><span style="color:var(--white);word-break:break-word;">${v?esc(v):'<i style="color:var(--danger);">belum diisi</i>'}</span></div>`;
+  let html = `<div class="list-card" style="padding:12px;margin-bottom:10px;">
+    <div style="font-weight:700;font-size:0.8rem;color:var(--white);margin-bottom:6px;"><i class="fas fa-id-card" style="color:var(--lime);margin-right:6px;"></i>Data Pemilik &amp; Lahan <span style="font-size:0.62rem;color:var(--text-muted);font-weight:400;">(hanya admin)</span></div>
+    ${baris('Nama (sesuai KTP)', idn.namaKtp||p.namaPemilik)}${baris('NIK', idn.nik)}${baris('Alamat KTP', idn.alamatKtp)}${baris('NPWP', idn.npwp)}
+    <div style="height:6px;"></div>
+    ${baris('Alamat lahan', [al.detail,al.desa,al.kecamatan,al.kabupaten,al.provinsi].filter(Boolean).join(', '))}${baris('Luas', p.luasHa?p.luasHa+' ha':'')}
+    ${baris('Bukti lahan', [p.jenisBuktiLahan,p.nomorDokumenLahan].filter(Boolean).join(' · '))}${baris('Atas nama', p.atasNamaBukti)}${baris('Kepemilikan', p.kepemilikan)}
+  </div>`;
+  const aktif = PD_AKTIF.includes(p.status);
+  const ada = DOK_URUT.filter(k => pdDok[k]);
+  const hilang = DOK_URUT.filter(k => !pdDok[k] && DOK_SLOT[k].w);
+  html += ada.map(k => {
+    const d = pdDok[k], m = DOK_SLOT[k], st = DOK_ST[d.status||'menunggu'] || DOK_ST.menunggu;
+    const img = fotoOk(d.foto) ? `<img src="${d.foto}" onclick="lihatFotoAdmin(this.src)" style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border-subtle);cursor:zoom-in;">` : '<div style="font-size:0.68rem;color:var(--danger);">Foto tidak valid</div>';
+    return `<div class="list-card" style="padding:12px;margin-bottom:8px;"><div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+      ${img}
+      <div style="flex:1;min-width:200px;">
+        <div style="font-weight:700;font-size:0.78rem;color:var(--white);">${esc(m.l)}${m.w?'':' <span style="font-size:0.6rem;color:var(--text-muted);font-weight:400;">(pendukung)</span>'}</div>
+        <div style="font-size:0.7rem;color:${st[1]};margin-top:3px;">${st[0]}</div>
+        ${d.catatan ? `<div style="font-size:0.68rem;color:var(--text-muted);margin-top:4px;">Catatan: ${esc(d.catatan)}</div>` : ''}
+        ${aktif ? `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+          <button class="btn ${d.status==='sesuai'?'btn-lime':'btn-outline'} btn-sm" onclick="tandaiDokumen('${k}','sesuai')"><i class="fas fa-check"></i> Sesuai</button>
+          <button class="btn ${d.status==='perbaikan'?'btn-danger':'btn-outline'} btn-sm" onclick="tandaiDokumen('${k}','perbaikan')"><i class="fas fa-times"></i> Perlu perbaikan</button></div>` : ''}
+      </div></div></div>`;
+  }).join('');
+  if (hilang.length) html += `<div style="font-size:0.7rem;color:var(--danger);margin-bottom:8px;">Belum diunggah: ${hilang.map(k=>esc(DOK_SLOT[k].l)).join(', ')}</div>`;
+  box.innerHTML = html;
+  pdAksiRender();
+}
+
+window.teruskanDariDetail = async (id) => { if (await teruskanKeTim(id)) closeModal('modal-pengajuan-detail'); };
+window.tandaiDokumen = async (k, status) => {
+  let catatan = '';
+  if (status === 'perbaikan') {
+    const c = prompt('Alasan / yang harus diperbaiki seller (akan terlihat oleh seller):', pdDok[k]?.catatan||'');
+    if (c === null) return; if (!c.trim()) { alert('Catatan wajib diisi supaya seller tahu apa yang diperbaiki.'); return; }
+    catatan = c.trim();
+  }
+  try {
+    await updateDoc(doc(db,'pengajuan_pjlh',pdId,'dokumen',k), { status, catatan });
+    pdDok[k] = { ...pdDok[k], status, catatan };
+    await pdMuatDokumen();
+  } catch(e) { alert('Gagal menyimpan penilaian: '+e.message); }
+};
+
+window.kembalikanKeSeller = async () => {
+  const g = hitungGate(pdDok);
+  const adaPerbaikan = Object.values(pdDok).some(d => d && d.status === 'perbaikan');
+  const c = prompt(adaPerbaikan ? 'Catatan umum untuk seller (boleh dikosongkan, dokumen yang ditandai sudah punya catatan):' : 'Belum ada dokumen yang ditandai "Perlu perbaikan". Tulis apa yang harus diperbaiki seller:', '');
+  if (c === null) return;
+  if (!adaPerbaikan && !c.trim()) { alert('Tandai dokumen yang perlu diperbaiki, atau tulis catatannya.'); return; }
+  try {
+    await updateDoc(doc(db,'pengajuan_pjlh',pdId), { status:'perbaikan', catatanKeputusan: c.trim(), dikembalikanAt: serverTimestamp() });
+    pdData.status = 'perbaikan';
+    await addDoc(collection(db,'notifikasi_admin'), { type:'pengajuan_pjlh_perbaikan', message:'Pengajuan dikembalikan ke seller untuk diperbaiki.', read:false, createdAt: serverTimestamp() }).catch(()=>{});
+    closeModal('modal-pengajuan-detail'); loadPengajuanPjlh();
+  } catch(e) { alert('Gagal mengembalikan: '+e.message); }
+};
+
+async function hapusSub(id, sub) {
+  for (;;) {
+    const s = await getDocs(query(collection(db,'pengajuan_pjlh',id,sub), limit(100)));
+    if (s.empty) break;
+    for (const d of s.docs) await deleteDoc(doc(db,'pengajuan_pjlh',id,sub,d.id));
+  }
+}
+window.hapusPengajuanAdmin = async () => {
+  const p = pdData; if (!p) return;
+  if (!confirm(`Hapus pengajuan "${p.lokasi||'tanpa nama'}" milik ${p.sellerName||'-'}?\n\nSemua titik, foto, dan dokumen legalitasnya ikut terhapus permanen.`)) return;
+  if (p.status === 'approved' || p.status === 'mou') { if (!confirm('Pengajuan ini sudah DISETUJUI / MOU. Yakin tetap hapus?')) return; }
+  const box = document.getElementById('pd-aksi'); box.innerHTML = '<span style="font-size:0.75rem;color:var(--text-muted);">Menghapus...</span>';
+  try {
+    await hapusSub(pdId,'titik'); await hapusSub(pdId,'dokumen');
+    await deleteDoc(doc(db,'pengajuan_pjlh',pdId));
+    closeModal('modal-pengajuan-detail'); loadPengajuanPjlh();
+  } catch(e) { alert('Gagal menghapus: '+e.message); pdAksiRender(); }
+};
+
 document.getElementById('pd-filter-jenis').addEventListener('change', () => { document.getElementById('pd-cari-no').value=''; pdMuat(true); });
 document.getElementById('pd-cari-btn').addEventListener('click', pdCari);
 document.getElementById('pd-cari-no').addEventListener('keydown', e => { if (e.key==='Enter') pdCari(); });
@@ -3688,7 +3824,9 @@ document.getElementById('refreshPengajuanBtn').addEventListener('click', loadPen
 
 // Teruskan pengajuan 'pending' → 'review', supaya muncul di dropdown verifikasi Tim
 window.teruskanKeTim = async (id) => {
-  if (!confirm('Teruskan pengajuan ini ke Tim untuk verifikasi lapangan?')) return;
+  const g = await cekGateDokumen(id);
+  if (!g.ok) { alert('Belum bisa diteruskan ke Tim:\n- ' + g.alasan.join('\n- ') + '\n\nBuka "Lihat Detail & Foto" untuk memeriksa dokumen.'); return false; }
+  if (!confirm('Teruskan pengajuan ini ke Tim untuk verifikasi lapangan?')) return false;
   try {
     await updateDoc(doc(db,'pengajuan_pjlh',id), { status:'review', diteruskanAt: serverTimestamp() });
     // Notifikasi ke Tim (dibaca dari sisi tim kalau ada fitur notifikasi umum)
@@ -3696,8 +3834,8 @@ window.teruskanKeTim = async (id) => {
       type:'pengajuan_pjlh_review', message:'Pengajuan PJLH baru siap diverifikasi lapangan oleh Tim.',
       read:false, createdAt: serverTimestamp()
     });
-    loadPengajuanPjlh();
-  } catch(e) { alert('Gagal meneruskan: '+e.message); }
+    loadPengajuanPjlh(); return true;
+  } catch(e) { alert('Gagal meneruskan: '+e.message); return false; }
 };
 
 // Buka modal keputusan (approved/mou/rejected) — mencatat hasil kesepakatan/keluaran, BUKAN nominal
