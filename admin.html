@@ -1139,6 +1139,19 @@ input,textarea,select{font-family:var(--body);}
   </div>
 </div>
 
+<!-- MODAL KENTONGAN (chat dengan seller) -->
+<div class="modal-backdrop" id="modal-chat-admin">
+  <div class="modal-box" style="max-width:560px;">
+    <button class="modal-close" onclick="tutupChatAdmin()"><i class="fas fa-times"></i></button>
+    <h3>Kentongan</h3>
+    <div class="sub" id="ca-sub">—</div>
+    <div id="ca-box" style="display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow-y:auto;margin:12px 0;"></div>
+    <textarea id="ca-teks" maxlength="1000" rows="3" placeholder="Tulis balasan untuk seller..." style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:10px;font-size:0.8rem;box-sizing:border-box;"></textarea>
+    <input type="url" id="ca-link" maxlength="490" placeholder="Tautan lampiran (opsional), mis. Google Drive" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border-subtle);border-radius:var(--r-sm);color:var(--parchment);padding:10px;font-size:0.8rem;box-sizing:border-box;">
+    <div class="modal-actions"><button class="btn btn-outline" onclick="tutupChatAdmin()">Tutup</button><button class="btn btn-lime" id="ca-kirim" onclick="kirimChatAdmin()"><i class="fas fa-paper-plane"></i> Kirim</button></div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="modal-pengajuan-keputusan">
   <div class="modal-box">
     <button class="modal-close" data-close="modal-pengajuan-keputusan"><i class="fas fa-times"></i></button>
@@ -1434,7 +1447,7 @@ input,textarea,select{font-family:var(--body);}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
   getFirestore, doc, getDoc, setDoc, collection, getDocs,
-  deleteDoc, addDoc, query, orderBy, limit, where, updateDoc, serverTimestamp, startAfter
+  deleteDoc, addDoc, query, orderBy, limit, where, updateDoc, serverTimestamp, startAfter, onSnapshot, increment
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail
@@ -3507,13 +3520,15 @@ async function loadPengajuanPjlh() {
     if (!items.length) { wrap.innerHTML = '<p style="color:var(--text-muted);">Tidak ada pengajuan untuk filter ini.</p>'; return; }
     // Urutkan: yang butuh aksi admin (pending, lapangan) di atas
     const prioritas = { pending:0, lapangan:1, review:2, perbaikan:2, approved:3, mou:3, rejected:4 };
-    items.sort((a,b) => (prioritas[a.status]??9) - (prioritas[b.status]??9));
+    items.sort((a,b) => ((prioritas[a.status]??9) - ((a.belumDibacaAdmin||0)>0?0.5:0)) - ((prioritas[b.status]??9) - ((b.belumDibacaAdmin||0)>0?0.5:0)));
 
     wrap.innerHTML = '';
     items.forEach(p => {
       const st = PENGAJUAN_STATUS_LABEL[p.status] || { label:p.status, badge:'badge-orange' };
       const jumlahTitik = (p.jumlahRorak||0) + (p.jumlahSumur||0) + (p.jumlahPohon||0);
       let aksi = `<button class="btn btn-outline btn-sm" onclick="bukaDetailPengajuan('${esc(p.id)}')"><i class="fas fa-images"></i> Lihat Detail &amp; Foto</button>`;
+      const unr = p.belumDibacaAdmin || 0;
+      aksi += `<button class="btn ${unr?'btn-lime':'btn-outline'} btn-sm" onclick="bukaChatAdmin('${esc(p.id)}')"><i class="fas fa-comments"></i> Chat Seller${unr?` (${unr} baru)`:''}</button>`;
       if (p.status === 'pending') {
         aksi += `<button class="btn btn-lime btn-sm" onclick="teruskanKeTim('${p.id}')"><i class="fas fa-share"></i> Teruskan ke Tim untuk Verifikasi Lapangan</button>`;
       } else if (p.status === 'lapangan') {
@@ -3534,6 +3549,7 @@ async function loadPengajuanPjlh() {
                 ${p.serapanM3 ? ` · <i class="fas fa-tint"></i> Est. ${Math.round(p.serapanM3).toLocaleString('id-ID')} m³/thn` : ''}
               </div>
               ${p.catatanKeputusan ? `<div style="font-size:0.68rem;color:var(--lime);margin-top:6px;"><i class="fas fa-comment-dots"></i> ${esc(p.catatanKeputusan)}</div>` : ''}
+              ${p.pesanTerakhir ? `<div style="font-size:0.68rem;color:var(--text-muted);margin-top:6px;"><i class="fas fa-comment-dots"></i> ${p.pesanTerakhirOleh==='admin'?'Anda':'Seller'}: ${esc(p.pesanTerakhir)}</div>` : ''}
               <div style="font-size:0.68rem;margin-top:6px;">${renderLegalitasBadge(p)}</div>
               <div style="margin-top:8px;"><span class="list-badge ${st.badge}">${st.label}</span></div>
             </div>
@@ -3720,7 +3736,7 @@ async function cekGateDokumen(id) { try { return hitungGate(await ambilDokumen(i
 function pdAksiRender() {
   const p = pdData, box = document.getElementById('pd-aksi'); if (!p) return;
   const g = hitungGate(pdDok), butuh = PD_AKTIF.includes(p.status);
-  let x = '';
+  let x = `<button class="btn btn-outline btn-sm" onclick="bukaChatAdmin('${esc(p.id)}')"><i class="fas fa-comments"></i> Chat Seller</button>`;
   if (butuh) {
     x += `<button class="btn btn-outline btn-sm" onclick="kembalikanKeSeller()"><i class="fas fa-undo"></i> Kembalikan ke Seller</button>`;
     if (p.status === 'pending') x += `<button class="btn btn-lime btn-sm" ${g.ok?'':'disabled style="opacity:.45;cursor:not-allowed;"'} onclick="teruskanDariDetail('${esc(p.id)}')"><i class="fas fa-share"></i> Teruskan ke Tim</button>`;
@@ -3813,6 +3829,47 @@ window.hapusPengajuanAdmin = async () => {
     await deleteDoc(doc(db,'pengajuan_pjlh',pdId));
     closeModal('modal-pengajuan-detail'); loadPengajuanPjlh();
   } catch(e) { alert('Gagal menghapus: '+e.message); pdAksiRender(); }
+};
+
+
+// ── KENTONGAN (admin): chat per pengajuan dengan seller ──
+let caId = null, caData = null, caUnsub = null, caBusy = false;
+const caWaktu = ts => ts && ts.toDate ? ts.toDate().toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+const caLinkOk = u => typeof u==='string' && /^https:\/\/[^\s"'<>]{4,480}$/.test(u);
+window.bukaChatAdmin = async (id) => {
+  caId = id; caData = null;
+  document.getElementById('ca-sub').textContent = 'Memuat...';
+  document.getElementById('ca-box').innerHTML = '';
+  document.getElementById('ca-teks').value = ''; document.getElementById('ca-link').value = '';
+  openModal('modal-chat-admin');
+  try { const d = await getDoc(doc(db,'pengajuan_pjlh',id)); caData = d.data() || {}; document.getElementById('ca-sub').textContent = `${caData.lokasi||''} — ${caData.sellerName||''}`; } catch(e) {}
+  if (caUnsub) { caUnsub(); caUnsub = null; }
+  caUnsub = onSnapshot(query(collection(db,'pengajuan_pjlh',id,'pesan'), orderBy('createdAt','desc'), limit(50)), snap => {
+    const msgs = snap.docs.map(d=>({id:d.id,...d.data()})).reverse();
+    const box = document.getElementById('ca-box');
+    box.innerHTML = msgs.length ? msgs.map(m => {
+      const me = m.dari === 'admin';
+      return `<div style="max-width:86%;align-self:${me?'flex-end':'flex-start'};background:${me?'rgba(198,255,0,0.12)':'rgba(255,255,255,0.06)'};border:1px solid var(--border-subtle);border-radius:12px;padding:9px 12px;font-size:0.78rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;">
+        <div style="font-size:0.62rem;font-weight:700;opacity:.8;margin-bottom:3px;">${me?'Admin':esc(m.nama||'Seller')}</div>${esc(m.teks||'')}${caLinkOk(m.link)?`<div style="margin-top:5px;"><a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer" style="color:var(--cyan);"><i class="fas fa-link"></i> Buka lampiran</a></div>`:''}
+        <div style="font-size:0.58rem;opacity:.55;margin-top:4px;">${caWaktu(m.createdAt)}</div></div>`;
+    }).join('') : '<div style="font-size:0.75rem;color:var(--text-muted);text-align:center;padding:16px;">Belum ada pesan.</div>';
+    box.scrollTop = box.scrollHeight;
+    if (msgs.length && msgs[msgs.length-1].dari === 'seller') updateDoc(doc(db,'pengajuan_pjlh',id), { belumDibacaAdmin: 0 }).then(()=>{ if (document.getElementById('pengajuan-pjlh-list')) loadPengajuanPjlh(); }).catch(()=>{});
+  }, e => { document.getElementById('ca-box').innerHTML = `<div style="color:var(--danger);font-size:0.75rem;">Gagal memuat: ${esc(e.message)}</div>`; });
+};
+window.tutupChatAdmin = () => { if (caUnsub) { caUnsub(); caUnsub = null; } caId = null; closeModal('modal-chat-admin'); if (document.getElementById('pengajuan-pjlh-list')) loadPengajuanPjlh(); };
+window.kirimChatAdmin = async () => {
+  if (!caId || caBusy) return;
+  const teks = document.getElementById('ca-teks').value.trim(), link = document.getElementById('ca-link').value.trim();
+  if (!teks && !link) return;
+  if (link && !caLinkOk(link)) { alert('Tautan harus diawali https://'); return; }
+  caBusy = true; const btn = document.getElementById('ca-kirim'); btn.disabled = true;
+  try {
+    await addDoc(collection(db,'pengajuan_pjlh',caId,'pesan'), { dari:'admin', uid:(auth.currentUser||{}).uid||'', nama:'Admin', teks:teks.slice(0,1000), link, createdAt:serverTimestamp() });
+    await updateDoc(doc(db,'pengajuan_pjlh',caId), { pesanTerakhir:(teks||'Tautan lampiran').slice(0,80), pesanTerakhirAt:serverTimestamp(), pesanTerakhirOleh:'admin', belumDibacaSeller:increment(1) });
+    document.getElementById('ca-teks').value = ''; document.getElementById('ca-link').value = '';
+  } catch(e) { alert('Gagal kirim: '+e.message); }
+  finally { caBusy = false; btn.disabled = false; }
 };
 
 document.getElementById('pd-filter-jenis').addEventListener('change', () => { document.getElementById('pd-cari-no').value=''; pdMuat(true); });
