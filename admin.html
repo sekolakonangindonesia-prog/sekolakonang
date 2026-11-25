@@ -3807,6 +3807,7 @@ window.kembalikanKeSeller = async () => {
   try {
     await updateDoc(doc(db,'pengajuan_pjlh',pdId), { status:'perbaikan', catatanKeputusan: c.trim(), dikembalikanAt: serverTimestamp() });
     pdData.status = 'perbaikan';
+    catatKejadianAdmin(pdId, 'Dikembalikan oleh Admin untuk diperbaiki' + (c.trim() ? ': ' + c.trim() : ''));
     await addDoc(collection(db,'notifikasi_admin'), { type:'pengajuan_pjlh_perbaikan', message:'Pengajuan dikembalikan ke seller untuk diperbaiki.', read:false, createdAt: serverTimestamp() }).catch(()=>{});
     closeModal('modal-pengajuan-detail'); loadPengajuanPjlh();
   } catch(e) { alert('Gagal mengembalikan: '+e.message); }
@@ -3836,6 +3837,8 @@ window.hapusPengajuanAdmin = async () => {
 let caId = null, caData = null, caUnsub = null, caBusy = false;
 const caWaktu = ts => ts && ts.toDate ? ts.toDate().toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
 const caLinkOk = u => typeof u==='string' && /^https:\/\/[^\s"'<>]{4,480}$/.test(u);
+
+const catatKejadianAdmin = (pid, teks) => addDoc(collection(db,'pengajuan_pjlh',pid,'pesan'), { dari:'admin', tipe:'sistem', uid:(auth.currentUser||{}).uid||'', nama:'Admin', teks, link:'', createdAt:serverTimestamp() }).catch(()=>{});
 window.bukaChatAdmin = async (id) => {
   caId = id; caData = null;
   document.getElementById('ca-sub').textContent = 'Memuat...';
@@ -3848,6 +3851,7 @@ window.bukaChatAdmin = async (id) => {
     const msgs = snap.docs.map(d=>({id:d.id,...d.data()})).reverse();
     const box = document.getElementById('ca-box');
     box.innerHTML = msgs.length ? msgs.map(m => {
+      if (m.tipe === 'sistem') return `<div style="align-self:center;font-size:0.62rem;color:var(--text-muted);background:rgba(255,255,255,0.05);border-radius:10px;padding:4px 12px;text-align:center;">${esc(m.teks||'')} · ${caWaktu(m.createdAt)}</div>`;
       const me = m.dari === 'admin';
       return `<div style="max-width:86%;align-self:${me?'flex-end':'flex-start'};background:${me?'rgba(198,255,0,0.12)':'rgba(255,255,255,0.06)'};border:1px solid var(--border-subtle);border-radius:12px;padding:9px 12px;font-size:0.78rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;">
         <div style="font-size:0.62rem;font-weight:700;opacity:.8;margin-bottom:3px;">${me?'Admin':esc(m.nama||'Seller')}</div>${esc(m.teks||'')}${caLinkOk(m.link)?`<div style="margin-top:5px;"><a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer" style="color:var(--cyan);"><i class="fas fa-link"></i> Buka lampiran</a></div>`:''}
@@ -3865,7 +3869,7 @@ window.kirimChatAdmin = async () => {
   if (link && !caLinkOk(link)) { alert('Tautan harus diawali https://'); return; }
   caBusy = true; const btn = document.getElementById('ca-kirim'); btn.disabled = true;
   try {
-    await addDoc(collection(db,'pengajuan_pjlh',caId,'pesan'), { dari:'admin', uid:(auth.currentUser||{}).uid||'', nama:'Admin', teks:teks.slice(0,1000), link, createdAt:serverTimestamp() });
+    await addDoc(collection(db,'pengajuan_pjlh',caId,'pesan'), { dari:'admin', tipe:'pesan', uid:(auth.currentUser||{}).uid||'', nama:'Admin', teks:teks.slice(0,1000), link, createdAt:serverTimestamp() });
     await updateDoc(doc(db,'pengajuan_pjlh',caId), { pesanTerakhir:(teks||'Tautan lampiran').slice(0,80), pesanTerakhirAt:serverTimestamp(), pesanTerakhirOleh:'admin', belumDibacaSeller:increment(1) });
     document.getElementById('ca-teks').value = ''; document.getElementById('ca-link').value = '';
   } catch(e) { alert('Gagal kirim: '+e.message); }
@@ -3886,6 +3890,7 @@ window.teruskanKeTim = async (id) => {
   if (!confirm('Teruskan pengajuan ini ke Tim untuk verifikasi lapangan?')) return false;
   try {
     await updateDoc(doc(db,'pengajuan_pjlh',id), { status:'review', diteruskanAt: serverTimestamp() });
+    catatKejadianAdmin(id, 'Dokumen disetujui admin, diteruskan ke Tim untuk verifikasi lapangan');
     // Notifikasi ke Tim (dibaca dari sisi tim kalau ada fitur notifikasi umum)
     await addDoc(collection(db,'notifikasi_admin'), {
       type:'pengajuan_pjlh_review', message:'Pengajuan PJLH baru siap diverifikasi lapangan oleh Tim.',
