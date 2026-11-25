@@ -370,6 +370,7 @@ input, textarea, select { font-family: var(--body); }
 .chat-b.me{align-self:flex-end;background:rgba(198,255,0,.13);border:1px solid var(--border);}
 .chat-b.lawan{align-self:flex-start;background:var(--surface2);border:1px solid var(--border-s);}
 .chat-b a{color:var(--cyan);}
+.chat-sys{align-self:center;font-size:.6rem;color:var(--muted);background:var(--surface2);border-radius:10px;padding:4px 12px;text-align:center;}
 .pill-unread{display:inline-block;background:var(--danger);color:#fff;font-size:.58rem;font-weight:800;border-radius:10px;padding:1px 6px;margin-left:5px;}
 .sec-label{font-size:.62rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin:18px 0 8px;}
 .modal-sheet {
@@ -681,6 +682,7 @@ input, textarea, select { font-family: var(--body); }
     <p id="kirimHint" style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;">
       Setiap titik otomatis tersimpan saat ditambahkan. Tombol kirim terbuka setelah semua target terpenuhi.
     </p>
+    <div id="riwayatForm"></div>
   </div>
 
   <!-- ── PENGAJUAN SAYA ── -->
@@ -899,22 +901,6 @@ input, textarea, select { font-family: var(--body); }
     <button class="btn-submit-full" onclick="closeModal('modalTitik')" style="margin-top:8px;background:transparent;color:var(--muted);border:1px solid var(--border-s);">
       Batal
     </button>
-  </div>
-</div>
-
-<!-- MODAL: Kentongan (chat dengan admin) -->
-<div class="modal-backdrop" id="modalChat">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Kentongan</div>
-    <div class="modal-sub" id="chatSub">Percakapan dengan Admin</div>
-    <div class="chat-wrap" id="chatBox"></div>
-    <div class="form-group"><textarea id="chatTeks" maxlength="1000" rows="3" placeholder="Tulis pertanyaan atau jawaban untuk admin..."></textarea></div>
-    <div class="form-group"><label>Tautan lampiran (opsional)</label>
-      <input type="url" id="chatLink" maxlength="490" placeholder="https://drive.google.com/...">
-      <div style="font-size:.6rem;color:var(--muted);margin-top:4px;">Unggah berkas ke Google Drive Anda, atur akses "Siapa saja yang memiliki link", lalu tempel tautannya di sini.</div></div>
-    <button class="btn-submit-full" id="chatKirimBtn" onclick="kirimChat()"><i class="fas fa-paper-plane"></i> Kirim</button>
-    <button class="btn-submit-full" onclick="tutupChat()" style="margin-top:8px;background:var(--surface2);color:var(--parchment);">Tutup</button>
   </div>
 </div>
 
@@ -1218,50 +1204,53 @@ function perbaruiBadgeChat() {
   d.textContent = n; d.style.display = n ? 'inline-block' : 'none';
 }
 
-// ── KENTONGAN: chat per pengajuan (hanya Anda dan Admin) ──
-let chatId = null, chatUnsub = null, chatBusy = false;
+// ── RIWAYAT & PERCAKAPAN (Kentongan): satu percakapan per pengajuan, tampil di bawah form / detail ──
+const rwUnsub = {};
 const fmtWaktu = ts => ts && ts.toDate ? ts.toDate().toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
 const linkAman = u => typeof u==='string' && /^https:\/\/[^\s"'<>]{4,480}$/.test(u);
-window.bukaChat = (id, prefill) => {
-  const p = allPengajuan.find(x=>x.id===id); if (!p) return;
-  chatId = id;
-  document.getElementById('chatSub').textContent = p.lokasi || 'Percakapan dengan Admin';
-  document.getElementById('chatTeks').value = prefill || '';
-  document.getElementById('chatLink').value = '';
-  document.getElementById('chatBox').innerHTML = '<div style="font-size:.7rem;color:var(--muted);">Memuat percakapan...</div>';
-  openModal('modalChat');
-  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
-  chatUnsub = onSnapshot(query(collection(db,'pengajuan_pjlh',id,'pesan'), orderBy('createdAt','desc'), limit(50)), snap => {
+const rwStop = boxId => { if (rwUnsub[boxId]) { rwUnsub[boxId](); delete rwUnsub[boxId]; } };
+window.riwayatInline = (pid, boxId) => {
+  const box = document.getElementById(boxId); if (!box) return;
+  rwStop(boxId);
+  box.innerHTML = `<div class="sec-label" style="color:var(--lime);">Riwayat &amp; Percakapan dengan Admin</div>
+    <div class="chat-wrap" id="${boxId}-list" style="max-height:50vh;"><div style="font-size:.7rem;color:var(--muted);">Memuat...</div></div>
+    <div class="form-group"><textarea id="${boxId}-teks" maxlength="1000" rows="3" placeholder="Tulis pertanyaan atau jawaban untuk admin..."></textarea></div>
+    <div class="form-group"><label>Tautan lampiran (opsional)</label>
+      <input type="url" id="${boxId}-link" maxlength="490" placeholder="https://drive.google.com/...">
+      <div style="font-size:.6rem;color:var(--muted);margin-top:4px;">Unggah berkas ke Google Drive Anda, atur akses "Siapa saja yang memiliki link", lalu tempel tautannya di sini.</div></div>
+    <button class="btn-submit-full" id="${boxId}-btn" onclick="kirimRiwayat('${pid}','${boxId}')"><i class="fas fa-paper-plane"></i> Kirim pesan</button>`;
+  rwUnsub[boxId] = onSnapshot(query(collection(db,'pengajuan_pjlh',pid,'pesan'), orderBy('createdAt','desc'), limit(50)), snap => {
+    const list = document.getElementById(boxId+'-list'); if (!list) return;
     const msgs = snap.docs.map(d=>({id:d.id,...d.data()})).reverse();
-    const box = document.getElementById('chatBox');
-    box.innerHTML = msgs.length ? msgs.map(m => {
+    list.innerHTML = msgs.length ? msgs.map(m => {
+      if (m.tipe === 'sistem') return `<div class="chat-sys">${escHtml(m.teks||'')} · ${fmtWaktu(m.createdAt)}</div>`;
       const me = m.dari === 'seller';
       return `<div class="chat-b ${me?'me':'lawan'}"><div class="who">${me?'Anda':'Admin'}</div>${escHtml(m.teks||'')}${linkAman(m.link)?`<div style="margin-top:5px;"><a href="${escHtml(m.link)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-link"></i> Buka lampiran</a></div>`:''}<div class="tm">${fmtWaktu(m.createdAt)}</div></div>`;
     }).join('') : '<div style="font-size:.72rem;color:var(--muted);text-align:center;padding:14px;">Belum ada pesan. Tulis pertanyaan Anda untuk admin di bawah.</div>';
-    box.scrollTop = box.scrollHeight;
-    const cur = allPengajuan.find(x=>x.id===id);
-    if (cur && (cur.belumDibacaSeller||0) > 0 && (!viewedSellerId || viewedSellerId === currentUser.uid)) updateDoc(doc(db,'pengajuan_pjlh',id), { belumDibacaSeller: 0 }).catch(()=>{});
-  }, () => { document.getElementById('chatBox').innerHTML = '<div style="font-size:.7rem;color:var(--danger);">Gagal memuat percakapan.</div>'; });
+    list.scrollTop = list.scrollHeight;
+    const cur = allPengajuan.find(x=>x.id===pid);
+    if (cur && (cur.belumDibacaSeller||0) > 0 && (!viewedSellerId || viewedSellerId === currentUser.uid)) updateDoc(doc(db,'pengajuan_pjlh',pid), { belumDibacaSeller: 0 }).catch(()=>{});
+  }, () => { const l = document.getElementById(boxId+'-list'); if (l) l.innerHTML = '<div style="font-size:.7rem;color:var(--danger);">Gagal memuat percakapan.</div>'; });
 };
-window.tutupChat = () => { if (chatUnsub) { chatUnsub(); chatUnsub = null; } chatId = null; closeModal('modalChat'); };
-window.tanyaDokumen = (slotId) => { if (pengajuanAktifId) bukaChat(pengajuanAktifId, '[Soal: ' + (SLOT[slotId]?.label||slotId) + '] '); };
-window.kirimChat = async () => {
+window.bukaChat = async (id) => { await bukaDetail(id); setTimeout(()=>document.getElementById('riwayatDetail')?.scrollIntoView({behavior:'smooth',block:'start'}), 150); };
+let rwBusy = false;
+window.kirimRiwayat = async (pid, boxId) => {
   if (viewedSellerId && viewedSellerId !== currentUser.uid) { showToast('Mode lihat saja','error'); return; }
-  if (!chatId || chatBusy) return;
-  const teks = document.getElementById('chatTeks').value.trim(), link = document.getElementById('chatLink').value.trim();
+  if (rwBusy) return;
+  const teks = document.getElementById(boxId+'-teks').value.trim(), link = document.getElementById(boxId+'-link').value.trim();
   if (!teks && !link) return;
   if (link && !linkAman(link)) { showToast('Tautan harus diawali https://','error'); return; }
-  chatBusy = true; const btn = document.getElementById('chatKirimBtn'); btn.disabled = true;
+  rwBusy = true; const btn = document.getElementById(boxId+'-btn'); btn.disabled = true;
   try {
-    const p = allPengajuan.find(x=>x.id===chatId) || {};
-    await addDoc(collection(db,'pengajuan_pjlh',chatId,'pesan'), { dari:'seller', uid:currentUser.uid, nama:userData.fullName||'Seller', teks:teks.slice(0,1000), link, createdAt:serverTimestamp() });
-    await updateDoc(doc(db,'pengajuan_pjlh',chatId), { pesanTerakhir:(teks||'Tautan lampiran').slice(0,80), pesanTerakhirAt:serverTimestamp(), pesanTerakhirOleh:'seller', belumDibacaAdmin:increment(1) });
+    const p = allPengajuan.find(x=>x.id===pid) || {};
+    await addDoc(collection(db,'pengajuan_pjlh',pid,'pesan'), { dari:'seller', tipe:'pesan', uid:currentUser.uid, nama:userData.fullName||'Seller', teks:teks.slice(0,1000), link, createdAt:serverTimestamp() });
+    await updateDoc(doc(db,'pengajuan_pjlh',pid), { pesanTerakhir:(teks||'Tautan lampiran').slice(0,80), pesanTerakhirAt:serverTimestamp(), pesanTerakhirOleh:'seller', belumDibacaAdmin:increment(1) });
     if (!(p.belumDibacaAdmin > 0)) addDoc(collection(db,'notifikasi_admin'), { type:'pesan_pjlh', sellerId:currentUser.uid, sellerName:userData.fullName||'', message:`Pesan baru dari ${userData.fullName||'seller'} di pengajuan "${p.lokasi||''}"`, read:false, createdAt:serverTimestamp() }).catch(()=>{});
-    document.getElementById('chatTeks').value = ''; document.getElementById('chatLink').value = '';
+    document.getElementById(boxId+'-teks').value = ''; document.getElementById(boxId+'-link').value = '';
   } catch(e) { showToast('Gagal kirim: '+e.message,'error'); }
-  finally { chatBusy = false; btn.disabled = false; }
+  finally { rwBusy = false; btn.disabled = false; }
 };
-
+const catatKejadian = (pid, teks) => addDoc(collection(db,'pengajuan_pjlh',pid,'pesan'), { dari:'seller', tipe:'sistem', uid:currentUser.uid, nama:userData.fullName||'Seller', teks, link:'', createdAt:serverTimestamp() }).catch(()=>{});
 
 window.bukaDetail = async (id) => {
   const p = allPengajuan.find(x=>x.id===id); if (!p) return;
@@ -1293,12 +1282,12 @@ window.bukaDetail = async (id) => {
       ${p.status==='rejected'?`<div style="margin-top:8px;color:var(--danger);">Pengajuan ini ditolak.</div>`:''}
     </div>
     ${(p.targetRorak||p.targetSumur||p.targetPohon)?`<div style="font-size:0.7rem;color:var(--muted);margin-top:8px;">Target: ${p.targetRorak||0} rorak · ${p.targetSumur||0} sumur · ${p.targetPohon||0} pohon</div>`:''}
-    ${p.status!=='draft' ? `<button class="btn-sm btn-outline-sm" style="color:var(--cyan);margin-top:12px;" onclick="closeModal('modalDetail');bukaChat('${escHtml(p.id)}')"><i class="fas fa-comments"></i> Chat dengan Admin${p.belumDibacaSeller?`<span class="pill-unread">${p.belumDibacaSeller}</span>`:''}</button>` : ''}
     <div class="section-head" style="margin-top:16px;"><h3>Dokumen Legalitas</h3></div>
     <div id="detailDokList" style="display:flex;flex-direction:column;gap:8px;"><div style="font-size:0.72rem;color:var(--muted);">Memuat dokumen...</div></div>
     <div class="section-head" style="margin-top:16px;"><h3>Titik Lapangan</h3></div>
     <div id="detailTitikList" style="display:flex;flex-direction:column;gap:10px;"><div style="font-size:0.72rem;color:var(--muted);">Memuat titik...</div></div>`;
   openModal('modalDetail');
+  if (p.status!=='draft') { document.getElementById('modalDetailBody').insertAdjacentHTML('beforeend','<div id="riwayatDetail"></div>'); riwayatInline(p.id,'riwayatDetail'); } else rwStop('riwayatDetail');
 
   detailId = id;
   muatDetailDokumen(id);
@@ -1566,7 +1555,6 @@ function slotHTML(id) {
       <label class="btn-sm btn-outline-sm" style="cursor:pointer;"><i class="fas fa-camera"></i> ${d ? 'Ganti foto' : 'Ambil / pilih foto'}
         <input type="file" accept="image/*" style="display:none;" onchange="unggahDokumen('${id}',this)"></label>
       ${d ? `<button class="btn-sm btn-outline-sm" style="color:var(--danger);" onclick="hapusDokumen('${id}')"><i class="fas fa-trash"></i></button>` : ''}
-      ${(allPengajuan.find(p=>p.id===pengajuanAktifId)||{}).status==='perbaikan' ? `<button class="btn-sm btn-outline-sm" style="color:var(--cyan);" onclick="tanyaDokumen('${id}')"><i class="fas fa-comments"></i> Tanya admin</button>` : ''}
     </div>
   </div>`;
 }
@@ -1665,7 +1653,7 @@ function renderDraftBanner() {
   const perbaikan = aktif && aktif.status === 'perbaikan';
   const lain = Math.max(0, allPengajuan.filter(p => p.status === 'draft').length - (aktif && aktif.status==='draft' ? 1 : 0));
   el.style.display = 'flex';
-  el.innerHTML = `<div><div style="font-size:.72rem;font-weight:700;color:${perbaikan?'var(--danger)':'var(--lime)'};">${perbaikan ? 'Perlu perbaikan dari Admin' : 'Melanjutkan draft'}</div><div style="font-size:.64rem;color:var(--muted);margin-top:2px;">${perbaikan ? 'Periksa dokumen bertanda "Perlu perbaikan", lalu kirim ulang.' : 'Isian dan titik tersimpan otomatis'}${lain?` · ${lain} draft lain ada di tab Pengajuan`:''}</div></div>${perbaikan ? `<button class="btn-sm btn-outline-sm" style="color:var(--cyan);white-space:nowrap;" onclick="bukaChat('${pengajuanAktifId}')"><i class="fas fa-comments"></i> Chat Admin</button>` : `<button class="btn-sm btn-outline-sm" style="color:var(--danger);white-space:nowrap;" onclick="hapusDraftAktif()"><i class="fas fa-trash"></i> Hapus draft</button>`}`;
+  el.innerHTML = `<div><div style="font-size:.72rem;font-weight:700;color:${perbaikan?'var(--danger)':'var(--lime)'};">${perbaikan ? 'Perlu perbaikan dari Admin' : 'Melanjutkan draft'}</div><div style="font-size:.64rem;color:var(--muted);margin-top:2px;">${perbaikan ? 'Periksa dokumen bertanda "Perlu perbaikan", lalu kirim ulang.' : 'Isian dan titik tersimpan otomatis'}${lain?` · ${lain} draft lain ada di tab Pengajuan`:''}</div></div>${perbaikan ? `<button class="btn-sm btn-outline-sm" style="color:var(--cyan);white-space:nowrap;" onclick="document.getElementById('riwayatForm').scrollIntoView({behavior:'smooth'})"><i class="fas fa-comments"></i> Tanya admin</button>` : `<button class="btn-sm btn-outline-sm" style="color:var(--danger);white-space:nowrap;" onclick="hapusDraftAktif()"><i class="fas fa-trash"></i> Hapus draft</button>`}`;
 }
 
 const SEMUA_INPUT = ['proj-nama','proj-deskripsi','proj-nomor-dokumen-lahan','proj-persen-pokok','proj-persen-mpts','proj-persen-semusim',
@@ -1683,6 +1671,7 @@ function kosongkanForm() {
   document.getElementById('pernyataan').checked = false;
   document.getElementById('komposisiTanamBox').style.display = 'none';
   document.getElementById('kepatuhanKuotaResult').textContent = '';
+  rwStop('riwayatForm'); const rf = document.getElementById('riwayatForm'); if (rf) rf.innerHTML = '';
   renderSlots(); renderTitikList(); renderDraftBanner();
 }
 
@@ -1720,6 +1709,7 @@ async function aktifkanDraft(id, d) {
     renderSlots();
     await muatTitikHalaman(true);
     renderDraftBanner();
+    if (d.status === 'perbaikan') riwayatInline(id, 'riwayatForm');
   } finally { muatDraftBusy = false; }
 }
 
@@ -2212,7 +2202,9 @@ window.submitPengajuanFinal = async () => {
   try {
     clearTimeout(saveTimer);
     await simpanSekarang();   // pastikan isian & target terakhir ikut tersimpan
+    const sebelumnya = (allPengajuan.find(x=>x.id===pengajuanAktifId)||{}).status;
     await updateDoc(doc(db,'pengajuan_pjlh',pengajuanAktifId), { status: 'pending', submittedAt: serverTimestamp() });
+    catatKejadian(pengajuanAktifId, sebelumnya==='perbaikan' ? 'Dikirim ulang oleh Penerima Manfaat setelah perbaikan' : 'Dikirim oleh Penerima Manfaat');
     await addDoc(collection(db,'notifikasi_admin'), {
       type:'new_pengajuan', sellerId:currentUser.uid, sellerName:userData.fullName, lokasi,
       message:`Pengajuan baru dari ${userData.fullName} — ${lokasi} (${hitung.rorak} rorak, ${hitung.sumur} sumur, ${hitung.pohon} pohon)`,
@@ -2252,7 +2244,7 @@ window.switchTab = (name) => {
 
 window.openModal  = id => document.getElementById(id).classList.add('open');
 setTimeout(() => { try { renderSlots(); renderProgresTarget(); } catch(e) {} }, 0);
-window.closeModal = id => document.getElementById(id).classList.remove('open');
+window.closeModal = id => { document.getElementById(id).classList.remove('open'); if (id==='modalDetail') rwStop('riwayatDetail'); };
 document.querySelectorAll('.modal-backdrop').forEach(m =>
   m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); })
 );
