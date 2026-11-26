@@ -258,6 +258,7 @@ input,textarea,select{font-family:var(--body);}
     <div class="sidebar-section-label">Konten Web</div>
     <div class="menu-item active" data-panel="overview"><i class="fas fa-th-large"></i> Overview</div>
     <div class="menu-item" data-panel="hero"><i class="fas fa-image"></i> Hero & Tentang</div>
+    <div class="menu-item" data-panel="kegiatan"><i class="fas fa-images"></i> Kegiatan Unggulan</div>
     <div class="menu-item" data-panel="mitra"><i class="fas fa-handshake"></i> Mitra</div>
     <div class="menu-item" data-panel="kontak"><i class="fas fa-share-alt"></i> Kontak & Sosial</div>
     <div class="menu-item" data-panel="laporan"><i class="fas fa-file-contract"></i> Dok. Laporan</div>
@@ -383,6 +384,49 @@ input,textarea,select{font-family:var(--body);}
           <button class="btn btn-lime" id="addBeritaExternalBtn"><i class="fas fa-plus"></i> Tambah Liputan</button>
         </div>
         <div id="list-berita-external"><p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p></div>
+      </div>
+    </section>
+
+    <!-- ===== KEGIATAN UNGGULAN ===== -->
+    <section class="panel" id="panel-kegiatan">
+      <div class="main-header"><h1>Kegiatan Unggulan</h1><p>Banner kegiatan yang tampil di halaman depan. Klik banner membuka halaman peta dan narasi kegiatan.</p></div>
+      <div id="keg-listview">
+        <div class="toolbar"><button class="btn btn-lime" onclick="kegBaru()"><i class="fas fa-plus"></i> Tambah Kegiatan</button></div>
+        <div id="keg-list"><p style="color:var(--text-muted);font-size:0.8rem;">Memuat...</p></div>
+      </div>
+      <div id="keg-formview" style="display:none;">
+        <input type="hidden" id="keg-id">
+        <div class="row-2">
+          <div class="form-group"><label>Jenis Kegiatan</label>
+            <select id="keg-jenis" onchange="kegGantiJenis()">
+              <option value="penanaman">Penanaman (peta + diagram air)</option>
+              <option value="biodiversitas">Pemantauan Biodiversitas (peta + indeks)</option>
+              <option value="lainnya">Kegiatan lain (narasi + foto)</option>
+            </select></div>
+          <div class="form-group"><label>Sumber Data</label>
+            <select id="keg-sumber" onchange="kegGantiSumber()"><option value="">— tanpa sumber data —</option></select></div>
+        </div>
+        <div class="row-2">
+          <div class="form-group"><label>Judul</label><input type="text" id="keg-judul" maxlength="120" placeholder="Rejoso Menabung Air: 5.000 Pohon untuk Desa Galih"></div>
+          <div class="form-group"><label>Tahun</label><input type="number" id="keg-tahun" min="2000" max="2100" placeholder="2021"></div>
+        </div>
+        <div class="form-group"><label>Ringkasan Banner (maks. 220 karakter)</label><textarea id="keg-ringkas" rows="2" maxlength="220"></textarea></div>
+        <div class="form-group"><label>Narasi (kosongkan satu baris untuk paragraf baru)</label><textarea id="keg-narasi" rows="10"></textarea></div>
+        <div class="section-divider"><i class="fas fa-camera"></i> Foto (maks. 3, foto pertama jadi cover banner)</div>
+        <div class="form-hint" style="margin-bottom:8px;">Klik foto di galeri sumber untuk memilih. Kamu juga bisa unggah foto baru. Urutan foto sesuai urutan pilihan.</div>
+        <div id="keg-galeri" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+        <div style="margin-bottom:10px;"><input type="file" id="keg-upload" accept="image/*" multiple style="font-size:0.75rem;color:var(--text-sub);"></div>
+        <div style="font-size:0.62rem;font-weight:700;letter-spacing:1.5px;color:var(--lime);margin-bottom:6px;">FOTO TERPILIH</div>
+        <div id="keg-terpilih" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;min-height:40px;"></div>
+        <div class="row-2">
+          <div class="form-group"><label>Urutan Banner (kecil = lebih dulu)</label><input type="number" id="keg-urutan" value="10"></div>
+          <div class="form-group"><label>Tampil di Halaman Depan</label><select id="keg-tampil"><option value="1">Tampil</option><option value="0">Sembunyikan</option></select></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          <button class="btn btn-lime" id="kegSimpanBtn" onclick="kegSimpan()"><i class="fas fa-save"></i> Simpan Kegiatan</button>
+          <button class="btn btn-outline" onclick="kegBatal()">Batal</button>
+        </div>
+        <div id="keg-err" style="display:none;margin-top:10px;color:var(--danger);font-size:0.78rem;"></div>
       </div>
     </section>
 
@@ -1514,7 +1558,7 @@ function switchPanel(name) {
     konservasi: loadKonservasiList, biodiversitas: loadBioList,
     pjlh: () => { loadSellers(); loadBuyers(); loadAktivitas(); loadPengajuanPjlh(); loadPublikasiList(); },
     tim: loadTim, gaharu: loadGaharu, target: loadProgram, progress: loadProgress,
-    rabkurva: loadRabKurva
+    rabkurva: loadRabKurva, kegiatan: kegList
   };
   if (loaders[name]) loaders[name]();
   if (name === 'hero') loadHero();
@@ -1649,6 +1693,167 @@ async function loadOverview() {
 // ============================================================
 // HERO & TENTANG
 // ============================================================
+
+
+// ============================================================
+// KEGIATAN UNGGULAN (koleksi kegiatan_unggulan — banner ringan di index)
+// Foto dipilih (dicentang) dari galeri sumber, atau diunggah langsung.
+// Dokumen banner hanya menyimpan cover kecil + indeks foto, bukan foto penuh.
+// ============================================================
+let kegSrcFoto = [];     // foto dari dokumen sumber (base64)
+let kegPilih = [];       // [{k:'src',i} | {k:'up',d}]
+const KEG_JENIS = { penanaman:'Penanaman', biodiversitas:'Biodiversitas', lainnya:'Kegiatan lain' };
+const kegEsc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+
+async function kegList() {
+  const wrap = document.getElementById('keg-list');
+  try {
+    const snap = await getDocs(collection(db,'kegiatan_unggulan'));
+    const arr = []; snap.forEach(d => arr.push({ id:d.id, ...d.data() }));
+    if (!arr.length) { wrap.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">Belum ada kegiatan. Klik "Tambah Kegiatan".</p>'; return; }
+    arr.sort((x,y) => (x.urutan||0)-(y.urutan||0));
+    wrap.innerHTML = arr.map(k => `
+      <div class="list-card"><div class="list-card-header">
+        <div style="display:flex;gap:12px;align-items:center;">
+          ${k.cover ? `<img src="${k.cover}" style="width:84px;height:52px;object-fit:cover;border-radius:8px;">` : ''}
+          <div>
+            <div style="font-size:0.85rem;color:var(--white);font-weight:600;">${kegEsc(k.judul)}</div>
+            <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="list-badge badge-lime">${KEG_JENIS[k.jenis]||k.jenis}</span>
+              <span class="list-badge">${kegEsc(k.tahun||'')}</span>
+              <span class="list-badge">Urutan ${kegEsc(k.urutan)}</span>
+              ${k.tampil ? '' : '<span class="list-badge" style="color:var(--orange)">Tersembunyi</span>'}
+            </div>
+          </div>
+        </div>
+        <div class="list-card-actions">
+          <button class="btn btn-outline btn-sm" onclick="kegEdit('${k.id}')"><i class="fas fa-edit"></i> Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="delDoc('kegiatan_unggulan','${k.id}',kegList)"><i class="fas fa-trash"></i></button>
+        </div></div></div>`).join('');
+  } catch(e) { wrap.innerHTML = '<p style="color:var(--danger);font-size:0.8rem;">Gagal memuat: '+kegEsc(e.message)+' (cek Firestore Rules untuk kegiatan_unggulan)</p>'; }
+}
+function kegTampilForm(on) {
+  document.getElementById('keg-listview').style.display = on ? 'none' : 'block';
+  document.getElementById('keg-formview').style.display = on ? 'block' : 'none';
+  document.getElementById('keg-err').style.display = 'none';
+}
+async function kegBaru() {
+  ['keg-id','keg-judul','keg-tahun','keg-ringkas','keg-narasi'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('keg-jenis').value = 'penanaman';
+  document.getElementById('keg-urutan').value = 10; document.getElementById('keg-tampil').value = '1';
+  kegPilih = []; kegSrcFoto = [];
+  await kegIsiSumber(''); kegRender(); kegTampilForm(true);
+}
+function kegBatal() { kegTampilForm(false); }
+async function kegGantiJenis() { kegPilih = []; kegSrcFoto = []; await kegIsiSumber(''); kegRender(); }
+async function kegIsiSumber(pilih) {
+  const j = document.getElementById('keg-jenis').value, sel = document.getElementById('keg-sumber');
+  sel.innerHTML = '<option value="">— tanpa sumber data —</option>';
+  if (j === 'lainnya') { sel.disabled = true; return; }
+  sel.disabled = false;
+  const col = j === 'penanaman' ? 'monitoring_reboisasi' : 'monitoring_kehati';
+  try {
+    const snap = await getDocs(collection(db, col)); const arr = [];
+    snap.forEach(d => { const x = d.data(); if (col==='monitoring_reboisasi' && !d.id.startsWith('tanam_')) return;
+      arr.push({ id:d.id, y:x.year||'', t: col==='monitoring_reboisasi' ? (x.title||x.location||'') : (x.location||'') }); });
+    arr.sort((p,q) => String(q.y).localeCompare(String(p.y)));
+    arr.forEach(o => { const op = document.createElement('option'); op.value = o.id; op.textContent = o.y + ' — ' + o.t; sel.appendChild(op); });
+  } catch(e) { console.error(e); }
+  sel.value = pilih || '';
+}
+async function kegGantiSumber() {
+  const j = document.getElementById('keg-jenis').value, id = document.getElementById('keg-sumber').value;
+  kegPilih = kegPilih.filter(x => x.k === 'up'); kegSrcFoto = [];
+  if (id) {
+    const col = j === 'penanaman' ? 'monitoring_reboisasi' : 'monitoring_kehati';
+    try { const s = await getDoc(doc(db, col, id)); if (s.exists()) { const x = s.data();
+      kegSrcFoto = x.photos || x.fotos || [];
+      if (!document.getElementById('keg-judul').value) document.getElementById('keg-judul').value = x.title || x.location || '';
+      if (!document.getElementById('keg-tahun').value) document.getElementById('keg-tahun').value = x.year || ''; } } catch(e) { console.error(e); }
+  }
+  kegRender();
+}
+function kegRender() {
+  const g = document.getElementById('keg-galeri');
+  g.innerHTML = kegSrcFoto.length ? kegSrcFoto.map((src,i) => {
+    const on = kegPilih.some(x => x.k==='src' && x.i===i);
+    return `<img src="${src}" onclick="kegToggle(${i})" style="width:78px;height:78px;object-fit:cover;border-radius:8px;cursor:pointer;border:3px solid ${on?'var(--lime)':'transparent'};opacity:${on?1:0.7};">`;
+  }).join('') : '<span style="font-size:0.72rem;color:var(--text-muted);">Belum ada galeri sumber (pilih sumber data, atau unggah foto di bawah).</span>';
+  const t = document.getElementById('keg-terpilih');
+  t.innerHTML = kegPilih.length ? kegPilih.map((x,n) => {
+    const src = x.k==='src' ? kegSrcFoto[x.i] : x.d;
+    return `<div style="position:relative;"><img src="${src}" style="width:96px;height:64px;object-fit:cover;border-radius:8px;border:2px solid ${n===0?'var(--lime)':'var(--border-subtle)'};">
+      <span style="position:absolute;left:4px;top:4px;background:#000a;color:#fff;font-size:0.6rem;padding:1px 6px;border-radius:6px;">${n===0?'Cover':n+1}</span>
+      <button onclick="kegLepas(${n})" style="position:absolute;right:2px;top:2px;border:0;border-radius:50%;width:18px;height:18px;cursor:pointer;background:#000a;color:#fff;font-size:0.65rem;">×</button></div>`;
+  }).join('') : '<span style="font-size:0.72rem;color:var(--text-muted);">Belum ada foto dipilih.</span>';
+}
+function kegToggle(i) {
+  const at = kegPilih.findIndex(x => x.k==='src' && x.i===i);
+  if (at >= 0) kegPilih.splice(at,1);
+  else { if (kegPilih.length >= 3) { alert('Maksimal 3 foto.'); return; } kegPilih.push({k:'src',i}); }
+  kegRender();
+}
+function kegLepas(n) { kegPilih.splice(n,1); kegRender(); }
+function kegKompres(src, w, h, q) {
+  return new Promise(res => { const im = new Image(); im.onload = () => {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const r = Math.max(w/im.naturalWidth, h/im.naturalHeight), sw = w/r, sh = h/r;
+    c.getContext('2d').drawImage(im, (im.naturalWidth-sw)/2, (im.naturalHeight-sh)/2, sw, sh, 0, 0, w, h);
+    res(c.toDataURL('image/jpeg', q)); }; im.onerror = () => res(src); im.src = src; });
+}
+function kegBaca(file) { return new Promise((res,rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsDataURL(file); }); }
+document.addEventListener('change', async ev => {
+  if (ev.target.id !== 'keg-upload') return;
+  for (const f of ev.target.files) {
+    if (kegPilih.length >= 3) { alert('Maksimal 3 foto.'); break; }
+    const raw = await kegBaca(f);
+    const d = await kegKompres(raw, 960, 640, 0.72);
+    kegPilih.push({k:'up', d});
+  }
+  ev.target.value = ''; kegRender();
+});
+async function kegEdit(id) {
+  const s = await getDoc(doc(db,'kegiatan_unggulan',id)); if (!s.exists()) return; const k = s.data();
+  document.getElementById('keg-id').value = id;
+  document.getElementById('keg-jenis').value = k.jenis || 'lainnya';
+  document.getElementById('keg-judul').value = k.judul||''; document.getElementById('keg-tahun').value = k.tahun||'';
+  document.getElementById('keg-ringkas').value = k.ringkas||''; document.getElementById('keg-narasi').value = k.narasi||'';
+  document.getElementById('keg-urutan').value = k.urutan ?? 10; document.getElementById('keg-tampil').value = k.tampil ? '1':'0';
+  await kegIsiSumber(k.sumberId||'');
+  kegSrcFoto = []; 
+  if (k.sumberId) { const col = k.jenis==='penanaman' ? 'monitoring_reboisasi' : 'monitoring_kehati';
+    try { const ss = await getDoc(doc(db,col,k.sumberId)); if (ss.exists()) kegSrcFoto = ss.data().photos || ss.data().fotos || []; } catch(e) {} }
+  kegPilih = Array.isArray(k.foto) ? k.foto.slice() : [];
+  kegRender(); kegTampilForm(true);
+}
+async function kegSimpan() {
+  const btn = document.getElementById('kegSimpanBtn'), err = document.getElementById('keg-err');
+  err.style.display = 'none';
+  const v = i => document.getElementById(i).value.trim();
+  try {
+    if (!v('keg-judul')) throw new Error('Judul wajib diisi.');
+    if (!v('keg-ringkas')) throw new Error('Ringkasan banner wajib diisi.');
+    if (!kegPilih.length) throw new Error('Pilih atau unggah minimal 1 foto (dipakai sebagai cover banner).');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+    const first = kegPilih[0], srcFirst = first.k==='src' ? kegSrcFoto[first.i] : first.d;
+    const cover = await kegKompres(srcFirst, 640, 400, 0.6);
+    const jenis = v('keg-jenis');
+    const data = {
+      jenis, judul: v('keg-judul'), tahun: Number(v('keg-tahun'))||0, ringkas: v('keg-ringkas'), narasi: document.getElementById('keg-narasi').value.trim(),
+      sumberKoleksi: jenis==='penanaman' ? 'monitoring_reboisasi' : (jenis==='biodiversitas' ? 'monitoring_kehati' : ''),
+      sumberId: v('keg-sumber'), foto: kegPilih, cover,
+      urutan: Number(v('keg-urutan'))||0, tampil: v('keg-tampil')==='1', updatedAt: serverTimestamp()
+    };
+    const kb = Math.round(JSON.stringify(data).length*0.75/1024);
+    if (kb > 850) throw new Error('Ukuran data ±'+kb+'KB, terlalu besar. Kurangi foto unggahan (foto dari galeri sumber tidak menambah ukuran).');
+    const id = v('keg-id');
+    if (id) await setDoc(doc(db,'kegiatan_unggulan',id), data, {merge:true});
+    else await addDoc(collection(db,'kegiatan_unggulan'), data);
+    kegTampilForm(false); kegList();
+  } catch(e) { err.textContent = e.message; err.style.display = 'block'; }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan Kegiatan'; }
+}
+Object.assign(window, { kegBaru, kegBatal, kegGantiJenis, kegGantiSumber, kegToggle, kegLepas, kegEdit, kegSimpan, kegList });
 
 // ── Narasi Capaian / Strategi / Prinsip (profil_yayasan/capaian | strategi | prinsip) ──
 const CMS_DEF = {"capaian": {"title": "Capaian Konservasi Kolektif", "em": "Dicatat Jelas, Terbuka untuk Diperiksa.", "desc": "Dari reforestasi hingga pemantauan lapangan, kami mendampingi program konservasi di berbagai lanskap, mulai dari lahan warga, lereng, sampai kawasan penyangga air. Setiap capaian dicatat dengan jelas, bisa dipertanggungjawabkan, dan dirawat agar manfaatnya terasa untuk jangka panjang."}, "strategi": {"title": "Strategi Keberlanjutan Kami", "em": "Dikerjakan dengan Sistem, Dibuktikan dengan Data.", "desc": "Konservasi yang bisa dipercaya dimulai dari proses yang rapi. Dari pencatatan titik, pemeriksaan dokumen, cek lapangan, sampai pemantauan dan pelaporan, setiap tahap kami jalankan dengan sistem agar hasilnya jelas dan bisa dipertanggungjawabkan.", "items": [{"tag": "Pencatatan", "icon": "fas fa-location-dot", "title": "Titik Berkoordinat", "desc": "Setiap rorak, sumur, dan pohon dicatat dengan lokasi GPS dan dua foto."}, {"tag": "Verifikasi", "icon": "fas fa-file-circle-check", "title": "Cek Dokumen", "desc": "Legalitas lahan dan identitas pemilik diperiksa admin sebelum proses berlanjut."}, {"tag": "Verifikasi", "icon": "fas fa-clipboard-check", "title": "Cek Lapangan", "desc": "Tim turun langsung memastikan data sesuai dengan kondisi nyata di lokasi."}, {"tag": "Pemantauan", "icon": "fas fa-binoculars", "title": "Pemantauan Berkala", "desc": "Kondisi tanaman dan titik dicek berulang, tercatat siapa yang memantau dan kapan."}, {"tag": "Penilaian", "icon": "fas fa-droplet", "title": "Estimasi Dampak", "desc": "Serapan air dihitung per titik, lalu dijumlahkan menjadi capaian yang terukur."}, {"tag": "Pelaporan", "icon": "fas fa-file-lines", "title": "Laporan Berfoto", "desc": "RAB, kurva S, dan laporan bulanan lengkap dengan foto untuk para mitra."}, {"tag": "Kemitraan", "icon": "fas fa-handshake", "title": "Jasa Lingkungan (PJLH)", "desc": "Pemilik lahan terverifikasi dipertemukan dengan mitra lewat kesepakatan tertulis."}, {"tag": "Komunitas", "icon": "fas fa-people-group", "title": "Libatkan Warga", "desc": "Penanaman bersama dan pendampingan warga di sekitar lokasi kegiatan."}]}, "prinsip": {"title": "Prinsip Kerja Konservasi Kami", "em": "Dipilih dengan Cermat, Dirawat Bersama Warga.", "desc": "Selain sistem yang rapi, ada prinsip yang kami pegang di lapangan: siapa yang menanam, pohon apa yang dipilih, di mana lokasinya, dan bagaimana hasilnya dijaga.", "items": [{"tag": "Partisipasi", "icon": "fas fa-seedling", "title": "Tanam Bersama (Tanam & Adopsi Pohon)", "desc": "Warga, sekolah, dan perusahaan bisa ikut menanam dan merawat pohon, guna mendukung reforestasi."}, {"tag": "Spesies", "icon": "fas fa-leaf", "title": "Utamakan Jenis Lokal", "desc": "Kami memilih pohon asli daerah agar sesuai dengan tanah dan iklim setempat, lebih tahan, dan ikut menjaga kekayaan hayati sekitar."}, {"tag": "Manfaat", "icon": "fas fa-apple-whole", "title": "Pohon yang Memberi Manfaat", "desc": "Jenis tanaman dipilih yang menahan tanah dan air, sekaligus memberi hasil seperti buah atau pangan bagi warga sekitar."}, {"tag": "Lokasi", "icon": "fas fa-map-location-dot", "title": "Lokasi Dipilih dengan Alasan", "desc": "Lahan dipilih berdasarkan kebutuhan pemulihan, manfaatnya bagi warga, dan kesiapan pemilik lahan, lalu diperiksa dokumen dan lapangannya."}, {"tag": "Keanekaragaman", "icon": "fas fa-paw", "title": "Cek Keanekaragaman Hayati Berkala", "desc": "Kondisi pohon, ekosistem, dan satwa di sekitar lokasi dicek secara berkala untuk melihat apakah pemulihan benar-benar berjalan."}, {"tag": "Masyarakat", "icon": "fas fa-users", "title": "Warga sebagai Pengelola", "desc": "Warga lokal dilibatkan dalam merawat dan mengelola kawasan, agar konservasi berjalan seiring dengan kemandirian ekonomi mereka."}]}};
