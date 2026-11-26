@@ -270,6 +270,10 @@
   .strategi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; max-width: 1200px; margin: 0 auto; text-align: left; }
   .strategi-card { --neon: #ccff00; background: #111; border: 2px solid #2b2b2b; border-radius: 16px; padding: 24px 22px 26px; transition: all .35s ease; display: flex; flex-direction: column; gap: 10px; }
   .strategi-card:hover { transform: translateY(-8px); border-color: var(--neon); box-shadow: 0 0 20px color-mix(in srgb, var(--neon) 55%, transparent); }
+  .prinsip-section { background: #0a1923; }
+  .prinsip-grid { grid-template-columns: repeat(3, 1fr); max-width: 1100px; }
+  @media (max-width: 1000px) { .prinsip-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .prinsip-grid { grid-template-columns: 1fr; } }
   .strategi-card.c1 { --neon: #ccff00; } .strategi-card.c2 { --neon: #00ffff; } .strategi-card.c3 { --neon: #ffaa00; } .strategi-card.c4 { --neon: #ff6ec7; }
   .strategi-tag { align-self: flex-start; font-size: .68rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--neon); border: 1px solid var(--neon); border-radius: 50px; padding: 3px 12px; }
   .strategi-icon { font-size: 2.1rem; color: var(--neon); margin: 8px 0 2px; }
@@ -427,8 +431,8 @@
 <!-- IMPACT -->
 <section class="kpi-section" id="impact">
   <div class="kpi-head reveal">
-    <h2 class="section-title">Capaian Konservasi Kolektif <em>Dicatat Jelas, Terbuka untuk Diperiksa.</em></h2>
-    <p>Dari reforestasi hingga pemantauan lapangan, kami mendampingi program konservasi di berbagai lanskap, mulai dari lahan warga, lereng, sampai kawasan penyangga air. Setiap capaian dicatat dengan jelas, bisa dipertanggungjawabkan, dan dirawat agar manfaatnya terasa untuk jangka panjang.</p>
+    <h2 class="section-title" id="impactTitle">Capaian Konservasi Kolektif <em>Dicatat Jelas, Terbuka untuk Diperiksa.</em></h2>
+    <p id="impactDesc">Dari reforestasi hingga pemantauan lapangan, kami mendampingi program konservasi di berbagai lanskap, mulai dari lahan warga, lereng, sampai kawasan penyangga air. Setiap capaian dicatat dengan jelas, bisa dipertanggungjawabkan, dan dirawat agar manfaatnya terasa untuk jangka panjang.</p>
   </div>
   <div class="kpi-grid">
     <div class="kpi-card card-pohon">
@@ -555,10 +559,10 @@
 <!-- STRATEGI KEBERLANJUTAN (sistem kerja) -->
 <section class="strategi-section" id="strategi">
   <div class="strategi-head reveal">
-    <h2>Strategi Keberlanjutan Kami <em>Dikerjakan dengan Sistem, Dibuktikan dengan Data.</em></h2>
-    <p>Konservasi yang bisa dipercaya dimulai dari proses yang rapi. Dari pencatatan titik, pemeriksaan dokumen, cek lapangan, sampai pemantauan dan pelaporan, setiap tahap kami jalankan dengan sistem agar hasilnya jelas dan bisa dipertanggungjawabkan.</p>
+    <h2 id="strategiTitle">Strategi Keberlanjutan Kami <em>Dikerjakan dengan Sistem, Dibuktikan dengan Data.</em></h2>
+    <p id="strategiDesc">Konservasi yang bisa dipercaya dimulai dari proses yang rapi. Dari pencatatan titik, pemeriksaan dokumen, cek lapangan, sampai pemantauan dan pelaporan, setiap tahap kami jalankan dengan sistem agar hasilnya jelas dan bisa dipertanggungjawabkan.</p>
   </div>
-  <div class="strategi-grid">
+  <div class="strategi-grid" id="strategiGrid">
     <div class="strategi-card c1 reveal">
       <span class="strategi-tag">Pencatatan</span>
       <i class="fas fa-location-dot strategi-icon"></i>
@@ -606,6 +610,52 @@
       <i class="fas fa-people-group strategi-icon"></i>
       <h3>Libatkan Warga</h3>
       <p>Penanaman bersama dan pendampingan warga di sekitar lokasi kegiatan.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRINSIP KERJA KONSERVASI -->
+<section class="strategi-section prinsip-section" id="prinsip">
+  <div class="strategi-head reveal">
+    <h2 id="prinsipTitle">Prinsip Kerja Konservasi Kami <em>Dipilih dengan Cermat, Dirawat Bersama Warga.</em></h2>
+    <p id="prinsipDesc">Selain sistem yang rapi, ada prinsip yang kami pegang di lapangan: siapa yang menanam, pohon apa yang dipilih, di mana lokasinya, dan bagaimana hasilnya dijaga.</p>
+  </div>
+  <div class="strategi-grid prinsip-grid" id="prinsipGrid">
+    <div class="strategi-card c1 reveal">
+      <span class="strategi-tag">Partisipasi</span>
+      <i class="fas fa-seedling strategi-icon"></i>
+      <h3>Tanam Bersama (Tanam &amp; Adopsi Pohon)</h3>
+      <p>Warga, sekolah, dan perusahaan bisa ikut menanam dan merawat pohon, guna mendukung reforestasi.</p>
+    </div>
+    <div class="strategi-card c2 reveal">
+      <span class="strategi-tag">Spesies</span>
+      <i class="fas fa-leaf strategi-icon"></i>
+      <h3>Utamakan Jenis Lokal</h3>
+      <p>Kami memilih pohon asli daerah agar sesuai dengan tanah dan iklim setempat, lebih tahan, dan ikut menjaga kekayaan hayati sekitar.</p>
+    </div>
+    <div class="strategi-card c3 reveal">
+      <span class="strategi-tag">Manfaat</span>
+      <i class="fas fa-apple-whole strategi-icon"></i>
+      <h3>Pohon yang Memberi Manfaat</h3>
+      <p>Jenis tanaman dipilih yang menahan tanah dan air, sekaligus memberi hasil seperti buah atau pangan bagi warga sekitar.</p>
+    </div>
+    <div class="strategi-card c4 reveal">
+      <span class="strategi-tag">Lokasi</span>
+      <i class="fas fa-map-location-dot strategi-icon"></i>
+      <h3>Lokasi Dipilih dengan Alasan</h3>
+      <p>Lahan dipilih berdasarkan kebutuhan pemulihan, manfaatnya bagi warga, dan kesiapan pemilik lahan, lalu diperiksa dokumen dan lapangannya.</p>
+    </div>
+    <div class="strategi-card c1 reveal">
+      <span class="strategi-tag">Keanekaragaman</span>
+      <i class="fas fa-paw strategi-icon"></i>
+      <h3>Cek Keanekaragaman Hayati Berkala</h3>
+      <p>Kondisi pohon, ekosistem, dan satwa di sekitar lokasi dicek secara berkala untuk melihat apakah pemulihan benar-benar berjalan.</p>
+    </div>
+    <div class="strategi-card c2 reveal">
+      <span class="strategi-tag">Masyarakat</span>
+      <i class="fas fa-users strategi-icon"></i>
+      <h3>Warga sebagai Pengelola</h3>
+      <p>Warga lokal dilibatkan dalam merawat dan mengelola kawasan, agar konservasi berjalan seiring dengan kemandirian ekonomi mereka.</p>
     </div>
   </div>
 </section>
@@ -1087,6 +1137,43 @@
   function safeIconClass(s) { return String(s || '').replace(/[^a-z0-9\s\-]/gi, '').trim(); }
   function safeHttpUrl(u) { u = String(u || '').trim(); return /^https?:\/\//i.test(u) ? u : ''; }
 
+
+  // ── Capaian / Strategi / Prinsip — narasi dikelola admin (profil_yayasan/capaian | strategi | prinsip) ──
+  function setHead(h2, title, em) {
+    if (!h2 || !title) return;
+    h2.textContent = title;
+    if (em) { h2.appendChild(document.createTextNode(' ')); const e = document.createElement('em'); e.textContent = em; h2.appendChild(e); }
+  }
+  function renderKartu(grid, items) {
+    const cl = ['c1','c2','c3','c4']; grid.innerHTML = '';
+    items.forEach((it, i) => {
+      const c = document.createElement('div'); c.className = 'strategi-card ' + cl[i % 4];
+      const t = document.createElement('span'); t.className = 'strategi-tag'; t.textContent = it.tag || '';
+      const ic = document.createElement('i'); ic.className = (safeIconClass(it.icon) || 'fas fa-leaf') + ' strategi-icon';
+      const h = document.createElement('h3'); h.textContent = it.title || '';
+      const p = document.createElement('p'); p.textContent = it.desc || '';
+      if (it.tag) c.appendChild(t); c.append(ic, h, p); grid.appendChild(c);
+    });
+  }
+  async function loadBlok(key, idTitle, idDesc, idGrid) {
+    try {
+      const snap = await getDoc(doc(db, 'profil_yayasan', key));
+      if (!snap.exists()) return;
+      const d = snap.data();
+      setHead(document.getElementById(idTitle), d.title, d.em);
+      if (d.desc) document.getElementById(idDesc).textContent = d.desc;
+      if (idGrid && Array.isArray(d.items)) {
+        const items = d.items.filter(x => x && (x.title || x.desc));
+        if (items.length) renderKartu(document.getElementById(idGrid), items);
+      }
+    } catch (e) { console.error('Blok load error', key, e); }
+  }
+  function loadBlokNarasi() {
+    loadBlok('capaian', 'impactTitle', 'impactDesc');
+    loadBlok('strategi', 'strategiTitle', 'strategiDesc', 'strategiGrid');
+    loadBlok('prinsip', 'prinsipTitle', 'prinsipDesc', 'prinsipGrid');
+  }
+
   async function loadPilar() {
     try {
       const snap = await getDoc(doc(db, 'profil_yayasan', 'pilar'));
@@ -1168,7 +1255,7 @@
   }
 
   // Panggil semua loader
-  loadProfil(); loadHero(); loadImpactStats(); loadPrograms(); loadMitra(); loadKontakSosial(); loadNews(); loadPilar(); loadSih3(); loadSdgs();
+  loadProfil(); loadHero(); loadImpactStats(); loadPrograms(); loadMitra(); loadKontakSosial(); loadNews(); loadPilar(); loadSih3(); loadSdgs(); loadBlokNarasi();
 
   // ── Admin modal ──
   let logoClicks=0, logoTimer=null;
