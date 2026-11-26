@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kegiatan — Sekola Konang Indonesia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root { --bg:#0a1219; --panel:#111a22; --panel2:#18232d; --line:#25333f; --text:#e8eef2; --soft:#9fb0bd; --lime:#ccff00; --cyan:#00e5ff; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; }
+  body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); }
+  a { color:inherit; }
+  .app { display:grid; grid-template-columns:420px 1fr 390px; height:100vh; overflow:hidden; }
+  .app.solo { grid-template-columns:1fr; }
+  .app.solo .left { max-width:820px; margin:0 auto; border:0; }
+  .app.solo #mapWrap, .app.solo .right { display:none; }
+  .left, .right { background:var(--panel); overflow-y:auto; }
+  .left { border-right:1px solid var(--line); padding:22px 24px 40px; }
+  .right { border-left:1px solid var(--line); padding:0 0 30px; }
+  #mapWrap { position:relative; min-width:0; }
+  #map { position:absolute; inset:0; background:#0c1a12; }
+  .back { display:inline-flex; align-items:center; gap:8px; font-size:.82rem; color:var(--soft); text-decoration:none; margin-bottom:16px; }
+  .back:hover { color:var(--lime); }
+  .tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .tag { font-size:.68rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--lime); border:1px solid var(--lime); border-radius:50px; padding:3px 11px; }
+  .tag.dim { color:var(--soft); border-color:var(--line); }
+  h1 { font-size:1.45rem; line-height:1.3; font-weight:700; margin-bottom:8px; }
+  .loc { font-size:.82rem; color:var(--soft); display:flex; gap:8px; margin-bottom:16px; }
+  .slider { position:relative; border-radius:14px; overflow:hidden; margin-bottom:16px; background:#000; }
+  .slides { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; }
+  .slides::-webkit-scrollbar { display:none; }
+  .slides img { flex:0 0 100%; width:100%; aspect-ratio:4/3; object-fit:cover; scroll-snap-align:center; }
+  .sl-btn { position:absolute; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:0; background:#fffd; color:#111; cursor:pointer; }
+  .sl-btn.p { left:10px; } .sl-btn.n { right:10px; }
+  .dots { position:absolute; left:0; right:0; bottom:10px; display:flex; justify-content:center; gap:6px; }
+  .dots i { width:7px; height:7px; border-radius:50%; background:#fff6; } .dots i.on { background:#fff; }
+  .chips { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:18px; }
+  .chip { background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:10px 8px; text-align:center; }
+  .chip b { display:block; font-size:1.05rem; color:var(--lime); } .chip span { font-size:.62rem; color:var(--soft); text-transform:uppercase; letter-spacing:.8px; }
+  h2.sec { font-size:1rem; margin:6px 0 10px; }
+  .narasi p { font-size:.9rem; line-height:1.75; color:#cfdae2; margin-bottom:12px; }
+  .narasi.clamp { max-height:230px; overflow:hidden; -webkit-mask-image:linear-gradient(#000 70%,transparent); mask-image:linear-gradient(#000 70%,transparent); }
+  .more { width:100%; padding:10px; border-radius:10px; border:1px solid var(--lime); color:var(--lime); background:transparent; cursor:pointer; font-weight:600; font-size:.85rem; margin-bottom:14px; }
+  .full { display:flex; align-items:center; justify-content:center; gap:8px; padding:11px; border-radius:10px; background:var(--panel2); border:1px solid var(--line); text-decoration:none; font-size:.82rem; color:var(--soft); }
+  .full:hover { color:var(--lime); border-color:var(--lime); }
+  .rhead { padding:18px 20px 0; font-weight:700; font-size:1rem; }
+  .tabs { display:flex; margin:12px 0 0; border-bottom:1px solid var(--line); }
+  .tabs button { flex:1; background:none; border:0; color:var(--soft); padding:12px 6px; font:inherit; font-size:.82rem; font-weight:600; cursor:pointer; border-bottom:2px solid transparent; }
+  .tabs button.on { color:var(--lime); border-color:var(--lime); }
+  .pane { display:none; padding:18px 20px; } .pane.on { display:block; }
+  .chartbox { height:210px; position:relative; margin-bottom:12px; }
+  .sprow { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid var(--line); font-size:.82rem; }
+  .sprow span { display:flex; align-items:center; gap:8px; } .sprow b { color:var(--lime); }
+  .dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .total { text-align:center; background:linear-gradient(135deg,#0d3b5c,#0a6b86); border-radius:14px; padding:16px; margin:12px 0; }
+  .total .num { font-size:2.1rem; font-weight:700; color:var(--cyan); } .total small { display:block; color:#cfe9f3; font-size:.7rem; letter-spacing:.8px; text-transform:uppercase; }
+  table { width:100%; border-collapse:collapse; font-size:.74rem; } th { text-align:left; color:var(--soft); font-weight:600; padding:6px 4px; border-bottom:1px solid var(--line); }
+  td { padding:7px 4px; border-bottom:1px solid var(--line); vertical-align:top; } td.r { text-align:right; color:var(--lime); font-weight:600; }
+  code { font-family:ui-monospace,Consolas,monospace; color:#d9f56a; font-size:.68rem; }
+  .meta { font-size:.68rem; color:var(--soft); margin-top:8px; }
+  .idx3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+  .leaflet-popup-content-wrapper { border-radius:14px; } .pop b { color:#111; } .pop div { font-size:.72rem; color:#555; margin-top:4px; }
+  @media (max-width:1100px) { .app { grid-template-columns:360px 1fr; } .right { grid-column:1 / -1; border-left:0; border-top:1px solid var(--line); } .app { height:auto; overflow:visible; } .left { max-height:none; } #mapWrap { height:70vh; } }
+  @media (max-width:760px) { .app { display:flex; flex-direction:column; } #mapWrap { height:62vh; order:2; } .left { order:1; } .right { order:3; } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="left" id="left">
+    <a class="back" href="index.html#kegiatan"><i class="fas fa-arrow-left"></i> Kembali ke Beranda</a>
+    <div class="tags" id="tags"></div>
+    <h1 id="judul">Memuat…</h1>
+    <div class="loc" id="loc" style="display:none"><i class="fas fa-location-dot"></i><span id="locTxt"></span></div>
+    <div class="slider" id="slider" style="display:none">
+      <div class="slides" id="slides"></div>
+      <button class="sl-btn p" id="slP" aria-label="Sebelumnya"><i class="fas fa-chevron-left"></i></button>
+      <button class="sl-btn n" id="slN" aria-label="Berikutnya"><i class="fas fa-chevron-right"></i></button>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="chips" id="chips" style="display:none"></div>
+    <h2 class="sec">Cerita Kegiatan</h2>
+    <div class="narasi clamp" id="narasi"></div>
+    <button class="more" id="more" style="display:none">Lihat Lebih Banyak <i class="fas fa-chevron-down"></i></button>
+    <a class="full" id="fullLink" href="#" style="display:none"><i class="fas fa-table-list"></i> Buka data lengkap program ini</a>
+  </aside>
+  <main id="mapWrap"><div id="map"></div></main>
+  <aside class="right" id="right">
+    <div class="rhead">Ringkasan Data</div>
+    <div class="tabs" id="tabs"></div>
+    <div id="panes"></div>
+  </aside>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="pjlh-formula.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  const app = initializeApp({
+    apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0", authDomain: "sekola-konang.firebaseapp.com", projectId: "sekola-konang",
+    storageBucket: "sekola-konang.firebasestorage.app", messagingSenderId: "9338352073", appId: "1:9338352073:web:b56481b836888b1a8bf818"
+  });
+  const db = getFirestore(app);
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const JENIS = { penanaman:'Penanaman', biodiversitas:'Biodiversitas', lainnya:'Kegiatan' };
+  const COLORS = ['#C6FF00','#ffab00','#2196f3','#e91e63','#00e5ff','#ff5722','#9c27b0','#4caf50','#fbc02d','#795548'];
+  const id = new URLSearchParams(location.search).get('id');
+
+  function gagal(msg) { $('judul').textContent = msg; $('app').classList.add('solo'); }
+
+  function slider(fotos) {
+    if (!fotos.length) return;
+    $('slider').style.display = 'block';
+    const box = $('slides'); fotos.forEach(src => { const im = document.createElement('img'); im.src = src; im.alt = ''; box.appendChild(im); });
+    const dots = $('dots'); fotos.forEach((_, i) => { dots.appendChild(document.createElement('i')); });
+    const upd = () => { const i = Math.round(box.scrollLeft / box.clientWidth); [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i)); };
+    box.addEventListener('scroll', upd, { passive:true }); upd();
+    $('slP').onclick = () => box.scrollBy({ left:-box.clientWidth, behavior:'smooth' });
+    $('slN').onclick = () => box.scrollBy({ left: box.clientWidth, behavior:'smooth' });
+    if (fotos.length < 2) { $('slP').style.display = $('slN').style.display = 'none'; dots.style.display = 'none'; }
+  }
+
+  function narasi(teks) {
+    const box = $('narasi'); const par = String(teks || '').split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+    par.forEach(t => { const p = document.createElement('p'); p.textContent = t; box.appendChild(p); });
+    if (!par.length) { box.innerHTML = '<p style="color:var(--soft)">Narasi belum ditambahkan.</p>'; box.classList.remove('clamp'); return; }
+    requestAnimationFrame(() => {
+      if (box.scrollHeight <= 240) { box.classList.remove('clamp'); return; }
+      $('more').style.display = 'block';
+      $('more').onclick = () => { const open = box.classList.toggle('clamp'); $('more').innerHTML = open ? 'Lihat Lebih Banyak <i class="fas fa-chevron-down"></i>' : 'Tutup <i class="fas fa-chevron-up"></i>'; };
+    });
+  }
+
+  function tabs(list) {
+    const t = $('tabs'), p = $('panes');
+    list.forEach((x, i) => {
+      const b = document.createElement('button'); b.textContent = x.label; if (!i) b.className = 'on'; t.appendChild(b);
+      const pane = document.createElement('div'); pane.className = 'pane' + (i ? '' : ' on'); pane.innerHTML = x.html; p.appendChild(pane);
+      b.onclick = () => { [...t.children].forEach(c => c.classList.remove('on')); [...p.children].forEach(c => c.classList.remove('on')); b.classList.add('on'); pane.classList.add('on'); setTimeout(() => x.show && x.show(), 30); };
+    });
+    setTimeout(() => list[0].show && list[0].show(), 30);
+  }
+
+  function peta(lat, lng) {
+    const map = L.map('map', { zoomControl:true }).setView([lat || -7.81, lng || 112.9], 13);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution:'Tiles &copy; Esri', maxZoom:19 }).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom:19 }).addTo(map);
+    map.createPane('pts'); map.getPane('pts').style.zIndex = 650;
+    return map;
+  }
+
+  async function muat() {
+    if (!id) return gagal('Kegiatan tidak ditemukan');
+    let k;
+    try { const s = await getDoc(doc(db, 'kegiatan_unggulan', id)); if (!s.exists()) return gagal('Kegiatan tidak ditemukan'); k = s.data(); }
+    catch (e) { console.error(e); return gagal('Gagal memuat kegiatan'); }
+
+    document.title = (k.judul || 'Kegiatan') + ' — Sekola Konang Indonesia';
+    $('judul').textContent = k.judul || '';
+    $('tags').innerHTML = `<span class="tag">${esc(JENIS[k.jenis] || 'Kegiatan')}</span>` + (k.tahun ? `<span class="tag dim">${esc(k.tahun)}</span>` : '');
+    narasi(k.narasi);
+
+    let src = null;
+    if (k.sumberKoleksi && k.sumberId) {
+      try { const s = await getDoc(doc(db, k.sumberKoleksi, k.sumberId)); if (s.exists()) src = s.data(); } catch (e) { console.warn('Sumber data gagal dimuat', e); }
+    }
+    const srcFoto = (src && (src.photos || src.fotos)) || [];
+    const fotos = (Array.isArray(k.foto) ? k.foto : []).map(x => x.k === 'src' ? srcFoto[x.i] : x.d).filter(Boolean).slice(0, 3);
+    slider(fotos.length ? fotos : (k.cover ? [k.cover] : []));
+
+    if (!src) { $('app').classList.add('solo'); return; }
+
+    if (k.jenis === 'penanaman') {
+      const lokasi = src.location; if (lokasi) { $('loc').style.display = 'flex'; $('locTxt').textContent = lokasi; }
+      const s = src.stats || {};
+      $('chips').style.display = 'grid';
+      $('chips').innerHTML = `<div class="chip"><b>${(s.trees || 0).toLocaleString('id-ID')}</b><span>Pohon</span></div>
+        <div class="chip"><b>${(s.rorak || 0).toLocaleString('id-ID')}</b><span>Rorak</span></div>
+        <div class="chip"><b>${((s.sumur || 0) + (s.biopori || 0)).toLocaleString('id-ID')}</b><span>Sumur &amp; Biopori</span></div>`;
+      $('fullLink').style.display = 'flex'; $('fullLink').href = 'konservasi-year-detail.html?id=' + encodeURIComponent(k.sumberId);
+
+      const spKeys = src.species ? Object.keys(src.species) : [], cmap = {};
+      spKeys.forEach((n, i) => cmap[n] = COLORS[i % COLORS.length]);
+      const map = peta();
+      const bounds = [];
+      if (src.areaPolygon) {
+        try {
+          const arr = typeof src.areaPolygon === 'string' ? JSON.parse(src.areaPolygon) : src.areaPolygon;
+          const BG = ['batas desa', 'batas petung', 'batas desa galih'];
+          const isBg = n => !n || BG.some(b => String(n).toLowerCase().includes(b));
+          [...arr.filter(i => isBg(i.name)), ...arr.filter(i => !isBg(i.name))].forEach(it => {
+            const raw = it.coords || it; const ll = raw.map(c => Array.isArray(c) ? [c[0], c[1]] : [c.lat, c.lng]);
+            const bg = isBg(it.name), col = it.color || '#C6FF00';
+            const pg = L.polygon(ll, { color:col, fillColor:col, fillOpacity: bg ? .08 : .12, weight: bg ? 1.4 : 1.8, interactive:!bg }).addTo(map);
+            if (!bg && it.name) pg.bindPopup(`<div class="pop"><b>${esc(it.name)}</b><div>Tahun: ${esc(src.year)}</div></div>`);
+            if (!bg) bounds.push(pg.getBounds());
+          });
+        } catch (e) { console.warn('Polygon', e); }
+      }
+      const ptsB = [];
+      (src.points || []).forEach(p => {
+        if (!p.koordinat) return;
+        const la = p.koordinat.latitude, lo = p.koordinat.longitude, nama = p.nama_pohon || 'Pohon', c = cmap[nama] || '#C6FF00';
+        L.circleMarker([la, lo], { radius:5, color:'rgba(0,0,0,.45)', fillColor:c, fillOpacity:1, weight:1, pane:'pts' }).addTo(map)
+          .bindPopup(`<div class="pop"><b><span class="dot" style="background:${c};margin-right:6px"></span>${esc(nama)}</b>
+            <div>Tahun tanam: <b>${esc(src.year)}</b></div>
+            <div>Program: ${esc(k.judul || src.title || '')}</div>
+            <div>GPS: ${la.toFixed(6)}, ${lo.toFixed(6)}</div></div>`);
+        ptsB.push([la, lo]);
+      });
+      if (ptsB.length) map.fitBounds(ptsB, { padding:[40, 40], maxZoom:17 });
+      else if (bounds.length) map.fitBounds(bounds[0], { padding:[30, 30] });
+
+      const { resP, resR, resS, resB, total, metodologiPakai, legacyFallback } = window.hitungEstimasiInfiltrasi(s, src.metodologi, src.year, src.sniParams);
+      const meta = (window.PJLH_METODOLOGI || {})[metodologiPakai] || {};
+      const rows = [
+        ['Pohon / Vegetasi', metodologiPakai === 'aqua_wb_v1' ? (src.year === 2024 ? `(${s.trees}/400)×1.5 ML/Ha` : `(${s.trees}/400)×0.02495×31.536×75%`) : `${s.trees} pohon`, resP],
+        ['Rorak (Trench)', metodologiPakai === 'aqua_wb_v1' ? (src.year === 2024 ? `${s.rorak}×0.17 ML` : `(${s.rorak}×490×3×163)/1jt`) : `${s.rorak} unit`, resR],
+        ['Sumur Resapan', metodologiPakai === 'aqua_wb_v1' ? `(${s.sumur}×754×3×163)/1jt` : `${s.sumur} unit`, resS],
+        ['Biopori', `(${s.biopori}/300)×1.5`, resB]
+      ].filter(r => r[2] > 0);
+      let ch1, ch2;
+      tabs([
+        { label:'Komposisi Tanaman', html:`<div class="chartbox"><canvas id="cSp"></canvas></div>` + (spKeys.length ? spKeys.map(n => `<div class="sprow"><span><i class="dot" style="background:${cmap[n]}"></i>${esc(n)}</span><b>${Number(src.species[n]).toLocaleString('id-ID')}</b></div>`).join('') : '<p class="meta">Belum ada data jenis tanaman.</p>'),
+          show() { if (ch1 || !spKeys.length) return; ch1 = new Chart($('cSp'), { type:'doughnut', data:{ labels:spKeys, datasets:[{ data:Object.values(src.species), backgroundColor:spKeys.map(n => cmap[n]), borderWidth:0 }] }, options:{ maintainAspectRatio:false, plugins:{ legend:{ display:false } } } }); } },
+        { label:'Resapan Air', html:`<div class="total"><small>Estimasi air terresapkan</small><div class="num">${total.toFixed(2)}</div><small>ML / tahun (kumulatif)</small></div>
+            <div class="chartbox" style="height:180px"><canvas id="cWt"></canvas></div>
+            <table><tr><th>Item</th><th>Formula</th><th style="text-align:right">ML/th</th></tr>${rows.map(r => `<tr><td><b>${r[0]}</b></td><td><code>${esc(r[1])}</code></td><td class="r">${r[2].toFixed(2)}</td></tr>`).join('')}</table>
+            <div class="meta">${legacyFallback ? 'Metodologi belum ditandai, sementara memakai: ' : 'Metodologi: '}${esc(meta.label || metodologiPakai || '-')}</div>`,
+          show() { if (ch2) return; Chart.defaults.color = '#9fb0bd'; ch2 = new Chart($('cWt'), { type:'bar', data:{ labels:['Pohon', 'Rorak', 'Sumur & Biopori'], datasets:[{ data:[resP, resR, resS + resB], backgroundColor:['#4caf50', '#795548', '#0277bd'], borderRadius:6 }] }, options:{ maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:'rgba(255,255,255,.05)' } }, y:{ grid:{ color:'rgba(255,255,255,.05)' } } } } }); } }
+      ]);
+    } else if (k.jenis === 'biodiversitas') {
+      if (src.location) { $('loc').style.display = 'flex'; $('locTxt').textContent = src.location; }
+      const lat = Number(src.lat), lng = Number(src.lng);
+      const map = peta(lat, lng);
+      if (lat && lng) {
+        map.setView([lat, lng], 15);
+        L.circleMarker([lat, lng], { radius:9, color:'#000', fillColor:'#ccff00', fillOpacity:1, weight:1.5, pane:'pts' }).addTo(map)
+          .bindPopup(`<div class="pop"><b>${esc(src.location || k.judul)}</b><div>Tahun pemantauan: <b>${esc(src.year)}</b></div><div>GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}</div></div>`).openPopup();
+      }
+      $('fullLink').style.display = 'flex'; $('fullLink').href = 'biodiversity-detail.html?id=' + encodeURIComponent(k.sumberId);
+      tabs([{ label:'Indeks Keanekaragaman', html:`<div class="idx3">
+          <div class="chip"><b>${esc(src.index_h ?? '-')}</b><span>H' (Keragaman)</span></div>
+          <div class="chip"><b>${esc(src.index_e ?? '-')}</b><span>E (Kemerataan)</span></div>
+          <div class="chip"><b>${esc(src.index_r ?? '-')}</b><span>R (Kekayaan)</span></div></div>
+          <div class="sprow"><span>Kategori</span><b>${esc(src.index_cat || '-')}</b></div>
+          <div class="sprow"><span>Total jenis flora</span><b>${esc(src.flora_total ?? '-')}</b></div>
+          <div class="sprow"><span>Jumlah famili</span><b>${esc(src.flora_famili ?? '-')}</b></div>
+          <div class="meta">Data lengkap dan tren per tahun ada di halaman detail biodiversitas.</div>` }]);
+    } else { $('app').classList.add('solo'); }
+  }
+  muat();
+</script>
+</body>
+</html>
