@@ -270,6 +270,32 @@
   .strategi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; max-width: 1200px; margin: 0 auto; text-align: left; }
   .strategi-card { --neon: #ccff00; background: #111; border: 2px solid #2b2b2b; border-radius: 16px; padding: 24px 22px 26px; transition: all .35s ease; display: flex; flex-direction: column; gap: 10px; }
   .strategi-card:hover { transform: translateY(-8px); border-color: var(--neon); box-shadow: 0 0 20px color-mix(in srgb, var(--neon) 55%, transparent); }
+  /* ── Banner Kegiatan (geser) ── */
+  .keg-section { padding: 64px 0 56px; background: #0a1923; border-top: 1px solid #1c3d52; display: none; }
+  .keg-head { max-width: 1180px; margin: 0 auto 26px; padding: 0 5%; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+  .keg-head h2 { color: #fff; font-size: 2rem; font-weight: 600; line-height: 1.2; margin-bottom: 8px; }
+  .keg-head p { color: #b9c8d4; max-width: 640px; line-height: 1.7; font-size: 1rem; }
+  .keg-all { color: #ccff00; border: 1px solid #ccff00; border-radius: 50px; padding: 9px 20px; font-size: .85rem; font-weight: 600; text-decoration: none; white-space: nowrap; transition: .25s; }
+  .keg-all:hover { background: #ccff00; color: #111; }
+  .keg-wrap { position: relative; max-width: 1280px; margin: 0 auto; }
+  .keg-track { display: flex; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 6px 5% 14px; scrollbar-width: none; scroll-padding: 0 5%; }
+  .keg-track::-webkit-scrollbar { display: none; }
+  .keg-card { position: relative; flex: 0 0 min(900px, 86%); height: 300px; border-radius: 24px; overflow: hidden; scroll-snap-align: start; background: #0d3a24; color: #fff; display: block; text-decoration: none; border: 1px solid #1e5a3a; }
+  .keg-card img { position: absolute; right: 0; top: 0; width: 62%; height: 100%; object-fit: cover; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 38%); mask-image: linear-gradient(to right, transparent 0, #000 38%); transition: transform .6s ease; }
+  .keg-card:hover img { transform: scale(1.04); }
+  .keg-body { position: relative; z-index: 1; width: 52%; height: 100%; padding: 30px 34px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+  .keg-tag { align-self: flex-start; font-size: .66rem; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; color: #ccff00; border: 1px solid #ccff00; border-radius: 50px; padding: 3px 12px; }
+  .keg-body h3 { font-size: 1.55rem; line-height: 1.25; font-weight: 600; }
+  .keg-body p { font-size: .92rem; line-height: 1.6; color: #d4e6dc; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .keg-btn { align-self: flex-start; border: 1px solid #fff; border-radius: 50px; padding: 7px 20px; font-size: .85rem; font-weight: 600; }
+  .keg-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; border: 0; background: #fff; color: #0d3a24; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.4); z-index: 3; }
+  .keg-arrow.p { left: 1.5%; } .keg-arrow.n { right: 1.5%; }
+  @media (max-width: 760px) {
+    .keg-card { flex-basis: 88%; height: 420px; }
+    .keg-card img { width: 100%; height: 55%; top: 0; -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent); mask-image: linear-gradient(to bottom, #000 45%, transparent); }
+    .keg-body { width: 100%; justify-content: flex-end; padding: 22px; } .keg-body h3 { font-size: 1.25rem; }
+    .keg-arrow { display: none; } .keg-head h2 { font-size: 1.6rem; }
+  }
   .prinsip-section { background: #0a1923; }
   .prinsip-grid { grid-template-columns: repeat(3, 1fr); max-width: 1100px; }
   @media (max-width: 1000px) { .prinsip-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -459,6 +485,22 @@
       <span class="impact-label">Lokasi Monitoring</span>
       <a href="biodiversity.html" class="btn-data">Buka Data</a>
     </div>
+  </div>
+</section>
+
+<!-- KEGIATAN UNGGULAN (banner geser, dikelola admin: kegiatan_unggulan) -->
+<section class="keg-section" id="kegiatan">
+  <div class="keg-head reveal">
+    <div>
+      <h2 id="kegTitle">Kegiatan Kami di Lapangan</h2>
+      <p id="kegDesc">Geser untuk melihat kegiatan penanaman, pemantauan keanekaragaman hayati, dan kegiatan lain. Klik satu kegiatan untuk melihat peta, foto, dan ceritanya.</p>
+    </div>
+    <a class="keg-all" href="kegiatan-semua.html">Lihat Semua Kegiatan <i class="fas fa-arrow-right"></i></a>
+  </div>
+  <div class="keg-wrap">
+    <button class="keg-arrow p" id="kegPrev" aria-label="Sebelumnya"><i class="fas fa-chevron-left"></i></button>
+    <div class="keg-track" id="kegTrack"></div>
+    <button class="keg-arrow n" id="kegNext" aria-label="Berikutnya"><i class="fas fa-chevron-right"></i></button>
   </div>
 </section>
 
@@ -1174,6 +1216,33 @@
     loadBlok('prinsip', 'prinsipTitle', 'prinsipDesc', 'prinsipGrid');
   }
 
+
+  // ── Banner Kegiatan Unggulan (koleksi ringan kegiatan_unggulan) ──
+  const KEG_JENIS = { penanaman: 'Penanaman', biodiversitas: 'Biodiversitas', lainnya: 'Kegiatan' };
+  async function loadKegiatan() {
+    try {
+      const snap = await getDocs(collection(db, 'kegiatan_unggulan'));
+      const arr = []; snap.forEach(d => { const x = d.data(); if (x.tampil) arr.push({ id: d.id, ...x }); });
+      if (!arr.length) return;
+      arr.sort((a, b) => (a.urutan || 0) - (b.urutan || 0));
+      const tr = document.getElementById('kegTrack'); tr.innerHTML = '';
+      arr.forEach(k => {
+        const a = document.createElement('a'); a.className = 'keg-card'; a.href = 'kegiatan.html?id=' + encodeURIComponent(k.id);
+        if (k.cover && /^data:image\//.test(k.cover)) { const im = document.createElement('img'); im.src = k.cover; im.alt = ''; a.appendChild(im); }
+        const b = document.createElement('div'); b.className = 'keg-body';
+        const t = document.createElement('span'); t.className = 'keg-tag'; t.textContent = (KEG_JENIS[k.jenis] || 'Kegiatan') + (k.tahun ? ' · ' + k.tahun : '');
+        const h = document.createElement('h3'); h.textContent = k.judul || '';
+        const p = document.createElement('p'); p.textContent = k.ringkas || '';
+        const bt = document.createElement('span'); bt.className = 'keg-btn'; bt.textContent = k.jenis === 'penanaman' ? 'Lihat Penanaman' : 'Lihat Kegiatan';
+        b.append(t, h, p, bt); a.appendChild(b); tr.appendChild(a);
+      });
+      document.getElementById('kegiatan').style.display = 'block';
+      const step = () => { const c = tr.querySelector('.keg-card'); return c ? c.getBoundingClientRect().width + 22 : 300; };
+      document.getElementById('kegPrev').onclick = () => tr.scrollBy({ left: -step(), behavior: 'smooth' });
+      document.getElementById('kegNext').onclick = () => tr.scrollBy({ left: step(), behavior: 'smooth' });
+    } catch (e) { console.error('Kegiatan load error', e); }
+  }
+
   async function loadPilar() {
     try {
       const snap = await getDoc(doc(db, 'profil_yayasan', 'pilar'));
@@ -1255,7 +1324,7 @@
   }
 
   // Panggil semua loader
-  loadProfil(); loadHero(); loadImpactStats(); loadPrograms(); loadMitra(); loadKontakSosial(); loadNews(); loadPilar(); loadSih3(); loadSdgs(); loadBlokNarasi();
+  loadProfil(); loadHero(); loadImpactStats(); loadPrograms(); loadMitra(); loadKontakSosial(); loadNews(); loadPilar(); loadSih3(); loadSdgs(); loadBlokNarasi(); loadKegiatan();
 
   // ── Admin modal ──
   let logoClicks=0, logoTimer=null;
