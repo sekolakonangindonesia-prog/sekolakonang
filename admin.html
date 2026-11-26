@@ -333,6 +333,7 @@ input,textarea,select{font-family:var(--body);}
       <div class="form-group"><label>Kartu 3 — Ikon (kelas Font Awesome) &amp; Judul</label>
         <div class="row-2"><input type="text" id="pilar-3-icon" placeholder="fas fa-paw"><input type="text" id="pilar-3-title" placeholder="Biodiversitas"></div></div>
       <div class="form-group"><label>Kartu 3 — Deskripsi</label><textarea id="pilar-3-desc" rows="2" placeholder="Menjaga ekosistem yang menjamin kualitas air & udara."></textarea></div>
+      <div id="cms-extra"></div>
       <div class="section-divider"><i class="fas fa-cloud-rain"></i> Informasi SIH3</div>
       <div class="form-group"><label>Judul Bagian</label><input type="text" id="sih3-title" placeholder="Informasi SIH3 (Sistem Informasi Hidrologi, Hidrometeorologi, dan Hidrogeologi)"></div>
       <div class="form-group"><label>Deskripsi</label><textarea id="sih3-desc" rows="2" placeholder="Pemantauan kondisi DAS untuk mendukung pengambilan keputusan berbasis data."></textarea></div>
@@ -1648,7 +1649,62 @@ async function loadOverview() {
 // ============================================================
 // HERO & TENTANG
 // ============================================================
+
+// ── Narasi Capaian / Strategi / Prinsip (profil_yayasan/capaian | strategi | prinsip) ──
+const CMS_DEF = {"capaian": {"title": "Capaian Konservasi Kolektif", "em": "Dicatat Jelas, Terbuka untuk Diperiksa.", "desc": "Dari reforestasi hingga pemantauan lapangan, kami mendampingi program konservasi di berbagai lanskap, mulai dari lahan warga, lereng, sampai kawasan penyangga air. Setiap capaian dicatat dengan jelas, bisa dipertanggungjawabkan, dan dirawat agar manfaatnya terasa untuk jangka panjang."}, "strategi": {"title": "Strategi Keberlanjutan Kami", "em": "Dikerjakan dengan Sistem, Dibuktikan dengan Data.", "desc": "Konservasi yang bisa dipercaya dimulai dari proses yang rapi. Dari pencatatan titik, pemeriksaan dokumen, cek lapangan, sampai pemantauan dan pelaporan, setiap tahap kami jalankan dengan sistem agar hasilnya jelas dan bisa dipertanggungjawabkan.", "items": [{"tag": "Pencatatan", "icon": "fas fa-location-dot", "title": "Titik Berkoordinat", "desc": "Setiap rorak, sumur, dan pohon dicatat dengan lokasi GPS dan dua foto."}, {"tag": "Verifikasi", "icon": "fas fa-file-circle-check", "title": "Cek Dokumen", "desc": "Legalitas lahan dan identitas pemilik diperiksa admin sebelum proses berlanjut."}, {"tag": "Verifikasi", "icon": "fas fa-clipboard-check", "title": "Cek Lapangan", "desc": "Tim turun langsung memastikan data sesuai dengan kondisi nyata di lokasi."}, {"tag": "Pemantauan", "icon": "fas fa-binoculars", "title": "Pemantauan Berkala", "desc": "Kondisi tanaman dan titik dicek berulang, tercatat siapa yang memantau dan kapan."}, {"tag": "Penilaian", "icon": "fas fa-droplet", "title": "Estimasi Dampak", "desc": "Serapan air dihitung per titik, lalu dijumlahkan menjadi capaian yang terukur."}, {"tag": "Pelaporan", "icon": "fas fa-file-lines", "title": "Laporan Berfoto", "desc": "RAB, kurva S, dan laporan bulanan lengkap dengan foto untuk para mitra."}, {"tag": "Kemitraan", "icon": "fas fa-handshake", "title": "Jasa Lingkungan (PJLH)", "desc": "Pemilik lahan terverifikasi dipertemukan dengan mitra lewat kesepakatan tertulis."}, {"tag": "Komunitas", "icon": "fas fa-people-group", "title": "Libatkan Warga", "desc": "Penanaman bersama dan pendampingan warga di sekitar lokasi kegiatan."}]}, "prinsip": {"title": "Prinsip Kerja Konservasi Kami", "em": "Dipilih dengan Cermat, Dirawat Bersama Warga.", "desc": "Selain sistem yang rapi, ada prinsip yang kami pegang di lapangan: siapa yang menanam, pohon apa yang dipilih, di mana lokasinya, dan bagaimana hasilnya dijaga.", "items": [{"tag": "Partisipasi", "icon": "fas fa-seedling", "title": "Tanam Bersama (Tanam & Adopsi Pohon)", "desc": "Warga, sekolah, dan perusahaan bisa ikut menanam dan merawat pohon, guna mendukung reforestasi."}, {"tag": "Spesies", "icon": "fas fa-leaf", "title": "Utamakan Jenis Lokal", "desc": "Kami memilih pohon asli daerah agar sesuai dengan tanah dan iklim setempat, lebih tahan, dan ikut menjaga kekayaan hayati sekitar."}, {"tag": "Manfaat", "icon": "fas fa-apple-whole", "title": "Pohon yang Memberi Manfaat", "desc": "Jenis tanaman dipilih yang menahan tanah dan air, sekaligus memberi hasil seperti buah atau pangan bagi warga sekitar."}, {"tag": "Lokasi", "icon": "fas fa-map-location-dot", "title": "Lokasi Dipilih dengan Alasan", "desc": "Lahan dipilih berdasarkan kebutuhan pemulihan, manfaatnya bagi warga, dan kesiapan pemilik lahan, lalu diperiksa dokumen dan lapangannya."}, {"tag": "Keanekaragaman", "icon": "fas fa-paw", "title": "Cek Keanekaragaman Hayati Berkala", "desc": "Kondisi pohon, ekosistem, dan satwa di sekitar lokasi dicek secara berkala untuk melihat apakah pemulihan benar-benar berjalan."}, {"tag": "Masyarakat", "icon": "fas fa-users", "title": "Warga sebagai Pengelola", "desc": "Warga lokal dilibatkan dalam merawat dan mengelola kawasan, agar konservasi berjalan seiring dengan kemandirian ekonomi mereka."}]}};
+const CMS_META = {
+  capaian:  { label: 'Capaian Konservasi Kolektif', icon: 'fa-chart-line', n: 0 },
+  strategi: { label: 'Strategi Keberlanjutan (Sistem Kerja)', icon: 'fa-diagram-project', n: 8 },
+  prinsip:  { label: 'Prinsip Kerja Konservasi', icon: 'fa-seedling', n: 6 }
+};
+const cmsEsc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+function buildCms() {
+  const box = document.getElementById('cms-extra'); if (!box || box.dataset.ok) return; box.dataset.ok = '1';
+  let h = '';
+  Object.keys(CMS_META).forEach(k => {
+    const m = CMS_META[k];
+    h += '<div class="section-divider"><i class="fas '+m.icon+'"></i> '+m.label+'</div>';
+    h += '<div class="form-group"><label>Judul (baris 1)</label><input type="text" id="cms-'+k+'-title"></div>';
+    h += '<div class="form-group"><label>Judul baris 2 (aksen lime, boleh kosong)</label><input type="text" id="cms-'+k+'-em"></div>';
+    h += '<div class="form-group"><label>Paragraf</label><textarea id="cms-'+k+'-desc" rows="3"></textarea></div>';
+    for (let n=1; n<=m.n; n++) {
+      h += '<div class="form-group"><label>Kartu '+n+' — Label kecil, Ikon (Font Awesome) &amp; Judul</label>'
+        +  '<div class="row-2"><input type="text" id="cms-'+k+'-'+n+'-tag" placeholder="Label"><input type="text" id="cms-'+k+'-'+n+'-icon" placeholder="fas fa-leaf"></div>'
+        +  '<input type="text" id="cms-'+k+'-'+n+'-title" placeholder="Judul kartu" style="margin-top:6px"></div>';
+      h += '<div class="form-group"><label>Kartu '+n+' — Deskripsi</label><textarea id="cms-'+k+'-'+n+'-desc" rows="2"></textarea></div>';
+    }
+  });
+  box.innerHTML = h;
+}
+function fillCms(k, d) {
+  d = d || CMS_DEF[k]; const g = id => document.getElementById(id);
+  g('cms-'+k+'-title').value = d.title||''; g('cms-'+k+'-em').value = d.em||''; g('cms-'+k+'-desc').value = d.desc||'';
+  const it = d.items||[];
+  for (let n=1; n<=CMS_META[k].n; n++) { const x = it[n-1]||{};
+    g('cms-'+k+'-'+n+'-tag').value = x.tag||''; g('cms-'+k+'-'+n+'-icon').value = x.icon||'';
+    g('cms-'+k+'-'+n+'-title').value = x.title||''; g('cms-'+k+'-'+n+'-desc').value = x.desc||''; }
+}
+async function loadCms() {
+  buildCms();
+  for (const k of Object.keys(CMS_META)) {
+    let d = null;
+    try { const s = await getDoc(doc(db,'profil_yayasan',k)); if (s.exists()) d = s.data(); } catch(e) { console.error(e); }
+    fillCms(k, d);
+  }
+}
+async function saveCms() {
+  const v = id => document.getElementById(id).value.trim();
+  for (const k of Object.keys(CMS_META)) {
+    const items = [];
+    for (let n=1; n<=CMS_META[k].n; n++) items.push({ tag: v('cms-'+k+'-'+n+'-tag'), icon: v('cms-'+k+'-'+n+'-icon'), title: v('cms-'+k+'-'+n+'-title'), desc: v('cms-'+k+'-'+n+'-desc') });
+    const data = { title: v('cms-'+k+'-title'), em: v('cms-'+k+'-em'), desc: v('cms-'+k+'-desc') };
+    if (CMS_META[k].n) data.items = items.filter(x => x.title || x.desc);
+    await setDoc(doc(db,'profil_yayasan',k), data);
+  }
+}
+
 async function loadHero() {
+  loadCms();
   try {
     const [hSnap, tSnap, pSnap, sSnap, gSnap] = await Promise.all([
       getDoc(doc(db,'profil_yayasan','hero')),
@@ -1729,6 +1785,7 @@ document.getElementById('saveHeroBtn').addEventListener('click', async () => {
     await setDoc(doc(db,'profil_yayasan','sih3'), { title: v('sih3-title'), desc: v('sih3-desc'), url: v('sih3-url'), btn_label: v('sih3-btn'), items: sihItems });
     await setDoc(doc(db,'profil_yayasan','sdgs'), { title: v('sdgs-title'), desc: v('sdgs-desc'),
       goals: [...document.querySelectorAll('.sdg-chk')].filter(c => c.checked).map(c => Number(c.value)) });
+    await saveCms();
     btn.innerHTML='<i class="fas fa-check"></i> Tersimpan!';
     setTimeout(()=>{ btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan Semua'; },2000);
   } catch(e) { alert('Gagal: '+e.message); btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Simpan Semua'; }
