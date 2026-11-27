@@ -1230,10 +1230,10 @@
         const a = document.createElement('a'); a.className = 'keg-card'; a.href = 'kegiatan.html?id=' + encodeURIComponent(k.id);
         if (k.cover && /^data:image\//.test(k.cover)) { const im = document.createElement('img'); im.src = k.cover; im.alt = ''; a.appendChild(im); }
         const b = document.createElement('div'); b.className = 'keg-body';
-        const t = document.createElement('span'); t.className = 'keg-tag'; t.textContent = (KEG_JENIS[k.jenis] || 'Kegiatan') + (k.tahun ? ' · ' + k.tahun : '');
+        const t = document.createElement('span'); t.className = 'keg-tag'; t.textContent = (k.kategori || KEG_JENIS[k.jenis] || 'Kegiatan') + (k.tahun ? ' · ' + k.tahun : '');
         const h = document.createElement('h3'); h.textContent = k.judul || '';
         const p = document.createElement('p'); p.textContent = k.ringkas || '';
-        const bt = document.createElement('span'); bt.className = 'keg-btn'; bt.textContent = k.jenis === 'penanaman' ? 'Lihat Penanaman' : 'Lihat Kegiatan';
+        const bt = document.createElement('span'); bt.className = 'keg-btn'; bt.textContent = k.jenis === 'penanaman' ? 'Lihat Penanaman' : (k.jenis === 'lainnya' ? 'Baca Cerita' : 'Lihat Kegiatan');
         b.append(t, h, p, bt); a.appendChild(b); tr.appendChild(a);
       });
       document.getElementById('kegiatan').style.display = 'block';
