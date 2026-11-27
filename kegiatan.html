@@ -65,6 +65,32 @@
   .meta { font-size:.68rem; color:var(--soft); margin-top:8px; }
   .idx3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
   .leaflet-popup-content-wrapper { border-radius:14px; } .pop b { color:#111; } .pop div { font-size:.72rem; color:#555; margin-top:4px; }
+  /* ── Mode cerita (artikel) ── */
+  #artikel { display:none; background:var(--bg); min-height:100vh; }
+  .ahero { position:relative; min-height:56vh; display:flex; align-items:flex-end; background:#0b1a14 center/cover no-repeat; }
+  .ahero::before { content:''; position:absolute; inset:0; background:linear-gradient(to top, rgba(10,18,25,.96) 8%, rgba(10,18,25,.45) 55%, rgba(10,18,25,.25)); }
+  .ahero .in { position:relative; z-index:1; width:100%; max-width:900px; margin:0 auto; padding:90px 22px 34px; }
+  .ahero .back { position:absolute; top:22px; left:22px; margin:0; background:#0008; padding:8px 14px; border-radius:50px; color:#fff; }
+  .ahero h1 { font-size:2.2rem; line-height:1.2; margin:10px 0 14px; }
+  .ameta { display:flex; flex-wrap:wrap; gap:18px; color:#cfdae2; font-size:.85rem; }
+  .ameta span { display:flex; gap:8px; align-items:center; }
+  .abody { max-width:760px; margin:0 auto; padding:34px 22px 80px; }
+  .abody p { font-size:1.02rem; line-height:1.85; color:#d6e1e8; margin-bottom:20px; }
+  .abody h2 { font-size:1.45rem; line-height:1.3; margin:34px 0 14px; color:#fff; }
+  .abody figure { margin:26px -60px; } .abody figure img { width:100%; border-radius:16px; display:block; cursor:zoom-in; }
+  .abody figcaption { font-size:.8rem; color:var(--soft); text-align:center; margin-top:8px; padding:0 60px; }
+  .agal { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:26px -60px; }
+  .agal img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; cursor:zoom-in; }
+  .agal.dua { grid-template-columns:repeat(2,1fr); } .agal.dua img { aspect-ratio:4/3; }
+  .aangka { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:28px 0; }
+  .aangka div { background:#102a1b; border:1px solid #1e5a3a; border-radius:14px; padding:16px 14px; text-align:center; }
+  .aangka b { display:block; font-size:1.7rem; color:var(--lime); } .aangka span { font-size:.78rem; color:#bcd3c4; line-height:1.4; display:block; margin-top:4px; }
+  .akutip { margin:28px 0; padding:6px 0 6px 22px; border-left:4px solid var(--lime); font-size:1.15rem; line-height:1.7; color:#fff; font-style:italic; }
+  .akutip cite { display:block; font-size:.82rem; color:var(--soft); margin-top:8px; font-style:normal; }
+  .abody .akhir { margin-top:36px; padding-top:22px; border-top:1px solid var(--line); display:flex; gap:12px; flex-wrap:wrap; }
+  .abody .akhir a { text-decoration:none; padding:10px 20px; border-radius:50px; border:1px solid var(--lime); color:var(--lime); font-size:.85rem; font-weight:600; }
+  #lb { position:fixed; inset:0; background:#000e; display:none; align-items:center; justify-content:center; z-index:9999; cursor:zoom-out; } #lb img { max-width:94vw; max-height:92vh; border-radius:10px; }
+  @media (max-width:900px) { .abody figure, .agal { margin-left:0; margin-right:0; } .abody figcaption { padding:0; } .ahero h1 { font-size:1.6rem; } }
   @media (max-width:1100px) { .app { grid-template-columns:360px 1fr; } .right { grid-column:1 / -1; border-left:0; border-top:1px solid var(--line); } .app { height:auto; overflow:visible; } .left { max-height:none; } #mapWrap { height:70vh; } }
   @media (max-width:760px) { .app { display:flex; flex-direction:column; } #mapWrap { height:62vh; order:2; } .left { order:1; } .right { order:3; } }
 </style>
@@ -96,11 +122,17 @@
   </aside>
 </div>
 
+<div id="artikel">
+  <div class="ahero" id="ahero"><a class="back" href="index.html#kegiatan"><i class="fas fa-arrow-left"></i> Kembali ke Beranda</a>
+    <div class="in"><div class="tags" id="atags"></div><h1 id="ajudul"></h1><div class="ameta" id="ameta"></div></div></div>
+  <div class="abody" id="abody"></div>
+</div>
+<div id="lb"><img alt=""></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="pjlh-formula.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
   const app = initializeApp({
     apiKey: "AIzaSyAepuZ8RHHuizqvXCbvBn4jyLxuWxwGey0", authDomain: "sekola-konang.firebaseapp.com", projectId: "sekola-konang",
     storageBucket: "sekola-konang.firebasestorage.app", messagingSenderId: "9338352073", appId: "1:9338352073:web:b56481b836888b1a8bf818"
@@ -155,15 +187,43 @@
     return map;
   }
 
+
+  async function artikel(k) {
+    $('app').style.display = 'none'; $('artikel').style.display = 'block';
+    const fotos = {};
+    try { const fs = await getDocs(collection(db, 'kegiatan_unggulan', id, 'foto')); fs.forEach(d => { fotos[d.id] = d.data().d; }); } catch (e) { console.warn('Foto cerita gagal dimuat', e); }
+    const sampul = fotos[k.coverId] || k.cover || '';
+    if (/^data:image\//.test(sampul)) $('ahero').style.backgroundImage = 'url("' + sampul + '")';
+    $('atags').innerHTML = `<span class="tag">${esc(k.kategori || JENIS[k.jenis] || 'Kegiatan')}</span>` + (k.tahun ? `<span class="tag dim">${esc(k.tahun)}</span>` : '');
+    $('ajudul').textContent = k.judul || '';
+    const meta = []; if (k.tanggal) meta.push(['fa-calendar', k.tanggal]); if (k.lokasi) meta.push(['fa-location-dot', k.lokasi]);
+    $('ameta').innerHTML = meta.map(m => `<span><i class="fas ${m[0]}"></i>${esc(m[1])}</span>`).join('');
+    const body = $('abody'), el = (t, c) => { const e = document.createElement(t); if (c) e.className = c; return e; };
+    const img = (fid, alt) => { const f = fotos[fid]; if (!f || !/^data:image\//.test(f)) return null; const i = el('img'); i.src = f; i.alt = alt || ''; i.loading = 'lazy'; return i; };
+    (k.blok || []).forEach(b => {
+      if (b.t === 'p' && b.teks) { const p = el('p'); p.textContent = b.teks; body.appendChild(p); }
+      else if (b.t === 'h' && b.teks) { const h = el('h2'); h.textContent = b.teks; body.appendChild(h); }
+      else if (b.t === 'foto') { const i = img(b.f, b.cap); if (!i) return; const fg = el('figure'); fg.appendChild(i); if (b.cap) { const c = el('figcaption'); c.textContent = b.cap; fg.appendChild(c); } body.appendChild(fg); }
+      else if (b.t === 'galeri') { const ims = (b.f || []).map(x => img(x, '')).filter(Boolean); if (!ims.length) return; const g = el('div', 'agal' + (ims.length % 3 !== 0 && ims.length < 5 ? ' dua' : '')); ims.forEach(i => g.appendChild(i)); body.appendChild(g); }
+      else if (b.t === 'angka' && (b.items || []).length) { const g = el('div', 'aangka'); b.items.forEach(x => { const d = el('div'); const n = el('b'); n.textContent = x.n; const l = el('span'); l.textContent = x.l; d.append(n, l); g.appendChild(d); }); body.appendChild(g); }
+      else if (b.t === 'kutip' && b.teks) { const q = el('blockquote', 'akutip'); q.appendChild(document.createTextNode('“' + b.teks + '”')); if (b.oleh) { const c = el('cite'); c.textContent = b.oleh; q.appendChild(c); } body.appendChild(q); }
+    });
+    const ak = el('div', 'akhir'); ak.innerHTML = '<a href="kegiatan-semua.html"><i class="fas fa-images"></i> Lihat kegiatan lainnya</a><a href="index.html">Beranda</a>'; body.appendChild(ak);
+    body.querySelectorAll('img').forEach(i => i.addEventListener('click', () => { const lb = $('lb'); lb.querySelector('img').src = i.src; lb.style.display = 'flex'; }));
+    $('lb').onclick = () => { $('lb').style.display = 'none'; };
+    document.title = (k.judul || 'Cerita') + ' — Sekola Konang Indonesia';
+  }
+
   async function muat() {
     if (!id) return gagal('Kegiatan tidak ditemukan');
     let k;
     try { const s = await getDoc(doc(db, 'kegiatan_unggulan', id)); if (!s.exists()) return gagal('Kegiatan tidak ditemukan'); k = s.data(); }
     catch (e) { console.error(e); return gagal('Gagal memuat kegiatan'); }
 
+    if (Array.isArray(k.blok) && k.blok.length) { await artikel(k); return; }
     document.title = (k.judul || 'Kegiatan') + ' — Sekola Konang Indonesia';
     $('judul').textContent = k.judul || '';
-    $('tags').innerHTML = `<span class="tag">${esc(JENIS[k.jenis] || 'Kegiatan')}</span>` + (k.tahun ? `<span class="tag dim">${esc(k.tahun)}</span>` : '');
+    $('tags').innerHTML = `<span class="tag">${esc(k.kategori || JENIS[k.jenis] || 'Kegiatan')}</span>` + (k.tahun ? `<span class="tag dim">${esc(k.tahun)}</span>` : '');
     narasi(k.narasi);
 
     let src = null;
