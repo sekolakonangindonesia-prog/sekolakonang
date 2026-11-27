@@ -37,10 +37,7 @@
   <h1>Semua Kegiatan Kami</h1>
   <p class="sub">Penanaman, pemantauan keanekaragaman hayati, dan kegiatan lain yang kami jalankan bersama warga dan mitra. Pilih yang ingin kamu lihat.</p>
   <div class="bar">
-    <button class="chip on" data-j="">Semua</button>
-    <button class="chip" data-j="penanaman">Penanaman</button>
-    <button class="chip" data-j="biodiversitas">Biodiversitas</button>
-    <button class="chip" data-j="lainnya">Lainnya</button>
+    <span id="chips" style="display:contents"><button class="chip on" data-j="">Semua</button></span>
     <select id="tahun"><option value="">Semua tahun</option></select>
     <input id="cari" type="search" placeholder="Cari kegiatan…">
   </div>
@@ -56,17 +53,18 @@
   }));
   const JENIS = { penanaman:'Penanaman', biodiversitas:'Biodiversitas', lainnya:'Kegiatan' };
   let semua = [], jenis = '';
+  const kat = k => k.kategori || JENIS[k.jenis] || 'Kegiatan';
   const $ = id => document.getElementById(id);
   function gambar() {
     const th = $('tahun').value, q = $('cari').value.trim().toLowerCase();
-    const arr = semua.filter(k => (!jenis || k.jenis === jenis) && (!th || String(k.tahun) === th) && (!q || (k.judul + ' ' + k.ringkas).toLowerCase().includes(q)));
+    const arr = semua.filter(k => (!jenis || kat(k) === jenis) && (!th || String(k.tahun) === th) && (!q || (k.judul + ' ' + k.ringkas).toLowerCase().includes(q)));
     const g = $('grid'); g.innerHTML = '';
     arr.forEach(k => {
       const a = document.createElement('a'); a.className = 'card'; a.href = 'kegiatan.html?id=' + encodeURIComponent(k.id);
       if (k.cover) { const im = document.createElement('img'); im.src = k.cover; im.alt = ''; a.appendChild(im); }
       const b = document.createElement('div'); b.className = 'cb';
       const t = document.createElement('div'); t.className = 'tags';
-      const t1 = document.createElement('span'); t1.className = 'tag'; t1.textContent = JENIS[k.jenis] || 'Kegiatan'; t.appendChild(t1);
+      const t1 = document.createElement('span'); t1.className = 'tag'; t1.textContent = kat(k); t.appendChild(t1);
       if (k.tahun) { const t2 = document.createElement('span'); t2.className = 'tag d'; t2.textContent = k.tahun; t.appendChild(t2); }
       const h = document.createElement('h3'); h.textContent = k.judul || '';
       const p = document.createElement('p'); p.textContent = k.ringkas || '';
@@ -74,12 +72,14 @@
     });
     $('empty').style.display = arr.length ? 'none' : 'block';
   }
-  document.querySelectorAll('.chip').forEach(c => c.onclick = () => { document.querySelectorAll('.chip').forEach(x => x.classList.remove('on')); c.classList.add('on'); jenis = c.dataset.j; gambar(); });
+  function pasangChip(c) { c.onclick = () => { document.querySelectorAll('.chip').forEach(x => x.classList.remove('on')); c.classList.add('on'); jenis = c.dataset.j; gambar(); }; }
+  pasangChip(document.querySelector('.chip'));
   $('tahun').onchange = gambar; $('cari').oninput = gambar;
   try {
     const s = await getDocs(collection(db, 'kegiatan_unggulan'));
     s.forEach(d => { const x = d.data(); if (x.tampil) semua.push({ id:d.id, ...x }); });
     semua.sort((a, b) => (b.tahun || 0) - (a.tahun || 0) || (a.urutan || 0) - (b.urutan || 0));
+    [...new Set(semua.map(kat))].forEach(n => { const b = document.createElement('button'); b.className = 'chip'; b.dataset.j = n; b.textContent = n; $('chips').appendChild(b); pasangChip(b); });
     [...new Set(semua.map(k => k.tahun).filter(Boolean))].sort((a, b) => b - a).forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; $('tahun').appendChild(o); });
   } catch (e) { console.error(e); }
   gambar();
